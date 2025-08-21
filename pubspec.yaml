@@ -84,5 +84,15 @@ flutter:
           weight: 800
         - asset: assets/fonts/Nunito/Nunito-Black.ttf
           weight: 900
+    - family: Estedad
+      fonts:
+        - asset: assets/fonts/Estedad/Estedad-FD-Regular.woff2
+          weight: 400
+        - asset: assets/fonts/Estedad/Estedad-FD-Medium.woff2
+          weight: 500
+        - asset: assets/fonts/Estedad/Estedad-FD-SemiBold.woff2
+          weight: 600
+        - asset: assets/fonts/Estedad/Estedad-FD-Bold.woff2
+          weight: 700
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

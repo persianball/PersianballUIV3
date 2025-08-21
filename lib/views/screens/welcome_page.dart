@@ -35,8 +35,8 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Coach and Market in your pocket. Find \nyour best outfit here.',
-                  style: TextStyle(color: AppColor.secondary.withOpacity(0.7), fontSize: 16),
+                  'فوتبال در جیب شما ،رو به سوی پیشرفت',
+                  style: TextStyle(fontFamily: 'Estedad',color: AppColor.secondary.withOpacity(0.7), fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -51,8 +51,8 @@ class WelcomePage extends StatelessWidget {
                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginPage()));
                 },
                 child: Text(
-                  'Get Started',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18, fontFamily: 'poppins'),
+                  'شروع',
+                  style: TextStyle(fontFamily: 'Estedad',color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18),
                 ),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 36, vertical: 18), backgroundColor: AppColor.primary,
