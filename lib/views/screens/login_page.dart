@@ -121,7 +121,7 @@ class LoginPage extends StatelessWidget {
             children: [
               // Email/Phone
               Directionality(
-                textDirection: TextDirection.rtl,
+                textDirection: TextDirection.ltr,
                 child: TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -158,7 +158,7 @@ class LoginPage extends StatelessWidget {
 
               // Password
               Directionality(
-                textDirection: TextDirection.rtl,
+                textDirection: TextDirection.ltr,
                 child: TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -199,7 +199,7 @@ class LoginPage extends StatelessWidget {
 
               // Forgot Password
               Container(
-                alignment: Alignment.centerRight,
+                alignment: Alignment.center,
                 child: TextButton(
                   onPressed: () {
                     // forgot password page
