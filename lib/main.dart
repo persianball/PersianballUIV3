@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:flutter/services.dart';
+import 'package:marketky/views/screens/home_page.dart';
+import 'package:marketky/views/screens/otp_verification_page.dart';
 import 'package:marketky/views/screens/welcome_page.dart';
 
 void main() {
@@ -23,7 +25,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
-        fontFamily: 'Nunito',
+        fontFamily: 'Estedad',
       ),
       home: WelcomePage(),
     );
