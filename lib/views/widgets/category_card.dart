@@ -24,6 +24,7 @@ class CategoryCard extends StatelessWidget {
             Container(
               margin: EdgeInsets.only(bottom: 6),
               child: SvgPicture.asset(
+                width: 32,
                 '${data.iconUrl}',
                 color: Colors.white,
               ),

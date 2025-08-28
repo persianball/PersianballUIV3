@@ -15,6 +15,9 @@ import 'package:marketky/views/widgets/custom_icon_button_widget.dart';
 import 'package:marketky/views/widgets/dummy_search_widget_1.dart';
 import 'package:marketky/views/widgets/flashsale_countdown_tile.dart';
 import 'package:marketky/views/widgets/item_card.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+
+import '../widgets/carousel_home_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -60,10 +63,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    if (flashsaleCountdownTimer != null) {
-      flashsaleCountdownTimer?.cancel();
-    }
-
+    flashsaleCountdownTimer?.cancel();
     super.dispose();
   }
 
@@ -87,79 +87,110 @@ class _HomePageState extends State<HomePage> {
         shrinkWrap: true,
         physics: BouncingScrollPhysics(),
         children: [
-          // Section 1
-          Container(
-            height: 190,
-            width: MediaQuery.of(context).size.width,
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.jpg'),
-                fit: BoxFit.cover,
+          // بخش ۱ - هدر
+          // بخش ۱ - هدر با کاروسل در پس‌زمینه و محتوای ثابت
+          Stack(
+            children: [
+              // پس‌زمینه: کاروسل اسلایدر
+              CarouselSlider(
+                items: [
+                  Opacity(opacity: 0.5,child: Image.asset('assets/images/background.png', fit: BoxFit.cover, width: double.infinity,)),
+                  Opacity(opacity: 0.5,child: Image.asset('assets/images/background2.png', fit: BoxFit.cover, width: double.infinity,))
+                ],
+                options: CarouselOptions(
+                  height: 190,
+                  autoPlay: true,
+                  autoPlayInterval: Duration(seconds: 3),
+                  autoPlayAnimationDuration: Duration(milliseconds: 400),
+                  autoPlayCurve: Curves.easeInCirc,
+                  scrollDirection: Axis.horizontal,
+                  viewportFraction: 1.0,
+                  pauseAutoPlayOnTouch: true,
+                  // بدون رنگ تیره کردن، ولی اگر متن خوانا نبود، بعداً اضافه می‌کنیم
+                ),
               ),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  margin: EdgeInsets.only(top: 26),
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Find the best \noutfit for you.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          height: 150 / 100,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      Row(
+
+              Container(
+                height: 190,
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.1),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(top: 26),
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        textDirection: TextDirection.rtl,
                         children: [
-                          CustomIconButtonWidget(
-                            onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => EmptyCartPage()));
-                            },
-                            value: 0,
-                            icon: SvgPicture.asset(
-                              'assets/icons/Bag.svg',
-                              color: Colors.white,
+                          Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Expanded(
+                              child: Text(
+                                'بهترین ست‌ها\nرا برای خود پیدا کنید.',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontFamily: 'Estedad',
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  height: 1.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
-                          CustomIconButtonWidget(
-                            onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => MessagePage()));
-                            },
-                            value: 2,
-                            margin: EdgeInsets.only(left: 16),
-                            icon: SvgPicture.asset(
-                              'assets/icons/Chat.svg',
-                              color: Colors.white,
-                            ),
+                          Row(
+                            textDirection: TextDirection.ltr,
+                            children: [
+                              CustomIconButtonWidget(
+                                onTap: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (context) => EmptyCartPage()));
+                                },
+                                value: 0,
+                                icon: SvgPicture.asset(
+                                  'assets/icons/Bag.svg',
+                                  color: Colors.black,
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              CustomIconButtonWidget(
+                                onTap: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (context) => MessagePage()));
+                                },
+                                value: 2,
+                                icon: SvgPicture.asset(
+                                  'assets/icons/Chat.svg',
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 22,),
+                    DummySearchWidget1(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => SearchPage(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                DummySearchWidget1(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => SearchPage(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          // Section 2 - category
+
+          // بخش ۲ - دسته‌بندی‌ها
           Container(
             width: MediaQuery.of(context).size.width,
             color: AppColor.secondary,
@@ -172,21 +203,26 @@ class _HomePageState extends State<HomePage> {
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    textDirection: TextDirection.rtl,
                     children: [
                       Text(
-                        'Category',
+                        'دسته‌بندی',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600),
+                          fontFamily: 'Estedad',
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       TextButton(
                         onPressed: () {},
                         child: Text(
-                          'View More',
+                          'مشاهده بیشتر',
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontWeight: FontWeight.w400),
+                            fontFamily: 'Estedad',
+                            color: Colors.white.withOpacity(0.7),
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.white,
@@ -195,52 +231,35 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-                // Category list
-                Container(
-                  margin: EdgeInsets.only(top: 12),
-                  height: 96,
-                  child: ListView.separated(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: categoryData.length,
-                    physics: BouncingScrollPhysics(),
-                    scrollDirection: Axis.horizontal,
-                    shrinkWrap: true,
-                    separatorBuilder: (context, index) {
-                      return SizedBox(width: 16);
-                    },
-                    itemBuilder: (context, index) {
-                      return CategoryCard(
-                        data: categoryData[index],
-                        onTap: () {},
-                      );
-                    },
+                // لیست دسته‌ها
+                Align(
+                  alignment: AlignmentGeometry.centerRight,
+                  child: Container(
+                    margin: EdgeInsets.only(top: 12),
+                    height: 96,
+                    child: ListView.separated(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: categoryData.length,
+                      physics: BouncingScrollPhysics(),
+                      scrollDirection: Axis.horizontal,
+                      shrinkWrap: true,
+                      separatorBuilder: (context, index) {
+                        return SizedBox(width: 16);
+                      },
+                      itemBuilder: (context, index) {
+                        return CategoryCard(
+                          data: categoryData[index],
+                          onTap: () {},
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          // Section 3 - banner
-          // Container(
-          //   height: 106,
-          //   padding: EdgeInsets.symmetric(vertical: 16),
-          //   child: ListView.separated(
-          //     padding: EdgeInsets.symmetric(horizontal: 16),
-          //     scrollDirection: Axis.horizontal,
-          //     itemCount: 3,
-          //     separatorBuilder: (context, index) {
-          //       return SizedBox(width: 16);
-          //     },
-          //     itemBuilder: (context, index) {
-          //       return Container(
-          //         width: 230,
-          //         height: 106,
-          //         decoration: BoxDecoration(color: AppColor.primarySoft, borderRadius: BorderRadius.circular(15)),
-          //       );
-          //     },
-          //   ),
-          // ),
 
-          // Section 4 - Flash Sale
+          // بخش ۳ - فلش سیل (فروش ویژه)
           Container(
             margin: EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -253,168 +272,113 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    textDirection: TextDirection.rtl,
                     children: [
                       Text(
-                        'Flash Sale',
+                        'فروش ویژه',
                         style: TextStyle(
+                          fontFamily: 'Estedad',
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
                         ),
                       ),
                       Row(
+                        textDirection: TextDirection.ltr,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2.0),
-                            child: FlashsaleCountdownTile(
-                              digit: hours[0], key: null,
+                          FlashsaleCountdownTile(digit: hours[0]),
+                          FlashsaleCountdownTile(digit: hours[1]),
+                          Text(
+                            ':',
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2.0),
-                            child: FlashsaleCountdownTile(
-                              digit: hours[1], key: null,
+                          FlashsaleCountdownTile(digit: minutes[0]),
+                          FlashsaleCountdownTile(digit: minutes[1]),
+                          Text(
+                            ':',
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2.0),
-                            child: Text(
-                              ':',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2.0),
-                            child: FlashsaleCountdownTile(
-                              digit: minutes[0],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2.0),
-                            child: FlashsaleCountdownTile(
-                              digit: minutes[1],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2.0),
-                            child: Text(
-                              ':',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2.0),
-                            child: FlashsaleCountdownTile(
-                              digit: seconds[0],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2.0),
-                            child: FlashsaleCountdownTile(
-                              digit: seconds[1],
-                            ),
-                          ),
+                          FlashsaleCountdownTile(digit: seconds[0]),
+                          FlashsaleCountdownTile(digit: seconds[1]),
                         ],
                       ),
                     ],
                   ),
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 310,
-                        child: ListView(
-                          shrinkWrap: true,
-                          physics: BouncingScrollPhysics(),
-                          scrollDirection: Axis.horizontal,
-                          children: List.generate(
-                            productData.length,
-                            (index) => Padding(
-                              padding: const EdgeInsets.only(left: 16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ItemCard(
-                                    product: productData[index],
-                                    titleColor: AppColor.primarySoft,
-                                    priceColor: AppColor.accent,
-                                  ),
-                                  Container(
-                                    width: 180,
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8.0),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              child: LinearProgressIndicator(
-                                                minHeight: 10,
-                                                value: 0.4,
-                                                color: AppColor.accent,
-                                                backgroundColor:
-                                                    AppColor.border,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Icon(
-                                          Icons.local_fire_department,
-                                          color: AppColor.accent,
-                                        ),
-                                      ],
+                Container(
+                  height: 310,
+                  child: ListView.separated(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: productData.length,
+                    separatorBuilder: (context, index) => SizedBox(width: 16),
+                    itemBuilder: (context, index) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ItemCard(
+                          product: productData[index],
+                          titleColor: AppColor.primarySoft,
+                          priceColor: AppColor.accent,
+                        ),
+                        Container(
+                          width: 180,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: LinearProgressIndicator(
+                                      minHeight: 10,
+                                      value: 0.4,
+                                      color: AppColor.accent,
+                                      backgroundColor: AppColor.border,
                                     ),
                                   ),
-                                  // Row(
-                                  //   children: [
-                                  //     Expanded(
-                                  //       child: Container(
-                                  //         color: Colors.amber,
-                                  //         height: 10,
-                                  //       ),
-                                  //     ),
-                                  //   ],
-                                  // ),
-                                ],
+                                ),
                               ),
-                            ),
+                              Icon(
+                                Icons.local_fire_department,
+                                color: AppColor.accent,
+                              ),
+                            ],
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          // Section 5 - product list
-
+          // بخش ۴ - پیشنهاد روز
           Padding(
-            padding: EdgeInsets.only(left: 16, top: 16),
+            padding: EdgeInsets.only(right: 16, top: 16),
             child: Text(
-              'Todays recommendation...',
+              'پیشنهاد روز برای شما...',
+              textAlign: TextAlign.right,
               style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400),
+                fontFamily: 'Estedad',
+                color: Colors.grey,
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
 
+          // لیست محصولات
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Wrap(
@@ -422,8 +386,11 @@ class _HomePageState extends State<HomePage> {
               runSpacing: 16,
               children: List.generate(
                 productData.length,
-                (index) => ItemCard(
-                  product: productData[index],
+                    (index) => Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: ItemCard(
+                    product: productData[index],
+                  ),
                 ),
               ),
             ),
