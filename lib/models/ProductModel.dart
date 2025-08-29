@@ -46,6 +46,136 @@ class Product {
   }
 }
 
+
+class ProductDetail {
+  final int id;
+  final String? nameFarsi;
+  final String? nameEnglish;
+  final String? description;
+  final String? image;
+  final List<String> images;
+  final int? price;
+  final int? discountPercentage;
+  final List<ProductVariant> variants;
+  final String? video;
+  final String? videoThumbnail;
+  final Category category;
+  final List<SimilarProduct> similarProducts;
+  final double avgRate;
+  final List<ProductComment> comments;
+
+  ProductDetail({
+    required this.id,
+    this.nameFarsi,
+    this.nameEnglish,
+    this.description,
+    this.image,
+    required this.images,
+    this.price,
+    this.discountPercentage,
+    required this.variants,
+    this.video,
+    this.videoThumbnail,
+    required this.category,
+    required this.similarProducts,
+    required this.avgRate,
+    required this.comments
+  });
+
+  factory ProductDetail.fromJson(Map<String, dynamic> json) {
+    return ProductDetail(
+      id: json['id'],
+      nameFarsi: json['name_farsi'],
+      nameEnglish: json['name_english'],
+      description: json['description'],
+      image: json['image'],
+      images: List<String>.from(json['images'] ?? []),
+      price: json['price'],
+      discountPercentage: json['discount_percentage'],
+      variants: (json['variants'] as List).map((v) => ProductVariant.fromJson(v)).toList(),
+      video: json['video'],
+      videoThumbnail: json['video_thumbnail'],
+      category: Category.fromJson(json['category']),
+      similarProducts: (json['simillar_products'] as List).map((v) => SimilarProduct.fromJson(v)).toList(),
+      avgRate: (json['avg_rate'] ?? 0.0).toDouble(),
+      comments: (json['comments'] as List).map((v) => ProductComment.fromJson(v)).toList(),
+    );
+  }
+}
+
+class ProductComment {
+  final String text;
+  final String adminResponse;
+  final String createAt;
+
+  ProductComment({required this.text,required this.adminResponse,required this.createAt});
+
+  factory ProductComment.fromJson(Map<String, dynamic> json) {
+    return ProductComment(
+      text: json['text'],
+      adminResponse: json['admin_response'],
+      createAt: json['created_at']
+    );
+  }
+}
+
+class ProductVariant {
+  final String? image;
+  final String? color;
+  final String? colorRgb;
+  final String? productName;
+  final int id;
+  final bool isActive;
+  final List<SizeVariant> sizeVariants;
+  final String? icon;
+  final String? video;
+  final List<String> images;
+
+  ProductVariant({
+    this.image,
+    this.color,
+    this.colorRgb,
+    this.productName,
+    required this.id,
+    required this.isActive,
+    required this.sizeVariants,
+    this.icon,
+    this.video,
+    required this.images,
+  });
+
+  factory ProductVariant.fromJson(Map<String, dynamic> json) {
+    return ProductVariant(
+      image: json['image'],
+      color: json['color'],
+      colorRgb: json['color_rgb'],
+      productName: json['product_name'],
+      id: json['id'],
+      isActive: json['is_active'],
+      sizeVariants: (json['size_variants'] as List).map((v) => SizeVariant.fromJson(v)).toList(),
+      icon: json['icon'],
+      video: json['video'],
+      images: List<String>.from(json['images'] ?? []),
+    );
+  }
+}
+
+class SizeVariant {
+  final String size;
+  final int? stock;
+  final int price;
+
+  SizeVariant({required this.size, required this.stock, required this.price});
+
+  factory SizeVariant.fromJson(Map<String, dynamic> json) {
+    return SizeVariant(
+      size: json['size'],
+      stock: json['stock'],
+      price: json['price'],
+    );
+  }
+}
+
 class Category {
   final String nameFarsi;
   final String? image;
@@ -61,3 +191,45 @@ class Category {
     );
   }
 }
+
+class SimilarProduct {
+  final int id;
+  final String nameFarsi;
+  final String nameEnglish;
+  final List<String> images;
+  final String image;
+  final int? discountPercentage;
+  final int? price;
+
+  SimilarProduct({
+    required this.id,
+    required this.nameFarsi,
+    required this.nameEnglish,
+    required this.images,
+    required this.image,
+    this.discountPercentage,
+    this.price,
+  });
+
+  factory SimilarProduct.fromJson(Map<String, dynamic> json) {
+    return SimilarProduct(
+      id: json['id'],
+      nameFarsi: json['name_farsi'],
+      nameEnglish: json['name_english'],
+      images: List<String>.from(json['images'] ?? []),
+      image: json['image'],
+      discountPercentage: json['discount_percentage'],
+      price: json['price'],
+    );
+  }
+}
+
+class ColorVariant {
+  final String color;
+  final String colorCode;
+  final String? imageUrl;
+
+  ColorVariant({required this.color, required this.colorCode, this.imageUrl});
+}
+
+

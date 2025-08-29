@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/product_detail.dart';
 import 'package:marketky/views/widgets/rating_tag.dart';
@@ -21,8 +23,11 @@ class ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Navigator.of(context).push(MaterialPageRoute(
-        //     builder: (context) => ProductDetail(product: product)));
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => BlocProvider(
+              create: (context) => ProductDetailBloc(),
+              child: ProductDetailPage(productId: this.product.id,),
+            )));
       },
       child: Container(
         width: MediaQuery.of(context).size.width / 2 - 16 - 8,

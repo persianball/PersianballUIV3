@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:marketky/core/model/ColorWay.dart';
+import 'package:marketky/models/ColorWay.dart';
 import 'package:marketky/core/model/ProductSize.dart';
 import 'package:marketky/core/model/Review.dart';
 

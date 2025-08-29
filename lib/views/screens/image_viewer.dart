@@ -41,10 +41,14 @@ class _ImageViewerState extends State<ImageViewer> {
               (index) => Container(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height,
-                child: Image.asset(
-                  widget.imageUrl[index],
-                  fit: BoxFit.contain,
-                ),
+                child: Image.network(
+                widget.imageUrl[index],
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
+                loadingBuilder: (ctx, child, loading) {
+                  return loading == null ? child : Center(child: CircularProgressIndicator());
+                },
+              ),
               ),
             ),
           ),
