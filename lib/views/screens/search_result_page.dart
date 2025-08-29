@@ -122,19 +122,19 @@ class _SearchResultPageState extends State<SearchResultPage> with TickerProvider
                   style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w400),
                 ),
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: List.generate(
-                    searchedProductData.length,
-                    (index) => ItemCard(
-                      product: searchedProductData[index],
-                    ),
-                  ),
-                ),
-              ),
+              // Container(
+              //   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              //   child: Wrap(
+              //     spacing: 16,
+              //     runSpacing: 16,
+              //     children: List.generate(
+              //       searchedProductData.length,
+              //       (index) => ItemCard(
+              //         product: searchedProductData[index],
+              //       ),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
           SizedBox(),

@@ -1,23 +1,20 @@
+// views/screens/home_page.dart
 import 'dart:async';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Category.dart';
-import 'package:marketky/core/model/Product.dart';
-import 'package:marketky/core/services/CategoryService.dart';
-import 'package:marketky/core/services/ProductService.dart';
 import 'package:marketky/views/screens/empty_cart_page.dart';
 import 'package:marketky/views/screens/message_page.dart';
 import 'package:marketky/views/screens/search_page.dart';
-import 'package:marketky/views/widgets/category_card.dart';
 import 'package:marketky/views/widgets/custom_icon_button_widget.dart';
 import 'package:marketky/views/widgets/dummy_search_widget_1.dart';
 import 'package:marketky/views/widgets/flashsale_countdown_tile.dart';
 import 'package:marketky/views/widgets/item_card.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-
-import '../widgets/carousel_home_page.dart';
+import '../../bloc/product/product_bloc.dart';
+import '../../models/ProductModel.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -25,9 +22,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Category> categoryData = CategoryService.categoryData;
-  List<Product> productData = ProductService.productData;
-
   Timer? flashsaleCountdownTimer;
   Duration flashsaleCountdownDuration = Duration(
     hours: 24 - DateTime.now().hour,
@@ -38,27 +32,23 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    context.read<ProductBloc>().add(FetchProducts());
     startTimer();
   }
 
   void startTimer() {
-    Timer.periodic(Duration(seconds: 1), (_) {
-      setCountdown();
+    flashsaleCountdownTimer = Timer.periodic(Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {
+          final seconds = flashsaleCountdownDuration.inSeconds - 1;
+          if (seconds < 1) {
+            flashsaleCountdownTimer?.cancel();
+          } else {
+            flashsaleCountdownDuration = Duration(seconds: seconds);
+          }
+        });
+      }
     });
-  }
-
-  void setCountdown() {
-    if (this.mounted) {
-      setState(() {
-        final seconds = flashsaleCountdownDuration.inSeconds - 1;
-
-        if (seconds < 1) {
-          flashsaleCountdownTimer?.cancel();
-        } else {
-          flashsaleCountdownDuration = Duration(seconds: seconds);
-        }
-      });
-    }
   }
 
   @override
@@ -69,332 +59,359 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    String seconds = flashsaleCountdownDuration.inSeconds
-        .remainder(60)
-        .toString()
-        .padLeft(2, '0');
-    String minutes = flashsaleCountdownDuration.inMinutes
-        .remainder(60)
-        .toString()
-        .padLeft(2, '0');
-    String hours = flashsaleCountdownDuration.inHours
-        .remainder(24)
-        .toString()
-        .padLeft(2, '0');
+    String seconds = flashsaleCountdownDuration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    String minutes = flashsaleCountdownDuration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    String hours = flashsaleCountdownDuration.inHours.remainder(24).toString().padLeft(2, '0');
 
     return Scaffold(
-      body: ListView(
-        shrinkWrap: true,
-        physics: BouncingScrollPhysics(),
-        children: [
-          // بخش ۱ - هدر
-          // بخش ۱ - هدر با کاروسل در پس‌زمینه و محتوای ثابت
-          Stack(
-            children: [
-              // پس‌زمینه: کاروسل اسلایدر
-              CarouselSlider(
-                items: [
-                  Opacity(opacity: 0.5,child: Image.asset('assets/images/background.png', fit: BoxFit.cover, width: double.infinity,)),
-                  Opacity(opacity: 0.5,child: Image.asset('assets/images/background2.png', fit: BoxFit.cover, width: double.infinity,))
+      body: BlocConsumer<ProductBloc, ProductState>(
+        listener: (context, state) {
+          // برای نمایش SnackBar در صورت خطا یا موفقیت
+        },
+        builder: (context, state) {
+          if (state is ProductLoading) {
+            return _buildLoading();
+          } else if (state is ProductError) {
+            return _buildError(state.message, context);
+          } else if (state is ProductLoaded) {
+            final products = state.products;
+            final flashProducts = products.where((p) => p.discountPercentage != null).toList();
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<ProductBloc>().add(FetchProducts());
+              },
+              child: ListView(
+                physics: BouncingScrollPhysics(),
+                children: [
+                  // بخش ۱ - هدر با کاروسل
+                  _buildHeader(context),
+
+                  // بخش ۲ - دسته‌بندی
+                  _buildCategorySection(),
+
+                  // بخش ۳ - فروش ویژه
+                  if (flashProducts.isNotEmpty)
+                    _buildFlashSaleSection(flashProducts, hours, minutes, seconds),
+
+                  // بخش ۴ - پیشنهاد روز
+                  _buildRecommendationSection(products),
                 ],
-                options: CarouselOptions(
-                  height: 190,
-                  autoPlay: true,
-                  autoPlayInterval: Duration(seconds: 3),
-                  autoPlayAnimationDuration: Duration(milliseconds: 400),
-                  autoPlayCurve: Curves.easeInCirc,
-                  scrollDirection: Axis.horizontal,
-                  viewportFraction: 1.0,
-                  pauseAutoPlayOnTouch: true,
-                  // بدون رنگ تیره کردن، ولی اگر متن خوانا نبود، بعداً اضافه می‌کنیم
-                ),
               ),
+            );
+          }
+          return _buildLoading();
+        },
+      ),
+    );
+  }
 
-              Container(
-                height: 190,
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.1),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(top: 26),
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        textDirection: TextDirection.rtl,
-                        children: [
-                          Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Expanded(
-                              child: Text(
-                                'بهترین ست‌ها\nرا برای خود پیدا کنید.',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontFamily: 'Estedad',
-                                  color: Colors.black,
-                                  fontSize: 18,
-                                  height: 1.5,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Row(
-                            textDirection: TextDirection.ltr,
-                            children: [
-                              CustomIconButtonWidget(
-                                onTap: () {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) => EmptyCartPage()));
-                                },
-                                value: 0,
-                                icon: SvgPicture.asset(
-                                  'assets/icons/Bag.svg',
-                                  color: Colors.black,
-                                ),
-                              ),
-                              SizedBox(width: 16),
-                              CustomIconButtonWidget(
-                                onTap: () {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) => MessagePage()));
-                                },
-                                value: 2,
-                                icon: SvgPicture.asset(
-                                  'assets/icons/Chat.svg',
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 22,),
-                    DummySearchWidget1(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => SearchPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+  Widget _buildHeader(BuildContext context) {
+    return Stack(
+      children: [
+        CarouselSlider(
+          items: [
+            Image.asset('assets/images/background.jpg', fit: BoxFit.cover, width: double.infinity),
+            Image.asset('assets/images/background.png', fit: BoxFit.cover, width: double.infinity),
+            Image.asset('assets/images/background2.png', fit: BoxFit.cover, width: double.infinity),
+          ],
+          options: CarouselOptions(
+            height: 190,
+            autoPlay: true,
+            autoPlayInterval: Duration(seconds: 5),
+            autoPlayAnimationDuration: Duration(milliseconds: 800),
+            scrollDirection: Axis.horizontal,
+            viewportFraction: 1.0,
           ),
-
-          // بخش ۲ - دسته‌بندی‌ها
-          Container(
-            width: MediaQuery.of(context).size.width,
-            color: AppColor.secondary,
-            padding: EdgeInsets.only(top: 12, bottom: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    textDirection: TextDirection.rtl,
-                    children: [
-                      Text(
-                        'دسته‌بندی',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {},
+        ),
+        Container(
+          height: 190,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.1),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.only(top: 26),
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  textDirection: TextDirection.rtl,
+                  children: [
+                    Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: Expanded(
                         child: Text(
-                          'مشاهده بیشتر',
+                          'بهترینها را برای خود پیدا کنید.',
+                          textAlign: TextAlign.right,
                           style: TextStyle(
                             fontFamily: 'Estedad',
-                            color: Colors.white.withOpacity(0.7),
-                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                            fontSize: 18,
+                            height: 1.5,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.white,
-                        ),
                       ),
-                    ],
-                  ),
-                ),
-                // لیست دسته‌ها
-                Align(
-                  alignment: AlignmentGeometry.centerRight,
-                  child: Container(
-                    margin: EdgeInsets.only(top: 12),
-                    height: 96,
-                    child: ListView.separated(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: categoryData.length,
-                      physics: BouncingScrollPhysics(),
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      separatorBuilder: (context, index) {
-                        return SizedBox(width: 16);
-                      },
-                      itemBuilder: (context, index) {
-                        return CategoryCard(
-                          data: categoryData[index],
-                          onTap: () {},
-                        );
-                      },
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // بخش ۳ - فلش سیل (فروش ویژه)
-          Container(
-            margin: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColor.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    textDirection: TextDirection.rtl,
-                    children: [
-                      Text(
-                        'فروش ویژه',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Row(
-                        textDirection: TextDirection.ltr,
-                        children: [
-                          FlashsaleCountdownTile(digit: hours[0]),
-                          FlashsaleCountdownTile(digit: hours[1]),
-                          Text(
-                            ':',
-                            style: TextStyle(
-                              fontFamily: 'Estedad',
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          FlashsaleCountdownTile(digit: minutes[0]),
-                          FlashsaleCountdownTile(digit: minutes[1]),
-                          Text(
-                            ':',
-                            style: TextStyle(
-                              fontFamily: 'Estedad',
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          FlashsaleCountdownTile(digit: seconds[0]),
-                          FlashsaleCountdownTile(digit: seconds[1]),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  height: 310,
-                  child: ListView.separated(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: productData.length,
-                    separatorBuilder: (context, index) => SizedBox(width: 16),
-                    itemBuilder: (context, index) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
+                      textDirection: TextDirection.ltr,
                       children: [
-                        ItemCard(
-                          product: productData[index],
-                          titleColor: AppColor.primarySoft,
-                          priceColor: AppColor.accent,
+                        CustomIconButtonWidget(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => EmptyCartPage()));
+                          },
+                          value: 0,
+                          icon: SvgPicture.asset(
+                            'assets/icons/Bag.svg',
+                            color: Colors.white,
+                          ),
                         ),
-                        Container(
-                          width: 180,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: LinearProgressIndicator(
-                                      minHeight: 10,
-                                      value: 0.4,
-                                      color: AppColor.accent,
-                                      backgroundColor: AppColor.border,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.local_fire_department,
-                                color: AppColor.accent,
-                              ),
-                            ],
+                        SizedBox(width: 16),
+                        CustomIconButtonWidget(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => MessagePage()));
+                          },
+                          value: 2,
+                          icon: SvgPicture.asset(
+                            'assets/icons/Chat.svg',
+                            color: Colors.white,
                           ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 22,),
+              DummySearchWidget1(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SearchPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategorySection() {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      color: AppColor.secondary,
+      padding: EdgeInsets.only(top: 12, bottom: 24),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              textDirection: TextDirection.rtl,
+              children: [
+                Text(
+                  'دسته‌بندی ها',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {},
+                  child: Text(
+                    'مشاهده بیشتر',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      color: Colors.white.withOpacity(0.7),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
                   ),
                 ),
               ],
             ),
-          ),
-
-          // بخش ۴ - پیشنهاد روز
-          Padding(
-            padding: EdgeInsets.only(right: 16, top: 16),
-            child: Text(
-              'پیشنهاد روز برای شما...',
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontFamily: 'Estedad',
-                color: Colors.grey,
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-
-          // لیست محصولات
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: List.generate(
-                productData.length,
-                    (index) => Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: ItemCard(
-                    product: productData[index],
+            SizedBox(height: 12),
+            Container(
+              height: 96,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: 3,
+                separatorBuilder: (_, i) => SizedBox(width: 16),
+                itemBuilder: (_, i) => Container(
+                  width: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'دسته $i',
+                      style: TextStyle(color: Colors.white, fontFamily: 'Estedad'),
+                    ),
                   ),
                 ),
               ),
             ),
-          )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFlashSaleSection(List<Product> products, String hours, String minutes, String seconds) {
+    return Container(
+      margin: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColor.primary,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              textDirection: TextDirection.rtl,
+              children: [
+                Text(
+                  'فروش ویژه',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Row(
+                  textDirection: TextDirection.ltr,
+                  children: [
+                    FlashsaleCountdownTile(digit: hours[0]),
+                    FlashsaleCountdownTile(digit: hours[1]),
+                    Text(':', style: TextStyle(color: Colors.white, fontSize: 16)),
+                    FlashsaleCountdownTile(digit: minutes[0]),
+                    FlashsaleCountdownTile(digit: minutes[1]),
+                    Text(':', style: TextStyle(color: Colors.white, fontSize: 16)),
+                    FlashsaleCountdownTile(digit: seconds[0]),
+                    FlashsaleCountdownTile(digit: seconds[1]),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 310,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              itemCount: products.length,
+              separatorBuilder: (_, i) => SizedBox(width: 16),
+              itemBuilder: (_, index) {
+                final p = products[index];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ItemCard(
+                      product: p,
+                      titleColor: AppColor.primarySoft,
+                      priceColor: AppColor.accent,
+                    ),
+                    Container(
+                      width: 180,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: LinearProgressIndicator(
+                                  minHeight: 10,
+                                  value: 0.6,
+                                  color: AppColor.accent,
+                                  backgroundColor: AppColor.border,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Icon(Icons.local_fire_department, color: AppColor.accent),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationSection(List<Product> products) {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.only(right: 16, top: 16),
+          child: Text(
+            'پیشنهاد روز برای شما...',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontFamily: 'Estedad',
+              color: Colors.grey,
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: products.map((p) => Directionality(
+              textDirection: TextDirection.rtl,
+              child: ItemCard(product: p),
+            )).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoading() {
+    return Center(child: CircularProgressIndicator());
+  }
+
+  Widget _buildError(String message, BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'خطا: $message',
+            style: TextStyle(fontFamily: 'Estedad', color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+              context.read<ProductBloc>().add(FetchProducts());
+            },
+            child: Text('تلاش مجدد', style: TextStyle(fontFamily: 'Estedad')),
+          ),
         ],
       ),
     );

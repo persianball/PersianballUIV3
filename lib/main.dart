@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:flutter/services.dart';
 import 'package:marketky/views/screens/home_page.dart';
 import 'package:marketky/views/screens/otp_verification_page.dart';
 import 'package:marketky/views/screens/welcome_page.dart';
+
+import 'bloc/product/product_bloc.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,7 +30,12 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Estedad',
       ),
-      home: HomePage(),
+      home: BlocProvider(
+        create: (context) => ProductBloc(),
+        child: Builder(builder: (context) {
+          return HomePage();
+        }),
+      ),
     );
   }
 }

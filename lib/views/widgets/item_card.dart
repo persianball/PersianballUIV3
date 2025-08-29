@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Product.dart';
 import 'package:marketky/views/screens/product_detail.dart';
 import 'package:marketky/views/widgets/rating_tag.dart';
+
+import '../../constant/urls.dart';
+import '../../models/ProductModel.dart';
 
 class ItemCard extends StatelessWidget {
   final Product product;
@@ -19,8 +21,8 @@ class ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => ProductDetail(product: product)));
+        // Navigator.of(context).push(MaterialPageRoute(
+        //     builder: (context) => ProductDetail(product: product)));
       },
       child: Container(
         width: MediaQuery.of(context).size.width / 2 - 16 - 8,
@@ -36,10 +38,44 @@ class ItemCard extends StatelessWidget {
               alignment: Alignment.topLeft,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                image: DecorationImage(
-                    image: AssetImage(product.image[0]), fit: BoxFit.cover),
               ),
-              child: RatingTag(value: product.rating),
+              child: Stack(
+                children: [
+                  // پس‌زمینه: تصویر از شبکه یا assets
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      '${URLs.baseUrl}${product.image!}',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        // اگر لود نشد، تصویر assets را نمایش بده
+                        return Image.asset(
+                          'assets/images/placeholder.jpg', // یا png
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        );
+                      },
+                      // اختیاری: نمایش لودینگ
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: Colors.grey[200],
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      },
+                    ),
+                  ),
+                  // محتوای جلو: RatingTag
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    child: RatingTag(value: 0),
+                  ),
+                ],
+              ),
             ),
 
             // item details
@@ -50,7 +86,7 @@ class ItemCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${product.name}',
+                    '${product.nameFarsi}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -69,13 +105,13 @@ class ItemCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    '${product.storeName}',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 10,
-                    ),
-                  )
+                  // Text(
+                  //   '${product.description}',
+                  //   style: TextStyle(
+                  //     color: Colors.grey,
+                  //     fontSize: 10,
+                  //   ),
+                  // )
                 ],
               ),
             )
