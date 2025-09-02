@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/screens/product_detail.dart';
 import 'package:marketky/views/widgets/rating_tag.dart';
 
@@ -101,11 +102,11 @@ class ItemCard extends StatelessWidget {
                   Container(
                     margin: EdgeInsets.only(top: 2, bottom: 8),
                     child: Text(
-                      '${product.price}',
+                      '${thousandSeparator(product.price??0)}',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        fontFamily: 'Poppins',
+                        fontFamily: 'Estedad',
                         color: priceColor,
                       ),
                     ),

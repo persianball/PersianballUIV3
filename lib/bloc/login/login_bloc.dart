@@ -8,20 +8,45 @@ part 'login_state.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   LoginBloc() : super(LoginInitial()) {
-    on<LoginSubmitted>((event, emit) async {
+    on<CheckAuthStatus>((event, emit) async {
       emit(LoginLoading());
-
-      try {
-        final result = await AuthService.login(event.username, event.password);
-
-        if (result['success']) {
-          emit(LoginSuccess(result['data']));
-        } else {
-          emit(LoginFailure(result['message']));
-        }
-      } catch (e) {
-        emit(LoginFailure('خطا در ارتباط با سرور'));
+      final isLoggedIn = await AuthService.isLoggedIn();
+      if (isLoggedIn) {
+        final token = await AuthService.getToken();
+        emit(LoginAuthenticated(token!));
+      } else {
+        emit(LoginUnauthenticated());
       }
+    });
+
+    on<LoginRequested>((event, emit) async {
+      emit(LoginLoading());
+      final result = await AuthService.login(event.username, event.password);
+      if (result['success']) {
+        emit(LoginAuthenticated(result['token']));
+      } else {
+        emit(LoginError(result['message']));
+      }
+    });
+
+    on<RegisterRequested>((event, emit) async {
+      emit(LoginLoading());
+      final result = await AuthService.register(
+        email: event.email,
+        mobileNumber: event.mobileNumber,
+        username: event.username,
+        password: event.password,
+      );
+      if (result['success']) {
+        emit(LoginAuthenticated(result['token']));
+      } else {
+        emit(LoginError(result['message']));
+      }
+    });
+
+    on<LogoutRequested>((event, emit) async {
+      await AuthService.logout();
+      emit(LoginUnauthenticated('شما با موفقیت خارج شدید'));
     });
   }
 }

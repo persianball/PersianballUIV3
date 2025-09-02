@@ -1,6 +1,7 @@
 // bloc/login/login_state.dart
 part of 'login_bloc.dart';
 
+
 abstract class LoginState extends Equatable {
   const LoginState();
 
@@ -12,19 +13,28 @@ class LoginInitial extends LoginState {}
 
 class LoginLoading extends LoginState {}
 
-class LoginSuccess extends LoginState {
-  final Map<String, dynamic> userData;
+class LoginAuthenticated extends LoginState {
+  final String token;
 
-  const LoginSuccess(this.userData);
+  const LoginAuthenticated(this.token);
 
   @override
-  List<Object?> get props => [userData];
+  List<Object?> get props => [token];
 }
 
-class LoginFailure extends LoginState {
+class LoginUnauthenticated extends LoginState {
+  final String? message;
+
+  const LoginUnauthenticated([this.message]);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class LoginError extends LoginState {
   final String message;
 
-  const LoginFailure(this.message);
+  const LoginError(this.message);
 
   @override
   List<Object?> get props => [message];
