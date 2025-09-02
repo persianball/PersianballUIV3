@@ -15,6 +15,7 @@ import 'package:marketky/views/widgets/flashsale_countdown_tile.dart';
 import 'package:marketky/views/widgets/item_card.dart';
 import '../../bloc/product/product_bloc.dart';
 import '../../models/ProductModel.dart';
+import 'cart_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -162,7 +163,7 @@ class _HomePageState extends State<HomePage> {
                         CustomIconButtonWidget(
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => EmptyCartPage()));
+                                builder: (context) => CartPage()));
                           },
                           value: 0,
                           icon: SvgPicture.asset(
@@ -170,33 +171,33 @@ class _HomePageState extends State<HomePage> {
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(width: 16),
-                        CustomIconButtonWidget(
-                          onTap: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => MessagePage()));
-                          },
-                          value: 2,
-                          icon: SvgPicture.asset(
-                            'assets/icons/Chat.svg',
-                            color: Colors.white,
-                          ),
-                        ),
+                        // SizedBox(width: 16),
+                        // CustomIconButtonWidget(
+                        //   onTap: () {
+                        //     Navigator.of(context).push(MaterialPageRoute(
+                        //         builder: (context) => MessagePage()));
+                        //   },
+                        //   value: 2,
+                        //   icon: SvgPicture.asset(
+                        //     'assets/icons/Chat.svg',
+                        //     color: Colors.white,
+                        //   ),
+                        // ),
                       ],
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 22,),
-              DummySearchWidget1(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => SearchPage(),
-                    ),
-                  );
-                },
-              ),
+              // DummySearchWidget1(
+              //   onTap: () {
+              //     Navigator.of(context).push(
+              //       MaterialPageRoute(
+              //         builder: (context) => SearchPage(),
+              //       ),
+              //     );
+              //   },
+              // ),
             ],
           ),
         ),
@@ -273,7 +274,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildFlashSaleSection(List<Product> products, String hours, String minutes, String seconds) {
     return Container(
-      margin: EdgeInsets.all(16),
+      margin: EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: AppColor.primary,
         borderRadius: BorderRadius.circular(10),
@@ -311,48 +312,51 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          Container(
-            height: 310,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              itemCount: products.length,
-              separatorBuilder: (_, i) => SizedBox(width: 16),
-              itemBuilder: (_, index) {
-                final p = products[index];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ItemCard(
-                      product: p,
-                      titleColor: AppColor.primarySoft,
-                      priceColor: AppColor.accent,
-                    ),
-                    Container(
-                      width: 180,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: LinearProgressIndicator(
-                                  minHeight: 10,
-                                  value: 0.6,
-                                  color: AppColor.accent,
-                                  backgroundColor: AppColor.border,
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Container(
+              height: 310,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                itemCount: products.length,
+                separatorBuilder: (_, i) => SizedBox(width: 16),
+                itemBuilder: (_, index) {
+                  final p = products[index];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ItemCard(
+                        product: p,
+                        titleColor: AppColor.primarySoft,
+                        priceColor: AppColor.accent,
+                      ),
+                      Container(
+                        width: 180,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: LinearProgressIndicator(
+                                    minHeight: 10,
+                                    value: 0.6,
+                                    color: AppColor.accent,
+                                    backgroundColor: AppColor.border,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          Icon(Icons.local_fire_department, color: AppColor.accent),
-                        ],
+                            Icon(Icons.local_fire_department, color: AppColor.accent),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -365,14 +369,17 @@ class _HomePageState extends State<HomePage> {
       children: [
         Padding(
           padding: EdgeInsets.only(right: 16, top: 16),
-          child: Text(
-            'پیشنهاد روز برای شما...',
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontFamily: 'Estedad',
-              color: Colors.grey,
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              'پیشنهاد روز برای شما...',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontFamily: 'Estedad',
+                color: Colors.grey,
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
         ),

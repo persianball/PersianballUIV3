@@ -1,15 +1,33 @@
+// views/widgets/modals/add_to_cart_modal.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/screens/cart_page.dart';
+import 'package:marketky/models/CartModel.dart';
+import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:marketky/utils/ThousandsFormatter.dart';
 
 class AddToCartModal extends StatefulWidget {
+  final CartModel product; // محصولی که کاربر می‌خواهد اضافه کند
+
+  const AddToCartModal({Key? key, required this.product}) : super(key: key);
+
   @override
   _AddToCartModalState createState() => _AddToCartModalState();
 }
 
 class _AddToCartModalState extends State<AddToCartModal> {
+  late int _quantity;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantity = 1;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final totalPrice = widget.product.price * _quantity;
+
     return Container(
       height: 190,
       decoration: BoxDecoration(
@@ -20,9 +38,8 @@ class _AddToCartModalState extends State<AddToCartModal> {
       margin: EdgeInsets.symmetric(horizontal: 16),
       padding: EdgeInsets.only(left: 16, right: 16, top: 14, bottom: 20),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // ----------
+          // Indicator
           Container(
             width: MediaQuery.of(context).size.width / 2,
             height: 6,
@@ -32,51 +49,58 @@ class _AddToCartModalState extends State<AddToCartModal> {
               color: AppColor.primarySoft,
             ),
           ),
-          // Section 1 - increment button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                margin: EdgeInsets.only(left: 6),
-                child: Text(
-                  'Jumlah Produk',
+
+          // تعداد
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'تعداد',
                   style: TextStyle(
-                    fontFamily: 'poppins',
+                    fontFamily: 'Estedad',
                     color: Color(0xFF0A0E2F).withOpacity(0.5),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: Icon(Icons.remove, size: 20, color: Colors.black),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: AppColor.primary, shape: CircleBorder(), backgroundColor: AppColor.border,
-                      padding: EdgeInsets.all(0),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => setState(() => _quantity++),
+                      icon: Icon(Icons.add, size: 20, color: Colors.black),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(AppColor.border),
+                        shape: MaterialStateProperty.all(CircleBorder()),
+                        padding: MaterialStateProperty.all(EdgeInsets.all(0)),
+                      ),
                     ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      '2',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, fontFamily: 'poppins'),
+
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        '$_quantity',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, fontFamily: 'Estedad'),
+                      ),
                     ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: Icon(Icons.add, size: 20, color: Colors.black),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: AppColor.primary, shape: CircleBorder(), backgroundColor: AppColor.border,
-                      padding: EdgeInsets.all(0),
+                    IconButton(
+                      onPressed: () {
+                        if (_quantity > 1) setState(() => _quantity--);
+                      },
+                      icon: Icon(Icons.remove, size: 20, color: Colors.black),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(AppColor.border),
+                        shape: MaterialStateProperty.all(CircleBorder()),
+                        padding: MaterialStateProperty.all(EdgeInsets.all(0)),
+                      ),
                     ),
-                  ),
-                ],
-              )
-            ],
+                  ],
+                )
+              ],
+            ),
           ),
-          // Section 2 - Total and add to cart button
+
+          // دکمه افزودن
           Container(
             width: MediaQuery.of(context).size.width,
             margin: EdgeInsets.only(top: 18),
@@ -87,9 +111,8 @@ class _AddToCartModalState extends State<AddToCartModal> {
               color: AppColor.primarySoft,
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
+                Expanded(
                   flex: 7,
                   child: Container(
                     padding: EdgeInsets.only(left: 24),
@@ -97,8 +120,14 @@ class _AddToCartModalState extends State<AddToCartModal> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('TOTAL', style: TextStyle(fontSize: 10, fontFamily: 'poppins')),
-                        Text('Rp 1,429,000', style: TextStyle(fontSize: 16, fontFamily: 'poppins', fontWeight: FontWeight.w700)),
+                        Text('مجموع', style: TextStyle(fontSize: 10, fontFamily: 'Estedad')),
+                        Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Text(
+                            '${thousandSeparator(totalPrice)} تومان',
+                            style: TextStyle(fontSize: 16, fontFamily: 'Estedad', fontWeight: FontWeight.w700),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -107,11 +136,14 @@ class _AddToCartModalState extends State<AddToCartModal> {
                   flex: 6,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => CartPage()));
+                      final item = widget.product.copyWith(quantity: _quantity);
+                      context.read<CartBloc>().add(AddToCart(item));
+                      Navigator.of(context).pop(); // بستن مودال
                     },
                     child: Text(
-                      'Add to Cart',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'poppins'),
+                      'افزودن به سبد',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'Estedad',
+                      color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColor.primary,

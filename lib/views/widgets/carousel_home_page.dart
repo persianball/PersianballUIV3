@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:marketky/views/screens/search_page.dart';
 
+import '../screens/cart_page.dart';
 import 'custom_icon_button_widget.dart';
 import 'dummy_search_widget_1.dart';
 import '../screens/empty_cart_page.dart';
@@ -50,7 +51,7 @@ Widget buildCarouselItem(BuildContext context,String imageUrl) {
                   CustomIconButtonWidget(
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => EmptyCartPage()));
+                          builder: (context) => CartPage()));
                     },
                     value: 0,
                     icon: SvgPicture.asset(

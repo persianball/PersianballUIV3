@@ -72,12 +72,9 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ),
-      body: BlocProvider(
-        create: (context) => LoginBloc(),
-        child: Builder(builder: (context) {
-          return _buildBody(context);
-        }),
-      ),
+      body: Builder(builder: (context) {
+        return _buildBody(context);
+      }),
     );
   }
 
@@ -102,14 +99,17 @@ class LoginPage extends StatelessWidget {
         ),
         Container(
           margin: EdgeInsets.only(bottom: 32),
-          child: Text(
-            ' به کمک شماره تلفن یا ایمیل خود وارد شوید.',
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontFamily: 'Estedad',
-              color: AppColor.secondary.withOpacity(0.7),
-              fontSize: 12,
-              height: 1.5,
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              ' به کمک شماره تلفن یا ایمیل خود وارد شوید.',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontFamily: 'Estedad',
+                color: AppColor.secondary.withOpacity(0.7),
+                fontSize: 12,
+                height: 1.5,
+              ),
             ),
           ),
         ),
@@ -222,18 +222,18 @@ class LoginPage extends StatelessWidget {
               // Error Message (با BlocConsumer)
               BlocConsumer<LoginBloc, LoginState>(
                 listener: (context, state) {
-                  if (state is LoginSuccess) {
+                  if (state is LoginAuthenticated) {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(builder: (context) => PageSwitcher()),
                     );
                   }
                 },
                 builder: (context, state) {
-                  if (state is LoginFailure) {
+                  if (state is LoginUnauthenticated) {
                     return Container(
                       margin: EdgeInsets.only(bottom: 16),
                       child: Text(
-                        state.message,
+                        state.message??"",
                         style: TextStyle(
                           color: Colors.red,
                           fontFamily: 'Estedad',
@@ -257,9 +257,9 @@ class LoginPage extends StatelessWidget {
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         context.read<LoginBloc>().add(
-                          LoginSubmitted(
-                            username: _emailController.text.trim(),
-                            password: _passwordController.text,
+                          LoginRequested(
+                            _emailController.text.trim(),
+                            _passwordController.text,
                           ),
                         );
                       }

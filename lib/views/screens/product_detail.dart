@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/core/model/Review.dart';
+import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/ColorWay.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
@@ -17,6 +18,7 @@ import 'package:marketky/views/widgets/review_tile.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
 import 'package:marketky/views/widgets/selectable_circle_size.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product_detail/product_detail_bloc.dart';
 import '../../bloc/product_detail/product_detail_event.dart';
 import '../../bloc/product_detail/product_detail_state.dart';
@@ -84,7 +86,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           showModalBottomSheet(
                             context: context,
                             backgroundColor: Colors.transparent,
-                            builder: (context) => AddToCartModal(),
+                            builder: (context) => AddToCartModal(
+                              product: CartModel(
+                                id: state.product.id,
+                                name: "ست لباس پرشین بال",
+                                image: state.product.image!,
+                                price: state.product.price!,
+                                quantity: 1,
+                              ),
+                            ),
                           );
                         },
                         child: Text(

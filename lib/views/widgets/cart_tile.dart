@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Cart.dart';
+import 'package:marketky/models/CartModel.dart';
 
 class CartTile extends StatelessWidget {
-  final Cart data;
+  final CartModel data;
   CartTile({required this.data});
   @override
   Widget build(BuildContext context) {
@@ -86,7 +86,7 @@ class CartTile extends StatelessWidget {
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  '${data.count}',
+                                  '${data.quantity}',
                                   style: TextStyle(fontFamily: 'poppins', fontWeight: FontWeight.w500),
                                 ),
                               ),

@@ -16,3 +16,8 @@ class FetchProductDetail extends ProductDetailEvent {
   @override
   List<Object?> get props => [productId];
 }
+
+// class ChangeProductColor extends ProductDetailEvent{
+//   final int varientIndex;
+//
+// }
