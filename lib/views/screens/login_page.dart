@@ -102,7 +102,7 @@ class LoginPage extends StatelessWidget {
           child: Directionality(
             textDirection: TextDirection.rtl,
             child: Text(
-              ' به کمک شماره تلفن یا ایمیل خود وارد شوید.',
+              ' به کمک نام کاربری خود وارد شوید.',
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontFamily: 'Estedad',
@@ -128,7 +128,7 @@ class LoginPage extends StatelessWidget {
                   textDirection: TextDirection.ltr,
                   style: TextStyle(fontFamily: 'Estedad'),
                   decoration: InputDecoration(
-                    hintText: 'شماره تلفن یا ایمیل',
+                    hintText: 'نام کاربری',
                     hintStyle: TextStyle(fontFamily: 'Estedad'),
                     prefixIcon: Container(
                       padding: EdgeInsets.all(12),
@@ -198,26 +198,26 @@ class LoginPage extends StatelessWidget {
               ),
 
               // Forgot Password
-              Container(
-                alignment: Alignment.center,
-                child: TextButton(
-                  onPressed: () {
-                    // forgot password page
-                  },
-                  child: Text(
-                    'فراموشی رمز عبور',
-                    style: TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 12,
-                      color: AppColor.secondary.withOpacity(0.5),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColor.primary.withOpacity(0.1),
-                  ),
-                ),
-              ),
+              // Container(
+              //   alignment: Alignment.center,
+              //   child: TextButton(
+              //     onPressed: () {
+              //       // forgot password page
+              //     },
+              //     child: Text(
+              //       'فراموشی رمز عبور',
+              //       style: TextStyle(
+              //         fontFamily: 'Estedad',
+              //         fontSize: 12,
+              //         color: AppColor.secondary.withOpacity(0.5),
+              //         fontWeight: FontWeight.w700,
+              //       ),
+              //     ),
+              //     style: TextButton.styleFrom(
+              //       foregroundColor: AppColor.primary.withOpacity(0.1),
+              //     ),
+              //   ),
+              // ),
 
               // Error Message (با BlocConsumer)
               BlocConsumer<LoginBloc, LoginState>(
@@ -246,7 +246,7 @@ class LoginPage extends StatelessWidget {
                   return SizedBox.shrink();
                 },
               ),
-
+              SizedBox(height: 16),
               // Loading یا دکمه ورود
               BlocBuilder<LoginBloc, LoginState>(
                 builder: (context, state) {

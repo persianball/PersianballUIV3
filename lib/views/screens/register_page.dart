@@ -514,44 +514,44 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
 
               // Social Login (اختیاری)
-              Container(
-                alignment: Alignment.center,
-                margin: EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'یا با این روش‌ها ادامه دهید',
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {},
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset('assets/icons/Google.svg'),
-                    SizedBox(width: 16),
-                    Text(
-                      'ادامه با گوگل',
-                      style: TextStyle(
-                        fontFamily: 'Estedad',
-                        color: AppColor.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    )
-                  ],
-                ),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: AppColor.primary,
-                  backgroundColor: AppColor.primarySoft,
-                  padding: EdgeInsets.symmetric(horizontal: 36, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                  shadowColor: Colors.transparent,
-                ),
-              ),
+              // Container(
+              //   alignment: Alignment.center,
+              //   margin: EdgeInsets.symmetric(vertical: 16),
+              //   child: Text(
+              //     'یا با این روش‌ها ادامه دهید',
+              //     style: TextStyle(
+              //       fontFamily: 'Estedad',
+              //       fontSize: 12,
+              //       color: Colors.grey[600],
+              //     ),
+              //   ),
+              // ),
+              // ElevatedButton(
+              //   onPressed: () {},
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.center,
+              //     children: [
+              //       SvgPicture.asset('assets/icons/Google.svg'),
+              //       SizedBox(width: 16),
+              //       Text(
+              //         'ادامه با گوگل',
+              //         style: TextStyle(
+              //           fontFamily: 'Estedad',
+              //           color: AppColor.secondary,
+              //           fontWeight: FontWeight.w600,
+              //         ),
+              //       )
+              //     ],
+              //   ),
+              //   style: ElevatedButton.styleFrom(
+              //     foregroundColor: AppColor.primary,
+              //     backgroundColor: AppColor.primarySoft,
+              //     padding: EdgeInsets.symmetric(horizontal: 36, vertical: 12),
+              //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              //     elevation: 0,
+              //     shadowColor: Colors.transparent,
+              //   ),
+              // ),
             ],
           ),
         ),

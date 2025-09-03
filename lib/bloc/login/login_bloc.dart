@@ -23,7 +23,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       emit(LoginLoading());
       final result = await AuthService.login(event.username, event.password);
       if (result['success']) {
-        emit(LoginAuthenticated(result['token']));
+        emit(LoginAuthenticated(result['data']['token']));
       } else {
         emit(LoginError(result['message']));
       }
@@ -38,7 +38,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         password: event.password,
       );
       if (result['success']) {
-        emit(LoginAuthenticated(result['token']));
+        emit(LoginAuthenticated(result['data']['token']));
       } else {
         emit(LoginError(result['message']));
       }
