@@ -32,3 +32,13 @@ class ProductDetailError extends ProductDetailState {
   @override
   List<Object?> get props => [message];
 }
+
+class ProductDetailChangedState extends ProductDetailState {
+  final ProductVariant productVariant;
+
+
+  const ProductDetailChangedState(this.productVariant);
+
+  @override
+  List<Object?> get props => [productVariant];
+}

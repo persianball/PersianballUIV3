@@ -39,7 +39,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   void initState() {
     super.initState();
     context.read<ProductDetailBloc>().add(FetchProductDetail(widget.productId));
-
   }
 
   @override
@@ -113,6 +112,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ),
       body: BlocBuilder<ProductDetailBloc, ProductDetailState>(
         builder: (context, state) {
+
           if (state is ProductDetailLoading) {
             return _buildLoading();
           } else if (state is ProductDetailError) {
@@ -120,6 +120,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           } else if (state is ProductDetailLoaded) {
             if(state.product.image != null){
               state.product.images.add(state.product.image!);
+            }
+            if(!state.product.variants.isEmpty){
+              context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(
+                state.product.variants[0]
+              ));
             }
             return _buildProductContent(state.product, context);
           }
@@ -159,26 +164,273 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Widget _buildProductContent(ProductDetail product, BuildContext context) {
     final PageController imageController = PageController();
-    print(product.images);
-    return ListView(
-      physics: BouncingScrollPhysics(),
-      children: [
-        // بخش ۱ - تصویر و اپ‌بار
-        GestureDetector(
-          onTap: (){
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => ImageViewer(
-                  imageUrl: product.images.map((img) => '${URLs.baseUrl}$img').toList(),
+    return BlocBuilder<ProductDetailVariantBloc,ProductDetailState>(
+      builder: (context, variant_state) {
+        if(variant_state is ProductDetailChangedState){
+          return ListView(
+            physics: BouncingScrollPhysics(),
+            children: [
+              // بخش ۱ - تصویر و اپ‌بار
+              GestureDetector(
+                onTap: (){
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ImageViewer(
+                        imageUrl: variant_state.productVariant.images.map((img) => '${URLs.baseUrl}$img').toList(),
+                      ),
+                    ),
+                  );
+                },
+                child: Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ImageViewer(
+                              imageUrl: variant_state.productVariant.images.map((img) => '${URLs.baseUrl}$img').toList(),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: 310,
+                        child: PageView(
+                          controller: imageController,
+                          children: variant_state.productVariant.images.map((url) {
+                            final fullUrl = '${URLs.baseUrl}$url';
+
+                            return Image.network(
+                              fullUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
+                              loadingBuilder: (ctx, child, loading) {
+                                return loading == null ? child : Center(child: CircularProgressIndicator());
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                    CustomAppBar(
+                      title: product.category.nameFarsi,
+                      leftIcon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+                      rightIcon: SvgPicture.asset('assets/icons/Bookmark.svg', color: Colors.black.withOpacity(0.5)),
+                      leftOnTap: () => Navigator.of(context).pop(),
+                      rightOnTap: () {},
+                    ),
+                    variant_state.productVariant.images.length > 0 ? Positioned(
+                      bottom: 16,
+                      child: SmoothPageIndicator(
+                        controller: imageController,
+                        count: variant_state.productVariant.images.length,
+                        effect: ExpandingDotsEffect(
+                          dotColor: AppColor.primary.withOpacity(0.2),
+                          activeDotColor: AppColor.primary.withOpacity(0.2),
+                          dotHeight: 8,
+                        ),
+                      )
+                      ,
+                    ):Positioned(
+                      bottom: 1,
+                      child: Container(
+                        child: Image.asset(
+                          "assets/images/placeholder.jpg",
+                          fit: BoxFit.fitWidth,
+                          width: MediaQuery.of(context).size.width,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
-          child: Stack(
-            alignment: Alignment.topCenter,
+
+              // بخش ۲ - اطلاعات محصول
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              product.nameFarsi ?? '',
+                              style: TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: AppColor.secondary,
+                              ),
+                            ),
+                          ),
+                          Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: RatingTag(value: product.avgRate, margin: EdgeInsets.only(left: 10))),
+                        ],
+                      ),
+                    ),
+                    if (product.price != null)
+                      Container(
+                        margin: EdgeInsets.only(top: 8, bottom: 14),
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Text(
+                            '${thousandSeparator(product.price!)} تومان',
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColor.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // بخش ۳ - انتخاب رنگ
+                    if (product.variants.isNotEmpty)
+                      Align(
+                        alignment: AlignmentGeometry.centerRight,
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            margin: EdgeInsets.only(bottom: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'رنگ',
+                                  style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColor.secondary,
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+                                SelectableCircleColor(
+                                  colorWay: product.variants
+                                      .map((v) => ColorWay(
+                                    color: Color(int.parse("ff"+v.colorRgb! ??"00000000",radix: 16)),
+                                    name: v.color??"ناشناس",
+                                    imageUrl: v.image != null ? '${URLs.baseUrl}${v.image}' : null,
+
+                                  ))
+                                      .toList(),
+                                  onColorSelected: (int vIndex) {
+
+                                    context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(product.variants[vIndex]));
+
+
+
+                                    // if (imageUrl != null) {
+                                    //   // پیدا کردن ایندکس تصویر در لیست
+                                    //   final index = product.images.indexWhere((img) => '${URLs.baseUrl}$img' == imageUrl);
+                                    //   if (index != -1 && index < product.images.length) {
+                                    //     imageController.animateToPage(
+                                    //       index,
+                                    //       duration: Duration(milliseconds: 300),
+                                    //       curve: Curves.easeInOut,
+                                    //     );
+                                    //   }
+                                    // }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: Text(
+                        product.description ?? '',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          color: AppColor.secondary.withOpacity(0.7),
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.justify,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+
+
+
+              // بخش ۴ - انتخاب سایز (در صورت وجود)
+              // (نیاز به تعریف سایز در مدل دارید — در صورت نیاز اضافه می‌شود)
+
+              // بخش ۵ - نظرات
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ExpansionTile(
+                        initiallyExpanded: true,
+                        title: Text(
+                          'نظرات',
+                          style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColor.secondary,
+                          ),
+                        ),
+                        children: [
+                          // در اینجا می‌تونی لیست نظرات واقعی رو بیاری
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: product.comments.length,
+                            itemBuilder: (ctx, i) => ReviewTile(review: Review(photoUrl: "assets/images/avatar_for_comments.png", name: " ${i} : ", review: product.comments[i].text , rating: 5)),
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(left: 52, top: 12, bottom: 6),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => ReviewsPage(reviews: [])),
+                                );
+                              },
+                              child: Text(
+                                'مشاهده همه نظرات',
+                                style: TextStyle(fontFamily: 'Estedad', color: AppColor.secondary, fontWeight: FontWeight.w600),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColor.primarySoft,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }else{
+          return ListView(
+            physics: BouncingScrollPhysics(),
             children: [
+              // بخش ۱ - تصویر و اپ‌بار
               GestureDetector(
-                onTap: () {
+                onTap: (){
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => ImageViewer(
@@ -187,223 +439,250 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   );
                 },
-                child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: 310,
-                  child: PageView(
-                    controller: imageController,
-                    children: product.images.map((url) {
-                      final fullUrl = '${URLs.baseUrl}$url';
-                      print(fullUrl);
-                      return Image.network(
-                        fullUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
-                        loadingBuilder: (ctx, child, loading) {
-                          return loading == null ? child : Center(child: CircularProgressIndicator());
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-              CustomAppBar(
-                title: product.category.nameFarsi,
-                leftIcon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
-                rightIcon: SvgPicture.asset('assets/icons/Bookmark.svg', color: Colors.black.withOpacity(0.5)),
-                leftOnTap: () => Navigator.of(context).pop(),
-                rightOnTap: () {},
-              ),
-              product.images.length > 0 ? Positioned(
-                bottom: 16,
-                child: SmoothPageIndicator(
-                  controller: imageController,
-                  count: product.images.length,
-                  effect: ExpandingDotsEffect(
-                    dotColor: AppColor.primary.withOpacity(0.2),
-                    activeDotColor: AppColor.primary.withOpacity(0.2),
-                    dotHeight: 8,
-                  ),
-                )
-                ,
-              ):Positioned(
-                bottom: 1,
-                child: Container(
-                  child: Image.asset(
-                    "assets/images/placeholder.jpg",
-                    fit: BoxFit.fitWidth,
-                    width: MediaQuery.of(context).size.width,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // بخش ۲ - اطلاعات محصول
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Directionality(
-                textDirection: TextDirection.rtl,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Stack(
+                  alignment: Alignment.topCenter,
                   children: [
-                    Expanded(
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ImageViewer(
+                              imageUrl: product.images.map((img) => '${URLs.baseUrl}$img').toList(),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: 310,
+                        child: PageView(
+                          controller: imageController,
+                          children: product.images.map((url) {
+                            final fullUrl = '${URLs.baseUrl}$url';
+
+                            return Image.network(
+                              fullUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
+                              loadingBuilder: (ctx, child, loading) {
+                                return loading == null ? child : Center(child: CircularProgressIndicator());
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                    CustomAppBar(
+                      title: product.category.nameFarsi,
+                      leftIcon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+                      rightIcon: SvgPicture.asset('assets/icons/Bookmark.svg', color: Colors.black.withOpacity(0.5)),
+                      leftOnTap: () => Navigator.of(context).pop(),
+                      rightOnTap: () {},
+                    ),
+                    product.images.length > 0 ? Positioned(
+                      bottom: 16,
+                      child: SmoothPageIndicator(
+                        controller: imageController,
+                        count: product.images.length,
+                        effect: ExpandingDotsEffect(
+                          dotColor: AppColor.primary.withOpacity(0.2),
+                          activeDotColor: AppColor.primary.withOpacity(0.2),
+                          dotHeight: 8,
+                        ),
+                      )
+                      ,
+                    ):Positioned(
+                      bottom: 1,
+                      child: Container(
+                        child: Image.asset(
+                          "assets/images/placeholder.jpg",
+                          fit: BoxFit.fitWidth,
+                          width: MediaQuery.of(context).size.width,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // بخش ۲ - اطلاعات محصول
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              product.nameFarsi ?? '',
+                              style: TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: AppColor.secondary,
+                              ),
+                            ),
+                          ),
+                          Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: RatingTag(value: product.avgRate, margin: EdgeInsets.only(left: 10))),
+                        ],
+                      ),
+                    ),
+                    if (product.price != null)
+                      Container(
+                        margin: EdgeInsets.only(top: 8, bottom: 14),
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Text(
+                            '${thousandSeparator(product.price!)} تومان',
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColor.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // بخش ۳ - انتخاب رنگ
+                    if (product.variants.isNotEmpty)
+                      Align(
+                        alignment: AlignmentGeometry.centerRight,
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            margin: EdgeInsets.only(bottom: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'رنگ',
+                                  style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColor.secondary,
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+                                SelectableCircleColor(
+                                  colorWay: product.variants
+                                      .map((v) => ColorWay(
+                                    color: Color(int.parse("ff"+v.colorRgb! ??"00000000",radix: 16)),
+                                    name: v.color??"ناشناس",
+                                    imageUrl: v.image != null ? '${URLs.baseUrl}${v.image}' : null,
+
+                                  )).toList(),
+                                  onColorSelected: (int vIndex) {
+
+                                    context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(product.variants[vIndex]));
+
+
+                                    // if (imageUrl != null) {
+                                    //   // پیدا کردن ایندکس تصویر در لیست
+                                    //   final index = product.images.indexWhere((img) => '${URLs.baseUrl}$img' == imageUrl);
+                                    //   if (index != -1 && index < product.images.length) {
+                                    //     imageController.animateToPage(
+                                    //       index,
+                                    //       duration: Duration(milliseconds: 300),
+                                    //       curve: Curves.easeInOut,
+                                    //     );
+                                    //   }
+                                    // }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    Directionality(
+                      textDirection: TextDirection.rtl,
                       child: Text(
-                        product.nameFarsi ?? '',
+                        product.description ?? '',
                         style: TextStyle(
                           fontFamily: 'Estedad',
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: AppColor.secondary,
+                          color: AppColor.secondary.withOpacity(0.7),
+                          height: 1.5,
                         ),
+                        textAlign: TextAlign.justify,
                       ),
                     ),
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                        child: RatingTag(value: product.avgRate, margin: EdgeInsets.only(left: 10))),
                   ],
                 ),
               ),
-              if (product.price != null)
-                Container(
-                  margin: EdgeInsets.only(top: 8, bottom: 14),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Text(
-                      '${thousandSeparator(product.price!)} تومان',
-                      style: TextStyle(
-                        fontFamily: 'Estedad',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColor.primary,
-                      ),
-                    ),
-                  ),
-                ),
+
+
+
+
+              // بخش ۴ - انتخاب سایز (در صورت وجود)
+              // (نیاز به تعریف سایز در مدل دارید — در صورت نیاز اضافه می‌شود)
+
+              // بخش ۵ - نظرات
               Directionality(
                 textDirection: TextDirection.rtl,
-                child: Text(
-                  product.description ?? '',
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    color: AppColor.secondary.withOpacity(0.7),
-                    height: 1.5,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ExpansionTile(
+                        initiallyExpanded: true,
+                        title: Text(
+                          'نظرات',
+                          style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColor.secondary,
+                          ),
+                        ),
+                        children: [
+                          // در اینجا می‌تونی لیست نظرات واقعی رو بیاری
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: product.comments.length,
+                            itemBuilder: (ctx, i) => ReviewTile(review: Review(photoUrl: "assets/images/avatar_for_comments.png", name: " ${i} : ", review: product.comments[i].text , rating: 5)),
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(left: 52, top: 12, bottom: 6),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => ReviewsPage(reviews: [])),
+                                );
+                              },
+                              child: Text(
+                                'مشاهده همه نظرات',
+                                style: TextStyle(fontFamily: 'Estedad', color: AppColor.secondary, fontWeight: FontWeight.w600),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColor.primarySoft,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.justify,
                 ),
               ),
             ],
-          ),
-        ),
+          );
+        }
 
-        // بخش ۳ - انتخاب رنگ
-        if (product.variants.isNotEmpty)
-          Directionality(
-            textDirection: TextDirection.rtl,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              margin: EdgeInsets.only(bottom: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'رنگ',
-                    style: TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.secondary,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  SelectableCircleColor(
-                    colorWay: product.variants
-                        .map((v) => ColorWay(
-                      color: Color(int.parse("ff"+v.colorRgb! ??"00000000",radix: 16)),
-                      name: v.color??"ناشناس",
-                      imageUrl: v.image != null ? '${URLs.baseUrl}${v.image}' : null,
-                    ))
-                        .toList(),
-                    onColorSelected: (String? imageUrl) {
-                      if (imageUrl != null) {
-                        // پیدا کردن ایندکس تصویر در لیست
-                        final index = product.images.indexWhere((img) => '${URLs.baseUrl}$img' == imageUrl);
-                        if (index != -1 && index < product.images.length) {
-                          imageController.animateToPage(
-                            index,
-                            duration: Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-
-        // بخش ۴ - انتخاب سایز (در صورت وجود)
-        // (نیاز به تعریف سایز در مدل دارید — در صورت نیاز اضافه می‌شود)
-
-        // بخش ۵ - نظرات
-        Directionality(
-          textDirection: TextDirection.rtl,
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ExpansionTile(
-                  initiallyExpanded: true,
-                  title: Text(
-                    'نظرات',
-                    style: TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.secondary,
-                    ),
-                  ),
-                  children: [
-                    // در اینجا می‌تونی لیست نظرات واقعی رو بیاری
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: product.comments.length,
-                      itemBuilder: (ctx, i) => ReviewTile(review: Review(photoUrl: "assets/images/avatar_for_comments.png", name: " ${i} : ", review: product.comments[i].text , rating: 5)),
-                    ),
-                    Container(
-                      margin: EdgeInsets.only(left: 52, top: 12, bottom: 6),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => ReviewsPage(reviews: [])),
-                          );
-                        },
-                        child: Text(
-                          'مشاهده همه نظرات',
-                          style: TextStyle(fontFamily: 'Estedad', color: AppColor.secondary, fontWeight: FontWeight.w600),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.primarySoft,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          elevation: 0,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+      }
     );
   }
 }

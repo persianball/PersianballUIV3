@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/bloc/login/login_bloc.dart';
+import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:flutter/services.dart';
 import 'package:marketky/views/screens/home_page.dart';
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => CartBloc()),
         BlocProvider(create: (context) => authBloc),
         BlocProvider(create: (context) => ProductBloc()),
+        BlocProvider(create: (context) => ProductDetailVariantBloc() )
       ],
       child:
          MaterialApp(

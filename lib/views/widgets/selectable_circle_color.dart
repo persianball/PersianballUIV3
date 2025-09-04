@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/ColorWay.dart';
+import 'package:marketky/models/ProductModel.dart';
 
 class SelectableCircleColor extends StatefulWidget {
   final EdgeInsetsGeometry? margin, padding;
   final List<ColorWay> colorWay;
-  final ValueChanged<String?> onColorSelected; // فراخوانی وقتی رنگ تغییر کرد
+  final ValueChanged<int> onColorSelected; // فراخوانی وقتی رنگ تغییر کرد
 
   SelectableCircleColor({
     Key? key,
@@ -20,10 +21,11 @@ class SelectableCircleColor extends StatefulWidget {
 }
 
 class _SelectableCircleState extends State<SelectableCircleColor> {
-  int? _selectedIndex;
+  int? _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+
     return Container(
       margin: widget.margin,
       padding: widget.padding,
@@ -39,8 +41,10 @@ class _SelectableCircleState extends State<SelectableCircleColor> {
                 setState(() {
                   _selectedIndex = index;
                 });
+
+
                 // ارسال آدرس تصویر به صفحه والد
-                widget.onColorSelected(variant.imageUrl);
+                widget.onColorSelected(index);
               },
               child: Container(
                 decoration: BoxDecoration(

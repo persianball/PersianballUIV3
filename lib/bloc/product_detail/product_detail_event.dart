@@ -1,5 +1,6 @@
 
 import 'package:equatable/equatable.dart';
+import 'package:marketky/models/ProductModel.dart';
 
 abstract class ProductDetailEvent extends Equatable {
   const ProductDetailEvent();
@@ -17,7 +18,13 @@ class FetchProductDetail extends ProductDetailEvent {
   List<Object?> get props => [productId];
 }
 
-// class ChangeProductColor extends ProductDetailEvent{
-//   final int varientIndex;
-//
-// }
+class ChangeProductColorEvent extends ProductDetailEvent{
+  final ProductVariant prdouctVar;
+
+
+  const ChangeProductColorEvent(this.prdouctVar);
+
+  @override
+  List<Object?> get props => [prdouctVar];
+
+}

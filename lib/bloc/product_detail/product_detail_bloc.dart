@@ -30,5 +30,17 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
         emit(ProductDetailError('خطا در ارتباط با سرور'));
       }
     });
+
+  }
+}
+
+class ProductDetailVariantBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
+  ProductDetailVariantBloc() : super(ProductDetailInitial()) {
+
+
+    on<ChangeProductColorEvent>((event, emit) async {
+      print("ChangeProductColorEvent");
+      emit(ProductDetailChangedState(event.prdouctVar));
+    });
   }
 }
