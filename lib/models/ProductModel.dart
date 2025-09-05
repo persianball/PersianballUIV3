@@ -63,6 +63,7 @@ class ProductDetail {
   final List<SimilarProduct> similarProducts;
   final double avgRate;
   final List<ProductComment> comments;
+  final String? editor;
 
   ProductDetail({
     required this.id,
@@ -79,7 +80,8 @@ class ProductDetail {
     required this.category,
     required this.similarProducts,
     required this.avgRate,
-    required this.comments
+    required this.comments,
+    this.editor
   });
 
   factory ProductDetail.fromJson(Map<String, dynamic> json) {
@@ -99,6 +101,7 @@ class ProductDetail {
       similarProducts: (json['simillar_products'] as List).map((v) => SimilarProduct.fromJson(v)).toList(),
       avgRate: (json['avg_rate'] ?? 0.0).toDouble(),
       comments: (json['comments'] as List).map((v) => ProductComment.fromJson(v)).toList(),
+      editor: json['editor'] ?? ""
     );
   }
 }

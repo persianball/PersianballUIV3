@@ -35,9 +35,14 @@ dependencies:
   cached_network_image: ^3.4.1
   intl: ^0.20.2
   shared_preferences: ^2.5.3
+
+  # just for test circular animation
   circular_reveal_animation: ^2.0.2
+  # for show video in product detail
   video_player: ^2.10.0
   chewie: ^1.12.1
+  # for html render in product detail
+  flutter_html: ^3.0.0
 
 
 dev_dependencies:
