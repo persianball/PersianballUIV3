@@ -12,8 +12,9 @@ import 'package:marketky/views/screens/welcome_page.dart';
 import 'bloc/product/product_bloc.dart';
 
 void main() {
-  runApp(MyApp());
   WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
+
 
 
 

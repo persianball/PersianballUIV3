@@ -40,7 +40,13 @@ class ProductDetailVariantBloc extends Bloc<ProductDetailEvent, ProductDetailSta
 
     on<ChangeProductColorEvent>((event, emit) async {
       print("ChangeProductColorEvent");
-      emit(ProductDetailChangedState(event.prdouctVar));
+      emit(ProductDetailChangedState(event.prdouctVar,event.productSize));
+    });
+
+
+    on<ChangeProductSizeEvent>((event, emit) async {
+      print("ChangeProductSizeEvent");
+      emit(ProductDetailSizeChanged(event.productVariant,event.productSize));
     });
   }
 }

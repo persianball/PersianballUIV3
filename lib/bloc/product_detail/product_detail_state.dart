@@ -1,6 +1,7 @@
 
 
 import 'package:equatable/equatable.dart';
+import 'package:marketky/core/model/ProductSize.dart';
 
 import '../../models/ProductModel.dart';
 
@@ -35,10 +36,22 @@ class ProductDetailError extends ProductDetailState {
 
 class ProductDetailChangedState extends ProductDetailState {
   final ProductVariant productVariant;
+  final SizeVariant? productSize;
 
 
-  const ProductDetailChangedState(this.productVariant);
+  const ProductDetailChangedState(this.productVariant,this.productSize);
 
   @override
   List<Object?> get props => [productVariant];
+}
+
+class ProductDetailSizeChanged extends ProductDetailState{
+  final ProductVariant productVariant;
+  final SizeVariant productSize;
+
+
+  const ProductDetailSizeChanged(this.productVariant,this.productSize);
+
+  @override
+  List<Object?> get props => [productVariant,productSize];
 }

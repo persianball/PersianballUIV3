@@ -1,4 +1,5 @@
 // views/screens/product_detail.dart
+import 'package:circular_reveal_animation/circular_reveal_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,6 +9,7 @@ import 'package:marketky/core/model/Review.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/ColorWay.dart';
 import 'package:marketky/models/ProductModel.dart';
+import 'package:marketky/models/VideoDetail.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/screens/reviews_page.dart';
@@ -18,10 +20,12 @@ import 'package:marketky/views/widgets/review_tile.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
 import 'package:marketky/views/widgets/selectable_circle_size.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:video_player/video_player.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product_detail/product_detail_bloc.dart';
 import '../../bloc/product_detail/product_detail_event.dart';
 import '../../bloc/product_detail/product_detail_state.dart';
+import '../widgets/video_player.dart';
 
 
 class ProductDetailPage extends StatefulWidget {
@@ -33,11 +37,23 @@ class ProductDetailPage extends StatefulWidget {
   State<ProductDetailPage> createState() => _ProductDetailPageState();
 }
 
-class _ProductDetailPageState extends State<ProductDetailPage> {
-
+class _ProductDetailPageState extends State<ProductDetailPage> with SingleTickerProviderStateMixin {
+  late AnimationController animationController;
+  late Animation<double> animation;
   @override
   void initState() {
     super.initState();
+    animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1000),
+    );
+    animation = CurvedAnimation(
+      parent: animationController,
+      curve: Curves.easeIn,
+
+    );
+
+
     context.read<ProductDetailBloc>().add(FetchProductDetail(widget.productId));
   }
 
@@ -72,36 +88,55 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       child: SvgPicture.asset('assets/icons/Chat.svg', color: Colors.white),
                     ),
                   ),
-                  Expanded(
-                    child: SizedBox(
-                      height: 64,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
-                        ),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) => AddToCartModal(
-                              product: CartModel(
-                                id: state.product.id,
-                                name: "ست لباس پرشین بال",
-                                image: state.product.image!,
-                                price: state.product.price!,
-                                quantity: 1,
-                              ),
+                  BlocBuilder<ProductDetailVariantBloc,ProductDetailState>(
+                    builder: (context,variant_state) {
+                      return Expanded(
+                        child: SizedBox(
+                          height: 64,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColor.primary,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 0,
                             ),
-                          );
-                        },
-                        child: Text(
-                          'افزودن به سبد',
-                          style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) => AddToCartModal(
+                                  product: CartModel(
+                                    id: state.product.id,
+                                    name: "ست لباس پرشین بال",
+                                    image: state.product.image!,
+                                    price: state.product.price!,
+                                    quantity: 1,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Builder(
+                              builder: (context) {
+                                if(variant_state is ProductDetailChangedState){
+                                  return Text(
+                                    'افزودن به سبد',
+                                    style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
+                                  );
+                                }else{
+                                  return Directionality(
+                                    textDirection: TextDirection.rtl,
+                                    child: Text(
+                                      'لطفا رنگ و اندازه را انتخاب کنید.',
+                                      style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
+                                    ),
+                                  );
+                                }
+
+                              }
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    }
                   ),
                 ],
               ),
@@ -121,9 +156,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             if(state.product.image != null){
               state.product.images.add(state.product.image!);
             }
-            if(!state.product.variants.isEmpty){
+            if(state.product.variants.isNotEmpty &&  state.product.variants[0].sizeVariants.isNotEmpty){
               context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(
-                state.product.variants[0]
+                state.product.variants[0],state.product.variants[0].sizeVariants[0]
               ));
             }
             return _buildProductContent(state.product, context);
@@ -196,21 +231,40 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
-                        height: 310,
-                        child: PageView(
-                          controller: imageController,
-                          children: variant_state.productVariant.images.map((url) {
-                            final fullUrl = '${URLs.baseUrl}$url';
+                        height: 360,
 
-                            return Image.network(
-                              fullUrl,
-                              fit: BoxFit.contain,
-                              errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
-                              loadingBuilder: (ctx, child, loading) {
-                                return loading == null ? child : Center(child: CircularProgressIndicator());
-                              },
-                            );
-                          }).toList(),
+                        child: Column(
+                          children: [
+                            //video
+
+                            Container(
+                              width: MediaQuery.of(context).size.width,
+                              height: 310,
+                              child: PageView(
+                                controller: imageController,
+                                children: [
+
+                                  product.video!=null && product.video!.isNotEmpty ? Container(child: VideoPlayerPage(videoDetail: new VideoDetail(hlsUrl: product.video!))):Container(),
+
+                                  //images
+                                  ...variant_state.productVariant.images.map((url) {
+                                  final fullUrl = '${URLs.baseUrl}$url';
+
+                                  return Image.network(
+                                    fullUrl,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
+                                    loadingBuilder: (ctx, child, loading) {
+                                      return loading == null ? child : Center(child: CircularProgressIndicator());
+                                    },
+                                  );
+                                }).toList(),
+
+
+
+                              ]),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -225,7 +279,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       bottom: 16,
                       child: SmoothPageIndicator(
                         controller: imageController,
-                        count: variant_state.productVariant.images.length,
+                        count:  (product.video!=null && product.video!.isNotEmpty) ? variant_state.productVariant.images.length +  1 : variant_state.productVariant.images.length,
                         effect: ExpandingDotsEffect(
                           dotColor: AppColor.primary.withOpacity(0.2),
                           activeDotColor: AppColor.primary.withOpacity(0.2),
@@ -247,8 +301,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
               ),
 
+
+
               // بخش ۲ - اطلاعات محصول
               Container(
+                decoration: BoxDecoration(
+                  color: Color(int.parse("ff"+ variant_state.productVariant.colorRgb! ?? "00000000",radix: 16))
+                      .withOpacity(0.1)
+                ),
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,8 +384,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   ))
                                       .toList(),
                                   onColorSelected: (int vIndex) {
-
-                                    context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(product.variants[vIndex]));
+                                    print(product.variants[vIndex]);
+                                    print(product.variants[vIndex].sizeVariants);
+                                    if(product.variants.isNotEmpty && product.variants[vIndex].sizeVariants.isNotEmpty){
+                                      context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(product.variants[vIndex],product.variants[vIndex].sizeVariants[0]));
+                                    }
 
 
 
@@ -348,6 +411,46 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                       ),
 
+                    // بخش ۴ - انتخاب سایز (در صورت وجود)
+                    if (variant_state.productVariant.sizeVariants.isNotEmpty)
+                      Align(
+                        alignment: AlignmentGeometry.centerRight,
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            margin: EdgeInsets.only(bottom: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'اندازه',
+                                  style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColor.secondary,
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+                                SelectableCircleSize(
+                                  productSize: variant_state.productVariant.sizeVariants
+                                      .map((s) => s.size)
+
+                                      .toList(),
+                                  onSizeSelected: (int sizeVariantIndex) {
+                                    context.read<ProductDetailVariantBloc>().add(
+                                      ChangeProductColorEvent(variant_state.productVariant, variant_state.productVariant.sizeVariants[sizeVariantIndex])
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+
                     Directionality(
                       textDirection: TextDirection.rtl,
                       child: Text(
@@ -367,8 +470,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
 
 
-              // بخش ۴ - انتخاب سایز (در صورت وجود)
-              // (نیاز به تعریف سایز در مدل دارید — در صورت نیاز اضافه می‌شود)
 
               // بخش ۵ - نظرات
               Directionality(
@@ -418,6 +519,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           )
                         ],
                       ),
+                      ExpansionTile(
+                        initiallyExpanded: true,
+                        title: Text(
+                          'توضیحات تکمیلی',
+                          style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColor.secondary,
+                          ),
+                        ),
+                        children: [
+                          
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -452,24 +568,38 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                         );
                       },
-                      child: Container(
-                        width: MediaQuery.of(context).size.width,
-                        height: 310,
-                        child: PageView(
-                          controller: imageController,
-                          children: product.images.map((url) {
-                            final fullUrl = '${URLs.baseUrl}$url';
-
-                            return Image.network(
-                              fullUrl,
-                              fit: BoxFit.contain,
-                              errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
-                              loadingBuilder: (ctx, child, loading) {
-                                return loading == null ? child : Center(child: CircularProgressIndicator());
-                              },
-                            );
-                          }).toList(),
-                        ),
+                      child: Column(
+                        children: [
+                          //video
+                          Container(child: VideoPlayerPage(videoDetail: new VideoDetail(hlsUrl: product.video!))),
+                          // Container(
+                          //   width: MediaQuery.of(context).size.width,
+                          //   height: 310,
+                          //   child: PageView(
+                          //     controller: imageController,
+                          //     children: [
+                          //
+                          //
+                          //
+                          //       //images
+                          //       ...product.images.map((url) {
+                          //       final fullUrl = '${URLs.baseUrl}$url';
+                          //
+                          //       return Image.network(
+                          //         fullUrl,
+                          //         fit: BoxFit.contain,
+                          //         errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
+                          //         loadingBuilder: (ctx, child, loading) {
+                          //           return loading == null ? child : Center(child: CircularProgressIndicator());
+                          //         },
+                          //       );
+                          //     }).toList(),
+                          //
+                          //
+                          //
+                          //   ]),
+                          // ),
+                        ],
                       ),
                     ),
                     CustomAppBar(
@@ -582,7 +712,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   )).toList(),
                                   onColorSelected: (int vIndex) {
 
-                                    context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(product.variants[vIndex]));
+                                    context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(product.variants[vIndex],product.variants[vIndex].sizeVariants[0]));
 
 
                                     // if (imageUrl != null) {

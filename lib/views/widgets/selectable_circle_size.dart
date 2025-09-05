@@ -1,57 +1,28 @@
+// widgets/selectable_circle_size.dart
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/ProductSize.dart';
 
 class SelectableCircleSize extends StatefulWidget {
-  final List<ProductSize> productSize;
-  final Color? selectedColor;
-  final Color? baseColor;
-  final TextStyle? selectedTextStyle;
-  final TextStyle? textStyle;
-
+  final List<String> productSize;
   final EdgeInsetsGeometry? margin, padding;
-  SelectableCircleSize({
+  final ValueChanged<int>? onSizeSelected;
+  final int? selectedSizeIndex;
+
+  const SelectableCircleSize({
+    Key? key,
     required this.productSize,
     this.margin,
     this.padding,
-    this.selectedColor,
-    this.baseColor,
-    this.textStyle,
-    this.selectedTextStyle,
-  });
+    this.onSizeSelected,
+    this.selectedSizeIndex,
+  }) : super(key: key);
 
   @override
-  _SelectableCircleState createState() => _SelectableCircleState();
+  _SelectableCircleSizeState createState() => _SelectableCircleSizeState();
 }
 
-class _SelectableCircleState extends State<SelectableCircleSize> {
-  int? _selectedIndex;
-
-  _change(index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  _getTextStyle(index) {
-    if (index == _selectedIndex) {
-      if (widget.selectedTextStyle == null) return TextStyle(color: Colors.white, fontWeight: FontWeight.w600);
-      return widget.selectedTextStyle;
-    } else {
-      if (widget.textStyle == null) return TextStyle(color: AppColor.primary, fontWeight: FontWeight.w600);
-      return widget.textStyle;
-    }
-  }
-
-  _getBackgroundColor(index) {
-    if (index == _selectedIndex) {
-      if (widget.selectedColor == null) return AppColor.secondary;
-      return widget.selectedColor;
-    } else {
-      if (widget.baseColor == null) return AppColor.primarySoft;
-      return widget.baseColor;
-    }
-  }
+class _SelectableCircleSizeState extends State<SelectableCircleSize> {
+  int? _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -59,26 +30,42 @@ class _SelectableCircleState extends State<SelectableCircleSize> {
       margin: widget.margin,
       padding: widget.padding,
       child: Wrap(
-        spacing: 20,
+        spacing: 12,
         runSpacing: 8,
         children: List.generate(
           widget.productSize.length,
-          (index) {
-            return InkWell(
+              (index) {
+            final size = widget.productSize[index];
+            final isSelected = _selectedIndex == index;
+
+            return GestureDetector(
               onTap: () {
-                _change(index);
+                setState(() {
+                  _selectedIndex = index;
+                });
+
+                widget.onSizeSelected?.call(_selectedIndex!);
               },
               child: Container(
-                width: 46,
-                height: 46,
+                width: 48,
+                height: 48,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
+                  color: isSelected ? AppColor.primary : Colors.white,
+                  border: Border.all(
+                    color: isSelected ? AppColor.primary : AppColor.border,
+                    width: 2,
+                  ),
                   borderRadius: BorderRadius.circular(100),
-                  color: _getBackgroundColor(index),
                 ),
                 child: Text(
-                  '${widget.productSize[index].name}',
-                  style: _getTextStyle(index),
+                  size,
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : AppColor.secondary,
+                  ),
                 ),
               ),
             );
