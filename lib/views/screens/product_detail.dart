@@ -26,6 +26,7 @@ import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product_detail/product_detail_bloc.dart';
 import '../../bloc/product_detail/product_detail_event.dart';
 import '../../bloc/product_detail/product_detail_state.dart';
+import '../widgets/similar_product_card.dart';
 import '../widgets/video_player.dart';
 
 
@@ -105,12 +106,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                 context: context,
                                 backgroundColor: Colors.transparent,
                                 builder: (context) => AddToCartModal(
-                                  product: CartModel(
+                                  product: CartItem(
                                     id: state.product.id,
-                                    name: "ست لباس پرشین بال",
-                                    image: state.product.image!,
+                                    name: state.product.nameFarsi??"",
+                                    image: state.product.image??"",
                                     price: state.product.price!,
-                                    quantity: 1,
+                                    quantity: 1, productId: state.product.id,
+                                    discountPrice: state.product.discountPercentage
                                   ),
                                 ),
                               );
@@ -535,10 +537,89 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                           Html(data: product.editor),
                         ],
                       ),
+
+                      // محصولات مشابه
+                      if (product.similarProducts.isNotEmpty)
+                        ExpansionTile(
+                          initiallyExpanded: false,
+                          title: Text(
+                            'محصولات مشابه',
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColor.secondary,
+                            ),
+                          ),
+                          children: [
+                            SizedBox(
+                              height: 200,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                shrinkWrap: true,
+                                physics: BouncingScrollPhysics(),
+                                itemCount: product.similarProducts.length,
+                                itemBuilder: (ctx, i) {
+                                  return SimilarProductCard(product: product.similarProducts[i]);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
               ),
+
+              // 🆕 سوالات متداول (FAQ)
+              if(product.faqs!=null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: ExpansionTile(
+                      title: Text(
+                        'سوالات متداول',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColor.secondary,
+                        ),
+                      ),
+                      children: [
+                        ...product.faqs!.map((faq) => ExpansionTile(
+                          initiallyExpanded: false,
+                          title: Text(
+                            faq.question,
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppColor.secondary,
+                            ),
+                          ),
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                              child: Text(
+                                faq.answer,
+                                style: TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 14,
+                                  height: 1.5,
+                                  color: Colors.black87,
+                                ),
+                                textAlign: TextAlign.right, // RTL text alignment
+                              ),
+                            ),
+                          ],
+                        )).toList(),
+                      ],
+                    ),
+                  ),
+                )
+
             ],
           );
         }else{

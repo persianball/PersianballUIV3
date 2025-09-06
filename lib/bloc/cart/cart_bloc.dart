@@ -1,52 +1,58 @@
 // bloc/cart/cart_bloc.dart
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marketky/models/CartModel.dart';
+import '../../services/cart_service.dart';
 
-import '../../models/CartModel.dart';
 part 'cart_event.dart';
 part 'cart_state.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
   CartBloc() : super(CartInitial()) {
-    on<AddToCart>((event, emit) {
-      final state = this.state;
-      if (state is CartLoaded) {
-        final items = List<CartModel>.from(state.items);
-        final index = items.indexWhere((item) => item.id == event.item.id);
-        if (index >= 0) {
-          items[index] = items[index].copyWith(quantity: items[index].quantity + event.item.quantity);
-        } else {
-          items.add(event.item);
-        }
-        emit(CartLoaded(items));
-      } else {
-        emit(CartLoaded([event.item]));
+    on<LoadCart>((event, emit) async {
+      emit(CartLoading());
+
+      try {
+        final cart = await CartService.fetchCart();
+
+        emit(CartLoaded(cart));
+      } catch (e) {
+
+        emit(CartError(e.toString()));
       }
     });
 
-    on<UpdateQuantity>((event, emit) {
-      if (state is CartLoaded) {
-        final items = List<CartModel>.from((state as CartLoaded).items);
-        final index = items.indexWhere((item) => item.id == event.id);
-        if (index >= 0 && event.quantity > 0) {
-          items[index] = items[index].copyWith(quantity: event.quantity);
-          emit(CartLoaded(items));
-        } else if (event.quantity <= 0) {
-          items.removeAt(index);
-          emit(CartLoaded(items));
-        }
+    on<AddToCart>((event, emit) async {
+      emit(CartLoading());
+      try {
+        await CartService.addToCart(event.productId, event.quantity);
+        final cart = await CartService.fetchCart();
+        emit(CartLoaded(cart));
+      } catch (e) {
+        emit(CartError('افزودن به سبد ناموفق بود'));
       }
     });
 
-    on<RemoveFromCart>((event, emit) {
-      if (state is CartLoaded) {
-        final items = (state as CartLoaded).items.where((item) => item.id != event.id).toList();
-        emit(CartLoaded(items));
+    on<RemoveFromCart>((event, emit) async {
+      emit(CartLoading());
+      try {
+        await CartService.removeItem(event.itemId);
+        final cart = await CartService.fetchCart();
+        emit(CartLoaded(cart));
+      } catch (e) {
+        emit(CartError('حذف ناموفق'));
       }
     });
 
-    on<ClearCart>((event, emit) {
-      emit(CartLoaded([]));
+    on<UpdateQuantity>((event, emit) async {
+      emit(CartLoading());
+      try {
+        await CartService.updateQuantity(event.itemId,event.productId, event.quantity);
+        final cart = await CartService.fetchCart();
+        emit(CartLoaded(cart));
+      } catch (e) {
+        emit(CartError('به‌روزرسانی ناموفق'));
+      }
     });
   }
 }

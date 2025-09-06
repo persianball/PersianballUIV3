@@ -6,29 +6,21 @@ import 'package:marketky/bloc/product_detail/product_detail_event.dart';
 import 'package:marketky/bloc/product_detail/product_detail_state.dart';
 import '../../models/ProductModel.dart';
 import '../../constant/urls.dart';
-
+import '../../services/product_service.dart';
 
 class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
   ProductDetailBloc() : super(ProductDetailInitial()) {
     on<FetchProductDetail>((event, emit) async {
       emit(ProductDetailLoading());
-      try {
 
-        final response = await http.get(
-          Uri.parse('${URLs.baseUrl}/v2/product/product/${event.productId}/'),
-        );
-        if (response.statusCode == 200) {
-          final json = jsonDecode(response.body);
-          final product = ProductDetail.fromJson(json);
-          emit(ProductDetailLoaded(product));
-        } else {
-          emit(ProductDetailError('محصول یافت نشد'));
-        }
-      } catch (e,s) {
-        print(e);
-        print(s);
-        emit(ProductDetailError('خطا در ارتباط با سرور'));
+      try {
+        final product = await ProductService.fetchProductDetail(event.productId);
+        emit(ProductDetailLoaded(product));
+      } catch (e) {
+        emit(ProductDetailError(e.toString()));
       }
+
+
     });
 
   }

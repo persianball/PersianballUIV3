@@ -7,7 +7,7 @@ import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 
 class AddToCartModal extends StatefulWidget {
-  final CartModel product; // محصولی که کاربر می‌خواهد اضافه کند
+  final CartItem product; // محصولی که کاربر می‌خواهد اضافه کند
 
   const AddToCartModal({Key? key, required this.product}) : super(key: key);
 
@@ -136,9 +136,8 @@ class _AddToCartModalState extends State<AddToCartModal> {
                   flex: 6,
                   child: ElevatedButton(
                     onPressed: () {
-                      final item = widget.product.copyWith(quantity: _quantity);
-                      context.read<CartBloc>().add(AddToCart(item));
-                      Navigator.of(context).pop(); // بستن مودال
+                      context.read<CartBloc>().add(AddToCart(widget.product.productId, _quantity));
+                      Navigator.of(context).pop();
                     },
                     child: Text(
                       'افزودن به سبد',

@@ -22,4 +22,22 @@ class ProductService {
       throw Exception('عدم دسترسی به سرور');
     }
   }
+
+  static Future<ProductDetail> fetchProductDetail(int productId) async {
+
+    print("product id : ${productId}");
+    try {
+      final response = await http.get(
+        Uri.parse('${URLs.baseUrl}/v2/product/product/${productId}/'),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return  ProductDetail.fromJson(data);
+      } else {
+        throw Exception('خطا در بارگذاری محصولات');
+      }
+    } catch (e) {
+      throw Exception('عدم دسترسی به سرور');
+    }
+  }
 }
