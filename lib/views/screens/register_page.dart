@@ -24,6 +24,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
   int _selectedTab = 1;
 
+  bool _passwordVisible = false;
+
+  bool _passwordConfirmVisible = false;
+
   void _switchTab(int index) {
     if (index == _selectedTab) return;
     setState(() {
@@ -324,7 +328,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 textDirection: TextDirection.ltr,
                 child: TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: !_passwordVisible,
                   style: TextStyle(fontFamily: 'Estedad'),
                   decoration: InputDecoration(
                     hintText: 'رمز عبور',
@@ -333,10 +337,19 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: SvgPicture.asset('assets/icons/Lock.svg', color: AppColor.primary),
                     ),
                     suffixIcon: IconButton(
+                      icon: Icon(
+                        // Based on passwordVisible state choose the icon
+                        !_passwordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Theme.of(context).primaryColor,
+                      ),
                       onPressed: () {
-
+                        // Update the state i.e. toogle the state of passwordVisible variable
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
                       },
-                      icon: SvgPicture.asset('assets/icons/Hide.svg', color: AppColor.primary),
                     ),
                     contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                     enabledBorder: OutlineInputBorder(
@@ -364,7 +377,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 textDirection: TextDirection.ltr,
                 child: TextFormField(
                   controller: _confirmPasswordController,
-                  obscureText: true,
+                  obscureText: !_passwordConfirmVisible,
                   style: TextStyle(fontFamily: 'Estedad'),
                   decoration: InputDecoration(
                     hintText: 'تکرار رمز عبور',
@@ -373,8 +386,19 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: SvgPicture.asset('assets/icons/Lock.svg', color: AppColor.primary),
                     ),
                     suffixIcon: IconButton(
-                      onPressed: () {},
-                      icon: SvgPicture.asset('assets/icons/Hide.svg', color: AppColor.primary),
+                      icon: Icon(
+                        // Based on passwordVisible state choose the icon
+                        !_passwordConfirmVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      onPressed: () {
+                        // Update the state i.e. toogle the state of passwordVisible variable
+                        setState(() {
+                          _passwordConfirmVisible = !_passwordConfirmVisible;
+                        });
+                      },
                     ),
                     contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                     enabledBorder: OutlineInputBorder(

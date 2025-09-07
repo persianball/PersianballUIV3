@@ -89,7 +89,7 @@ class _HomePageState extends State<HomePage> {
                   _buildHeader(context),
 
                   // بخش ۲ - دسته‌بندی
-                  _buildCategorySection(),
+                  //_buildCategorySection(),
 
                   // بخش ۳ - فروش ویژه
                   if (flashProducts.isNotEmpty)

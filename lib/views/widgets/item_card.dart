@@ -25,10 +25,7 @@ class ItemCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => BlocProvider(
-              create: (context) => ProductDetailBloc(),
-              child: ProductDetailPage(productId: this.product.id,),
-            )));
+            builder: (context) => ProductDetailPage(productId: this.product.id,)));
       },
       child: Container(
         width: MediaQuery.of(context).size.width / 2 - 16 - 8,

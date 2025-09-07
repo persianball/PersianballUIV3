@@ -9,12 +9,21 @@ import 'package:marketky/views/screens/register_page.dart';
 import '../../bloc/login/login_bloc.dart';
 
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   LoginPage({Key? key}) : super(key: key);
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _emailController = TextEditingController();
+
   final TextEditingController _passwordController = TextEditingController();
+
+  var _passwordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +59,7 @@ class LoginPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'اکانت ندارم🥲!',
+                  'حساب کاربری ندارم!',
                   style: TextStyle(
                     fontFamily: 'Estedad',
                     color: AppColor.secondary.withOpacity(0.7),
@@ -161,7 +170,7 @@ class LoginPage extends StatelessWidget {
                 textDirection: TextDirection.ltr,
                 child: TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText:!_passwordVisible,
                   textDirection: TextDirection.ltr,
                   style: TextStyle(fontFamily: 'Estedad'),
                   decoration: InputDecoration(
@@ -171,11 +180,21 @@ class LoginPage extends StatelessWidget {
                       child: SvgPicture.asset('assets/icons/Lock.svg', color: AppColor.primary),
                     ),
                     suffixIcon: IconButton(
+                      icon: Icon(
+                        // Based on passwordVisible state choose the icon
+                        !_passwordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Theme.of(context).primaryColor,
+                      ),
                       onPressed: () {
-                        // toggle visibility
+                        // Update the state i.e. toogle the state of passwordVisible variable
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
                       },
-                      icon: SvgPicture.asset('assets/icons/Hide.svg', color: AppColor.primary),
                     ),
+
                     contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: AppColor.border, width: 1),

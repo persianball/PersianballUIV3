@@ -34,37 +34,37 @@ class _MainAppBarState extends State<MainAppBar> {
       elevation: 0,
       title: Row(
         children: [
-          DummySearchWidget2(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => SearchPage(),
-                ),
-              );
-            },
-          ),
-          CustomIconButtonWidget(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => CartPage()));
-            },
-            value: widget.cartValue,
-            margin: EdgeInsets.only(left: 16),
-            icon: SvgPicture.asset(
-              'assets/icons/Bag.svg',
-              color: Colors.white,
-            ),
-          ),
-          CustomIconButtonWidget(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessagePage()));
-            },
-            value: widget.chatValue,
-            margin: EdgeInsets.only(left: 16),
-            icon: SvgPicture.asset(
-              'assets/icons/Chat.svg',
-              color: Colors.white,
-            ),
-          ),
+          // DummySearchWidget2(
+          //   onTap: () {
+          //     Navigator.of(context).push(
+          //       MaterialPageRoute(
+          //         builder: (context) => SearchPage(),
+          //       ),
+          //     );
+          //   },
+          // ),
+          // CustomIconButtonWidget(
+          //   onTap: () {
+          //     Navigator.of(context).push(MaterialPageRoute(builder: (context) => CartPage()));
+          //   },
+          //   value: widget.cartValue,
+          //   margin: EdgeInsets.only(left: 16),
+          //   icon: SvgPicture.asset(
+          //     'assets/icons/Bag.svg',
+          //     color: Colors.white,
+          //   ),
+          // ),
+          // CustomIconButtonWidget(
+          //   onTap: () {
+          //     Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessagePage()));
+          //   },
+          //   value: widget.chatValue,
+          //   margin: EdgeInsets.only(left: 16),
+          //   icon: SvgPicture.asset(
+          //     'assets/icons/Chat.svg',
+          //     color: Colors.white,
+          //   ),
+          // ),
         ],
       ), systemOverlayStyle: SystemUiOverlayStyle.light,
     );

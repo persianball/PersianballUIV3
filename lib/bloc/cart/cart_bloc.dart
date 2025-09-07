@@ -23,13 +23,15 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     });
 
     on<AddToCart>((event, emit) async {
+
       emit(CartLoading());
       try {
         await CartService.addToCart(event.productId, event.quantity);
+        emit(CartItemAdded('این کالا به سبد خرید اضافه شد')); // ← نمایش دیالوگ
         final cart = await CartService.fetchCart();
         emit(CartLoaded(cart));
       } catch (e) {
-        emit(CartError('افزودن به سبد ناموفق بود'));
+        emit(CartError('افزودن کالا ناموفق بود: ${e.toString()}'));
       }
     });
 

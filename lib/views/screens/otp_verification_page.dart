@@ -54,7 +54,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   void _onResendCode() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('کد تأیید دوباره به $_maskedDestination ارسال شد', style: TextStyle(fontFamily: 'Estedad')),
+        content: Text('کد تأیید دوباره به ${_maskedDestination} ارسال شد', style: TextStyle(fontFamily: 'Estedad')),
         backgroundColor: AppColor.primary,
       ),
     );
@@ -108,20 +108,24 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
           textDirection: TextDirection.rtl,
           child: Container(
             margin: EdgeInsets.only(bottom: 32),
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(fontFamily: 'Estedad', fontSize: 14, color: AppColor.secondary.withOpacity(0.7)),
-                children: [
-                  TextSpan(text: 'کد یکبار مصرف به '),
-                  TextSpan(
-                    text: _maskedDestination,
-                    style: TextStyle(
-                      color: AppColor.primary,
-                      fontWeight: FontWeight.w700,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: RichText(
+                text: TextSpan(
+                  style: TextStyle(fontFamily: 'Estedad', fontSize: 14, color: AppColor.secondary.withOpacity(0.7)),
+                  children: [
+                    TextSpan(text: 'کد یکبار مصرف به '),
+                    TextSpan(
+                      text: _maskedDestination,
+                      style: TextStyle(
+                        color: AppColor.primary,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: "Estedad",
+                      ),
                     ),
-                  ),
-                  TextSpan(text: ' ارسال شده است.'),
-                ],
+                    TextSpan(text: ' ارسال شده است.'),
+                  ],
+                ),
               ),
             ),
           ),
@@ -258,25 +262,25 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
         SizedBox(height: 16),
 
         // Resend Code
-        ElevatedButton(
-          onPressed: _onResendCode,
-          child: Text(
-            'ارسال دوباره‌ی کد',
-            style: TextStyle(
-              fontFamily: 'Estedad',
-              color: AppColor.secondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColor.primarySoft,
-            foregroundColor: AppColor.primary,
-            padding: EdgeInsets.symmetric(horizontal: 36, vertical: 18),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 0,
-            shadowColor: Colors.transparent,
-          ),
-        ),
+        // ElevatedButton(
+        //   onPressed: _onResendCode,
+        //   child: Text(
+        //     'ارسال دوباره‌ی کد',
+        //     style: TextStyle(
+        //       fontFamily: 'Estedad',
+        //       color: AppColor.secondary,
+        //       fontWeight: FontWeight.w600,
+        //     ),
+        //   ),
+        //   style: ElevatedButton.styleFrom(
+        //     backgroundColor: AppColor.primarySoft,
+        //     foregroundColor: AppColor.primary,
+        //     padding: EdgeInsets.symmetric(horizontal: 36, vertical: 18),
+        //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        //     elevation: 0,
+        //     shadowColor: Colors.transparent,
+        //   ),
+        // ),
       ],
     );
   }

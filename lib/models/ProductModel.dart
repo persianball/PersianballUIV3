@@ -184,11 +184,13 @@ class SizeVariant {
   final String size;
   final int? discountPrice;
   final int price;
+  final int id;
 
-  SizeVariant({required this.size, required this.discountPrice, required this.price});
+  SizeVariant({required this.id,required this.size, required this.discountPrice, required this.price});
 
   factory SizeVariant.fromJson(Map<String, dynamic> json) {
     return SizeVariant(
+      id:json['id'],
       size: json['size'],
       discountPrice: json['discount_price'],
       price: json['price'],

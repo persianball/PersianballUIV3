@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:marketky/utils/ThousandsFormatter.dart';
 
 import '../../constant/app_color.dart';
+import '../../constant/urls.dart';
 import '../../models/ProductModel.dart';
 import '../screens/product_detail.dart';
 
@@ -13,6 +15,7 @@ class SimilarProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
+        Navigator.of(context).pop();
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => ProductDetailPage(productId: product.id),
@@ -40,7 +43,7 @@ class SimilarProductCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
-                'https://yourdomain.com${product.image ?? (product.images.isNotEmpty ? product.images[0] : '')}',
+                '${URLs.baseUrl}${product.image ?? (product.images.isNotEmpty ? product.images[0] : '')}',
                 fit: BoxFit.cover,
                 height: 120,
                 width: 160,
@@ -74,7 +77,7 @@ class SimilarProductCard extends StatelessWidget {
                 children: [
                   if (product.discountPercentage != null && product.discountPercentage! > 0)
                     Text(
-                      '${product.price! ~/ 1000} هزار تومان',
+                      '${thousandSeparator(product.price!)} تومان',
                       style: TextStyle(
                         decoration: TextDecoration.lineThrough,
                         color: Colors.grey,
@@ -83,8 +86,8 @@ class SimilarProductCard extends StatelessWidget {
                     ),
                   Text(
                     product.discountPercentage != null && product.discountPercentage! > 0
-                        ? '${(product.price! * (1 - product.discountPercentage! / 100)) ~/ 1000} هزار تومان'
-                        : '${product.price! ~/ 1000} هزار تومان',
+                        ? '${thousandSeparator((product.price! * (1 - product.discountPercentage! / 100)).toInt()) } تومان'
+                        : '${thousandSeparator(product.price!)} تومان',
                     style: TextStyle(
                       fontFamily: 'Estedad',
                       fontSize: 16,

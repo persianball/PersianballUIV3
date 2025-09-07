@@ -46,11 +46,14 @@ class AuthService {
   }
 
   // ذخیره توکن‌ها
-  static Future<void> saveTokens(String token, [String? refreshToken]) async {
+  static Future<void> saveTokens(String token, [String? refreshToken,bool? isCoach]) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     if (refreshToken != null) {
       await prefs.setString('refresh_token', refreshToken);
+    }
+    if(isCoach !=null){
+      await prefs.setBool("is_coach", isCoach);
     }
   }
 
@@ -170,17 +173,18 @@ class AuthService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        final token = data['token'];
-        final refresh = data['refresh'];
-        if (token != null) {
-          await saveTokens(token, refresh);
-          return {'success': true, 'token': token, 'refresh': refresh};
-        }else{
+        // final token = data['token'];
+        // final refresh = data['refresh'];
+        // if (token != null) {
+        //   await saveTokens(token, refresh);
+        //   return {'success': true, 'token': token, 'refresh': refresh};
+        // }else{
           return {
-            'success': false,
+            'success': true,
             'message': data['message'] ?? 'ثبت‌نام ناموفق بود',
+            'data':data
           };
-        }
+        // }
       } else {
         print(response.statusCode);
         final error = jsonDecode(response.body);

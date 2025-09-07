@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
+import 'package:marketky/services/auth_service.dart';
 
 import '../../constant/urls.dart';
 
@@ -38,8 +39,19 @@ class VerifyOtpBloc extends Bloc<VerifyOtpEvent, VerifyOtpState> {
         print(response.body);
         print(response.statusCode);
         if (response.statusCode == 200 || response.statusCode == 201) {
-          final userData = jsonDecode(response.body);
-          emit(VerifyOtpSuccess(userData));
+          final data = jsonDecode(response.body);
+          final token = data['extra']['access'];
+          final refresh = data['extra']['refresh'];
+          final isCoach = data['extra']['is_coach'];
+          if (token != null) {
+            await AuthService.saveTokens(token, refresh);
+            emit(VerifyOtpSuccess(data));
+          }else{
+            final message = data['message'] ?? 'ثبت نام با مشکل مواجه شده است لطفا دوباره تلاش کنید.';
+            emit(VerifyOtpFailure(message));
+          }
+
+
         } else {
           final error = jsonDecode(response.body);
           final message = error['message'] ?? 'کد وارد شده نامعتبر است';
