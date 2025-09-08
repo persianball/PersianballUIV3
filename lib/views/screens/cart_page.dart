@@ -102,29 +102,31 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildCheckoutButton() {
-    return BlocBuilder<CartBloc, CartState>(
-      builder: (context, state) {
-        if (state is CartLoaded) {
-          return Container(
-            padding: EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderSuccessPage()));
-              },
-              child: Text('انتخاب آدرس',
-              style: TextStyle(
-                  color: Colors.white70
-              ),),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColor.primary,
-                padding: EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return SafeArea(
+      child: BlocBuilder<CartBloc, CartState>(
+        builder: (context, state) {
+          if (state is CartLoaded) {
+            return Container(
+              padding: EdgeInsets.all(16),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderSuccessPage()));
+                },
+                child: Text('انتخاب آدرس',
+                style: TextStyle(
+                    color: Colors.white70
+                ),),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.primary,
+                  padding: EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
               ),
-            ),
-          );
-        }
-        return Container();
-      },
+            );
+          }
+          return Container();
+        },
+      ),
     );
   }
 }

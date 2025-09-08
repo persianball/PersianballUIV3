@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
             scaffoldBackgroundColor: Colors.white,
             fontFamily: 'Estedad',
           ),
-          home: WelcomePage(),
+          home: SafeArea(child: WelcomePage()),
          )
 
     );

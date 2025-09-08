@@ -7,49 +7,51 @@ class OrderSuccessPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: Container(
-        width: MediaQuery.of(context).size.width,
-        height: 184,
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        color: Colors.white,
-        child: Column(
-          children: [
-            Container(
-              margin: EdgeInsets.only(bottom: 16),
-              width: MediaQuery.of(context).size.width,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: Text(
-                  'Your Orders',
-                  style: TextStyle(color: AppColor.secondary, fontWeight: FontWeight.w500),
-                ),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: AppColor.primary, padding: EdgeInsets.symmetric(vertical: 18), backgroundColor: AppColor.border,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                  shadowColor: Colors.transparent,
-                ),
-              ),
-            ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => PageSwitcher()));
-                },
-                child: Text(
-                  'Continue Shopping',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18, fontFamily: 'poppins'),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 18), backgroundColor: AppColor.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                  shadowColor: Colors.transparent,
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: 184,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          color: Colors.white,
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.only(bottom: 16),
+                width: MediaQuery.of(context).size.width,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  child: Text(
+                    'Your Orders',
+                    style: TextStyle(color: AppColor.secondary, fontWeight: FontWeight.w500),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: AppColor.primary, padding: EdgeInsets.symmetric(vertical: 18), backgroundColor: AppColor.border,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                  ),
                 ),
               ),
-            ),
-          ],
+              SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => PageSwitcher()));
+                  },
+                  child: Text(
+                    'Continue Shopping',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18, fontFamily: 'poppins'),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 18), backgroundColor: AppColor.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       extendBody: true,

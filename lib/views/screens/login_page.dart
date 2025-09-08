@@ -41,42 +41,44 @@ class _LoginPageState extends State<LoginPage> {
           icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
         ),
       ),
-      bottomNavigationBar: Container(
-        width: MediaQuery.of(context).size.width,
-        height: 48,
-        alignment: Alignment.center,
-        child: TextButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPage()));
-          },
-          style: TextButton.styleFrom(
-            foregroundColor: AppColor.secondary.withOpacity(0.1),
-          ),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'حساب کاربری ندارم!',
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    color: AppColor.secondary.withOpacity(0.7),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: 48,
+          alignment: Alignment.center,
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPage()));
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColor.secondary.withOpacity(0.1),
+            ),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'حساب کاربری ندارم!',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      color: AppColor.secondary.withOpacity(0.7),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-                Text(
-                  'ثبت نام',
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    color: AppColor.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                  Text(
+                    'ثبت نام',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      color: AppColor.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

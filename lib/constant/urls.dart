@@ -1,3 +1,3 @@
 class URLs{
-    static const baseUrl = "http://185.226.117.38";
+    static const baseUrl = "https://api2.persianball.ir";
 }

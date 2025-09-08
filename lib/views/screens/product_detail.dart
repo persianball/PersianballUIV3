@@ -64,155 +64,157 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
-      bottomNavigationBar: BlocBuilder<ProductDetailBloc, ProductDetailState>(
-        builder: (context, state) {
-          if (state is ProductDetailLoaded) {
-            return Container(
-              width: MediaQuery.of(context).size.width,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: AppColor.border, width: 1)),
-              ),
-              child: Row(
-                children: [
-                  // Container(
-                  //   width: 64,
-                  //   height: 64,
-                  //   margin: EdgeInsets.only(right: 14),
-                  //   child: ElevatedButton(
-                  //     style: ElevatedButton.styleFrom(
-                  //       backgroundColor: AppColor.secondary,
-                  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  //       elevation: 0,
-                  //     ),
-                  //     onPressed: () {},
-                  //     child: SvgPicture.asset('assets/icons/Chat.svg', color: Colors.white),
-                  //   ),
-                  // ),
-                  BlocBuilder<ProductDetailVariantBloc,ProductDetailState>(
-                    builder: (context,variant_state) {
-                      return BlocListener<CartBloc,CartState>(
-                        listener: (context, state) {
-                          if (state is CartItemAdded) {
-                            // نمایش دیالوگ موفقیت
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.check_circle, color: Colors.green, size: 64),
-                                    SizedBox(height: 16),
-                                    Text(
-                                      state.message,
-                                      style: TextStyle(
-                                        fontFamily: 'Estedad',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    SizedBox(height: 16),
-                                    ElevatedButton(
-                                      onPressed: () => Navigator.of(ctx).pop(),
-                                      child: Text('باشه', style: TextStyle(fontFamily: 'Estedad',color: Colors.white70)),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColor.primary,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-
-                          if (state is CartError) {
-                            // نمایش خطا
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(state.message, style: TextStyle(fontFamily: 'Estedad')),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        child:  Expanded(
-                            child: SizedBox(
-                              height: 64,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColor.primary,
+      bottomNavigationBar: SafeArea(
+        child: BlocBuilder<ProductDetailBloc, ProductDetailState>(
+          builder: (context, state) {
+            if (state is ProductDetailLoaded) {
+              return Container(
+                width: MediaQuery.of(context).size.width,
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: AppColor.border, width: 1)),
+                ),
+                child: Row(
+                  children: [
+                    // Container(
+                    //   width: 64,
+                    //   height: 64,
+                    //   margin: EdgeInsets.only(right: 14),
+                    //   child: ElevatedButton(
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: AppColor.secondary,
+                    //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    //       elevation: 0,
+                    //     ),
+                    //     onPressed: () {},
+                    //     child: SvgPicture.asset('assets/icons/Chat.svg', color: Colors.white),
+                    //   ),
+                    // ),
+                    BlocBuilder<ProductDetailVariantBloc,ProductDetailState>(
+                      builder: (context,variant_state) {
+                        return BlocListener<CartBloc,CartState>(
+                          listener: (context, state) {
+                            if (state is CartItemAdded) {
+                              // نمایش دیالوگ موفقیت
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                  elevation: 0,
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.check_circle, color: Colors.green, size: 64),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        state.message,
+                                        style: TextStyle(
+                                          fontFamily: 'Estedad',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 16),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.of(ctx).pop(),
+                                        child: Text('باشه', style: TextStyle(fontFamily: 'Estedad',color: Colors.white70)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColor.primary,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                                onPressed: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (context) => AddToCartModal(
-                                      cartItem:
-                                      (variant_state is ProductDetailSizeChanged) ?
-                                        CartItem(
-                                        id: variant_state.productSize.id,
-                                        name: state.product.nameFarsi??"",
-                                        image: variant_state.productVariant.image??"",
-                                        price: variant_state.productSize.price,
-                                        quantity: 1, productId: state.product.id,
-                                        discountPrice: variant_state.productSize.discountPrice
-                                      ):
-                                      (variant_state is ProductDetailChangedState) ?
-                                      CartItem(
-                                          id: variant_state.productSize!.id,
+                              );
+                            }
+
+                            if (state is CartError) {
+                              // نمایش خطا
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(state.message, style: TextStyle(fontFamily: 'Estedad')),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          child:  Expanded(
+                              child: SizedBox(
+                                height: 64,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColor.primary,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 0,
+                                  ),
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) => AddToCartModal(
+                                        cartItem:
+                                        (variant_state is ProductDetailSizeChanged) ?
+                                          CartItem(
+                                          id: variant_state.productSize.id,
                                           name: state.product.nameFarsi??"",
                                           image: variant_state.productVariant.image??"",
-                                          price: variant_state.productSize!.price,
+                                          price: variant_state.productSize.price,
                                           quantity: 1, productId: state.product.id,
-                                          discountPrice: variant_state.productSize!.discountPrice
-                                      ):
-                                      CartItem(
-                                        id: state.product.id,
-                                        name: state.product.nameFarsi??"",
-                                        image: state.product.image??"",
-                                        price: state.product.price!,
-                                        quantity: 1, productId: state.product.id,
-                                        discountPrice: state.product.discountPercentage,
-                                    ),)
-                                  );
-                                },
-                                child: Builder(
-                                  builder: (context) {
-                                    if(variant_state is ProductDetailChangedState){
-                                      return Text(
-                                        'افزودن به سبد',
-                                        style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
-                                      );
-                                    }else{
-                                      return Directionality(
-                                        textDirection: TextDirection.rtl,
-                                        child: Text(
-                                          'لطفا رنگ و اندازه را انتخاب کنید.',
+                                          discountPrice: variant_state.productSize.discountPrice
+                                        ):
+                                        (variant_state is ProductDetailChangedState) ?
+                                        CartItem(
+                                            id: variant_state.productSize!.id,
+                                            name: state.product.nameFarsi??"",
+                                            image: variant_state.productVariant.image??"",
+                                            price: variant_state.productSize!.price,
+                                            quantity: 1, productId: state.product.id,
+                                            discountPrice: variant_state.productSize!.discountPrice
+                                        ):
+                                        CartItem(
+                                          id: state.product.id,
+                                          name: state.product.nameFarsi??"",
+                                          image: state.product.image??"",
+                                          price: state.product.price!,
+                                          quantity: 1, productId: state.product.id,
+                                          discountPrice: state.product.discountPercentage,
+                                      ),)
+                                    );
+                                  },
+                                  child: Builder(
+                                    builder: (context) {
+                                      if(variant_state is ProductDetailChangedState){
+                                        return Text(
+                                          'افزودن به سبد',
                                           style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
-                                        ),
-                                      );
-                                    }
+                                        );
+                                      }else{
+                                        return Directionality(
+                                          textDirection: TextDirection.rtl,
+                                          child: Text(
+                                            'لطفا رنگ و اندازه را انتخاب کنید.',
+                                            style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
+                                          ),
+                                        );
+                                      }
 
-                                  }
+                                    }
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                      );
-                    }
-                  ),
-                ],
-              ),
-            );
-          }
-          return Container(); // در حالت لودینگ یا خطا، نمایش نده
-        },
+                        );
+                      }
+                    ),
+                  ],
+                ),
+              );
+            }
+            return Container(); // در حالت لودینگ یا خطا، نمایش نده
+          },
+        ),
       ),
       body: BlocBuilder<ProductDetailBloc, ProductDetailState>(
         builder: (context, state) {

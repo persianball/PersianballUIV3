@@ -75,6 +75,7 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
+
     - family: Poppins
       fonts:
         - asset: assets/fonts/Poppins/Poppins-Regular.ttf
@@ -101,13 +102,13 @@ flutter:
           weight: 900
     - family: Estedad
       fonts:
-        - asset: assets/fonts/Estedad/Estedad-FD-Regular.woff2
+        - asset: assets/fonts/Estedad/Estedad-FD-ExtraLight.ttf
           weight: 400
-        - asset: assets/fonts/Estedad/Estedad-FD-Medium.woff2
+        - asset: assets/fonts/Estedad/Estedad-FD-Regular.ttf
           weight: 500
-        - asset: assets/fonts/Estedad/Estedad-FD-SemiBold.woff2
+        - asset: assets/fonts/Estedad/Estedad-FD-SemiBold.ttf
           weight: 600
-        - asset: assets/fonts/Estedad/Estedad-FD-Bold.woff2
+        - asset: assets/fonts/Estedad/Estedad-FD-Bold.ttf
           weight: 700
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

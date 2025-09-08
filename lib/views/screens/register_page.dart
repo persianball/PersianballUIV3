@@ -51,42 +51,44 @@ class _RegisterPageState extends State<RegisterPage> {
           icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
         ),
       ),
-      bottomNavigationBar: Container(
-        width: MediaQuery.of(context).size.width,
-        height: 48,
-        alignment: Alignment.center,
-        child: TextButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginPage()));
-          },
-          style: TextButton.styleFrom(
-            foregroundColor: AppColor.secondary.withOpacity(0.1),
-          ),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'حساب کاربری دارید؟',
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    color: AppColor.secondary.withOpacity(0.7),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: 48,
+          alignment: Alignment.center,
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginPage()));
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColor.secondary.withOpacity(0.1),
+            ),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'حساب کاربری دارید؟',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      color: AppColor.secondary.withOpacity(0.7),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-                Text(
-                  ' ورود',
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    color: AppColor.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                  Text(
+                    ' ورود',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      color: AppColor.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

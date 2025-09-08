@@ -29,26 +29,28 @@ class _PageSwitcherState extends State<PageSwitcher> {
         // NotificationPage(),
         ProfilePage(),
       ][_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColor.primarySoft, width: 2))),
-        child: BottomNavigationBar(
-          onTap: _onItemTapped,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          items: [
-            (_selectedIndex == 0)
-                ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Home-active.svg'), label: '')
-                : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Home.svg'), label: ''),
-            // (_selectedIndex == 1)
-            //     ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Category-active.svg'), label: '')
-            //     : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Category.svg'), label: ''),
-            // (_selectedIndex == 2)
-            //     ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Notification-active.svg'), label: '')
-            //     : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Notification.svg'), label: ''),
-            (_selectedIndex == 1)
-                ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Profile-active.svg'), label: '')
-                : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Profile.svg'), label: ''),
-          ],
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColor.primarySoft, width: 2))),
+          child: BottomNavigationBar(
+            onTap: _onItemTapped,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            items: [
+              (_selectedIndex == 0)
+                  ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Home-active.svg'), label: '')
+                  : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Home.svg'), label: ''),
+              // (_selectedIndex == 1)
+              //     ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Category-active.svg'), label: '')
+              //     : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Category.svg'), label: ''),
+              // (_selectedIndex == 2)
+              //     ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Notification-active.svg'), label: '')
+              //     : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Notification.svg'), label: ''),
+              (_selectedIndex == 1)
+                  ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Profile-active.svg'), label: '')
+                  : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Profile.svg'), label: ''),
+            ],
+          ),
         ),
       ),
     );
