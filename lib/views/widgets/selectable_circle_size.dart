@@ -47,8 +47,8 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
                 widget.onSizeSelected?.call(_selectedIndex!);
               },
               child: Container(
-                width: 48,
-                height: 48,
+                width: 32,
+                height: 32,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: isSelected ? AppColor.primary : Colors.white,

@@ -8,12 +8,18 @@ class SelectableCircleColor extends StatefulWidget {
   final List<ColorWay> colorWay;
   final ValueChanged<int> onColorSelected; // فراخوانی وقتی رنگ تغییر کرد
 
+  // New: allow customizing circle size and spacing
+  final double circleSize; // default 42
+  final double spacing; // default 20
+
   SelectableCircleColor({
     Key? key,
     required this.colorWay,
     this.margin,
     this.padding,
     required this.onColorSelected,
+    this.circleSize = 42,
+    this.spacing = 20,
   }) : super(key: key);
 
   @override
@@ -30,7 +36,7 @@ class _SelectableCircleState extends State<SelectableCircleColor> {
       margin: widget.margin,
       padding: widget.padding,
       child: Wrap(
-        spacing: 20,
+        spacing: widget.spacing,
         runSpacing: 8,
         children: List.generate(
           widget.colorWay.length,
@@ -42,8 +48,7 @@ class _SelectableCircleState extends State<SelectableCircleColor> {
                   _selectedIndex = index;
                 });
 
-
-                // ارسال آدرس تصویر به صفحه والد
+                // ارسال ایندکس انتخاب
                 widget.onColorSelected(index);
               },
               child: Container(
@@ -55,13 +60,13 @@ class _SelectableCircleState extends State<SelectableCircleColor> {
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Container(
-                  width: 42,
-                  height: 42,
+                  width: widget.circleSize,
+                  height: widget.circleSize,
                   decoration: BoxDecoration(
                     color: variant.color,
                     borderRadius: BorderRadius.circular(100),
                     border: Border.all(
-                      width: 4,
+                      width: (widget.circleSize / 10).clamp(2, 6),
                       color: (index == _selectedIndex)
                           ? AppColor.primarySoft.withOpacity(0.9)
                           : Colors.transparent,
