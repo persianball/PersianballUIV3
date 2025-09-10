@@ -71,6 +71,7 @@ class _CarouselImageViewerState extends State<CarouselImageViewer> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    _playVideo(0);
   }
 
   @override

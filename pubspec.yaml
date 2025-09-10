@@ -42,7 +42,8 @@ dependencies:
   video_player: ^2.10.0
   chewie: ^1.12.1
   # for html render in product detail
-  flutter_html: ^3.0.0
+  flutter_html_all: ^3.0.0
+  url_launcher: ^6.1.0
 
 
 dev_dependencies:

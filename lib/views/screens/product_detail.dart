@@ -21,6 +21,7 @@ import 'package:marketky/views/widgets/review_tile.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
 import 'package:marketky/views/widgets/selectable_circle_size.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product_detail/product_detail_bloc.dart';
@@ -693,7 +694,41 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                           ),
                         ),
                         children: [
-                          Html(data: product.editor),
+                          Html(
+                            data: product.editor,
+                            onLinkTap: (url,_,__)async{
+                                if (await canLaunchUrl(Uri.parse(url!))) {
+                                  await launchUrl(Uri.parse(url));
+                                }
+                            },
+                            style: {
+                              "a": Style(color: AppColor.primary, textDecoration: TextDecoration.underline),
+                            },
+                            extensions: [
+                              // تصویر با قاب گرد و Fit کنترل‌شده
+                              TagExtension(
+                                tagsToExtend: {"img"},
+                                builder: (context) {
+                                  final src = '${URLs.baseUrl}${context.attributes['src']}' ?? "";
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      src,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => Image.asset('assets/images/placeholder.jpg'),
+                                    ),
+                                  );
+                                },
+                              ),
+
+
+
+
+                            ],
+
+                          ),
+
+
                         ],
                       ),
                       // محصولات مشابه

@@ -43,4 +43,26 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+
+
+    <!-- اضافه کردن queries برای دسترسی به اپلیکیشن‌های خارجی -->
+    <queries>
+        <!-- برای باز کردن مرورگر -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- برای تماس -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <!-- برای ارسال ایمیل -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+        <!-- اگر می‌خوای اپ خاصی مثل تلگرام رو باز کنی -->
+        <package android:name="org.telegram.messenger" />
+    </queries>
 </manifest>
