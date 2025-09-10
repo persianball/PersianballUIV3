@@ -22,6 +22,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
 
   @override
   Widget build(BuildContext context) {
+    quantity = widget.cartItemFromBackend.quantity;
     String? farsiName = widget.cartItemFromBackend.product?.productVariant?.productName;
     String? colorName = widget.cartItemFromBackend.product?.productVariant?.color;
     int? originalPrice =widget.cartItemFromBackend.product !=null && widget.cartItemFromBackend.product?.price != null? widget.cartItemFromBackend.product!.price! * widget.cartItemFromBackend.quantity:0;
@@ -124,7 +125,9 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                         SizedBox(height: 8),
                         _buildFeatureRow(Icons.check_circle_outline, 'ضمانت یک ساله'),
                         SizedBox(height: 8),
-                        _buildFeatureRow(Icons.check_circle_outline, 'ارسال رایگان '),
+                        widget.priceFromBack.isFreeShipping!=null&&
+                        widget.priceFromBack.isFreeShipping! ?_buildFeatureRow(Icons.check_circle_outline, 'ارسال رایگان ') :
+                        _buildFeatureRow(Icons.motorcycle, '${widget.priceFromBack.postShippingPrice}:هزینه ارسال '),
                       ],
                     ),
 
