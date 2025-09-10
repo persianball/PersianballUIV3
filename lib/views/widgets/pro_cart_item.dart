@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
@@ -19,6 +20,8 @@ class ProCartItemCard extends StatefulWidget {
 
 class _ProCartItemCardState extends State<ProCartItemCard> {
   int quantity = 1;
+  bool isLoading = false;
+  bool isDeleteLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -199,6 +202,13 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                         if(state is CartError){
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
                         }
+                        if(state is CartLoaded){
+                          setState(() {
+                            isLoading = false;
+                            isDeleteLoading = false;
+                          });
+                        }
+
                       },
                       builder: (context,state) {
 
@@ -214,16 +224,24 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                               child: Builder(
 
                                 builder: (context) {
-                                  if(state is CartLoading){
-                                    return CircularProgressIndicator(
-                                      color: Colors.red,strokeWidth: 5,
+
+                                  if(isDeleteLoading){
+                                    return Center(
+                                      child: LoadingAnimationWidget.twistingDots(
+                                        leftDotColor: const Color(0xFF1A1A3F),
+                                        rightDotColor: const Color(0xFFEA3799),
+                                        size: 10,
+                                      ),
                                     );
                                   }
-
                                   return IconButton(
                                     icon: Icon(Icons.delete_outline, color: Colors.red[600]),
                                     onPressed: () {
+                                      setState(() {
+                                        isDeleteLoading = true;
+                                      });
                                       context.read<CartBloc>().add(RemoveFromCart(widget.cartItemFromBackend.id));
+
                                     },
                                   );
                                 }
@@ -247,13 +265,20 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                         quantity++;
                                       });
                                       context.read<CartBloc>().add(UpdateQuantity(widget.cartItemFromBackend.id,widget.cartItemFromBackend.product!.id,quantity));
+                                      setState(() {
+                                        isLoading = true;
+                                      });
                                     },
                                   ),
                                   Builder(
                                     builder: (context) {
-                                      if(state is CartLoading){
-                                        return LinearProgressIndicator(
-                                          color: AppColor.primary,
+                                      if(isLoading){
+                                        return Center(
+                                          child: LoadingAnimationWidget.twistingDots(
+                                            leftDotColor: const Color(0xFF1A1A3F),
+                                            rightDotColor: const Color(0xFFEA3799),
+                                            size: 10,
+                                          ),
                                         );
                                       }
                                       return Container(
@@ -278,6 +303,10 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                         });
 
                                         context.read<CartBloc>().add(UpdateQuantity(widget.cartItemFromBackend.id,widget.cartItemFromBackend.product!.id,quantity));
+
+                                        setState(() {
+                                          isLoading = true;
+                                        });
                                       }
                                     },
                                   ),

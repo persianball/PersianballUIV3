@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:marketky/views/screens/search_page.dart';
 
+import '../../bloc/cart/cart_bloc.dart';
 import '../screens/cart_page.dart';
 import 'custom_icon_button_widget.dart';
 import 'dummy_search_widget_1.dart';
@@ -9,6 +11,7 @@ import '../screens/empty_cart_page.dart';
 import '../screens/message_page.dart';
 
 Widget buildCarouselItem(BuildContext context,String imageUrl) {
+  context.read<CartBloc>().add(LoadCart());
   return Container(
     width: MediaQuery.of(context).size.width,
     padding: EdgeInsets.symmetric(horizontal: 16),
@@ -48,16 +51,22 @@ Widget buildCarouselItem(BuildContext context,String imageUrl) {
               Row(
                 textDirection: TextDirection.ltr,
                 children: [
-                  CustomIconButtonWidget(
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => CartPage()));
-                    },
-                    value: 0,
-                    icon: SvgPicture.asset(
-                      'assets/icons/Bag.svg',
-                      color: Colors.white,
-                    ),
+                  BlocBuilder<CartBloc,CartState>(
+                    builder: (context,state) {
+                      return CustomIconButtonWidget(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => CartPage()));
+                        },
+                        value: state is CartLoaded ? state.cart.results.length > 0?
+                            state.cart.results[0].items.length
+                            : 0 : 0,
+                        icon: SvgPicture.asset(
+                          'assets/icons/Bag.svg',
+                          color: Colors.white,
+                        ),
+                      );
+                    }
                   ),
                   SizedBox(width: 16),
                   CustomIconButtonWidget(

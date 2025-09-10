@@ -22,6 +22,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       }
     });
 
+    on<UpdateQuantityLoadingEvent>((event, emit) async{
+      emit(CartUpdatingLoading());
+    });
+
     on<AddToCart>((event, emit) async {
 
       emit(CartLoading());
@@ -36,7 +40,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     });
 
     on<RemoveFromCart>((event, emit) async {
-      emit(CartLoading());
+      // Keep current UI; avoid global loading for minor cart updates
       try {
         await CartService.removeItem(event.itemId);
         final cart = await CartService.fetchCart();
@@ -47,9 +51,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     });
 
     on<UpdateQuantity>((event, emit) async {
-      emit(CartLoading());
+      // Avoid emitting CartLoading to prevent full-screen refresh
       try {
-        await CartService.updateQuantity(event.itemId,event.productId, event.quantity);
+        await CartService.updateQuantity(event.itemId, event.productId, event.quantity);
         final cart = await CartService.fetchCart();
         emit(CartLoaded(cart));
       } catch (e) {

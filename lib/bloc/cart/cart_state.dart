@@ -11,6 +11,9 @@ class CartInitial extends CartState {}
 
 class CartLoading extends CartState {}
 
+class CartUpdatingLoading extends CartState {}
+
+
 class CartLoaded extends CartState {
   final AllCartFromBackend cart;
 
@@ -21,7 +24,7 @@ class CartLoaded extends CartState {
 }
 
 class CartItemChangedQuantity extends CartState {
-  final ProductInCart productInCart;
+  final AllCartFromBackend productInCart;
 
   const CartItemChangedQuantity(this.productInCart);
 

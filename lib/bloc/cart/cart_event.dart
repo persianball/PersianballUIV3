@@ -9,6 +9,8 @@ abstract class CartEvent extends Equatable {
 
 class LoadCart extends CartEvent {}
 
+class UpdateQuantityLoadingEvent extends CartEvent {}
+
 class AddToCart extends CartEvent {
   final int productId;
   final int quantity;
