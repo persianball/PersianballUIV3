@@ -6,6 +6,7 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/views/screens/order_success_page.dart';
 import 'package:marketky/views/widgets/cart_tile.dart';
+import 'package:marketky/views/widgets/pro_cart_item.dart';
 import '../../bloc/cart/cart_bloc.dart';
 
 class CartPage extends StatefulWidget {
@@ -62,7 +63,8 @@ class _CartPageState extends State<CartPage> {
           if(state is CartLoading){
             return CircularProgressIndicator();
           }
-          final count = state is CartLoaded ? state.cart.itemCount : 0;
+          final count = state is CartLoaded ? state.cart.results.length>0?
+              state.cart.results[0].items.length:0 : 0;
           return Column(
             children: [
               Text('سبد خرید', style: TextStyle(fontFamily: 'Estedad', color: Colors.black)),
@@ -78,22 +80,23 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Widget _buildCartContent(Cart cart) {
+  Widget _buildCartContent(AllCartFromBackend cart) {
     return ListView(
       padding: EdgeInsets.all(16),
       children: [
         ListView.separated(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          itemCount: cart.items.length,
+          itemCount: cart.count > 0 ? cart.results[0].items.length : 0,
           separatorBuilder: (_, i) => SizedBox(height: 16),
           itemBuilder: (_, i) {
-            final item = cart.items[i];
-            return CartTile(
-              data: item,
-              onRemove: () => context.read<CartBloc>().add(RemoveFromCart(item.id)),
-              onChangeQuantity: (qty) => context.read<CartBloc>().add(UpdateQuantity(item.id,item.productId, qty)),
-            );
+            // final item = cart.items[i];
+            // return CartTile(
+            //   data: item,
+            //   onRemove: () => context.read<CartBloc>().add(RemoveFromCart(item.id)),
+            //   onChangeQuantity: (qty) => context.read<CartBloc>().add(UpdateQuantity(item.id,item.productId, qty)),
+            // );
+            return ProCartItemCard(cartItemFromBackend: cart.results[0].items[i],priceFromBack: cart.results[0].price,);
           },
         ),
         // بقیه بخش‌ها (حمل و نقل، قیمت کل و ...)

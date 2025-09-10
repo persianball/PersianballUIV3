@@ -1,4 +1,6 @@
 // core/model/Cart.dart
+import 'package:marketky/models/ProductModel.dart';
+
 class CartItem {
   final int id;
   final int productId;
@@ -58,7 +60,7 @@ class Cart {
 
 
 class CartItemFromBackend{
-  final int? product;
+  final ProductInCart? product;
   final int? classes;
   final int? course;
   final int? support_coach;
@@ -76,24 +78,104 @@ class CartItemFromBackend{
     return CartItemFromBackend(
         id: json['id'],
         quantity: json['quantity'],
-        product: json['product'],
+        product: ProductInCart.fromJson(json['product']),
         classes: json['classes'],
         support_coach: json['support_coach'],
         course: json['course']
     );
   }
 }
+
+class TotalPriceFromBack{
+  final int? price;
+  final int? nat;
+  final int? discountedPrice;
+  final bool? isFreeShipping;
+  final int? freeShippingThreshold;
+  final int? postShippingPrice;
+  final int? peykShippingPrice;
+  final int? orderShippingPrice;
+
+  TotalPriceFromBack({
+    this.price,
+    this.nat,
+    this.discountedPrice,
+    this.isFreeShipping,
+    this.freeShippingThreshold,
+    this.postShippingPrice,
+    this.peykShippingPrice,
+    this.orderShippingPrice
+  });
+
+
+  factory TotalPriceFromBack.fromJson(Map<String, dynamic> json) {
+
+    return TotalPriceFromBack(
+        price: json['price'],
+        nat: json['nat']!=null ? json['nat'].toInt() : 0,
+        discountedPrice: json['discounted_price']!=null?json['discounted_price'].toInt(): 0,
+        isFreeShipping: json['is_free_shipping'],
+        freeShippingThreshold: json['free_shipping_threshold'],
+        postShippingPrice: json['post_shipping_price'],
+        peykShippingPrice: json['peyk_shipping_price'],
+        orderShippingPrice: json['order_shipping_price']
+    );
+  }
+}
+
+class ProductInCart{
+  final ProductVariant? productVariant;
+  final String? size;
+  final int? count;
+  final int? disountPercentage;
+  final bool? isActive;
+  final int? price;
+  final int id;
+
+  ProductInCart({
+    required this.productVariant,required this.size,required this.count,required this.disountPercentage,
+    required this.isActive,required this.price,required this.id
+  });
+  factory ProductInCart.fromJson(Map<String, dynamic> json){
+    return ProductInCart(id:json['id'],productVariant:ProductVariant.fromJson(json['product_variant']),size:json['size'],count:json['count'],disountPercentage:json['discount_percentage'],isActive:json['is_active'],price:json['price']);
+  }
+}
+
 class CartFromBackend{
-  final int count;
-  final List<CartItemFromBackend> results;
+  final int? user;
+  final TotalPriceFromBack price;
+  final List<CartItemFromBackend> items;
 
 
-  CartFromBackend({required this.count, required this.results});
+  CartFromBackend({this.user,required this.price,required this.items});
 
   factory CartFromBackend.fromJson(Map<String, dynamic> json) {
-    final itemsJson = json['results'] as List;
+    final itemsJson = json['items'] as List;
     final items = itemsJson.map((item) => CartItemFromBackend.fromJson(item)).toList();
     return CartFromBackend(
+        user: json['user'],
+        price:TotalPriceFromBack.fromJson(json['price']) ,
+        items: items
+    );
+  }
+
+
+
+}
+
+
+
+class AllCartFromBackend{
+  final int count;
+  final List<CartFromBackend> results;
+
+
+  AllCartFromBackend({required this.count, required this.results});
+
+  factory AllCartFromBackend.fromJson(Map<String, dynamic> json) {
+    final itemsJson = json['results'] as List;
+    final items = itemsJson.map((item) => CartFromBackend.fromJson(item)).toList();
+    return AllCartFromBackend(
       results: items,
       count: json['count']
     );

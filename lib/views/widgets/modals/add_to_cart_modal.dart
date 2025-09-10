@@ -188,7 +188,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
                    flex: 6,
                    child: ElevatedButton(
                      onPressed: () {
-                       context.read<CartBloc>().add(AddToCart(widget.cartItem.productId, _quantity));
+                       context.read<CartBloc>().add(AddToCart(widget.cartItem.id, _quantity));
                        Navigator.of(context).pop();
 
                      },

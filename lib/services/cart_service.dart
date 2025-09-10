@@ -1,6 +1,7 @@
 // services/CartService.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:marketky/views/widgets/pro_cart_item.dart';
 import '../../services/product_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:marketky/models/CartModel.dart';
@@ -11,11 +12,11 @@ class CartService {
 
 
   // دریافت سبد خرید
-  static Future<Cart> fetchCart() async {
+  static Future<AllCartFromBackend> fetchCart() async {
     final token = await _getToken();
     print(token);
     final response = await http.get(
-      Uri.parse(URLs.baseUrl+"/v1/order/basket-items/"),
+      Uri.parse(URLs.baseUrl+"/v1/order/basket/"),
       headers: {
         'Authorization': 'token $token',
         'Content-Type': 'application/json',
@@ -24,35 +25,8 @@ class CartService {
 
     if (response.statusCode == 200) {
       try{
-      var cartFromBackend = CartFromBackend.fromJson(jsonDecode(response.body));
-      List<CartItem> items = [];
-      for (var res in cartFromBackend.results) {
-        print(res);
-        if (res.product != null) {
-          ProductDetail product = await ProductService.fetchProductDetail(res.product ?? -1);
-          print(product);
-
-          items.add(
-            CartItem(
-              id: res.id,
-              productId: res.product ?? -1,
-              name: product.nameFarsi ?? "",
-              image: product.image ?? "",
-              price: product.price!,
-              quantity: res.quantity,
-              discountPrice: product.discountPercentage
-            ),
-          );
-        } else {
-          // فقط در صورتی که product null باشد، خطا پرتاب کنید — نه همیشه!
-          throw Exception("نتیجه مطلوب نمی باشد.");
-        }
-      }
-      //product
-
-        return new Cart(items: items
-          ,
-        totalPrice: 0,itemCount: 0);
+      var AllDataAboutCartFromBack = AllCartFromBackend.fromJson(jsonDecode(response.body));
+      return AllDataAboutCartFromBack;
       }catch(e){
 
         print("no product available + ${e.toString()}");

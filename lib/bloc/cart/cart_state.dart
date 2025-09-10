@@ -12,12 +12,21 @@ class CartInitial extends CartState {}
 class CartLoading extends CartState {}
 
 class CartLoaded extends CartState {
-  final Cart cart;
+  final AllCartFromBackend cart;
 
   const CartLoaded(this.cart);
 
   @override
   List<Object?> get props => [cart];
+}
+
+class CartItemChangedQuantity extends CartState {
+  final ProductInCart productInCart;
+
+  const CartItemChangedQuantity(this.productInCart);
+
+  @override
+  List<Object?> get props => [productInCart];
 }
 
 class CartItemAdded extends CartState {

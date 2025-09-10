@@ -28,8 +28,10 @@ import '../../bloc/product_detail/product_detail_bloc.dart';
 import '../../bloc/product_detail/product_detail_event.dart';
 import '../../bloc/product_detail/product_detail_state.dart';
 import '../widgets/ProCarousel.dart';
+import '../widgets/custom_icon_button_widget.dart';
 import '../widgets/similar_product_card.dart';
 import '../widgets/video_player.dart';
+import 'cart_page.dart';
 
 
 class ProductDetailPage extends StatefulWidget {
@@ -143,68 +145,97 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                             }
                           },
                           child:  Expanded(
-                              child: SizedBox(
-                                height: 64,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColor.primary,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    elevation: 0,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    height: 64,
+                                    child: Container(
+                                      width: 64,
+                                      height: 64,
+                                      margin: EdgeInsets.only(right: 14),
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColor.secondary,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                          elevation: 0,
+                                        ),
+                                        onPressed: () {
+                                          Navigator.of(context).push(MaterialPageRoute(
+                                              builder: (context) => CartPage()));
+                                        },
+                                        child: SvgPicture.asset('assets/icons/Bag.svg', color: Colors.white,fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  onPressed: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (context) => AddToCartModal(
-                                        cartItem:
-                                        (variant_state is ProductDetailSizeChanged) ?
-                                          CartItem(
-                                          id: variant_state.productSize.id,
-                                          name: state.product.nameFarsi??"",
-                                          image: variant_state.productVariant.image??"",
-                                          price: variant_state.productSize.price,
-                                          quantity: 1, productId: state.product.id,
-                                          discountPrice: variant_state.productSize.discountPercentage
-                                        ):
-                                        (variant_state is ProductDetailChangedState) ?
-                                        CartItem(
-                                            id: variant_state.productSize!.id,
-                                            name: state.product.nameFarsi??"",
-                                            image: variant_state.productVariant.image??"",
-                                            price: variant_state.productSize!.price,
-                                            quantity: 1, productId: state.product.id,
-                                            discountPrice: variant_state.productSize!.discountPercentage
-                                        ):
-                                        CartItem(
-                                          id: state.product.id,
-                                          name: state.product.nameFarsi??"",
-                                          image: state.product.image??"",
-                                          price: state.product.price!,
-                                          quantity: 1, productId: state.product.id,
-                                          discountPrice: state.product.discountPercentage,
-                                      ),)
-                                    );
-                                  },
-                                  child: Builder(
-                                    builder: (context) {
-                                      if(variant_state is ProductDetailSizeChanged){
-                                        return Text(
-                                          'افزودن به سبد',
-                                          style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
-                                        );
-                                      }else{
-                                        return Directionality(
-                                          textDirection: TextDirection.rtl,
-                                          child: Text(
-                                            'لطفا رنگ و اندازه را انتخاب کنید.',
-                                            style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
-                                          ),
-                                        );
-                                      }
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 64,
 
-                                    }
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColor.primary,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                          elevation: 0,
+                                        ),
+                                        onPressed: () {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            backgroundColor: Colors.transparent,
+                                            builder: (context) => AddToCartModal(
+                                              cartItem:
+                                              (variant_state is ProductDetailSizeChanged) ?
+                                                CartItem(
+                                                id: variant_state.productSize.id,
+                                                name: state.product.nameFarsi??"",
+                                                image: variant_state.productVariant.image??"",
+                                                price: variant_state.productSize.price,
+                                                quantity: 1, productId: state.product.id,
+                                                discountPrice: variant_state.productSize.discountPercentage
+                                              ):
+                                              (variant_state is ProductDetailChangedState) ?
+                                              CartItem(
+                                                  id: variant_state.productSize!.id,
+                                                  name: state.product.nameFarsi??"",
+                                                  image: variant_state.productVariant.image??"",
+                                                  price: variant_state.productSize!.price,
+                                                  quantity: 1, productId: state.product.id,
+                                                  discountPrice: variant_state.productSize!.discountPercentage
+                                              ):
+                                              CartItem(
+                                                id: state.product.id,
+                                                name: state.product.nameFarsi??"",
+                                                image: state.product.image??"",
+                                                price: state.product.price!,
+                                                quantity: 1, productId: state.product.id,
+                                                discountPrice: state.product.discountPercentage,
+                                            ),)
+                                          );
+                                        },
+                                        child: Builder(
+                                          builder: (context) {
+                                            if(variant_state is ProductDetailSizeChanged){
+                                              return Text(
+                                                'افزودن به سبد',
+                                                style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
+                                              );
+                                            }else{
+                                              return Directionality(
+                                                textDirection: TextDirection.rtl,
+                                                child: Text(
+                                                  'لطفا رنگ و اندازه را انتخاب کنید.',
+                                                  style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
+                                                ),
+                                              );
+                                            }
+
+                                          }
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
                         );
