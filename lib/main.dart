@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:marketky/views/screens/home_page.dart';
 import 'package:marketky/views/screens/otp_verification_page.dart';
 import 'package:marketky/views/screens/welcome_page.dart';
+import 'package:marketky/bloc/address/address_bloc.dart';
 
 import 'bloc/product/product_bloc.dart';
 
@@ -40,7 +41,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => authBloc),
         BlocProvider(create: (context) => ProductBloc()),
         BlocProvider(create: (context) => ProductDetailBloc()),
-        BlocProvider(create: (context) => ProductDetailVariantBloc() )
+        BlocProvider(create: (context) => ProductDetailVariantBloc() ),
+        BlocProvider(create: (context) => AddressBloc()),
       ],
       child:
          MaterialApp(

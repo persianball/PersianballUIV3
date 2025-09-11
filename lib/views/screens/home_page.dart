@@ -5,6 +5,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/empty_cart_page.dart';
 import 'package:marketky/views/screens/message_page.dart';
@@ -407,7 +408,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildLoading() {
-    return Center(child: CircularProgressIndicator());
+    return Center(child: LoadingAnimationWidget.discreteCircle(color: AppColor.primary, size: 40));
   }
 
   Widget _buildError(String message, BuildContext context) {

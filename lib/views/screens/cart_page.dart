@@ -8,6 +8,8 @@ import 'package:marketky/views/screens/order_success_page.dart';
 import 'package:marketky/views/widgets/cart_tile.dart';
 import 'package:marketky/views/widgets/pro_cart_item.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/checkout_timeline.dart';
+import 'package:marketky/views/screens/address_selection_page.dart';
 import '../../bloc/cart/cart_bloc.dart';
 
 class CartPage extends StatefulWidget {
@@ -85,22 +87,22 @@ class _CartPageState extends State<CartPage> {
     return ListView(
       padding: EdgeInsets.all(16),
       children: [
+        // Step 1 timeline
+        const CheckoutTimeline(currentStep: 0),
+        const SizedBox(height: 12),
+
         ListView.separated(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           itemCount: cart.count > 0 ? cart.results[0].items.length : 0,
           separatorBuilder: (_, i) => SizedBox(height: 16),
           itemBuilder: (_, i) {
-            // final item = cart.items[i];
-            // return CartTile(
-            //   data: item,
-            //   onRemove: () => context.read<CartBloc>().add(RemoveFromCart(item.id)),
-            //   onChangeQuantity: (qty) => context.read<CartBloc>().add(UpdateQuantity(item.id,item.productId, qty)),
-            // );
-            return ProCartItemCard(cartItemFromBackend: cart.results[0].items[i],priceFromBack: cart.results[0].price,);
+            return ProCartItemCard(
+              cartItemFromBackend: cart.results[0].items[i],
+              priceFromBack: cart.results[0].price,
+            );
           },
         ),
-        // بقیه بخش‌ها (حمل و نقل، قیمت کل و ...)
       ],
     );
   }
@@ -146,7 +148,7 @@ class _CartPageState extends State<CartPage> {
                                   ? 0
                                   : (selectedMethod == 'peyk' ? peykPrice : postPrice);
                               final int discount = (base - discounted) < 0 ? 0 : (base - discounted);
-                              final int payable = discounted + tax + shippingCost;
+                              final int payable = base - discounted + tax + shippingCost;
 
                               Widget priceRow(String label, String value, {Color? valueColor}) {
                                 return Padding(
@@ -188,12 +190,12 @@ class _CartPageState extends State<CartPage> {
                                               padding: const EdgeInsets.all(16.0),
                                               child: Column(
                                                 children: [
-                                                  priceRow('قیمت کل', '${thousandSeparator(price.price??0)} تومان'),
+                                                  priceRow('قیمت کل', '${thousandSeparator(base)} تومان'),
                                                   priceRow('تخفیف', '${thousandSeparator(discounted)} تومان', valueColor: Colors.redAccent),
                                                   priceRow('مالیات', '${thousandSeparator(tax)} تومان'),
                                                   priceRow('هزینه ارسال', isFree ? 'رایگان' : '${thousandSeparator(shippingCost)} تومان', valueColor: isFree ? Colors.green : null),
                                                   const Divider(height: 24),
-                                                  priceRow('مبلغ قابل پرداخت', '${thousandSeparator(discount)} تومان', valueColor: Colors.black),
+                                                  priceRow('مبلغ قابل پرداخت', '${thousandSeparator(payable)} تومان', valueColor: Colors.black),
                                                 ],
                                               ),
                                             ),
@@ -245,7 +247,9 @@ class _CartPageState extends State<CartPage> {
                                             child: ElevatedButton(
                                               onPressed: () {
                                                 Navigator.of(context).pop();
-                                                Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderSuccessPage()));
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(builder: (context) => const AddressSelectionPage()),
+                                                );
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: AppColor.primary,
@@ -269,7 +273,7 @@ class _CartPageState extends State<CartPage> {
                   );
                 },
                 child: const Text(
-                  'مشاهده جزئیات سفارش',
+                  'تسویه و انتخاب آدرس',
                   style: TextStyle(color: Colors.white70),
                 ),
                 style: ElevatedButton.styleFrom(

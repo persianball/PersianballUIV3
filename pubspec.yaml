@@ -47,6 +47,10 @@ dependencies:
 
   loading_animation_widget: ^1.3.0
 
+  # UI helpers for address selection and payment
+  timeline_tile: ^2.0.0
+  webview_flutter: ^4.8.0
+
 
 dev_dependencies:
   flutter_test:

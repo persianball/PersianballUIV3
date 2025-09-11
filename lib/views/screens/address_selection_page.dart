@@ -1,11 +1,15 @@
 // lib/views/screens/address_selection_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marketky/bloc/address/address_event.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
 import 'package:marketky/models/address_model.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/payment_webview_page.dart';
+import 'package:marketky/views/widgets/checkout_timeline.dart';
+
+import '../../bloc/address/address_state.dart';
 
 class AddressSelectionPage extends StatefulWidget {
   const AddressSelectionPage({super.key});
@@ -46,6 +50,10 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
             final list = state.list;
             return Column(
               children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: CheckoutTimeline(currentStep: 1),
+                ),
                 Expanded(
                   child: ListView.separated(
                     itemCount: list.length,
@@ -88,7 +96,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('تسویه حساب و پرداخت', style: TextStyle(color: Colors.white)),
+                        child: const Text('نهایی‌سازی و پرداخت', style: TextStyle(color: Colors.white)),
                       ),
                     ),
                   ),

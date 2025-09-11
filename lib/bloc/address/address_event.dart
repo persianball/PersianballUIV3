@@ -1,5 +1,6 @@
-part of 'address_bloc.dart';
+import 'package:equatable/equatable.dart';
 
+import '../../models/address_model.dart';
 abstract class AddressEvent extends Equatable {
   @override
   List<Object?> get props => [];

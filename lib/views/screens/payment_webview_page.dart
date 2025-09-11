@@ -1,6 +1,7 @@
 // lib/views/screens/payment_webview_page.dart
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:marketky/views/widgets/checkout_timeline.dart';
 
 class PaymentWebViewPage extends StatefulWidget {
   final String paymentUrl;
@@ -37,11 +38,21 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('پرداخت آنلاین', style: TextStyle(color: Colors.black))),
-      body: Stack(
+      body: Column(
         children: [
-          WebViewWidget(controller: _controller),
-          if (loading)
-            const Center(child: CircularProgressIndicator()),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: CheckoutTimeline(currentStep: 2),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                WebViewWidget(controller: _controller),
+                if (loading)
+                  const Center(child: CircularProgressIndicator()),
+              ],
+            ),
+          ),
         ],
       ),
     );
