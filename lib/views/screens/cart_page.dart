@@ -247,8 +247,16 @@ class _CartPageState extends State<CartPage> {
                                             child: ElevatedButton(
                                               onPressed: () {
                                                 Navigator.of(context).pop();
+                                                // Pass cart and selected delivery method forward
+                                                final cart = (context.read<CartBloc>().state as CartLoaded).cart;
                                                 Navigator.of(context).push(
-                                                  MaterialPageRoute(builder: (context) => const AddressSelectionPage()),
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const AddressSelectionPage(),
+                                                    settings: RouteSettings(arguments: {
+                                                      'cart': cart,
+                                                      'delivery_method': selectedMethod,
+                                                    }),
+                                                  ),
                                                 );
                                               },
                                               style: ElevatedButton.styleFrom(

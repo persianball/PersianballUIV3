@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
+import 'package:marketky/constant/urls.dart';
 
 class PaymentWebViewPage extends StatefulWidget {
   final String paymentUrl;
@@ -15,9 +16,15 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
   bool loading = true;
   late final WebViewController _controller;
 
+  late final PlatformWebViewControllerCreationParams params;
+
+
   @override
   void initState() {
     super.initState();
+
+
+
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -28,6 +35,14 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
             // در اینجا می‌توانید آدرس بازگشت (callback) را بررسی کنید
             // و وضعیت پرداخت را از سرور بگیرید
             return NavigationDecision.navigate;
+          },
+          onHttpError: (er) {
+            // Handle HTTP errors here
+            setState(() {
+              loading = false;
+            });
+
+            print(er);
           },
         ),
       )
@@ -47,7 +62,10 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
           Expanded(
             child: Stack(
               children: [
-                WebViewWidget(controller: _controller),
+                Container(
+                    child: WebViewWidget(controller: _controller),
+                  color: Colors.red,
+                ),
                 if (loading)
                   const Center(child: CircularProgressIndicator()),
               ],

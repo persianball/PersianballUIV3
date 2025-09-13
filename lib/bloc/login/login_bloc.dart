@@ -25,7 +25,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       if (result['success']) {
         emit(LoginAuthenticated(result['data']['token']));
       } else {
-        emit(LoginError(result['message']));
+        emit(LoginUnauthenticated(result['message']));
       }
     });
 
@@ -40,7 +40,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       if (result['success']) {
         emit(LoginAuthenticated(result['data']['token']));
       } else {
-        emit(LoginError(result['message']));
+        emit(LoginUnauthenticated(result['message']));
       }
     });
 

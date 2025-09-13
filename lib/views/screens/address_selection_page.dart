@@ -8,6 +8,9 @@ import 'package:marketky/models/address_model.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/payment_webview_page.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
+import 'package:marketky/views/screens/order_summary_page.dart';
+import 'package:marketky/models/CartModel.dart';
+import 'package:marketky/bloc/address/address_bloc.dart';
 
 import '../../bloc/address/address_state.dart';
 
@@ -29,6 +32,16 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Try get passed cart and delivery method from previous page (CartPage)
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    AllCartFromBackend? passedCart;
+    String? passedDeliveryMethod;
+    if (routeArgs is Map) {
+      final map = routeArgs as Map;
+      if (map['cart'] is AllCartFromBackend) passedCart = map['cart'] as AllCartFromBackend;
+      if (map['delivery_method'] is String) passedDeliveryMethod = map['delivery_method'] as String;
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('انتخاب آدرس', style: TextStyle(color: Colors.black))),
       floatingActionButton: FloatingActionButton(
@@ -311,11 +324,99 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   }
 
   void _goToPayment() {
-    // در عمل واقعی، باید خلاصه سبد و آدرس انتخابی را به سرور بفرستید و لینک پرداخت برگردد
-    // اینجا برای دموی UI، فرض می‌کنیم لینک پرداخت دریافت شده است
-    final fakePaymentUrl = 'https://example.com/payment-gateway';
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => PaymentWebViewPage(paymentUrl: fakePaymentUrl),
-    ));
+    if (selectedAddressId == null) return;
+
+    // Prefer delivery method passed from previous step if available
+    final args = ModalRoute.of(context)?.settings.arguments;
+    String initialMethod = 'post';
+    if (args is Map && args['delivery_method'] is String && (args['delivery_method'] as String).isNotEmpty) {
+      initialMethod = args['delivery_method'] as String;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        String method = initialMethod;
+        return StatefulBuilder(
+          builder: (context, setStateSB) {
+            return Directionality(
+              textDirection: TextDirection.rtl,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text('انتخاب روش ارسال', style: TextStyle(fontWeight: FontWeight.w700)),
+                    RadioListTile<String>(
+                      value: 'post',
+                      groupValue: method,
+                      onChanged: (v) => setStateSB(() => method = v ?? 'post'),
+                      title: const Text('پست'),
+                    ),
+                    RadioListTile<String>(
+                      value: 'peyk',
+                      groupValue: method,
+                      onChanged: (v) => setStateSB(() => method = v ?? 'post'),
+                      title: const Text('پیک'),
+                    ),
+                    RadioListTile<String>(
+                      value: 'free',
+                      groupValue: method,
+                      onChanged: (v) => setStateSB(() => method = v ?? 'post'),
+                      title: const Text('ارسال رایگان'),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        final state = context.read<AddressBloc>().state;
+                        if (state is AddressLoaded) {
+                          final addr = state.list.firstWhere((a) => a.id == selectedAddressId);
+                          AllCartFromBackend? cart;
+                          String useMethod = method;
+                          if (args is Map) {
+                            final map = args as Map;
+                            if (map['cart'] is AllCartFromBackend) cart = map['cart'] as AllCartFromBackend;
+                            if (map['delivery_method'] is String && (map['delivery_method'] as String).isNotEmpty) {
+                              useMethod = method; // respect user choice from this sheet
+                            }
+                          }
+                          if (cart != null) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => OrderSummaryPage(
+                                  cart: cart!,
+                                  address: addr,
+                                  deliveryMethod: useMethod,
+                                ),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('اطلاعات سبد در دسترس نیست. لطفاً از سبد خرید وارد شوید.')),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColor.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('ادامه'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }

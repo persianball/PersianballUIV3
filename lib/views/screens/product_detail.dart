@@ -260,6 +260,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
             if(state.product.image != null){
               state.product.images.add(state.product.image!);
             }
+
             if(state.product.variants.isNotEmpty &&  state.product.variants[0].sizeVariants.isNotEmpty){
               context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(
                 state.product.variants[0],state.product.variants[0].sizeVariants[0]
@@ -1180,3 +1181,5 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     );
   }
 }
+
+
