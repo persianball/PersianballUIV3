@@ -9,7 +9,7 @@ class ProductService {
 
   static Future<List<Product>> fetchProducts() async {
     try {
-      final response = await http.get(Uri.parse(baseUrl+"/v2/product/product"));
+      final response = await http.get(Uri.parse(baseUrl+"/v2/product/product/"));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

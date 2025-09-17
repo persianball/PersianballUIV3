@@ -32,11 +32,15 @@ class _HomePageState extends State<HomePage> {
     seconds: 60 - DateTime.now().second,
   );
 
+  reloadHomePage() {
+    context.read<ProductBloc>().add(FetchProducts());
+    context.read<CartBloc>().add(LoadCart(context));
+  }
+
   @override
   void initState() {
     super.initState();
-    context.read<ProductBloc>().add(FetchProducts());
-    context.read<CartBloc>().add(LoadCart());
+    reloadHomePage();
     startTimer();
   }
 
@@ -83,7 +87,7 @@ class _HomePageState extends State<HomePage> {
 
             return RefreshIndicator(
               onRefresh: () async {
-                context.read<ProductBloc>().add(FetchProducts());
+                reloadHomePage();
               },
               child: ListView(
                 physics: BouncingScrollPhysics(),
@@ -424,7 +428,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 8),
           TextButton(
             onPressed: () {
-              context.read<ProductBloc>().add(FetchProducts());
+              reloadHomePage();
             },
             child: Text('تلاش مجدد', style: TextStyle(fontFamily: 'Estedad')),
           ),

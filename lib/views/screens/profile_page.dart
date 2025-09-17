@@ -90,80 +90,53 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
           ),
-          // // Section 2 - Account Menu
-          // Container(
-          //   width: MediaQuery.of(context).size.width,
-          //   margin: EdgeInsets.only(top: 24),
-          //   child: Column(
-          //     mainAxisAlignment: MainAxisAlignment.start,
-          //     crossAxisAlignment: CrossAxisAlignment.start,
-          //     children: [
-          //       Container(
-          //         margin: EdgeInsets.only(left: 16),
-          //         child: Text(
-          //           'ACCOUNT',
-          //           style: TextStyle(color: AppColor.secondary.withOpacity(0.5), letterSpacing: 6 / 100, fontWeight: FontWeight.w600),
-          //         ),
-          //       ),
-          //       MenuTileWidget(
-          //         onTap: () {},
-          //         margin: EdgeInsets.only(top: 10),
-          //         icon: SvgPicture.asset(
-          //           'assets/icons/Heart.svg',
-          //           color: AppColor.secondary.withOpacity(0.5),
-          //         ),
-          //         title: 'Wishlist',
-          //         subtitle: 'Lorem ipsum Dolor sit Amet',
-          //       ),
-          //       MenuTileWidget(
-          //         onTap: () {},
-          //         icon: SvgPicture.asset(
-          //           'assets/icons/Show.svg',
-          //           color: AppColor.secondary.withOpacity(0.5),
-          //         ),
-          //         title: 'Last Seen',
-          //         subtitle: 'Lorem ipsum Dolor sit Amet',
-          //       ),
-          //       MenuTileWidget(
-          //         onTap: () {},
-          //         icon: SvgPicture.asset(
-          //           'assets/icons/Heart.svg',
-          //           color: AppColor.secondary.withOpacity(0.5),
-          //         ),
-          //         title: 'Wishlist',
-          //         subtitle: 'Lorem ipsum Dolor sit Amet',
-          //       ),
-          //       MenuTileWidget(
-          //         onTap: () {},
-          //         icon: SvgPicture.asset(
-          //           'assets/icons/Bag.svg',
-          //           color: AppColor.secondary.withOpacity(0.5),
-          //         ),
-          //         title: 'Orders',
-          //         subtitle: 'Lorem ipsum Dolor sit Amet',
-          //       ),
-          //       MenuTileWidget(
-          //         onTap: () {},
-          //         icon: SvgPicture.asset(
-          //           'assets/icons/Wallet.svg',
-          //           color: AppColor.secondary.withOpacity(0.5),
-          //         ),
-          //         title: 'Wallet',
-          //         subtitle: 'Lorem ipsum Dolor sit Amet',
-          //       ),
-          //       MenuTileWidget(
-          //         onTap: () {},
-          //         icon: SvgPicture.asset(
-          //           'assets/icons/Location.svg',
-          //           color: AppColor.secondary.withOpacity(0.5),
-          //         ),
-          //         title: 'Addresses',
-          //         subtitle: 'Lorem ipsum Dolor sit Amet',
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          //
+          // Section 2 - Account Menu
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              margin: EdgeInsets.only(top: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(right: 16),
+                    child: Text(
+                      'حساب کاربری',
+                      style: TextStyle(color: AppColor.secondary.withOpacity(0.5), letterSpacing: 6 / 100, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+
+
+                  MenuTileWidget(
+                    onTap: () {
+                      Navigator.of(context).pushNamed('/orders');
+                    },
+                    icon: SvgPicture.asset(
+                      'assets/icons/Bag.svg',
+                      color: AppColor.secondary.withOpacity(0.5),
+                    ),
+                    title: 'سفارشات',
+                    subtitle: 'سفارش‌های ثبت‌شده شما',
+                  ),
+
+                  MenuTileWidget(
+                    onTap: () {
+                      Navigator.of(context).pushNamed('/addresses');
+                    },
+                    icon: SvgPicture.asset(
+                      'assets/icons/Location.svg',
+                      color: AppColor.secondary.withOpacity(0.5),
+                    ),
+                    title: 'آدرس‌ها',
+                    subtitle: 'آدرس‌های ثبت‌شده شما',
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           // // Section 3 - Settings
           // Container(
           //   width: MediaQuery.of(context).size.width,

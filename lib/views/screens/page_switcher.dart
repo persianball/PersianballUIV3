@@ -5,6 +5,7 @@ import 'package:marketky/views/screens/feeds_page.dart';
 import 'package:marketky/views/screens/home_page.dart';
 import 'package:marketky/views/screens/notification_page.dart';
 import 'package:marketky/views/screens/profile_page.dart';
+import 'package:marketky/views/screens/courses_page.dart';
 
 class PageSwitcher extends StatefulWidget {
   @override
@@ -25,8 +26,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
     return Scaffold(
       body: [
         HomePage(),
-        // FeedsPage(),
-        // NotificationPage(),
+        const CoursesPage(),
         ProfilePage(),
       ][_selectedIndex],
       bottomNavigationBar: SafeArea(
@@ -34,19 +34,15 @@ class _PageSwitcherState extends State<PageSwitcher> {
           decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColor.primarySoft, width: 2))),
           child: BottomNavigationBar(
             onTap: _onItemTapped,
+            currentIndex: _selectedIndex,
             showSelectedLabels: false,
             showUnselectedLabels: false,
             items: [
               (_selectedIndex == 0)
                   ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Home-active.svg'), label: '')
                   : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Home.svg'), label: ''),
-              // (_selectedIndex == 1)
-              //     ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Category-active.svg'), label: '')
-              //     : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Category.svg'), label: ''),
-              // (_selectedIndex == 2)
-              //     ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Notification-active.svg'), label: '')
-              //     : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Notification.svg'), label: ''),
-              (_selectedIndex == 1)
+              BottomNavigationBarItem(icon: const Icon(Icons.school_outlined), label: ''),
+              (_selectedIndex == 2)
                   ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Profile-active.svg'), label: '')
                   : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Profile.svg'), label: ''),
             ],

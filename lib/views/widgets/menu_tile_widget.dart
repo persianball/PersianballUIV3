@@ -38,7 +38,7 @@ class MenuTileWidget extends StatelessWidget {
               width: 46,
               height: 46,
               padding: EdgeInsets.all(10),
-              margin: EdgeInsets.only(right: 16),
+              margin: EdgeInsets.only(left: 16),
               decoration: BoxDecoration(
                 color: iconBackground,
                 borderRadius: BorderRadius.circular(8),
@@ -48,11 +48,11 @@ class MenuTileWidget extends StatelessWidget {
             // Info
             Expanded(
               child: (subtitle == null)
-                  ? Text('$title', style: TextStyle(color: titleColor, fontFamily: 'poppins', fontWeight: FontWeight.w500))
+                  ? Text('$title', style: TextStyle(color: titleColor, fontFamily: 'Estedad', fontWeight: FontWeight.w500))
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('$title', style: TextStyle(color: AppColor.secondary, fontFamily: 'poppins', fontWeight: FontWeight.w500)),
+                        Text('$title', style: TextStyle(color: AppColor.secondary, fontFamily: 'Estedad', fontWeight: FontWeight.w500)),
                         SizedBox(height: 2),
                         Text('$subtitle', style: TextStyle(color: AppColor.secondary.withOpacity(0.7), fontSize: 12)),
                       ],

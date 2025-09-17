@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:marketky/views/screens/home_page.dart';
 import 'package:marketky/views/screens/otp_verification_page.dart';
 import 'package:marketky/views/screens/welcome_page.dart';
+import 'package:marketky/views/screens/page_switcher.dart';
+import 'package:marketky/core/app_router.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
 
 import 'bloc/product/product_bloc.dart';
@@ -51,7 +53,8 @@ class MyApp extends StatelessWidget {
             scaffoldBackgroundColor: Colors.white,
             fontFamily: 'Estedad',
           ),
-          home: SafeArea(child: WelcomePage()),
+          onGenerateRoute: AppRouter.onGenerateRoute,
+          initialRoute: '/',
          )
 
     );

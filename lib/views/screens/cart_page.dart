@@ -21,7 +21,7 @@ class _CartPageState extends State<CartPage> {
   @override
   void initState() {
     super.initState();
-    context.read<CartBloc>().add(LoadCart());
+    context.read<CartBloc>().add(LoadCart(context));
   }
 
   @override
@@ -42,7 +42,7 @@ class _CartPageState extends State<CartPage> {
                 children: [
                   Text(state.message),
                   ElevatedButton(
-                    onPressed: () => context.read<CartBloc>().add(LoadCart()),
+                    onPressed: () => context.read<CartBloc>().add(LoadCart(context)),
                     child: Text('تلاش مجدد'),
                   ),
                 ],

@@ -24,8 +24,7 @@ class ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => ProductDetailPage(productId: this.product.id,)));
+        Navigator.of(context).pushNamed('/product/${product.id}');
       },
       child: Container(
         width: MediaQuery.of(context).size.width / 2 - 16 - 8,
@@ -72,11 +71,11 @@ class ItemCard extends StatelessWidget {
                     ),
                   ),
                   // محتوای جلو: RatingTag
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    child: RatingTag(value: 0),
-                  ),
+                  // Positioned(
+                  //   top: 0,
+                  //   left: 0,
+                  //   child: RatingTag(value: product.),
+                  // ),
                 ],
               ),
             ),

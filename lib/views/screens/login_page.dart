@@ -10,7 +10,8 @@ import '../../bloc/login/login_bloc.dart';
 
 
 class LoginPage extends StatefulWidget {
-  LoginPage({Key? key}) : super(key: key);
+  final bool popOnSuccess; // if true, pop with result after successful login
+  LoginPage({Key? key, this.popOnSuccess = false}) : super(key: key);
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -37,6 +38,8 @@ class _LoginPageState extends State<LoginPage> {
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop();
+            //navigate to home page
+            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=> PageSwitcher()), ModalRoute.withName("/"));
           },
           icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
         ),
@@ -244,9 +247,11 @@ class _LoginPageState extends State<LoginPage> {
               BlocConsumer<LoginBloc, LoginState>(
                 listener: (context, state) {
                   if (state is LoginAuthenticated) {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => PageSwitcher()),
-                    );
+                    if (widget.popOnSuccess && Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop(true); // signal success
+                    } else {
+                      Navigator.of(context).pushReplacementNamed('/home');
+                    }
                   }
                 },
                 builder: (context, state) {

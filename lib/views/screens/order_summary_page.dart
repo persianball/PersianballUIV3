@@ -32,6 +32,8 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   final TextEditingController _discountCtrl = TextEditingController();
   bool _useWallet = false;
   bool _posting = false;
+  int _discountPercent = 0;
+  bool _applyingDiscount = false;
 
   @override
   void dispose() {
@@ -44,11 +46,99 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     return prefs.getString('auth_token');
   }
 
+  // Ask user to login if token is missing, then return token if available
+  Future<String?> _requireToken() async {
+    final token = await _getToken();
+    if (token == null || token.isEmpty) {
+      await _showLoginDialog();
+      return null;
+    }
+    return token;
+  }
+
+  Future<void> _showLoginDialog() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: const Text('نیاز به ورود دارید'),
+          content: const Text('برای ادامه، لطفاً ابتدا وارد حساب کاربری خود شوید.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('انصراف'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).pushNamed(
+                  '/login',
+                  arguments: {'popOnSuccess': true},
+                );
+              },
+              child: const Text('ورود'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _applyDiscountCode() async {
+    if (_discountCtrl.text.trim().isEmpty) {
+      _showSnack('لطفاً کد تخفیف را وارد کنید');
+      return;
+    }
+
+    if (_applyingDiscount) return;
+    
+    setState(() => _applyingDiscount = true);
+    
+    try {
+      final token = await _requireToken();
+      if (token == null || token.isEmpty) return; // user canceled or not logged in
+      final body = {
+        'code': _discountCtrl.text.trim(),
+      };
+
+      final resp = await http.post(
+        Uri.parse('${URLs.baseUrl}/v1/payment/voucher/verify/'),
+        headers: {
+          'Authorization': 'token ${token ?? ''}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        final discountPercent = data['discount_percent'] as int? ?? 0;
+        
+        setState(() => _discountPercent = discountPercent);
+        
+        if (discountPercent > 0) {
+          _showSnack('کد تخفیف اعمال شد - ${discountPercent}% تخفیف');
+        } else {
+          _showSnack('کد تخفیف نامعتبر است');
+        }
+      } else {
+        _showSnack('خطا در اعمال کد تخفیف (${resp.statusCode})');
+      }
+    } catch (e) {
+      _showSnack('خطای شبکه/سرور: $e');
+    } finally {
+      if (mounted) setState(() => _applyingDiscount = false);
+    }
+  }
+
   Future<void> _submitOrder() async {
     if (_posting) return;
     setState(() => _posting = true);
     try {
-      final token = await _getToken();
+      final token = await _requireToken();
+      if (token == null || token.isEmpty) { setState(() => _posting = false); return; }
       final body = {
         'delivery_method': widget.deliveryMethod,
         'address': widget.address.id,
@@ -60,7 +150,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       final resp = await http.post(
         Uri.parse('${URLs.baseUrl}/v1/order/order/'),
         headers: {
-          'Authorization': 'token ${token ?? ''}',
+          'Authorization': 'token $token',
           'Content-Type': 'application/json',
         },
         body: jsonEncode(body),
@@ -115,9 +205,14 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     final isFree = widget.deliveryMethod == 'free' || (price.isFreeShipping ?? false);
     final shippingCost = isFree ? 0 : (widget.deliveryMethod == 'peyk' ? peykPrice : postPrice);
 
-    // discount value shown is (base - discounted)
-    final discountValue = (base - discounted) < 0 ? 0 : (base - discounted);
-    final payable = discounted + tax + shippingCost;
+    // Apply discount percentage if available
+    final finalDiscounted = _discountPercent > 0 
+        ? base - (base * _discountPercent / 100)
+        : discounted;
+    
+    // discount value shown is (base - finalDiscounted)
+    final discountValue = base - finalDiscounted;
+    final payable = finalDiscounted + tax + shippingCost;
 
     return Scaffold(
       appBar: AppBar(title: const Text('خلاصه سفارش', style: TextStyle(color: Colors.black))),
@@ -207,14 +302,57 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                         children: [
                           const Text('کد تخفیف', style: TextStyle(fontWeight: FontWeight.w700)),
                           const SizedBox(height: 8),
-                          TextField(
-                            controller: _discountCtrl,
-                            decoration: InputDecoration(
-                              hintText: 'کد تخفیف خود را وارد کنید',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              isDense: true,
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _discountCtrl,
+                                  decoration: InputDecoration(
+                                    hintText: 'کد تخفیف خود را وارد کنید',
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                    isDense: true,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: _applyingDiscount ? null : _applyDiscountCode,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColor.primary,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                                child: _applyingDiscount
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text('اعمال', style: TextStyle(color: Colors.white)),
+                              ),
+                            ],
                           ),
+                          if (_discountPercent > 0) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.green.shade200),
+                              ),
+                              child: Text(
+                                'کد تخفیف اعمال شد: ${_discountPercent}% تخفیف',
+                                style: TextStyle(
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 8),
                           Row(
                             children: [
@@ -243,11 +381,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                       child: Column(
                         children: [
                           _priceRow('قیمت کل', '${thousandSeparator(base)} تومان'),
-                          _priceRow('تخفیف', '${thousandSeparator(discountValue)} تومان', valueColor: Colors.redAccent),
+                          _priceRow('تخفیف', '-${thousandSeparator(discountValue.toInt())} تومان', valueColor: Colors.redAccent),
                           _priceRow('مالیات', '${thousandSeparator(tax)} تومان'),
                           _priceRow('هزینه ارسال', isFree ? 'رایگان' : '${thousandSeparator(shippingCost)} تومان', valueColor: isFree ? Colors.green : null),
                           const Divider(height: 24),
-                          _priceRow('مبلغ قابل پرداخت', '${thousandSeparator(payable)} تومان', valueColor: Colors.black),
+                          _priceRow('مبلغ قابل پرداخت', '${thousandSeparator(payable.toInt())} تومان', valueColor: Colors.black),
                         ],
                       ),
                     ),

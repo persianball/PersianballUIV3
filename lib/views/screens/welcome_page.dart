@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/bloc/login/login_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/home_page.dart';
-import 'package:marketky/views/screens/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:marketky/views/screens/page_switcher.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -31,9 +31,12 @@ class _WelcomePageState extends State<WelcomePage> {
       body: BlocConsumer<LoginBloc,LoginState>(
         listener: (context,state){
           if(state is LoginAuthenticated){
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => PageSwitcher()),
-            );
+            SharedPreferences.getInstance().then((p) async {
+              await p.setBool('has_seen_welcome', true);
+              if (mounted) {
+                Navigator.of(context).pushReplacementNamed('/home');
+              }
+            });
           }
         },
         builder: (context,state) {
@@ -79,8 +82,12 @@ class _WelcomePageState extends State<WelcomePage> {
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     margin: EdgeInsets.only(bottom: 16),
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginPage()));
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('has_seen_welcome', true);
+                        if (!mounted) return;
+                        // Go to home (PageSwitcher). Login can be triggered when needed elsewhere.
+                        Navigator.of(context).pushReplacementNamed('/home');
                       },
                       child: Text(
                         'شروع',

@@ -54,7 +54,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   void _onResendCode() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('کد تأیید دوباره به ${_maskedDestination} ارسال شد', style: TextStyle(fontFamily: 'Estedad')),
+        content: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text('کد تأیید دوباره به ${_maskedDestination} ارسال شد', style: TextStyle(fontFamily: 'Estedad'))),
         backgroundColor: AppColor.primary,
       ),
     );

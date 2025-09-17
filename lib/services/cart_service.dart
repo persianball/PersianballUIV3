@@ -1,5 +1,6 @@
 // services/CartService.dart
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:marketky/views/widgets/pro_cart_item.dart';
 import '../../services/product_service.dart';
@@ -12,9 +13,31 @@ class CartService {
 
 
   // دریافت سبد خرید
-  static Future<AllCartFromBackend> fetchCart() async {
+  static Future<AllCartFromBackend> fetchCart(BuildContext context) async {
     final token = await _getToken();
-    print(token);
+    if (token == null || token.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('نیاز به ورود دارید'),
+            content: const Text('برای مشاهده سبد خرید ابتدا وارد حساب کاربری شوید.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pushNamed('/login', arguments: {'popOnSuccess': true});
+                },
+                child: const Text('ورود'),
+              ),
+            ],
+          ),
+        ),
+      );
+      throw Exception('نیاز به ورود');
+    }
     final response = await http.get(
       Uri.parse(URLs.baseUrl+"/v1/order/basket/"),
       headers: {
@@ -47,8 +70,31 @@ class CartService {
   }
 
   // افزودن محصول به سبد
-  static Future<void> addToCart(int productId, int quantity) async {
+  static Future<void> addToCart(BuildContext context, int productId, int quantity) async {
     final token = await _getToken();
+    if (token == null || token.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('نیاز به ورود دارید'),
+            content: const Text('برای افزودن به سبد ابتدا وارد حساب کاربری شوید.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(ctx).pushNamed('/login', arguments: {'popOnSuccess': true});
+                },
+                child: const Text('ورود'),
+              ),
+            ],
+          ),
+        ),
+      );
+      throw Exception('نیاز به ورود');
+    }
     final response = await http.post(
       Uri.parse(URLs.baseUrl+"/v1/order/basket-items/"),
       headers: {
@@ -67,8 +113,31 @@ class CartService {
   }
 
   // حذف آیتم
-  static Future<void> removeItem(int itemId) async {
+  static Future<void> removeItem(BuildContext context, int itemId) async {
     final token = await _getToken();
+    if (token == null || token.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('نیاز به ورود دارید'),
+            content: const Text('برای حذف آیتم ابتدا وارد حساب کاربری شوید.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pushNamed('/login', arguments: {'popOnSuccess': true});
+                },
+                child: const Text('ورود'),
+              ),
+            ],
+          ),
+        ),
+      );
+      throw Exception('نیاز به ورود');
+    }
     final response = await http.delete(
       Uri.parse('${URLs.baseUrl+"/v1/order/basket-items"}/$itemId/'),
       headers: {'Authorization': 'token $token'},
@@ -80,8 +149,31 @@ class CartService {
   }
 
   // به‌روزرسانی تعداد
-  static Future<void> updateQuantity(int itemId,int productId, int quantity) async {
+  static Future<void> updateQuantity(BuildContext context, int itemId,int productId, int quantity) async {
     final token = await _getToken();
+    if (token == null || token.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('نیاز به ورود دارید'),
+            content: const Text('برای ویرایش سبد ابتدا وارد حساب کاربری شوید.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pushNamed('/login', arguments: {'popOnSuccess': true});
+                },
+                child: const Text('ورود'),
+              ),
+            ],
+          ),
+        ),
+      );
+      throw Exception('نیاز به ورود');
+    }
     final response = await http.put(
       Uri.parse('${URLs.baseUrl+"/v1/order/basket-items"}/$itemId/'),
       headers: {

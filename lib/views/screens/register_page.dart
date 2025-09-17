@@ -58,7 +58,7 @@ class _RegisterPageState extends State<RegisterPage> {
           alignment: Alignment.center,
           child: TextButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginPage()));
+              Navigator.of(context).pushNamed('/login');
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColor.secondary.withOpacity(0.1),

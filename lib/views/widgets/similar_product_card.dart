@@ -16,11 +16,7 @@ class SimilarProductCard extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.of(context).pop();
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ProductDetailPage(productId: product.id),
-          ),
-        );
+        Navigator.of(context).pushNamed('/product/${product.id}');
       },
       child: Container(
         width: 160, // عرض ثابت برای اسلایدر افقی

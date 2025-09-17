@@ -161,8 +161,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           elevation: 0,
                                         ),
                                         onPressed: () {
-                                          Navigator.of(context).push(MaterialPageRoute(
-                                              builder: (context) => CartPage()));
+                                          Navigator.of(context).pushNamed('/cart');
                                         },
                                         child: SvgPicture.asset('assets/icons/Bag.svg', color: Colors.white,fit: BoxFit.contain,
                                         ),

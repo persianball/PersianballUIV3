@@ -11,7 +11,7 @@ import '../screens/empty_cart_page.dart';
 import '../screens/message_page.dart';
 
 Widget buildCarouselItem(BuildContext context,String imageUrl) {
-  context.read<CartBloc>().add(LoadCart());
+  context.read<CartBloc>().add(LoadCart(context));
   return Container(
     width: MediaQuery.of(context).size.width,
     padding: EdgeInsets.symmetric(horizontal: 16),

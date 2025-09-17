@@ -27,7 +27,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   @override
   void initState() {
     super.initState();
-    context.read<AddressBloc>().add(LoadAddresses());
+    context.read<AddressBloc>().add(LoadAddresses(context));
   }
 
   @override
@@ -45,6 +45,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('انتخاب آدرس', style: TextStyle(color: Colors.black))),
       floatingActionButton: FloatingActionButton(
+
         onPressed: _openCreateDialog,
         backgroundColor: AppColor.primary,
         child: const Icon(Icons.add, color: Colors.white),
@@ -67,41 +68,44 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                   padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: CheckoutTimeline(currentStep: 1),
                 ),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: list.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) {
-                      final item = list[i];
-                      final isFirst = i == 0;
-                      final isLast = i == list.length - 1;
-                      return TimelineTile(
-                        isFirst: isFirst,
-                        isLast: isLast,
-                        indicatorStyle: IndicatorStyle(
-                          width: 24,
-                          height: 24,
-                          indicator: Container(
-                            decoration: BoxDecoration(
-                              color: selectedAddressId == item.id ? AppColor.primary : Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColor.primary, width: 2),
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Expanded(
+                    child: ListView.separated(
+                      itemCount: list.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (_, i) {
+                        final item = list[i];
+                        final isFirst = i == 0;
+                        final isLast = i == list.length - 1;
+                        return TimelineTile(
+                          isFirst: isFirst,
+                          isLast: isLast,
+                          indicatorStyle: IndicatorStyle(
+                            width: 24,
+                            height: 24,
+                            indicator: Container(
+                              decoration: BoxDecoration(
+                                color: selectedAddressId == item.id ? AppColor.primary : Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColor.primary, width: 2),
+                              ),
+                              child: const Icon(Icons.location_on, size: 14, color: Colors.white),
                             ),
-                            child: const Icon(Icons.location_on, size: 14, color: Colors.white),
                           ),
-                        ),
-                        beforeLineStyle: LineStyle(color: Colors.grey.shade300, thickness: 2),
-                        afterLineStyle: LineStyle(color: Colors.grey.shade300, thickness: 2),
-                        endChild: _addressCard(item),
-                      );
-                    },
+                          beforeLineStyle: LineStyle(color: Colors.grey.shade300, thickness: 2),
+                          afterLineStyle: LineStyle(color: Colors.grey.shade300, thickness: 2),
+                          endChild: _addressCard(item),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: SizedBox(
-                      width: double.infinity,
+                      width: MediaQuery.of(context).size.width*0.5,
                       child: ElevatedButton(
                         onPressed: selectedAddressId == null ? null : _goToPayment,
                         style: ElevatedButton.styleFrom(
@@ -269,9 +273,9 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                         defaultAddress: isDefault,
                       );
                       if (model == null) {
-                        context.read<AddressBloc>().add(CreateAddress(payload));
+                        context.read<AddressBloc>().add(CreateAddress(context, payload));
                       } else {
-                        context.read<AddressBloc>().add(UpdateAddress(model.id!, payload));
+                        context.read<AddressBloc>().add(UpdateAddress(context, model.id!, payload));
                       }
                       Navigator.of(ctx).pop();
                     },
@@ -313,7 +317,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
           TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('لغو')),
           TextButton(
             onPressed: () {
-              context.read<AddressBloc>().add(DeleteAddress(id));
+              context.read<AddressBloc>().add(DeleteAddress(context, id));
               Navigator.of(ctx).pop();
             },
             child: const Text('حذف', style: TextStyle(color: Colors.red)),
@@ -328,95 +332,130 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
 
     // Prefer delivery method passed from previous step if available
     final args = ModalRoute.of(context)?.settings.arguments;
-    String initialMethod = 'post';
+    String initialMethod = 'free';
     if (args is Map && args['delivery_method'] is String && (args['delivery_method'] as String).isNotEmpty) {
       initialMethod = args['delivery_method'] as String;
     }
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        String method = initialMethod;
-        return StatefulBuilder(
-          builder: (context, setStateSB) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text('انتخاب روش ارسال', style: TextStyle(fontWeight: FontWeight.w700)),
-                    RadioListTile<String>(
-                      value: 'post',
-                      groupValue: method,
-                      onChanged: (v) => setStateSB(() => method = v ?? 'post'),
-                      title: const Text('پست'),
-                    ),
-                    RadioListTile<String>(
-                      value: 'peyk',
-                      groupValue: method,
-                      onChanged: (v) => setStateSB(() => method = v ?? 'post'),
-                      title: const Text('پیک'),
-                    ),
-                    RadioListTile<String>(
-                      value: 'free',
-                      groupValue: method,
-                      onChanged: (v) => setStateSB(() => method = v ?? 'post'),
-                      title: const Text('ارسال رایگان'),
-                    ),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        final state = context.read<AddressBloc>().state;
-                        if (state is AddressLoaded) {
-                          final addr = state.list.firstWhere((a) => a.id == selectedAddressId);
-                          AllCartFromBackend? cart;
-                          String useMethod = method;
-                          if (args is Map) {
-                            final map = args as Map;
-                            if (map['cart'] is AllCartFromBackend) cart = map['cart'] as AllCartFromBackend;
-                            if (map['delivery_method'] is String && (map['delivery_method'] as String).isNotEmpty) {
-                              useMethod = method; // respect user choice from this sheet
-                            }
-                          }
-                          if (cart != null) {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => OrderSummaryPage(
-                                  cart: cart!,
-                                  address: addr,
-                                  deliveryMethod: useMethod,
-                                ),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('اطلاعات سبد در دسترس نیست. لطفاً از سبد خرید وارد شوید.')),
-                            );
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColor.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('ادامه'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+    Navigator.of(context).pop();
+    final state = context.read<AddressBloc>().state;
+    if (state is AddressLoaded) {
+      final addr = state.list.firstWhere((a) => a.id == selectedAddressId);
+      AllCartFromBackend? cart;
+      String useMethod = initialMethod;
+
+      if (args is Map) {
+        final map = args as Map;
+        if (map['cart'] is AllCartFromBackend) cart = map['cart'] as AllCartFromBackend;
+        if (map['delivery_method'] is String && (map['delivery_method'] as String).isNotEmpty) {
+          useMethod = map['delivery_method'];
+        }
+      }
+      if (cart != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => OrderSummaryPage(
+              cart: cart!,
+              address: addr,
+              deliveryMethod: useMethod,
+            ),
+          ),
         );
-      },
-    );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('اطلاعات سبد در دسترس نیست. لطفاً از سبد خرید وارد شوید.')),
+        );
+      }
+    }
+
+
+
+
+
+    // showModalBottomSheet(
+    //   context: context,
+    //   backgroundColor: Colors.white,
+    //   shape: const RoundedRectangleBorder(
+    //     borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    //   ),
+    //   builder: (ctx) {
+    //     String method = initialMethod;
+    //     return StatefulBuilder(
+    //       builder: (context, setStateSB) {
+    //         return Directionality(
+    //           textDirection: TextDirection.rtl,
+    //           child: Padding(
+    //             padding: const EdgeInsets.all(16.0),
+    //             child: Column(
+    //               mainAxisSize: MainAxisSize.min,
+    //               crossAxisAlignment: CrossAxisAlignment.stretch,
+    //               children: [
+    //                 const Text('انتخاب روش ارسال', style: TextStyle(fontWeight: FontWeight.w700)),
+    //                 RadioListTile<String>(
+    //                   value: 'post',
+    //                   groupValue: method,
+    //                   onChanged: (v) => setStateSB(() => method = v ?? 'post'),
+    //                   title: const Text('پست'),
+    //                 ),
+    //                 RadioListTile<String>(
+    //                   value: 'peyk',
+    //                   groupValue: method,
+    //                   onChanged: (v) => setStateSB(() => method = v ?? 'post'),
+    //                   title: const Text('پیک'),
+    //                 ),
+    //                 RadioListTile<String>(
+    //                   value: 'free',
+    //                   groupValue: method,
+    //                   onChanged: (v) => setStateSB(() => method = v ?? 'post'),
+    //                   title: const Text('ارسال رایگان'),
+    //                 ),
+    //                 const SizedBox(height: 8),
+    //                 ElevatedButton(
+    //                   onPressed: () {
+    //                     Navigator.of(context).pop();
+    //                     final state = context.read<AddressBloc>().state;
+    //                     if (state is AddressLoaded) {
+    //                       final addr = state.list.firstWhere((a) => a.id == selectedAddressId);
+    //                       AllCartFromBackend? cart;
+    //                       String useMethod = method;
+    //                       if (args is Map) {
+    //                         final map = args as Map;
+    //                         if (map['cart'] is AllCartFromBackend) cart = map['cart'] as AllCartFromBackend;
+    //                         if (map['delivery_method'] is String && (map['delivery_method'] as String).isNotEmpty) {
+    //                           useMethod = method; // respect user choice from this sheet
+    //                         }
+    //                       }
+    //                       if (cart != null) {
+    //                         Navigator.of(context).push(
+    //                           MaterialPageRoute(
+    //                             builder: (_) => OrderSummaryPage(
+    //                               cart: cart!,
+    //                               address: addr,
+    //                               deliveryMethod: useMethod,
+    //                             ),
+    //                           ),
+    //                         );
+    //                       } else {
+    //                         ScaffoldMessenger.of(context).showSnackBar(
+    //                           const SnackBar(content: Text('اطلاعات سبد در دسترس نیست. لطفاً از سبد خرید وارد شوید.')),
+    //                         );
+    //                       }
+    //                     }
+    //                   },
+    //                   style: ElevatedButton.styleFrom(
+    //                     backgroundColor: AppColor.primary,
+    //                     padding: const EdgeInsets.symmetric(vertical: 14),
+    //                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    //                   ),
+    //                   child: const Text('ادامه'),
+    //                 ),
+    //               ],
+    //             ),
+    //           ),
+    //         );
+    //       },
+    //     );
+    //   },
+    // );
   }
 }

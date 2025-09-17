@@ -19,7 +19,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
   Future<void> _onLoad(LoadAddresses e, Emitter<AddressState> emit) async {
     emit(AddressLoading());
     try {
-      final list = await AddressService.list();
+      final list = await AddressService.list(e.context);
       emit(AddressLoaded(list: list));
     } catch (err) {
       emit(AddressError(err.toString()));
@@ -28,8 +28,8 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
 
   Future<void> _onCreate(CreateAddress e, Emitter<AddressState> emit) async {
     try {
-      await AddressService.create(e.model);
-      add(LoadAddresses());
+      await AddressService.create(e.context, e.model);
+      add(LoadAddresses(e.context));
     } catch (err) {
       emit(AddressError(err.toString()));
     }
@@ -37,8 +37,8 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
 
   Future<void> _onUpdate(UpdateAddress e, Emitter<AddressState> emit) async {
     try {
-      await AddressService.update(e.id, e.model);
-      add(LoadAddresses());
+      await AddressService.update(e.context, e.id, e.model);
+      add(LoadAddresses(e.context));
     } catch (err) {
       emit(AddressError(err.toString()));
     }
@@ -46,8 +46,8 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
 
   Future<void> _onDelete(DeleteAddress e, Emitter<AddressState> emit) async {
     try {
-      await AddressService.remove(e.id);
-      add(LoadAddresses());
+      await AddressService.remove(e.context, e.id);
+      add(LoadAddresses(e.context));
     } catch (err) {
       emit(AddressError(err.toString()));
     }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 import '../../models/address_model.dart';
 abstract class AddressEvent extends Equatable {
@@ -6,20 +7,26 @@ abstract class AddressEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadAddresses extends AddressEvent {}
+class LoadAddresses extends AddressEvent {
+  final BuildContext context;
+  LoadAddresses(this.context);
+}
 
 class CreateAddress extends AddressEvent {
+  final BuildContext context;
   final AddressModel model;
-  CreateAddress(this.model);
+  CreateAddress(this.context, this.model);
 }
 
 class UpdateAddress extends AddressEvent {
+  final BuildContext context;
   final int id;
   final AddressModel model;
-  UpdateAddress(this.id, this.model);
+  UpdateAddress(this.context, this.id, this.model);
 }
 
 class DeleteAddress extends AddressEvent {
+  final BuildContext context;
   final int id;
-  DeleteAddress(this.id);
+  DeleteAddress(this.context, this.id);
 }

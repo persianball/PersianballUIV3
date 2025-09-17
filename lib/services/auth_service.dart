@@ -63,6 +63,42 @@ class AuthService {
     return prefs.getString('auth_token');
   }
 
+  // Returns token if exists; otherwise shows a login dialog using provided context,
+  // navigates to login, and returns null.
+  static Future<String?> requireToken(BuildContext context) async {
+    final token = await getToken();
+    if (token != null && token.isNotEmpty) return token;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: const Text('نیاز به ورود دارید'),
+          content: const Text('برای ادامه، لطفاً ابتدا وارد حساب کاربری خود شوید.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('انصراف'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).pushNamed(
+                  '/login',
+                  arguments: {'popOnSuccess': true},
+                );
+              },
+              child: const Text('ورود'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return null;
+  }
+
   // بررسی وضعیت ورود
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
