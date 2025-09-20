@@ -46,18 +46,31 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 
-
 	<key>LSApplicationQueriesSchemes</key>
-    <array>
-        <string>https</string>
-        <string>http</string>
-        <string>tel</string>
-        <string>mailto</string>
-        <string>sms</string>
-        <!-- اگر می‌خوای اپ خاصی مثل تلگرام رو باز کنی -->
-        <string>tg</string>
-    </array>
+	<array>
+		<string>https</string>
+		<string>http</string>
+		<string>tel</string>
+		<string>mailto</string>
+		<string>sms</string>
+		<!-- اگر می‌خوای اپ خاصی مثل تلگرام رو باز کنی -->
+		<string>tg</string>
+	</array>
 
+	<!-- Custom URL scheme for deep links -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>marketky</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>marketky</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- For universal links you will also need Associated Domains in entitlements -->
 
 </dict>
 </plist>
