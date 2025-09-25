@@ -7,6 +7,7 @@ import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/views/screens/order_success_page.dart';
 import 'package:marketky/views/widgets/cart_tile.dart';
 import 'package:marketky/views/widgets/pro_cart_item.dart';
+import 'package:marketky/views/widgets/course_cart_item.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
 import 'package:marketky/views/screens/address_selection_page.dart';
@@ -71,7 +72,7 @@ class _CartPageState extends State<CartPage> {
               Text('سبد خرید', style: TextStyle(fontFamily: 'Estedad', color: Colors.black)),
               Directionality(
                 textDirection: TextDirection.rtl,
-                  child: Text(' $countمحصول ', style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.7)))),
+                  child: Text(' $count آیتم ', style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.7)))),
             ],
           );
         },
@@ -84,6 +85,16 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildCartContent(AllCartFromBackend cart) {
+    if (cart.count == 0 || cart.results.isEmpty || cart.results[0].items.isEmpty) {
+      return Center(
+        child: Text('سبد خرید شما خالی است'),
+      );
+    }
+
+    final items = cart.results[0].items;
+    final products = items.where((item) => item.product != null).toList();
+    final courses = items.where((item) => item.course != null).toList();
+
     return ListView(
       padding: EdgeInsets.all(16),
       children: [
@@ -91,19 +102,69 @@ class _CartPageState extends State<CartPage> {
         const CheckoutTimeline(currentStep: 0),
         const SizedBox(height: 12),
 
-        ListView.separated(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: cart.count > 0 ? cart.results[0].items.length : 0,
-          separatorBuilder: (_, i) => SizedBox(height: 16),
-          itemBuilder: (_, i) {
-            return ProCartItemCard(
-              cartItemFromBackend: cart.results[0].items[i],
-              priceFromBack: cart.results[0].price,
-            );
-          },
-        ),
+        // Products Section
+        if (products.isNotEmpty) ...[
+          _buildSectionHeader('محصولات', Icons.shopping_bag),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: products.length,
+            separatorBuilder: (_, i) => SizedBox(height: 16),
+            itemBuilder: (_, i) {
+              return ProCartItemCard(
+                cartItemFromBackend: products[i],
+                priceFromBack: cart.results[0].price,
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
+
+        // Courses Section
+        if (courses.isNotEmpty) ...[
+          _buildSectionHeader('دوره‌های آموزشی', Icons.school),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: courses.length,
+            separatorBuilder: (_, i) => SizedBox(height: 16),
+            itemBuilder: (_, i) {
+              return CourseCartItemCard(
+                cartItemFromBackend: courses[i],
+                priceFromBack: cart.results[0].price,
+              );
+            },
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColor.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColor.primary.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColor.primary, size: 24),
+          SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColor.primary,
+              fontFamily: 'Estedad',
+            ),
+          ),
+          Spacer(),
+          Icon(Icons.arrow_drop_down, color: AppColor.primary),
+        ],
+      ),
     );
   }
 

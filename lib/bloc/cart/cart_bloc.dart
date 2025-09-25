@@ -54,11 +54,23 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     on<UpdateQuantity>((event, emit) async {
       // Avoid emitting CartLoading to prevent full-screen refresh
       try {
-        await CartService.updateQuantity(event.context, event.itemId, event.productId, event.quantity);
+        await CartService.updateQuantity(event.context, event.itemId, event.productId,event.courseId, event.quantity);
         final cart = await CartService.fetchCart(event.context);
         emit(CartLoaded(cart));
       } catch (e) {
         emit(CartError('به‌روزرسانی ناموفق'));
+      }
+    });
+
+    on<AddCourseToCart>((event, emit) async {
+      emit(CartLoading());
+      try {
+        await CartService.addCourseToCart(event.context, event.courseId, event.quantity);
+        emit(CartItemAdded('این دوره به سبد خرید اضافه شد'));
+        final cart = await CartService.fetchCart(event.context);
+        emit(CartLoaded(cart));
+      } catch (e) {
+        emit(CartError('افزودن دوره ناموفق بود: ${e.toString()}'));
       }
     });
   }

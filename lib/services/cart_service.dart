@@ -112,6 +112,49 @@ class CartService {
     }
   }
 
+  // افزودن دوره به سبد
+  static Future<void> addCourseToCart(BuildContext context, int courseId, int quantity) async {
+    final token = await _getToken();
+    if (token == null || token.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('نیاز به ورود دارید'),
+            content: const Text('برای افزودن دوره به سبد ابتدا وارد حساب کاربری شوید.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(ctx).pushNamed('/login', arguments: {'popOnSuccess': true});
+                },
+                child: const Text('ورود'),
+              ),
+            ],
+          ),
+        ),
+      );
+      throw Exception('نیاز به ورود');
+    }
+    final response = await http.post(
+      Uri.parse(URLs.baseUrl+"/v1/order/basket-items/"),
+      headers: {
+        'Authorization': 'token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'course': courseId,
+        'quantity': quantity,
+      }),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('افزودن دوره به سبد ناموفق بود');
+    }
+  }
+
   // حذف آیتم
   static Future<void> removeItem(BuildContext context, int itemId) async {
     final token = await _getToken();
@@ -149,7 +192,7 @@ class CartService {
   }
 
   // به‌روزرسانی تعداد
-  static Future<void> updateQuantity(BuildContext context, int itemId,int productId, int quantity) async {
+  static Future<void> updateQuantity(BuildContext context, int itemId,int? productId,int? courseid, int quantity) async {
     final token = await _getToken();
     if (token == null || token.isEmpty) {
       await showDialog<void>(
@@ -180,7 +223,7 @@ class CartService {
         'Authorization': 'token $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'quantity': quantity,'product':productId}),
+      body: jsonEncode({'quantity': quantity,'product':productId,'course':courseid}),
     );
 
     if (response.statusCode != 200) {

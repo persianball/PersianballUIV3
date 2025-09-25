@@ -1,9 +1,14 @@
 // lib/views/screens/course_detail_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/course_detail_model.dart';
 import 'package:marketky/services/course_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/modals/add_course_to_cart_modal.dart';
+import 'package:marketky/bloc/cart/cart_bloc.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final int id;
@@ -238,6 +243,35 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                           Chip(label: Text('ظرفیت: ${item.capacity}')),
                                         ],
                                       ),
+                                      const SizedBox(height: 12),
+                                      if (item.isActive)
+                                        SizedBox(
+                                          width: double.infinity,
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              showModalBottomSheet(
+                                                context: context,
+                                                backgroundColor: Colors.transparent,
+                                                builder: (context) => AddCourseToCartModal(courseItem: item),
+                                              );
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppColor.primary,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              padding: EdgeInsets.symmetric(vertical: 12),
+                                              elevation: 0,
+                                            ),
+                                            child: Text(
+                                              'افزودن به سبد',
+                                              style: TextStyle(
+                                                fontFamily: 'Estedad',
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -255,6 +289,100 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             );
           },
         ),
+      ),
+      bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
+        builder: (context, cartState) {
+          return Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Cart Button
+                SizedBox(
+                  height: 64,
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    margin: EdgeInsets.only(right: 14),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColor.secondary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('/cart');
+                      },
+                      child: SvgPicture.asset('assets/icons/Bag.svg', color: Colors.white, fit: BoxFit.contain),
+                    ),
+                  ),
+                ),
+                // Add to Cart Button
+                Expanded(
+                  child: FutureBuilder<CourseDetailResponse>(
+                    future: _future,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data!.detail.timeAndLocation.isNotEmpty) {
+                        final firstCourse = snapshot.data!.detail.timeAndLocation.first;
+                        return ElevatedButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => AddCourseToCartModal(courseItem: firstCourse),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColor.primary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'افزودن به سبد',
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        );
+                      }
+                      return ElevatedButton(
+                        onPressed: null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'دوره در دسترس نیست',
+                          style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

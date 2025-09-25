@@ -41,11 +41,23 @@ class RemoveFromCart extends CartEvent {
 class UpdateQuantity extends CartEvent {
   final BuildContext context;
   final int itemId;
-  final int productId;
+  final int? productId;
+  final int? courseId;
   final int quantity;
 
-  const UpdateQuantity(this.context, this.itemId,this.productId, this.quantity);
+  const UpdateQuantity(this.context, this.itemId,this.productId,this.courseId, this.quantity);
 
   @override
   List<Object?> get props => [context, itemId, quantity];
+}
+
+class AddCourseToCart extends CartEvent {
+  final BuildContext context;
+  final int courseId;
+  final int quantity;
+
+  const AddCourseToCart(this.context, this.courseId, this.quantity);
+
+  @override
+  List<Object?> get props => [context, courseId, quantity];
 }

@@ -263,7 +263,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                       setState(() {
                                         quantity++;
                                       });
-                                      context.read<CartBloc>().add(UpdateQuantity(context, widget.cartItemFromBackend.id,widget.cartItemFromBackend.product!.id,quantity));
+                                      context.read<CartBloc>().add(UpdateQuantity(context, widget.cartItemFromBackend.id,widget.cartItemFromBackend.product!.id,null,quantity));
                                       setState(() {
                                         isLoading = true;
                                       });
@@ -301,7 +301,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                           quantity--;
                                         });
 
-                                        context.read<CartBloc>().add(UpdateQuantity(context, widget.cartItemFromBackend.id,widget.cartItemFromBackend.product!.id,quantity));
+                                        context.read<CartBloc>().add(UpdateQuantity(context, widget.cartItemFromBackend.id,widget.cartItemFromBackend.product!.id,null,quantity));
 
                                         setState(() {
                                           isLoading = true;

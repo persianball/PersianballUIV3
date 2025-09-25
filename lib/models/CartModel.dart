@@ -1,5 +1,6 @@
 // core/model/Cart.dart
 import 'package:marketky/models/ProductModel.dart';
+import 'package:marketky/models/course_detail_model.dart';
 
 class CartItem {
   final int id;
@@ -62,7 +63,7 @@ class Cart {
 class CartItemFromBackend{
   final ProductInCart? product;
   final int? classes;
-  final int? course;
+  final CourseInCart? course;
   final int? support_coach;
   final int quantity;
   final int id;
@@ -78,10 +79,11 @@ class CartItemFromBackend{
     return CartItemFromBackend(
         id: json['id'],
         quantity: json['quantity'],
-        product: ProductInCart.fromJson(json['product']),
+        product: json['product']==null? null:ProductInCart.fromJson(json['product']),
+      course: json['course']==null?null:CourseInCart.fromJson(json['course']),
         classes: json['classes'],
         support_coach: json['support_coach'],
-        course: json['course']
+
     );
   }
 }
@@ -140,6 +142,43 @@ class ProductInCart{
     return ProductInCart(id:json['id'],productVariant:ProductVariant.fromJson(json['product_variant']),size:json['size'],count:json['count'],disountPercentage:json['discount_percentage'],isActive:json['is_active'],price:json['price']);
   }
 }
+
+class CourseInCart{
+  final bool? isActive;
+  final String? image;
+  final int? price;
+  final String? location;
+  final int? coach;
+  final String? courseName;
+  ProductVariant? giftProduct;
+  final int id;
+  final bool? shipmentRequired;
+  final int? discountPercentage;
+  final int? capacity;
+  
+
+  CourseInCart({
+    required this.isActive,required this.image,required this.price,required this.location,
+    required this.coach,required this.courseName,required this.giftProduct,required this.id,
+    required this.shipmentRequired,required this.discountPercentage,required this.capacity
+  });
+  factory CourseInCart.fromJson(Map<String, dynamic> json){
+    return CourseInCart(
+        isActive: json['is_active'],
+        image: json['image'],
+        price: json['price'],
+        location: json['location'],
+        coach: json['coach'],
+        courseName: json['course_name'],
+        giftProduct:json['gift_product'] != null ? ProductVariant.fromJson(json['gift_product']) : null,
+        id:json['id'],
+        shipmentRequired:json['shipment_required'],
+        discountPercentage:json['discount_percentage'],
+        capacity:json['capacity']
+    );
+  }
+}
+
 
 class CartFromBackend{
   final int? user;
