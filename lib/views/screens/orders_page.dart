@@ -81,6 +81,7 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
   Color _statusColor(String s) {
     switch (s.toLowerCase()) {
       case 'success':
+        return Colors.green.shade600;
       case 'paid':
         return Colors.green.shade600;
       case 'pending':
