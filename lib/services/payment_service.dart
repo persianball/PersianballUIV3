@@ -10,7 +10,7 @@ class PaymentService {
     final token = await AuthService.getToken();
 
     final uri = nextPageUrl != null && nextPageUrl.isNotEmpty
-        ? Uri.parse(nextPageUrl)
+        ? Uri.parse('${"https://"+nextPageUrl.split('http://')[1]}')
         : Uri.parse('${URLs.baseUrl}/v1/payment/payments/');
 
     final response = await http.get(

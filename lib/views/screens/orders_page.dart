@@ -70,9 +70,10 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       // near bottom, load next page
       final next = _nextUrl;
-      _nextUrl = null; // prevent duplicate calls
+      // _nextUrl = null; // prevent duplicate calls
       if (next != null) {
         _fetch(loadMore: true);
+        _nextUrl = null;
       }
     }
   }
@@ -130,7 +131,7 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
             child: Icon(_statusIcon(item.status), color: statusClr),
           ),
           title: Text(
-            'کد پیگیری: ${item.trackingCode}',
+            'کد پیگیری: ${item.trackingCode} , ${item.id}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontWeight: FontWeight.w700),
@@ -157,7 +158,7 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
               ],
             ),
           ),
-          trailing: const Icon(Icons.chevron_right),
+          trailing:null,
           onTap: () {
             // Optionally navigate to a payment detail page later
           },
