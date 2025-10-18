@@ -9,6 +9,8 @@ import 'package:marketky/views/screens/splash_router.dart';
 import 'package:marketky/views/screens/orders_page.dart';
 import 'package:marketky/views/screens/addresses_page.dart';
 import 'package:marketky/views/screens/course_detail_page.dart';
+import 'package:marketky/views/screens/my_course_detail_page.dart';
+import 'package:marketky/models/course_models.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -63,6 +65,25 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const OrdersPage(), settings: settings);
       case '/addresses':
         return MaterialPageRoute(builder: (_) => const AddressesPage(), settings: settings);
+      case '/user-course-detail':
+        final args = settings.arguments;
+        MyCourse? myCourse;
+        if (args is MyCourse) {
+          myCourse = args;
+        } else if (args is Map) {
+          final c = args['course'] ?? args['myCourse'] ?? args['data'];
+          if (c is MyCourse) myCourse = c;
+        }
+        if (myCourse == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(body: Center(child: Text('اطلاعات دوره کاربر یافت نشد'))),
+            settings: settings,
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => MyCourseDetailPage(myCourse: myCourse!),
+          settings: RouteSettings(name: name, arguments: args),
+        );
       default:
         // Fallback to home
         return MaterialPageRoute(builder: (_) => PageSwitcher(), settings: settings);

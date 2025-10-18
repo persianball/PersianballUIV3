@@ -13,23 +13,32 @@ class CoursesPage extends StatefulWidget {
   State<CoursesPage> createState() => _CoursesPageState();
 }
 
-class _CoursesPageState extends State<CoursesPage> {
+class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin {
   CoursesResponse? _data;
   bool _loading = true;
   String? _error;
   String? _nextUrl;
   final ScrollController _controller = ScrollController();
 
+  MyCoursesResponse? _userCourses;
+  bool _userLoading = false;
+  String? _userError;
+
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _fetch();
+    _fetchUserCourses();
     _controller.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -62,6 +71,25 @@ class _CoursesPageState extends State<CoursesPage> {
     }
   }
 
+  Future<void> _fetchUserCourses() async {
+    setState(() {
+      _userLoading = true;
+      _userError = null;
+    });
+    try {
+      final res = await CourseService.fetchUserCourses(context);
+      setState(() {
+        _userCourses = res;
+        _userLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _userError = e.toString();
+        _userLoading = false;
+      });
+    }
+  }
+
   void _onScroll() {
     if (_nextUrl == null) return;
     if (_controller.position.pixels >= _controller.position.maxScrollExtent - 200) {
@@ -85,34 +113,60 @@ class _CoursesPageState extends State<CoursesPage> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: 'همه دوره‌ها'),
+            Tab(text: 'دوره‌های من'),
+          ],
+        ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text(_error!))
-              : Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: RefreshIndicator(
-                    color: AppColor.primary,
-                    onRefresh: () async {
-                      _nextUrl = null;
-                      await _fetch();
-                    },
-                    child: ListView.builder(
-                      controller: _controller,
-                      padding: const EdgeInsets.only(bottom: 32),
-                      itemCount: _data!.results.length,
-                      itemBuilder: (_, i) {
-                        final c = _data!.results[i];
-                        return _CourseCard(
-                          course: c,
-                          imageUrl: _abs("${URLs.baseUrl}${c.image}"),
-                          onTap: () => Navigator.of(context).pushNamed('/course/${c.id}', arguments: c),
-                        );
-                      },
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Tab 1: All Courses
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+                  ? Center(child: Text(_error!))
+                  : Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: RefreshIndicator(
+                        color: AppColor.primary,
+                        onRefresh: () async {
+                          _nextUrl = null;
+                          await _fetch();
+                        },
+                        child: ListView.builder(
+                          controller: _controller,
+                          padding: const EdgeInsets.only(bottom: 32),
+                          itemCount: _data!.results.length,
+                          itemBuilder: (_, i) {
+                            final c = _data!.results[i];
+                            return _CourseCard(
+                              course: c,
+                              imageUrl: _abs(c.image),
+                              onTap: () => Navigator.of(context).pushNamed('/course/${c.id}', arguments: c),
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+          // Tab 2: User Courses
+          _userLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _userError != null
+                  ? Center(child: Text(_userError!))
+                  : Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: _UserCoursesList(
+                        courses: _userCourses?.results ?? [],
+                        abs: _abs,
+                        onTapCourse: (course,{scrollToVideo}) => Navigator.of(context).pushNamed('/user-course-detail', arguments: course),
+                      ),
+                    ),
+        ],
+      ),
     );
   }
 }
@@ -214,5 +268,149 @@ class _CourseCard extends StatelessWidget {
 
       ],
     );
+  }
+}
+
+class _UserCoursesList extends StatefulWidget {
+  final List<MyCourse> courses;
+  final String Function(String) abs;
+  final void Function(MyCourse, {int? scrollToVideo}) onTapCourse;
+  const _UserCoursesList({required this.courses, required this.abs, required this.onTapCourse});
+
+  @override
+  State<_UserCoursesList> createState() => _UserCoursesListState();
+}
+
+class _UserCoursesListState extends State<_UserCoursesList> {
+  Map<int, Set<int>> watchedVideos = {};
+
+  MyCourse? _continueCourse;
+  int? _continueVideo;
+  String? _continueCourseTitle;
+  String? _continueVideoTitle;
+  String? _continueVideoWeekTitle;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    // TODO: persist video progress with shared_preferences or other storage for each course
+    // ...load watched videos into watchedVideos...
+    // After loading watchedVideos:
+    _findContinueWatching();
+  }
+
+  void _findContinueWatching() {
+    _continueCourse = null;
+    _continueVideo = null;
+
+    // for (final course in widget.courses) {
+    //   final totalVideos = course.sectionCount;
+    //   final watched = watchedVideos[course.id]?.length ?? 0;
+    //   if (watched < totalVideos) {
+    //     // This course is not finished, find first unwatched video index
+    //     int idx = 0;
+    //     outer:
+    //     for (final week in course.courseDetail['detail']['sections'] ?? []) {
+    //       for (final video in week['sections'] ?? []) {
+    //         if (!(watchedVideos[course.id]?.contains(idx) ?? false)) {
+    //           _continueCourse = course;
+    //           _continueVideo = idx;
+    //           _continueCourseTitle = course.courseTitle ?? course.nameFarsi;
+    //           _continueVideoTitle = video['title'] ?? '';
+    //           _continueVideoWeekTitle = week['week_name'] ?? "هفته ${week['week_number']}";
+    //           break outer;
+    //         }
+    //         idx++;
+    //       }
+    //     }
+    //     if (_continueCourse != null) break;
+    //   }
+    // }
+    // setState(() {});
+  }
+
+  Future<void> _saveProgress() async {
+    // TODO: save watchedVideos
+  }
+
+  void _toggleWatched(int courseId, int videoIndex) {
+    setState(() {
+      watchedVideos.putIfAbsent(courseId, () => <int>{});
+      if (watchedVideos[courseId]!.contains(videoIndex)) {
+        watchedVideos[courseId]!.remove(videoIndex);
+      } else {
+        watchedVideos[courseId]!.add(videoIndex);
+      }
+    });
+    _saveProgress();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> children = [];
+    if (_continueCourse != null && _continueVideo != null) {
+      children.add(
+        Card(
+          color: Colors.deepPurple[50],
+          margin: EdgeInsets.fromLTRB(16, 18, 16, 10),
+          child: ListTile(
+            leading: Icon(Icons.play_circle_fill, color: Colors.deepPurple, size: 40),
+            title: Text('ادامه تماشا', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_continueCourseTitle ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(_continueVideoWeekTitle ?? ''),
+                Text(_continueVideoTitle ?? '', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+            trailing: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                backgroundColor: Colors.deepPurple,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () => widget.onTapCourse(_continueCourse!, scrollToVideo: _continueVideo),
+              icon: Icon(Icons.play_arrow),
+              label: Text('ادامه'),
+            ),
+          ),
+        ),
+      );
+    }
+    if (widget.courses.isEmpty) {
+      children.add(Center(child: Text('درسی خریداری نکرده‌اید')));
+    } else {
+      children.add(
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 32),
+          itemCount: widget.courses.length,
+          itemBuilder: (context, i) {
+            final course = widget.courses[i];
+            return Card(
+              margin: EdgeInsets.fromLTRB(16, 12, 16, 6),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: ListTile(
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(widget.abs(course.courseThumbnail), width: 60, height: 60, fit: BoxFit.cover),
+                ),
+                title: Text(course.courseDetail.courseTitle, style: TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: Text('پیشرفت: به زودی', style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                trailing: Icon(Icons.arrow_forward_ios),
+                onTap: () => widget.onTapCourse(course),
+              ),
+            );
+          },
+        ),
+      );
+    }
+    return SingleChildScrollView(child: Column(children: children));
   }
 }

@@ -9,6 +9,11 @@ import 'package:marketky/services/course_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/modals/add_course_to_cart_modal.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+
+// Add a property to detect 'userOwned' mode
+typedef UserCourseDetailArgs = Map<String, dynamic>;
 
 class CourseDetailPage extends StatefulWidget {
   final int id;
@@ -21,11 +26,70 @@ class CourseDetailPage extends StatefulWidget {
 class _CourseDetailPageState extends State<CourseDetailPage>
     with SingleTickerProviderStateMixin {
   late Future<CourseDetailResponse> _future;
+  bool _userOwned = false;
+  int? _userCourseId;
+  Map<int, Set<int>> watchedVideos = {};
 
   @override
   void initState() {
     super.initState();
     _future = CourseService.fetchCourseDetail(id: widget.id);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is UserCourseDetailArgs && args['userCourse'] == true) {
+      _userOwned = true;
+      _userCourseId = args['id'];
+      _loadWatchedProgress();
+      if (args['scrollToVideo'] != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToVideo(args['scrollToVideo'] as int);
+        });
+      }
+    }
+  }
+
+  final ScrollController _videosScrollController = ScrollController();
+  int? _highlightVideoIdx;
+
+  void _scrollToVideo(int idx) {
+    setState(() { _highlightVideoIdx = idx; });
+    Timer(Duration(milliseconds: 200), () {
+      double pos = idx * 94.0; // Approximate tile height
+      _videosScrollController.animateTo(pos, duration: Duration(milliseconds: 400), curve: Curves.ease);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ادامه تماشا...'), backgroundColor: Colors.deepPurple));
+    });
+    Timer(Duration(seconds: 2), () { setState(() { _highlightVideoIdx = null; }); });
+  }
+
+  Future<void> _loadWatchedProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getStringList('watchedVideos_${_userCourseId ?? 0}') ?? [];
+    setState(() {
+      watchedVideos[_userCourseId ?? 0] = stored.map(int.parse).toSet();
+    });
+  }
+
+  Future<void> _saveWatchedProgress() async {
+    if (_userCourseId == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final ids = watchedVideos[_userCourseId!] ?? {};
+    await prefs.setStringList('watchedVideos_${_userCourseId}', ids.map((i) => i.toString()).toList());
+  }
+
+  void _toggleWatched(int videoIdx) {
+    setState(() {
+      watchedVideos.putIfAbsent(_userCourseId ?? 0, () => <int>{});
+      if (watchedVideos[_userCourseId]!.contains(videoIdx)) {
+        watchedVideos[_userCourseId]!.remove(videoIdx);
+      } else {
+        watchedVideos[_userCourseId]!.add(videoIdx);
+      }
+    });
+    _saveWatchedProgress();
   }
 
   String _abs(String rel) {
@@ -41,6 +105,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     if (hours > 0) return '${hours}ساعت ${minutes}دقیقه';
     return '${minutes}دقیقه';
   }
+
+  double getCompletionPercent(int total, int watched) => total == 0 ? 0 : watched / total;
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +143,27 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             }
 
             final data = snapshot.data!;
+            final totalVideos = data.detail.weeks.fold<int>(0, (sum, w) => sum + w.sections.length);
+            final watched = watchedVideos[_userCourseId ?? 0]?.length ?? 0;
+            Widget progressBar = (_userOwned && totalVideos > 0)
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('پیشرفت شما:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: getCompletionPercent(totalVideos, watched),
+                        backgroundColor: Colors.grey[300],
+                        minHeight: 10,
+                        color: AppColor.primary,
+                      ),
+                      SizedBox(height: 4),
+                      Text('${(getCompletionPercent(totalVideos, watched) * 100).toStringAsFixed(0)}% ویدیوها کامل دیده شد', style: TextStyle(fontSize: 12, color: Colors.black)),
+                    ]))
+                : SizedBox.shrink();
+
             return CustomScrollView(
+              controller: _videosScrollController,
               slivers: [
                 SliverAppBar(
                   pinned: true,
@@ -110,7 +196,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                     ),
                   ),
                 ),
-
+                progressBar,
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -155,6 +241,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                   ),
                 ),
                 SliverList(
+                  //controller: _videosScrollController,
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final week = data.detail.weeks[index];
@@ -167,20 +254,27 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                             children: week.sections.asMap().entries.map((entry) {
                               final i = entry.key;
                               final s = entry.value;
+                              Color tileColor = (i == _highlightVideoIdx)
+                                ? Colors.deepPurple.withOpacity(0.14)
+                                : Colors.transparent;
                               return _AnimatedSlideFade(
                                 delayMs: 40 * i,
                                 child: ListTile(
+                                  tileColor: tileColor,
                                   leading: Icon(s.isLocked ? Icons.lock : Icons.play_circle_fill, color: s.isLocked ? Colors.grey : Colors.green),
                                   title: Text(s.title),
                                   subtitle: (s.videoUrl != null && s.videoUrl!.isNotEmpty)
                                       ? Text(s.videoUrl!)
                                       : null,
-                                  trailing: s.videoThumbnail != null && s.videoThumbnail!.isNotEmpty
+                                  trailing: _userOwned ? Checkbox(
+                                    value: watchedVideos[_userCourseId ?? 0]?.contains(i) ?? false,
+                                    onChanged: (_) => _toggleWatched(i),
+                                  ) : (s.videoThumbnail != null && s.videoThumbnail!.isNotEmpty
                                       ? ClipRRect(
                                           borderRadius: BorderRadius.circular(6),
                                           child: Image.network(_abs(s.videoThumbnail!), width: 56, height: 36, fit: BoxFit.cover),
                                         )
-                                      : null,
+                                      : null),
                                 ),
                               );
                             }).toList(),

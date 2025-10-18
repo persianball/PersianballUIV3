@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/course_models.dart';
 import 'package:marketky/models/course_detail_model.dart';
+import 'package:flutter/widgets.dart';
+import 'package:marketky/services/auth_service.dart';
 
 class CourseService {
   static Future<CoursesResponse> fetchCourses({String? nextPageUrl}) async {
@@ -27,5 +29,20 @@ class CourseService {
       return CourseDetailResponse.fromJson(data);
     }
     throw Exception('خطا در دریافت جزییات دوره (${res.statusCode})');
+  }
+
+  static Future<MyCoursesResponse> fetchUserCourses(BuildContext context) async {
+    final token = await AuthService.getToken();
+    if (token == null || token.isEmpty) throw Exception('توکن ورود یافت نشد');
+    final uri = Uri.parse('${URLs.baseUrl}/v1/course/user-course');
+    final res = await http.get(uri, headers: {
+      'Authorization': 'token $token',
+      'Accept': 'application/json',
+    });
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      return MyCoursesResponse.fromJson(data);
+    }
+    throw Exception('خطا در دریافت لیست دوره‌های کاربر (${res.statusCode})');
   }
 }
