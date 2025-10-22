@@ -8,10 +8,10 @@ import 'package:marketky/views/widgets/menu_tile_widget.dart';
 
 import '../../bloc/login/login_bloc.dart';
 import 'login_page.dart';
+import 'otp_verification_page.dart';
 import 'package:marketky/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:marketky/bloc/otp/verify_otp_bloc.dart';
 
 class UserService {
   static const String endpoint = '/v1/user/';
@@ -254,8 +254,9 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
   final _birthDateController = TextEditingController();
   String? _gender;
 
-  bool _registeredWithEmail = true; // Will detect from fetched profile
   bool _loading = false;
+  bool _isEmailVerified = false;
+  bool _isMobileVerified = false;
 
   @override
   void initState() {
@@ -274,15 +275,8 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
         _mobileController.text = profile['mobile_number'] ?? '';
         _birthDateController.text = profile['birth_date'] ?? '';
         _gender = profile['gender'];
-        _registeredWithEmail = (profile['email']?.toString().isNotEmpty ?? false);
-        final isEmailVerified = profile['is_email_verified'] == true;
-        final isMobileVerified = profile['is_mobile_verified'] == true;
-        if ((!isEmailVerified && _registeredWithEmail) || (!isMobileVerified && !_registeredWithEmail)) {
-          _showOtpVerificationDialog(
-            destination: _registeredWithEmail ? profile['email'] : profile['mobile_number'],
-            isEmail: _registeredWithEmail,
-          );
-        }
+        _isEmailVerified = profile['is_email_verified'] == true;
+        _isMobileVerified = profile['is_mobile_verified'] == true;
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -292,101 +286,22 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
     setState(() => _loading = false);
   }
 
-  void _showOtpVerificationDialog({required String destination, required bool isEmail}) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) {
-        final TextEditingController _otpController = TextEditingController();
-        return BlocProvider(
-          create: (_) => VerifyOtpBloc(),
-          child: AlertDialog(
-            title: Text(isEmail ? 'تأیید ایمیل' : 'تأیید شماره موبایل', style: TextStyle(fontFamily: 'Estedad')),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('لطفاً کد ارسال شده به ${isEmail ? 'ایمیل' : 'شماره'} زیر را وارد کنید:', style: TextStyle(fontFamily: 'Estedad')), 
-                SizedBox(height: 8),
-                Text(destination, style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 12),
-                TextFormField(
-                  controller: _otpController,
-                  maxLength: 5,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: "کد تایید ۵ رقمی"),
-                ),
-                SizedBox(height: 8),
-                BlocConsumer<VerifyOtpBloc, VerifyOtpState>(
-                  listener: (context, state) async {
-                    if (state is VerifyOtpSuccess) {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('تأیید با موفقیت انجام شد'), backgroundColor: Colors.green),
-                      );
-                      await Future.delayed(Duration(milliseconds: 300));
-                      _fetchProfile(); // Refresh profile after verification
-                    } else if (state is VerifyOtpFailure) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-                      );
-                    }
-                  },
-                  builder: (context, state) {
-                    if (state is VerifyOtpLoading) {
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    return SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (_otpController.text.length != 5) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('کد باید ۵ رقمی باشد'), backgroundColor: Colors.red),
-                            );
-                            return;
-                          }
-                          BlocProvider.of<VerifyOtpBloc>(context).add(
-                            OtpSubmitted(
-                              code: _otpController.text,
-                              email: isEmail ? destination : null,
-                              mobileNumber: !isEmail ? destination : null,
-                            ),
-                          );
-                        },
-                        child: Text('تایید'),
-                      ),
-                    );
-                  },
-                )
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('انصراف'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  void _navigateToOtpVerification({required String destination, required bool isEmail}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => OTPVerificationPage(
+          destination: destination,
+          isEmail: isEmail,
+          email: isEmail ? destination : null,
+          mobileNumber: !isEmail ? destination : null,
+        ),
+      ),
+    ).then((_) {
+      // Refresh profile after returning from OTP verification
+      _fetchProfile();
+    });
   }
 
-  Future<void> _selectBirthDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(Duration(days: 3650)),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      locale: Locale('fa'),
-    );
-    if (picked != null) {
-      _birthDateController.text = "${picked.year}/${picked.month}/${picked.day}";
-    }
-  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -394,8 +309,8 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
     Map<String, dynamic> data = {
       "first_name": _firstNameController.text,
       "last_name": _lastNameController.text,
-      "email": _registeredWithEmail ? _emailController.text : null,
-      "mobile_number": !_registeredWithEmail ? _mobileController.text : null,
+      "email": _emailController.text.isNotEmpty ? _emailController.text : null,
+      "mobile_number": _mobileController.text.isNotEmpty ? _mobileController.text : null,
       "birth_date": _birthDateController.text.isNotEmpty ? _birthDateController.text : null,
       "gender": _gender,
     };
@@ -405,6 +320,8 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('اطلاعات با موفقیت ذخیره شد'), backgroundColor: Colors.green),
       );
+      // Refresh profile after successful update
+      _fetchProfile();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('خطا در ذخیره اطلاعات'), backgroundColor: Colors.red),
@@ -444,20 +361,61 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                   ],
                 ),
                 SizedBox(height: 12),
-                if (_registeredWithEmail)
-                  TextFormField(
-                    controller: _mobileController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(labelText: 'شماره موبایل'),
-                    validator: (val) => val == null || val.isEmpty ? 'شماره موبایل را وارد کنید' : null,
-                  )
-                else
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(labelText: 'ایمیل'),
-                    validator: (val) => val == null || val.isEmpty ? 'ایمیل را وارد کنید' : null,
+                // Email Field with Verification Status
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: 'ایمیل',
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isEmailVerified ? Icons.check_circle : Icons.cancel,
+                          color: _isEmailVerified ? Colors.green : Colors.red,
+                          size: 20,
+                        ),
+                        if (!_isEmailVerified && _emailController.text.isNotEmpty)
+                          TextButton(
+                            onPressed: () => _navigateToOtpVerification(
+                              destination: _emailController.text,
+                              isEmail: true,
+                            ),
+                            child: Text('تأیید', style: TextStyle(fontSize: 12)),
+                          ),
+                      ],
+                    ),
                   ),
+                  validator: (val) => val == null || val.isEmpty ? 'ایمیل را وارد کنید' : null,
+                ),
+                SizedBox(height: 12),
+                // Phone Field with Verification Status
+                TextFormField(
+                  controller: _mobileController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'شماره موبایل',
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isMobileVerified ? Icons.check_circle : Icons.cancel,
+                          color: _isMobileVerified ? Colors.green : Colors.red,
+                          size: 20,
+                        ),
+                        if (!_isMobileVerified && _mobileController.text.isNotEmpty)
+                          TextButton(
+                            onPressed: () => _navigateToOtpVerification(
+                              destination: _mobileController.text,
+                              isEmail: false,
+                            ),
+                            child: Text('تأیید', style: TextStyle(fontSize: 12)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  validator: (val) => val == null || val.isEmpty ? 'شماره موبایل را وارد کنید' : null,
+                ),
                 // SizedBox(height: 12),
                 // TextFormField(
                 //   controller: _birthDateController,
