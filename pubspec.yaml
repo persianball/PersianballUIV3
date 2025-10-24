@@ -51,6 +51,7 @@ dependencies:
   # UI helpers for address selection and payment
   timeline_tile: ^2.0.0
   webview_flutter: ^4.8.0
+  flutter_launcher_icons: ^0.14.4
 
 
 dev_dependencies:
