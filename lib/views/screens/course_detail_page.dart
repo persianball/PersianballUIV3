@@ -29,6 +29,65 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     _future = CourseService.fetchCourseDetail(id: widget.id);
   }
 
+  /// قیمت آیتم زمان و مکان: قیمت نهایی، بج قرمز درصد تخفیف و قیمت اصلی خط‌خورده
+  Widget _timeLocationPrice(CourseTimeAndLocationItem item) {
+    final int percent = item.discountPercentage;
+    final bool hasDiscount = percent > 0 && percent < 100 && item.price > 0;
+    final int finalPrice =
+        hasDiscount ? (item.price * (1 - percent / 100)).toInt() : item.price;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${thousandSeparator(finalPrice)} تومان',
+          style: const TextStyle(
+            fontFamily: 'Estedad',
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        if (hasDiscount) ...[
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '٪$percent',
+                  style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                thousandSeparator(item.price),
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
   /// کاور پیش‌فرض بخش‌های هفته
   Widget _sectionFallbackThumb() => Image.asset(
         'assets/images/course_not_found.jpg',
@@ -307,26 +366,43 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
+                                        // ظرفیت بالا سمت راست، کنار عنوان مکان
                                         Row(
                                           children: [
-                                            Text(item.location, style: const TextStyle(fontWeight: FontWeight.w700)),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppColor.primarySoft,
+                                                borderRadius:
+                                                    BorderRadius.circular(999),
+                                              ),
+                                              child: Text(
+                                                'ظرفیت: ${item.capacity}',
+                                                style: const TextStyle(
+                                                  fontFamily: 'Estedad',
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
                                             const SizedBox(width: 8),
-                                            if (item.isActive) const Chip(label: Text('فعال')),
+                                            Expanded(
+                                              child: Text(
+                                                item.location,
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w700),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            if (item.isActive)
+                                              const Chip(label: Text('فعال')),
                                           ],
                                         ),
                                         const SizedBox(height: 6),
                                         Text(item.time),
                                         const SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            Text('${thousandSeparator(item.price)} تومان', style: const TextStyle(fontWeight: FontWeight.w800)),
-                                            const SizedBox(width: 8),
-                                            if (item.discountPercentage > 0)
-                                              Chip(label: Text('%${item.discountPercentage} تخفیف')),
-                                            const Spacer(),
-                                            Chip(label: Text('ظرفیت: ${item.capacity}')),
-                                          ],
-                                        ),
+                                        _timeLocationPrice(item),
                                         const SizedBox(height: 12),
                                         if (item.isActive)
                                           SizedBox(
