@@ -1,6 +1,7 @@
 // lib/views/screens/orders_page.dart
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/views/screens/order_detail_page.dart';
 import 'package:marketky/models/payment_models.dart';
 import 'package:marketky/services/payment_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
@@ -128,9 +129,11 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
-            onTap: () {
-              // Optionally navigate to a payment detail page later
-            },
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => OrderDetailPage(payment: item),
+              ),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -159,6 +162,8 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
                         ),
                       ),
                       const Spacer(),
+                      Icon(Icons.chevron_left,
+                          size: 18, color: Colors.grey.shade400),
                       Text(
                         'سفارش #${item.id}',
                         style: TextStyle(
