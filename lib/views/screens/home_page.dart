@@ -13,7 +13,9 @@ import 'package:marketky/views/widgets/item_card.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product/product_bloc.dart';
 import '../../models/ProductModel.dart';
+import '../../services/catalog_service.dart';
 import 'cart_page.dart';
+import 'catalog_page.dart';
 import '../widgets/page_container.dart';
 
 class HomePage extends StatefulWidget {
@@ -96,7 +98,7 @@ class _HomePageState extends State<HomePage> {
                     _buildHeader(context),
 
                     // بخش ۲ - دسته‌بندی
-                    //_buildCategorySection(),
+                    _buildCategorySection(products),
 
                     // بخش ۳ - فروش ویژه
                     if (flashProducts.isNotEmpty)
@@ -202,7 +204,37 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              SizedBox(height: 22,),
+              SizedBox(height: 16),
+              // نوار جست‌وجو: ورود به صفحه کاتالوگ
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CatalogPage()),
+                ),
+                child: Container(
+                  height: 44,
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    textDirection: TextDirection.rtl,
+                    children: [
+                      Icon(Icons.search, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Text(
+                        'جست‌وجو در محصولات…',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 12),
               // DummySearchWidget1(
               //   onTap: () {
               //     Navigator.of(context).push(
@@ -216,6 +248,74 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ],
+    );
+  }
+
+  /// دسته‌بندی‌ها از روی محصولات ساخته می‌شوند (بک‌اند endpoint اختصاصی ندارد)
+  Widget _buildCategorySection(List<Product> products) {
+    final categories = CatalogService.categoriesFrom(products);
+    if (categories.isEmpty) return SizedBox.shrink();
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                Text(
+                  'دسته‌بندی‌ها',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CatalogPage()),
+                  ),
+                  child: Text(
+                    'مشاهده همه',
+                    style: TextStyle(fontFamily: 'Estedad', fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              itemCount: categories.length,
+              separatorBuilder: (_, __) => SizedBox(width: 8),
+              itemBuilder: (_, i) {
+                final c = categories[i];
+                return ActionChip(
+                  label: Text(
+                    '${c.nameFarsi} (${CatalogService.countInCategory(products, c.id)})',
+                    style: TextStyle(fontFamily: 'Estedad', fontSize: 12),
+                  ),
+                  backgroundColor: AppColor.primarySoft.withOpacity(0.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                    side: BorderSide(color: AppColor.border),
+                  ),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CatalogPage(initialCategoryId: c.id),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
