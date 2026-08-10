@@ -124,45 +124,98 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
             ),
           ],
         ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          leading: CircleAvatar(
-            radius: 22,
-            backgroundColor: statusClr.withOpacity(.12),
-            child: Icon(_statusIcon(item.status), color: statusClr),
-          ),
-          title: Text(
-            'کد پیگیری: ${item.trackingCode} , ${item.id}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusClr.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(999),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () {
+              // Optionally navigate to a payment detail page later
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ردیف اول: وضعیت (مهم‌ترین اطلاعات) و شماره سفارش
+                  Row(
+                    children: [
+                      Icon(_statusIcon(item.status), color: statusClr, size: 20),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusClr.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          _statusFa(item.status),
+                          style: TextStyle(
+                            fontFamily: 'Estedad',
+                            color: statusClr,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'سفارش #${item.id}',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    _statusFa(item.status),
-                    style: TextStyle(color: statusClr, fontWeight: FontWeight.w600, fontSize: 12),
+                  const SizedBox(height: 10),
+                  // ردیف دوم: مبلغ، برجسته‌ترین عدد کارت
+                  Text(
+                    priceText,
+                    style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Icon(Icons.price_change, size: 16, color: Colors.grey.shade600),
-                const SizedBox(width: 4),
-                Text(priceText, style: const TextStyle(fontWeight: FontWeight.w600)),
-              ],
+                  const SizedBox(height: 8),
+                  Divider(height: 1, color: Colors.grey.shade200),
+                  const SizedBox(height: 8),
+                  // ردیف سوم: کد پیگیری، اطلاعات کم‌اهمیت‌تر
+                  Row(
+                    children: [
+                      Icon(Icons.confirmation_number_outlined,
+                          size: 15, color: Colors.grey.shade600),
+                      const SizedBox(width: 6),
+                      Text(
+                        'کد پیگیری',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.trackingCode,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textDirection: TextDirection.ltr,
+                          textAlign: TextAlign.left,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          trailing:null,
-          onTap: () {
-            // Optionally navigate to a payment detail page later
-          },
         ),
       ),
     );
@@ -184,11 +237,19 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('سفارش‌های من', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+      // چیدمان اپ‌بار راست‌به‌چپ: عنوان و دکمه بازگشت سمت راست
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: AppBar(
+            title: const Text('سفارش‌های من',
+                style: TextStyle(color: Colors.black)),
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            elevation: 0,
+          ),
+        ),
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,

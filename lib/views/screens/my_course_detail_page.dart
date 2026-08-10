@@ -198,7 +198,11 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     final progress = totalSections == 0 ? 0.0 : watchedCount / totalSections;
 
     return Scaffold(
-      body: Directionality(
+      // top: false تا SliverAppBar تمام‌عرض بالای صفحه بماند و فقط پایین
+      // صفحه از نوار ناوبری سیستم فاصله بگیرد
+      body: SafeArea(
+        top: false,
+        child: Directionality(
         textDirection: TextDirection.rtl,
         child: CustomScrollView(
           controller: _scrollController,
@@ -491,6 +495,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
           ],
+        ),
         ),
       ),
     );

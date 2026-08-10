@@ -224,7 +224,8 @@ class _CourseCard extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 16 / 9,
                       child: imageUrl.isEmpty
-                          ? Container(color: Colors.grey[200])
+                          ? Image.asset('assets/images/course_not_found.jpg',
+                              fit: BoxFit.cover)
                           : Image.network(imageUrl, fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Image.asset('assets/images/course_not_found.jpg',fit: BoxFit.cover,),),
                     ),
@@ -390,7 +391,7 @@ class _UserCoursesListState extends State<_UserCoursesList> {
               child: ListTile(
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(widget.abs(course.courseThumbnail), width: 60, height: 60, fit: BoxFit.cover),
+                  child: _CourseThumbnail(url: widget.abs(course.courseThumbnail)),
                 ),
                 title: Text(course.courseDetail.courseTitle, style: TextStyle(fontWeight: FontWeight.w800)),
                 subtitle: Text('پیشرفت: به زودی', style: TextStyle(color: Colors.grey[700], fontSize: 12)),
@@ -403,5 +404,46 @@ class _UserCoursesListState extends State<_UserCoursesList> {
       );
     }
     return SingleChildScrollView(child: Column(children: children));
+  }
+}
+/// تصویر دوره با نمایش عکس پیش‌فرض در صورت نبود آدرس یا خطای لود
+class _CourseThumbnail extends StatelessWidget {
+  final String url;
+  final double size;
+
+  const _CourseThumbnail({required this.url, this.size = 60});
+
+  Widget _fallback() => Image.asset(
+        'assets/images/course_not_found.jpg',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    if (url.isEmpty) return _fallback();
+    return Image.network(
+      url,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _fallback(),
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          width: size,
+          height: size,
+          color: Colors.grey.shade200,
+          child: const Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

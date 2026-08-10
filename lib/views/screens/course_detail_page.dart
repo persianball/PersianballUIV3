@@ -9,6 +9,7 @@ import 'package:marketky/services/course_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/modals/add_course_to_cart_modal.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:marketky/views/widgets/modals/video_player_dialog.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final int id;
@@ -26,6 +27,31 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   void initState() {
     super.initState();
     _future = CourseService.fetchCourseDetail(id: widget.id);
+  }
+
+  /// کاور پیش‌فرض بخش‌های هفته
+  Widget _sectionFallbackThumb() => Image.asset(
+        'assets/images/course_not_found.jpg',
+        width: 56,
+        height: 36,
+        fit: BoxFit.cover,
+      );
+
+  void _onSectionTap(CourseWeekSectionItem section) {
+    if (section.isLocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('این ویدیو قفل است، ابتدا دوره را تهیه کنید')),
+      );
+      return;
+    }
+    final url = section.videoUrl;
+    if ((url ?? '').isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ویدیویی برای این بخش موجود نیست')),
+      );
+      return;
+    }
+    showVideoPlayerDialog(context, videoUrl: _abs(url!), title: section.title);
   }
 
   String _abs(String rel) {
@@ -165,26 +191,83 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                             margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                             child: ExpansionTile(
                               title: Text('هفته ${week.weekNumber}${week.weekName == null || week.weekName!.isEmpty ? '' : ' - ${week.weekName}'}'),
-                              children: week.sections.asMap().entries.map((entry) {
-                                final i = entry.key;
-                                final s = entry.value;
-                                return _AnimatedSlideFade(
-                                  delayMs: 40 * i,
-                                  child: ListTile(
-                                    leading: Icon(s.isLocked ? Icons.lock : Icons.play_circle_fill, color: s.isLocked ? Colors.grey : Colors.green),
-                                    title: Text(s.title),
-                                    // subtitle: (s.videoUrl != null && s.videoUrl!.isNotEmpty)
-                                    //     ? Text(s.videoUrl!)
-                                    //     : null,
-                                    trailing: s.videoThumbnail != null && s.videoThumbnail!.isNotEmpty
-                                        ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Image.network(_abs(s.videoThumbnail!), width: 56, height: 36, fit: BoxFit.cover),
-                                    )
-                                        : null,
+                              // ویدیوهای هر هفته داخل یک کانتینر مجزا
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColor.primarySoft.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColor.border),
                                   ),
-                                );
-                              }).toList(),
+                                  child: Column(
+                                    children: week.sections
+                                        .asMap()
+                                        .entries
+                                        .map((entry) {
+                                      final i = entry.key;
+                                      final s = entry.value;
+                                      return _AnimatedSlideFade(
+                                        delayMs: 40 * i,
+                                        child: Container(
+                                          margin: EdgeInsets.only(
+                                              bottom: i ==
+                                                      week.sections.length - 1
+                                                  ? 0
+                                                  : 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(
+                                                color: AppColor.border),
+                                          ),
+                                          child: ListTile(
+                                            dense: true,
+                                            // ویدیوهای باز با انیمیشن در دیالوگ پخش می‌شوند
+                                            onTap: () => _onSectionTap(s),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 4),
+                                            leading: Icon(
+                                                s.isLocked
+                                                    ? Icons.lock
+                                                    : Icons.play_circle_fill,
+                                                color: s.isLocked
+                                                    ? Colors.grey
+                                                    : Colors.green),
+                                            title: Text(
+                                              s.title,
+                                              style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600),
+                                            ),
+                                            // اگر کاور ویدیو نبود یا لود نشد، عکس پیش‌فرض
+                                            trailing: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              child: (s.videoThumbnail ?? '')
+                                                      .isEmpty
+                                                  ? _sectionFallbackThumb()
+                                                  : Image.network(
+                                                      _abs(s.videoThumbnail!),
+                                                      width: 56,
+                                                      height: 36,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder:
+                                                          (_, __, ___) =>
+                                                              _sectionFallbackThumb(),
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );

@@ -25,7 +25,17 @@ class _AddressesPageState extends State<AddressesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('آدرس‌ها', style: TextStyle(color: Colors.black))),
+      // چیدمان اپ‌بار راست‌به‌چپ: عنوان و دکمه بازگشت سمت راست
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: AppBar(
+            title:
+                const Text('آدرس‌ها', style: TextStyle(color: Colors.black)),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _openCreateDialog,
         backgroundColor: AppColor.primary,
