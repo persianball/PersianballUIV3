@@ -39,7 +39,12 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
         ),
         width: MediaQuery.of(context).size.width,
         margin: EdgeInsets.symmetric(horizontal: 16),
-        padding: EdgeInsets.only(left: 16, right: 16, top: 14, bottom: 20),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 14,
+          bottom: 20 + MediaQuery.of(context).viewPadding.bottom,
+        ),
         child: Column(
           children: [
             // Indicator

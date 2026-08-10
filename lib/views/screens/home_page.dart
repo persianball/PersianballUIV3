@@ -260,7 +260,7 @@ class _HomePageState extends State<HomePage> {
           Directionality(
             textDirection: TextDirection.rtl,
             child: Container(
-              height: 310,
+              height: 230,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16),
@@ -268,37 +268,10 @@ class _HomePageState extends State<HomePage> {
                 separatorBuilder: (_, i) => SizedBox(width: 16),
                 itemBuilder: (_, index) {
                   final p = products[index];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ItemCard(
-                        product: p,
-                        titleColor: AppColor.primarySoft,
-                        priceColor: AppColor.accent,
-                      ),
-                      Container(
-                        width: 180,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: LinearProgressIndicator(
-                                    minHeight: 10,
-                                    value: 0.6,
-                                    color: AppColor.accent,
-                                    backgroundColor: AppColor.border,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Icon(Icons.local_fire_department, color: AppColor.accent),
-                          ],
-                        ),
-                      ),
-                    ],
+                  // رنگ‌های پیش‌فرض کارت روی بک‌گراند سفید خوانا هستند
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: ItemCard(product: p),
                   );
                 },
               ),

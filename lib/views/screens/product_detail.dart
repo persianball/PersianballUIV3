@@ -766,7 +766,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                           ),
                           children: [
                             SizedBox(
-                              height: 225,
+                              height: 215,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 shrinkWrap: true,

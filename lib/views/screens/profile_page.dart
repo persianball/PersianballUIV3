@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:marketky/views/widgets/menu_tile_widget.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/views/widgets/main_app_bar_widget.dart';
@@ -144,6 +146,63 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // ==== فرم تکمیل اطلاعات کاربری ====
+            Directionality(
+              textDirection: TextDirection.rtl,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: _ProfileCompletionForm(),
+              ),
+            ),
+
+            // ==== منوی حساب کاربری ====
+            Directionality(
+              textDirection: TextDirection.rtl,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.only(top: 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(right: 16),
+                      child: Text(
+                        'حساب کاربری',
+                        style: TextStyle(
+                          color: AppColor.secondary.withOpacity(0.5),
+                          letterSpacing: 6 / 100,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    MenuTileWidget(
+                      onTap: () {
+                        Navigator.of(context).pushNamed('/orders');
+                      },
+                      icon: SvgPicture.asset(
+                        'assets/icons/Bag.svg',
+                        color: AppColor.secondary.withOpacity(0.5),
+                      ),
+                      title: 'سفارشات',
+                      subtitle: 'سفارش‌های ثبت‌شده شما',
+                    ),
+                    MenuTileWidget(
+                      onTap: () {
+                        Navigator.of(context).pushNamed('/addresses');
+                      },
+                      icon: SvgPicture.asset(
+                        'assets/icons/Location.svg',
+                        color: AppColor.secondary.withOpacity(0.5),
+                      ),
+                      title: 'آدرس‌ها',
+                      subtitle: 'آدرس‌های ثبت‌شده شما',
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

@@ -1,5 +1,7 @@
 // views/widgets/modals/add_to_cart_modal.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
@@ -41,7 +43,13 @@ class _AddToCartModalState extends State<AddToCartModal> {
           ),
           width: double.infinity,
           margin: EdgeInsets.symmetric(horizontal: 16),
-          padding: EdgeInsets.only(left: 16, right: 16, top: 14, bottom: 20),
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 14,
+            // فضای نوار ناوبری سیستم تا دکمه افزودن زیر آن گیر نکند
+            bottom: 20 + MediaQuery.of(context).viewPadding.bottom,
+          ),
           child: Column(
             children: [
               // Indicator
@@ -156,6 +164,71 @@ class _AddToCartModalState extends State<AddToCartModal> {
                           ),
                         ),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // دکمه افزودن
+              Container(
+                width: double.infinity,
+                margin: EdgeInsets.only(top: 18),
+                padding: EdgeInsets.all(4),
+                height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: AppColor.primarySoft,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 7,
+                      child: Container(
+                        padding: EdgeInsets.only(left: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('مجموع',
+                                style: TextStyle(fontSize: 10, fontFamily: 'Estedad')),
+                            Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: Text(
+                                '${thousandSeparator(totalPrice - discoutedPrice)} تومان',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'Estedad',
+                                    fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 6,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.read<CartBloc>().add(
+                              AddToCart(context, widget.cartItem.id, _quantity));
+                          Navigator.of(context).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColor.primary,
+                          padding: EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'افزودن به سبد',
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Estedad',
+                              color: Colors.white),
+                        ),
+                      ),
                     ),
                   ],
                 ),
