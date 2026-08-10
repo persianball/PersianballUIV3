@@ -4,14 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
-import 'package:marketky/views/screens/order_success_page.dart';
-import 'package:marketky/views/widgets/cart_tile.dart';
 import 'package:marketky/views/widgets/pro_cart_item.dart';
 import 'package:marketky/views/widgets/course_cart_item.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
 import 'package:marketky/views/screens/address_selection_page.dart';
 import '../../bloc/cart/cart_bloc.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 class CartPage extends StatefulWidget {
   @override
@@ -95,12 +94,13 @@ class _CartPageState extends State<CartPage> {
     final products = items.where((item) => item.product != null).toList();
     final courses = items.where((item) => item.course != null).toList();
 
-    return ListView(
-      padding: EdgeInsets.all(16),
-      children: [
-        // Step 1 timeline
-        const CheckoutTimeline(currentStep: 0),
-        const SizedBox(height: 12),
+    return PageContainer(
+      child: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          // Step 1 timeline
+          const CheckoutTimeline(currentStep: 0),
+          const SizedBox(height: 12),
 
         // Products Section
         if (products.isNotEmpty) ...[
@@ -137,6 +137,7 @@ class _CartPageState extends State<CartPage> {
           ),
         ],
       ],
+      ),
     );
   }
 
@@ -208,7 +209,6 @@ class _CartPageState extends State<CartPage> {
                               final int shippingCost = (selectedMethod == 'free')
                                   ? 0
                                   : (selectedMethod == 'peyk' ? peykPrice : postPrice);
-                              final int discount = (base - discounted) < 0 ? 0 : (base - discounted);
                               final int payable = base - discounted + tax + shippingCost;
 
                               Widget priceRow(String label, String value, {Color? valueColor}) {

@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/core/model/Product.dart';
 import 'package:marketky/core/services/ProductService.dart';
-import 'package:marketky/views/widgets/item_card.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 class SearchResultPage extends StatefulWidget {
   final String searchKeyword;
@@ -107,40 +107,42 @@ class _SearchResultPageState extends State<SearchResultPage> with TickerProvider
           ),
         ), systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
-      body: TabBarView(
-        controller: tabController,
-        children: [
-          // 1 - Related
-          ListView(
-            shrinkWrap: true,
-            physics: BouncingScrollPhysics(),
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: 16, top: 16),
-                child: Text(
-                  'Search result of ${widget.searchKeyword}',
-                  style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w400),
+      body: PageContainer(
+        child: TabBarView(
+          controller: tabController,
+          children: [
+            // 1 - Related
+            ListView(
+              shrinkWrap: true,
+              physics: BouncingScrollPhysics(),
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(left: 16, top: 16),
+                  child: Text(
+                    'Search result of ${widget.searchKeyword}',
+                    style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w400),
+                  ),
                 ),
-              ),
-              // Container(
-              //   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              //   child: Wrap(
-              //     spacing: 16,
-              //     runSpacing: 16,
-              //     children: List.generate(
-              //       searchedProductData.length,
-              //       (index) => ItemCard(
-              //         product: searchedProductData[index],
-              //       ),
-              //     ),
-              //   ),
-              // ),
-            ],
-          ),
-          SizedBox(),
-          SizedBox(),
-          SizedBox(),
-        ],
+                // Container(
+                //   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                //   child: Wrap(
+                //     spacing: 16,
+                //     runSpacing: 16,
+                //     children: List.generate(
+                //       searchedProductData.length,
+                //       (index) => ItemCard(
+                //         product: searchedProductData[index],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+              ],
+            ),
+            SizedBox(),
+            SizedBox(),
+            SizedBox(),
+          ],
+        ),
       ),
     );
   }

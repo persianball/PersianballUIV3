@@ -37,7 +37,6 @@ class AppRouter {
     final courseMatch = RegExp(r'^/course/(\d+)$').firstMatch(name);
     if (courseMatch != null) {
       final id = int.parse(courseMatch.group(1)!);
-      final args = settings.arguments; // may contain Course for hero
       return MaterialPageRoute(
         builder: (_) => CourseDetailPage(id: id),
         settings: settings,

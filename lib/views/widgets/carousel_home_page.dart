@@ -7,7 +7,6 @@ import '../../bloc/cart/cart_bloc.dart';
 import '../screens/cart_page.dart';
 import 'custom_icon_button_widget.dart';
 import 'dummy_search_widget_1.dart';
-import '../screens/empty_cart_page.dart';
 import '../screens/message_page.dart';
 
 Widget buildCarouselItem(BuildContext context,String imageUrl) {

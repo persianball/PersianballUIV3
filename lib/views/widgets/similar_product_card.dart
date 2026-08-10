@@ -4,7 +4,6 @@ import 'package:marketky/utils/ThousandsFormatter.dart';
 import '../../constant/app_color.dart';
 import '../../constant/urls.dart';
 import '../../models/ProductModel.dart';
-import '../screens/product_detail.dart';
 
 class SimilarProductCard extends StatelessWidget {
   final SimilarProduct product;
@@ -39,7 +38,7 @@ class SimilarProductCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
-                '${URLs.baseUrl}${product.image ?? (product.images.isNotEmpty ? product.images[0] : '')}',
+                '${URLs.baseUrl}${product.image}',
                 fit: BoxFit.cover,
                 height: 120,
                 width: 160,

@@ -5,10 +5,6 @@ import 'package:marketky/bloc/login/login_bloc.dart';
 import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:flutter/services.dart';
-import 'package:marketky/views/screens/home_page.dart';
-import 'package:marketky/views/screens/otp_verification_page.dart';
-import 'package:marketky/views/screens/welcome_page.dart';
-import 'package:marketky/views/screens/page_switcher.dart';
 import 'package:marketky/core/app_router.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
 import 'package:app_links/app_links.dart';
@@ -63,9 +59,7 @@ class _MyAppState extends State<MyApp> {
 
       // Runtime links stream
       _linkSub = _appLinks!.uriLinkStream.listen((uri) {
-        if (uri != null) {
-          _handleUri(uri);
-        }
+        _handleUri(uri);
       }, onError: (_) {});
     } catch (_) {}
   }

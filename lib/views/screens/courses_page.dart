@@ -333,22 +333,6 @@ class _UserCoursesListState extends State<_UserCoursesList> {
     // setState(() {});
   }
 
-  Future<void> _saveProgress() async {
-    // TODO: save watchedVideos
-  }
-
-  void _toggleWatched(int courseId, int videoIndex) {
-    setState(() {
-      watchedVideos.putIfAbsent(courseId, () => <int>{});
-      if (watchedVideos[courseId]!.contains(videoIndex)) {
-        watchedVideos[courseId]!.remove(videoIndex);
-      } else {
-        watchedVideos[courseId]!.add(videoIndex);
-      }
-    });
-    _saveProgress();
-  }
-
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [];

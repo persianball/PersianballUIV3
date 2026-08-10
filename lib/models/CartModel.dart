@@ -1,6 +1,5 @@
 // core/model/Cart.dart
 import 'package:marketky/models/ProductModel.dart';
-import 'package:marketky/models/course_detail_model.dart';
 
 class CartItem {
   final int id;

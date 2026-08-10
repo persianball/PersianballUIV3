@@ -20,7 +20,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
   final ScrollController _scrollController = ScrollController();
   final ScrollController _listController = ScrollController();
   Map<int, Set<int>> _watchedByCourse = {}; // courseId -> set of flat indices
-  int? _highlightIndex;
   int? _continueIndex;
   String? _continueLabel;
   bool _introExpanded = false;
@@ -171,7 +170,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
   }
 
   void _scrollToIndex(int flatIndex) {
-    setState(() { _highlightIndex = flatIndex; });
     // Each tile approx 92-100 height; use 94 as heuristic
     final double pos = flatIndex * 94.0;
     _listController.animateTo(
@@ -179,9 +177,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
       duration: const Duration(milliseconds: 400),
       curve: Curves.ease,
     );
-    Timer(const Duration(seconds: 2), () {
-      if (mounted) setState(() { _highlightIndex = null; });
-    });
   }
 
   int _flatIndexFrom(int weekIdx, int sectionIdx) {

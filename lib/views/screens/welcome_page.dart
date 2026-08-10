@@ -3,9 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/bloc/login/login_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/screens/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:marketky/views/screens/page_switcher.dart';
 
 class WelcomePage extends StatefulWidget {
   @override

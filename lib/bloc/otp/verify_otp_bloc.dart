@@ -42,7 +42,6 @@ class VerifyOtpBloc extends Bloc<VerifyOtpEvent, VerifyOtpState> {
           final data = jsonDecode(response.body);
           final token = data['extra']['access'];
           final refresh = data['extra']['refresh'];
-          final isCoach = data['extra']['is_coach'];
           if (token != null) {
             await AuthService.saveTokens(token, refresh);
             emit(VerifyOtpSuccess(data));

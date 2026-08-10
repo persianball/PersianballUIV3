@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/login/login_bloc.dart';
-import 'package:marketky/views/screens/login_page.dart';
 
 /// Ensures user is authenticated before performing [action].
 /// - If authenticated: runs [action] immediately.

@@ -6,11 +6,9 @@ import 'package:timeline_tile/timeline_tile.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
 import 'package:marketky/models/address_model.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/screens/payment_webview_page.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
 import 'package:marketky/views/screens/order_summary_page.dart';
 import 'package:marketky/models/CartModel.dart';
-import 'package:marketky/bloc/address/address_bloc.dart';
 
 import '../../bloc/address/address_state.dart';
 
@@ -32,16 +30,6 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Try get passed cart and delivery method from previous page (CartPage)
-    final routeArgs = ModalRoute.of(context)?.settings.arguments;
-    AllCartFromBackend? passedCart;
-    String? passedDeliveryMethod;
-    if (routeArgs is Map) {
-      final map = routeArgs as Map;
-      if (map['cart'] is AllCartFromBackend) passedCart = map['cart'] as AllCartFromBackend;
-      if (map['delivery_method'] is String) passedDeliveryMethod = map['delivery_method'] as String;
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text('انتخاب آدرس', style: TextStyle(color: Colors.black))),
       floatingActionButton: FloatingActionButton(
@@ -345,8 +333,8 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
       String useMethod = initialMethod;
 
       if (args is Map) {
-        final map = args as Map;
-        if (map['cart'] is AllCartFromBackend) cart = map['cart'] as AllCartFromBackend;
+        final map = args;
+        if (map['cart'] is AllCartFromBackend) cart = map['cart'];
         if (map['delivery_method'] is String && (map['delivery_method'] as String).isNotEmpty) {
           useMethod = map['delivery_method'];
         }

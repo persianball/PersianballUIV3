@@ -1,7 +1,5 @@
 // lib/bloc/address/address_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import 'package:marketky/models/address_model.dart';
 import 'package:marketky/services/address_service.dart';
 
 import 'address_event.dart';

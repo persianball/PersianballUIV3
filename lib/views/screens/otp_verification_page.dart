@@ -51,17 +51,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     return '${mobile.substring(0, 4)}****${mobile.substring(mobile.length - 2)}';
   }
 
-  void _onResendCode() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Text('کد تأیید دوباره به ${_maskedDestination} ارسال شد', style: TextStyle(fontFamily: 'Estedad'))),
-        backgroundColor: AppColor.primary,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

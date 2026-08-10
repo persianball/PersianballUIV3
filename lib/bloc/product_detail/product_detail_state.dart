@@ -1,7 +1,6 @@
 
 
 import 'package:equatable/equatable.dart';
-import 'package:marketky/core/model/ProductSize.dart';
 
 import '../../models/ProductModel.dart';
 

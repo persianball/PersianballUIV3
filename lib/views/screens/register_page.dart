@@ -1,10 +1,8 @@
 // views/screens/register_page.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/screens/login_page.dart';
 import 'package:marketky/views/screens/otp_verification_page.dart';
 import '../../bloc/register/register_bloc.dart';
 
@@ -595,11 +593,4 @@ class _RegisterPageState extends State<RegisterPage> {
     _inviteKeyController.dispose();
     super.dispose();
   }
-}
-
-// کمکی برای TabBar
-class _VSync implements TickerProvider {
-  const _VSync();
-  @override
-  Ticker createTicker(TickerCallback onTick) => Ticker(onTick);
 }

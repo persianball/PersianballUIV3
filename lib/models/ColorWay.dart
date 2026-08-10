@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:marketky/models/ProductModel.dart';
 
 class ColorWay {
   String name;

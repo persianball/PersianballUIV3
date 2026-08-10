@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/screens/feeds_page.dart';
 import 'package:marketky/views/screens/home_page.dart';
-import 'package:marketky/views/screens/notification_page.dart';
 import 'package:marketky/views/screens/profile_page.dart';
 import 'package:marketky/views/screens/courses_page.dart';
 

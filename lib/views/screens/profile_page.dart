@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/views/widgets/main_app_bar_widget.dart';
-import 'package:marketky/views/widgets/menu_tile_widget.dart';
 
 import '../../bloc/login/login_bloc.dart';
 import 'login_page.dart';
@@ -12,11 +10,13 @@ import 'otp_verification_page.dart';
 import 'package:marketky/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:marketky/views/widgets/page_container.dart';
 
 class UserService {
   static const String endpoint = '/v1/user/';
 
-  static Future<Map<String, dynamic>?> getUserProfile(BuildContext context) async {
+  static Future<Map<String, dynamic>?> getUserProfile(
+      BuildContext context) async {
     final token = await AuthService.getToken();
     if (token == null || token.isEmpty) {
       await AuthService.requireToken(context);
@@ -35,7 +35,8 @@ class UserService {
     throw Exception('خطا در دریافت اطلاعات پروفایل');
   }
 
-  static Future<bool> updateUserProfile(BuildContext context, Map<String, dynamic> data) async {
+  static Future<bool> updateUserProfile(
+      BuildContext context, Map<String, dynamic> data) async {
     final token = await AuthService.getToken();
     if (token == null || token.isEmpty) {
       await AuthService.requireToken(context);
@@ -69,171 +70,84 @@ class _ProfilePageState extends State<ProfilePage> {
         cartValue: 2,
         chatValue: 2,
       ),
-      body: ListView(
-        shrinkWrap: true,
-        physics: BouncingScrollPhysics(),
-        children: [
-          // Section 1 - Profile Picture - Username - Name
-          Container(
-            width: MediaQuery.of(context).size.width,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.jpg'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Column(
-              children: [
-                // Profile Picture
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    color: Colors.grey,
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/avatar_for_comments.png'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                // Fullname
-                // Container(
-                //   margin: EdgeInsets.only(bottom: 4, top: 14),
-                //   child: Text(
-                //     'Nadsya Utari',
-                //     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
-                //   ),
-                // ),
-                // // Username
-                // Text(
-                //   'Username',
-                //   style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
-                // ),
-                BlocListener<LoginBloc, LoginState>(
-                  listener: (context, state) {
-                    if (state is LoginUnauthenticated) {
-                      // هدایت به صفحه مناسب
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => LoginPage()),
-                      );
-                    }
-                  },
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.read<LoginBloc>().add(LogoutRequested());
-                    },
-                    child: Text('خروج از حساب',
-                      style: TextStyle(fontFamily: 'Estedad', color: Colors.white, fontSize: 16),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                )
-
-              ],
-            ),
-          ),
-
-          // ==== BEGIN: Profile Completion Form ====
-          Directionality(
-            textDirection: TextDirection.rtl,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              child: _ProfileCompletionForm(),
-            ),
-          ),
-          // ==== END: Profile Completion Form ====
-          // Section 2 - Account Menu
-          Directionality(
-            textDirection: TextDirection.rtl,
-            child: Container(
+      body: PageContainer(
+        child: ListView(
+          shrinkWrap: true,
+          physics: BouncingScrollPhysics(),
+          children: [
+            // Section 1 - Profile Picture - Username - Name
+            Container(
               width: MediaQuery.of(context).size.width,
-              margin: EdgeInsets.only(top: 24),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/background.jpg'),
+                  fit: BoxFit.cover,
+                ),
+              ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Profile Picture
                   Container(
-                    margin: EdgeInsets.only(right: 16),
-                    child: Text(
-                      'حساب کاربری',
-                      style: TextStyle(color: AppColor.secondary.withOpacity(0.5), letterSpacing: 6 / 100, fontWeight: FontWeight.w600),
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      color: Colors.grey,
+                      image: DecorationImage(
+                        image:
+                            AssetImage('assets/images/avatar_for_comments.png'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-
-
-                  MenuTileWidget(
-                    onTap: () {
-                      Navigator.of(context).pushNamed('/orders');
+                  // Fullname
+                  // Container(
+                  //   margin: EdgeInsets.only(bottom: 4, top: 14),
+                  //   child: Text(
+                  //     'Nadsya Utari',
+                  //     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
+                  //   ),
+                  // ),
+                  // // Username
+                  // Text(
+                  //   'Username',
+                  //   style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+                  // ),
+                  BlocListener<LoginBloc, LoginState>(
+                    listener: (context, state) {
+                      if (state is LoginUnauthenticated) {
+                        // هدایت به صفحه مناسب
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
+                      }
                     },
-                    icon: SvgPicture.asset(
-                      'assets/icons/Bag.svg',
-                      color: AppColor.secondary.withOpacity(0.5),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        context.read<LoginBloc>().add(LogoutRequested());
+                      },
+                      child: Text(
+                        'خروج از حساب',
+                        style: TextStyle(
+                            fontFamily: 'Estedad',
+                            color: Colors.white,
+                            fontSize: 16),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding:
+                            EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
-                    title: 'سفارشات',
-                    subtitle: 'سفارش‌های ثبت‌شده شما',
-                  ),
-
-                  MenuTileWidget(
-                    onTap: () {
-                      Navigator.of(context).pushNamed('/addresses');
-                    },
-                    icon: SvgPicture.asset(
-                      'assets/icons/Location.svg',
-                      color: AppColor.secondary.withOpacity(0.5),
-                    ),
-                    title: 'آدرس‌ها',
-                    subtitle: 'آدرس‌های ثبت‌شده شما',
                   ),
                 ],
               ),
             ),
-          ),
-
-          // // Section 3 - Settings
-          // Container(
-          //   width: MediaQuery.of(context).size.width,
-          //   margin: EdgeInsets.only(top: 24),
-          //   child: Column(
-          //     mainAxisAlignment: MainAxisAlignment.start,
-          //     crossAxisAlignment: CrossAxisAlignment.start,
-          //     children: [
-          //       Container(
-          //         margin: EdgeInsets.only(left: 16),
-          //         child: Text(
-          //           'SETTINGS',
-          //           style: TextStyle(color: AppColor.secondary.withOpacity(0.5), letterSpacing: 6 / 100, fontWeight: FontWeight.w600),
-          //         ),
-          //       ),
-          //       MenuTileWidget(
-          //         onTap: () {},
-          //         margin: EdgeInsets.only(top: 10),
-          //         icon: SvgPicture.asset(
-          //           'assets/icons/Filter.svg',
-          //           color: AppColor.secondary.withOpacity(0.5),
-          //         ),
-          //         title: 'Languages',
-          //         subtitle: 'Lorem ipsum Dolor sit Amet',
-          //       ),
-          //       MenuTileWidget(
-          //         onTap: () {},
-          //         icon: SvgPicture.asset(
-          //           'assets/icons/Log Out.svg',
-          //           color: Colors.red,
-          //         ),
-          //         iconBackground: Colors.red[100]!,
-          //         title: 'Log Out',
-          //         titleColor: Colors.red,
-          //       ),
-          //     ],
-          //   ),
-          // )
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -280,14 +194,18 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطا در دریافت اطلاعات پروفایل'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('خطا در دریافت اطلاعات پروفایل'),
+            backgroundColor: Colors.red),
       );
     }
     setState(() => _loading = false);
   }
 
-  void _navigateToOtpVerification({required String destination, required bool isEmail}) {
-    Navigator.of(context).push(
+  void _navigateToOtpVerification(
+      {required String destination, required bool isEmail}) {
+    Navigator.of(context)
+        .push(
       MaterialPageRoute(
         builder: (context) => OTPVerificationPage(
           destination: destination,
@@ -296,12 +214,12 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
           mobileNumber: !isEmail ? destination : null,
         ),
       ),
-    ).then((_) {
+    )
+        .then((_) {
       // Refresh profile after returning from OTP verification
       _fetchProfile();
     });
   }
-
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -310,21 +228,27 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
       "first_name": _firstNameController.text,
       "last_name": _lastNameController.text,
       "email": _emailController.text.isNotEmpty ? _emailController.text : null,
-      "mobile_number": _mobileController.text.isNotEmpty ? _mobileController.text : null,
-      "birth_date": _birthDateController.text.isNotEmpty ? _birthDateController.text : null,
+      "mobile_number":
+          _mobileController.text.isNotEmpty ? _mobileController.text : null,
+      "birth_date": _birthDateController.text.isNotEmpty
+          ? _birthDateController.text
+          : null,
       "gender": _gender,
     };
     data.removeWhere((k, v) => v == null || (v is String && v.isEmpty));
     try {
       await UserService.updateUserProfile(context, data);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('اطلاعات با موفقیت ذخیره شد'), backgroundColor: Colors.green),
+        SnackBar(
+            content: Text('اطلاعات با موفقیت ذخیره شد'),
+            backgroundColor: Colors.green),
       );
       // Refresh profile after successful update
       _fetchProfile();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطا در ذخیره اطلاعات'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('خطا در ذخیره اطلاعات'), backgroundColor: Colors.red),
       );
     }
     setState(() => _loading = false);
@@ -339,7 +263,11 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("تکمیل اطلاعات کاربری", style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.bold, fontSize: 18)),
+                Text("تکمیل اطلاعات کاربری",
+                    style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18)),
                 SizedBox(height: 16),
                 Row(
                   children: [
@@ -347,7 +275,9 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                       child: TextFormField(
                         controller: _firstNameController,
                         decoration: InputDecoration(labelText: 'نام'),
-                        validator: (val) => val == null || val.isEmpty ? 'نام را وارد کنید' : null,
+                        validator: (val) => val == null || val.isEmpty
+                            ? 'نام را وارد کنید'
+                            : null,
                       ),
                     ),
                     SizedBox(width: 8),
@@ -355,7 +285,9 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                       child: TextFormField(
                         controller: _lastNameController,
                         decoration: InputDecoration(labelText: 'نام خانوادگی'),
-                        validator: (val) => val == null || val.isEmpty ? 'نام خانوادگی را وارد کنید' : null,
+                        validator: (val) => val == null || val.isEmpty
+                            ? 'نام خانوادگی را وارد کنید'
+                            : null,
                       ),
                     ),
                   ],
@@ -375,18 +307,21 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                           color: _isEmailVerified ? Colors.green : Colors.red,
                           size: 20,
                         ),
-                        if (!_isEmailVerified && _emailController.text.isNotEmpty)
+                        if (!_isEmailVerified &&
+                            _emailController.text.isNotEmpty)
                           TextButton(
                             onPressed: () => _navigateToOtpVerification(
                               destination: _emailController.text,
                               isEmail: true,
                             ),
-                            child: Text('تأیید', style: TextStyle(fontSize: 12)),
+                            child:
+                                Text('تأیید', style: TextStyle(fontSize: 12)),
                           ),
                       ],
                     ),
                   ),
-                  validator: (val) => val == null || val.isEmpty ? 'ایمیل را وارد کنید' : null,
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'ایمیل را وارد کنید' : null,
                 ),
                 SizedBox(height: 12),
                 // Phone Field with Verification Status
@@ -403,18 +338,22 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                           color: _isMobileVerified ? Colors.green : Colors.red,
                           size: 20,
                         ),
-                        if (!_isMobileVerified && _mobileController.text.isNotEmpty)
+                        if (!_isMobileVerified &&
+                            _mobileController.text.isNotEmpty)
                           TextButton(
                             onPressed: () => _navigateToOtpVerification(
                               destination: _mobileController.text,
                               isEmail: false,
                             ),
-                            child: Text('تأیید', style: TextStyle(fontSize: 12)),
+                            child:
+                                Text('تأیید', style: TextStyle(fontSize: 12)),
                           ),
                       ],
                     ),
                   ),
-                  validator: (val) => val == null || val.isEmpty ? 'شماره موبایل را وارد کنید' : null,
+                  validator: (val) => val == null || val.isEmpty
+                      ? 'شماره موبایل را وارد کنید'
+                      : null,
                 ),
                 // SizedBox(height: 12),
                 // TextFormField(
@@ -443,11 +382,16 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                     onPressed: _loading ? null : _submit,
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 10),
-                      child: Text('ثبت اطلاعات', style: TextStyle(fontFamily: 'Estedad', fontSize: 16,color: Colors.white)),
+                      child: Text('ثبت اطلاعات',
+                          style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 16,
+                              color: Colors.white)),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColor.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                 ),

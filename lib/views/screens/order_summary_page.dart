@@ -7,7 +7,6 @@ import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/address_model.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/views/screens/payment_webview_page.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -106,7 +105,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       final resp = await http.post(
         Uri.parse('${URLs.baseUrl}/v1/payment/voucher/verify/'),
         headers: {
-          'Authorization': 'token ${token ?? ''}',
+          'Authorization': 'token $token',
           'Content-Type': 'application/json',
         },
         body: jsonEncode(body),
@@ -115,9 +114,9 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
         final data = jsonDecode(resp.body) as Map<String, dynamic>;
         final discountPercent = data['discount_percent'] as int? ?? 0;
-        
+
         setState(() => _discountPercent = discountPercent);
-        
+
         if (discountPercent > 0) {
           _showSnack('کد تخفیف اعمال شد - ${discountPercent}% تخفیف');
         } else {

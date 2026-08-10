@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/views/screens/product_detail.dart';
-import 'package:marketky/views/widgets/rating_tag.dart';
 
 import '../../constant/urls.dart';
 import '../../models/ProductModel.dart';

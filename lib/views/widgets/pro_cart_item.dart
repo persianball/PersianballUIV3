@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
-import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 
@@ -30,7 +29,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
     String? colorName = widget.cartItemFromBackend.product?.productVariant?.color;
     int? originalPrice =widget.cartItemFromBackend.product !=null && widget.cartItemFromBackend.product?.price != null? widget.cartItemFromBackend.product!.price! * widget.cartItemFromBackend.quantity:0;
     int? discountPercent = widget.cartItemFromBackend.product?.disountPercentage;
-    int? discountedPrice = originalPrice!=null ? widget.cartItemFromBackend.product?.disountPercentage != null ?  (originalPrice *(1-widget.cartItemFromBackend.product!.disountPercentage! / 100.0)).toInt() : originalPrice : 0;
+    int? discountedPrice = widget.cartItemFromBackend.product?.disountPercentage != null ?  (originalPrice *(1-widget.cartItemFromBackend.product!.disountPercentage! / 100.0)).toInt() : originalPrice;
     return SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -184,7 +183,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                         ):Container(),
                         SizedBox(width: 8,),
                         Text(
-                          thousandSeparator(originalPrice??0),
+                          thousandSeparator(originalPrice),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[500],
@@ -314,11 +313,6 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                             ),
                           ],
                         );
-
-
-
-                        throw Exception("مشکلی در دریافت سبد ایجاد شده است.");
-
                       }
                     ),
                   ],

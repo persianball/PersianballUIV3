@@ -1,5 +1,4 @@
 // views/screens/product_detail.dart
-import 'package:circular_reveal_animation/circular_reveal_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -10,7 +9,6 @@ import 'package:marketky/core/model/Review.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/ColorWay.dart';
 import 'package:marketky/models/ProductModel.dart';
-import 'package:marketky/models/VideoDetail.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/screens/reviews_page.dart';
@@ -20,18 +18,13 @@ import 'package:marketky/views/widgets/rating_tag.dart';
 import 'package:marketky/views/widgets/review_tile.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
 import 'package:marketky/views/widgets/selectable_circle_size.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:video_player/video_player.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product_detail/product_detail_bloc.dart';
 import '../../bloc/product_detail/product_detail_event.dart';
 import '../../bloc/product_detail/product_detail_state.dart';
 import '../widgets/ProCarousel.dart';
-import '../widgets/custom_icon_button_widget.dart';
 import '../widgets/similar_product_card.dart';
-import '../widgets/video_player.dart';
-import 'cart_page.dart';
 
 
 class ProductDetailPage extends StatefulWidget {
@@ -302,13 +295,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   }
 
   Widget _buildProductContent(ProductDetail product, BuildContext context) {
-    final PageController imageController = PageController();
     return BlocBuilder<ProductDetailVariantBloc,ProductDetailState>(
       builder: (context, variant_state) {
         if(variant_state is ProductDetailSizeChanged){
-          var variantColor = Color(int.parse(
-              "ff" + variant_state.productVariant.colorRgb! ?? "00000000",
-              radix: 16));
           return ListView(
             physics: BouncingScrollPhysics(),
             children: [
@@ -459,8 +448,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               Container(
                 decoration: BoxDecoration(
                     color: Color(int.parse(
-                        "ff" + variant_state.productVariant.colorRgb! ??
-                            "00000000", radix: 16))
+                        "ff" + variant_state.productVariant.colorRgb!,
+                        radix: 16))
                         .withOpacity(0.1)
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -504,7 +493,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                   final int? discountPercentage = size_state.productSize.discountPercentage;
 
                                   int finalPrice = originalPrice;
-                                  int? percent = 0;
+                                  int percent = 0;
 
                                   if (discountPercentage != null &&
                                       discountPercentage > 0 &&
@@ -519,7 +508,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                   return Row(
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      if (percent != null && percent > 0) SizedBox(width: 8),
+                                      if (percent > 0) SizedBox(width: 8),
                                       Text(
                                         '${thousandSeparator(finalPrice)} تومان',
                                         style: TextStyle(
@@ -529,9 +518,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           color: AppColor.primary,
                                         ),
                                       ),
-                                      if (percent != null && percent > 0) SizedBox(width: 8),
+                                      if (percent > 0) SizedBox(width: 8),
 
-                                      if (percent != null && percent > 0)
+                                      if (percent > 0)
                                       Container(
                                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
@@ -548,8 +537,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                             ),
                                           ),
                                         ),
-                                      if (percent != null && percent > 0) SizedBox(width: 8),
-                                      if (percent != null && percent > 0)
+                                      if (percent > 0) SizedBox(width: 8),
+                                      if (percent > 0)
                                         Text(
                                           '${thousandSeparator(originalPrice)} تومان',
                                           style: TextStyle(
@@ -612,7 +601,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                       .map((v) =>
                                       ColorWay(
                                         color: Color(int.parse(
-                                            "ff" + v.colorRgb! ?? "00000000",
+                                            "ff" + v.colorRgb!,
                                             radix: 16)),
                                         name: v.color ?? "ناشناس",
                                         imageUrl: v.image != null ? '${URLs
@@ -740,7 +729,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               TagExtension(
                                 tagsToExtend: {"img"},
                                 builder: (context) {
-                                  final src = '${URLs.baseUrl}${context.attributes['src']}' ?? "";
+                                  final src = '${URLs.baseUrl}${context.attributes['src']}';
                                   return ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                     child: Image.network(

@@ -7,17 +7,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/screens/empty_cart_page.dart';
-import 'package:marketky/views/screens/message_page.dart';
-import 'package:marketky/views/screens/search_page.dart';
 import 'package:marketky/views/widgets/custom_icon_button_widget.dart';
-import 'package:marketky/views/widgets/dummy_search_widget_1.dart';
 import 'package:marketky/views/widgets/flashsale_countdown_tile.dart';
 import 'package:marketky/views/widgets/item_card.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product/product_bloc.dart';
 import '../../models/ProductModel.dart';
 import 'cart_page.dart';
+import '../widgets/page_container.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -89,22 +86,24 @@ class _HomePageState extends State<HomePage> {
               onRefresh: () async {
                 reloadHomePage();
               },
-              child: ListView(
-                physics: BouncingScrollPhysics(),
-                children: [
-                  // بخش ۱ - هدر با کاروسل
-                  _buildHeader(context),
+              child: PageContainer(
+                child: ListView(
+                  physics: BouncingScrollPhysics(),
+                  children: [
+                    // بخش ۱ - هدر با کاروسل
+                    _buildHeader(context),
 
-                  // بخش ۲ - دسته‌بندی
-                  //_buildCategorySection(),
+                    // بخش ۲ - دسته‌بندی
+                    //_buildCategorySection(),
 
-                  // بخش ۳ - فروش ویژه
-                  if (flashProducts.isNotEmpty)
-                    _buildFlashSaleSection(flashProducts, hours, minutes, seconds),
+                    // بخش ۳ - فروش ویژه
+                    if (flashProducts.isNotEmpty)
+                      _buildFlashSaleSection(flashProducts, hours, minutes, seconds),
 
-                  // بخش ۴ - پیشنهاد روز
-                  _buildRecommendationSection(products),
-                ],
+                    // بخش ۴ - پیشنهاد روز
+                    _buildRecommendationSection(products),
+                  ],
+                ),
               ),
             );
           }
@@ -215,73 +214,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCategorySection() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      color: AppColor.secondary,
-      padding: EdgeInsets.only(top: 12, bottom: 24),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              textDirection: TextDirection.rtl,
-              children: [
-                Text(
-                  'دسته‌بندی ها',
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'مشاهده بیشتر',
-                    style: TextStyle(
-                      fontFamily: 'Estedad',
-                      color: Colors.white.withOpacity(0.7),
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            Container(
-              height: 96,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: 3,
-                separatorBuilder: (_, i) => SizedBox(width: 16),
-                itemBuilder: (_, i) => Container(
-                  width: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'دسته $i',
-                      style: TextStyle(color: Colors.white, fontFamily: 'Estedad'),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

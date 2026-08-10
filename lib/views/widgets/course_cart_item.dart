@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
-import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 
@@ -33,11 +32,9 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
         ? widget.cartItemFromBackend.course!.price! * widget.cartItemFromBackend.quantity
         : 0;
     int? discountPercent = widget.cartItemFromBackend.course?.discountPercentage;
-    int? discountedPrice = originalPrice != null
-        ? widget.cartItemFromBackend.course?.discountPercentage != null
-            ? (originalPrice * (1 - widget.cartItemFromBackend.course!.discountPercentage! / 100.0)).toInt()
-            : originalPrice
-        : 0;
+    int? discountedPrice = widget.cartItemFromBackend.course?.discountPercentage != null
+        ? (originalPrice * (1 - widget.cartItemFromBackend.course!.discountPercentage! / 100.0)).toInt()
+        : originalPrice;
 
     return SingleChildScrollView(
       child: Padding(
@@ -271,7 +268,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                         ),
                       SizedBox(width: 8),
                       Text(
-                        thousandSeparator(originalPrice ?? 0),
+                        thousandSeparator(originalPrice),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[500],
