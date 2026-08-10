@@ -38,6 +38,12 @@ class CarouselImageViewer extends StatefulWidget {
   final double thumbnailSize;
   final double thumbnailSpacing;
 
+  /// اسلایدی که در ابتدا نمایش داده می‌شود
+  final int initialIndex;
+
+  /// با تغییر اسلاید صدا زده می‌شود
+  final ValueChanged<int>? onIndexChanged;
+
   const CarouselImageViewer({
     Key? key,
     this.imageUrls,
@@ -45,6 +51,8 @@ class CarouselImageViewer extends StatefulWidget {
     this.mainImageHeight = 300.0,
     this.thumbnailSize = 80.0,
     this.thumbnailSpacing = 8.0,
+    this.initialIndex = 0,
+    this.onIndexChanged,
   })  : assert(
             (mediaItems != null && mediaItems.length>0) ||
                 (imageUrls != null && imageUrls.length>0),
@@ -57,7 +65,7 @@ class CarouselImageViewer extends StatefulWidget {
 
 class _CarouselImageViewerState extends State<CarouselImageViewer> {
   late final PageController _pageController;
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   // Video controllers cached per index
   final Map<int, VideoPlayerController> _videoControllers = {};
@@ -70,8 +78,10 @@ class _CarouselImageViewerState extends State<CarouselImageViewer> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    _playVideo(0);
+    // اگر ایندکس ذخیره‌شده از محتوای فعلی بزرگ‌تر باشد، به آخرین اسلاید محدود می‌شود
+    _currentIndex = widget.initialIndex.clamp(0, _items.length - 1);
+    _pageController = PageController(initialPage: _currentIndex);
+    _playVideo(_currentIndex);
   }
 
   @override
@@ -94,6 +104,7 @@ class _CarouselImageViewerState extends State<CarouselImageViewer> {
     setState(() {
       _currentIndex = index;
     });
+    widget.onIndexChanged?.call(index);
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
@@ -107,6 +118,7 @@ class _CarouselImageViewerState extends State<CarouselImageViewer> {
     setState(() {
       _currentIndex = index;
     });
+    widget.onIndexChanged?.call(index);
   }
 
   void _pauseVideoAt(int index) {

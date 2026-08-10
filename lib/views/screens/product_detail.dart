@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/widgets/circular_reveal_switcher.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/core/model/Review.dart';
 import 'package:marketky/models/CartModel.dart';
@@ -38,8 +37,8 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> with SingleTickerProviderStateMixin {
-  /// محل کلیک روی دایره رنگ، مبدأ ترنزیشن دایره‌ای
-  Offset? _colorTapPosition;
+  /// اسلاید فعلی گالری تا با تعویض رنگ همان اسلاید حفظ شود
+  int _carouselIndex = 0;
 
   late AnimationController animationController;
   late Animation<double> animation;
@@ -377,10 +376,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                 child: Column(
                                   children: [
                                     const SizedBox(height: 90),
-                                    CircularRevealSwitcher(
-                                      center: _colorTapPosition,
-                                      child: CarouselImageViewer(
+                                    CarouselImageViewer(
                                       key: ValueKey(variant_state.productVariant.id),
+                                      initialIndex: _carouselIndex,
+                                      onIndexChanged: (i) => _carouselIndex = i,
                                       imageUrls: variant_state.productVariant
                                           .images.map((url) => '${URLs
                                           .baseUrl}$url').toList(),
@@ -407,7 +406,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                       mainImageHeight: 250,
                                       thumbnailSize: 40,
                                       thumbnailSpacing: 12,
-                                    ),
                                     ),
                                     const SizedBox(height: 8),
                                   ],
@@ -617,10 +615,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
                                       ))
                                       .toList(),
-                                  onColorSelected: (int vIndex, Offset tapPos) {
-                                    // مبدأ ترنزیشن دایره‌ای، محل کلیک کاربر است
-                                    setState(() => _colorTapPosition = tapPos);
-
+                                  onColorSelected: (int vIndex) {
                                     if (product.variants.isNotEmpty &&
                                         product.variants[vIndex].sizeVariants
                                             .isNotEmpty) {

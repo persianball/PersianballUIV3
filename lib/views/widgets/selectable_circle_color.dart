@@ -5,8 +5,7 @@ import 'package:marketky/models/ColorWay.dart';
 class SelectableCircleColor extends StatefulWidget {
   final EdgeInsetsGeometry? margin, padding;
   final List<ColorWay> colorWay;
-  /// فراخوانی وقتی رنگ تغییر کرد؛ [globalPosition] محل کلیک کاربر است
-  final void Function(int index, Offset globalPosition) onColorSelected;
+  final ValueChanged<int> onColorSelected; // فراخوانی وقتی رنگ تغییر کرد
 
   // New: allow customizing circle size and spacing
   final double circleSize; // default 42
@@ -43,15 +42,14 @@ class _SelectableCircleState extends State<SelectableCircleColor> {
               (index) {
             final variant = widget.colorWay[index];
             return InkWell(
-              onTapDown: (details) {
+              onTap: () {
                 setState(() {
                   _selectedIndex = index;
                 });
 
-                // ارسال ایندکس انتخاب به همراه محل کلیک
-                widget.onColorSelected(index, details.globalPosition);
+                // ارسال ایندکس انتخاب
+                widget.onColorSelected(index);
               },
-              onTap: () {},
               child: Container(
                 decoration: BoxDecoration(
                   border: Border.all(

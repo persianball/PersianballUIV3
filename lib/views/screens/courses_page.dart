@@ -128,7 +128,11 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
           ),
         ),
       ),
-      body: TabBarView(
+      // جهت TabBarView باید با TabBar راست‌به‌چپ یکی باشد وگرنه جهت اسلاید
+      // صفحه‌ها برعکس تب‌ها می‌شود
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: TabBarView(
         controller: _tabController,
         children: [
           // Tab 1: All Courses
@@ -173,6 +177,7 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                       ),
                     ),
         ],
+        ),
       ),
     );
   }
