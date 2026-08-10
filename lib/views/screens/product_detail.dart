@@ -376,7 +376,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                 child: Column(
                                   children: [
                                     const SizedBox(height: 90),
-                                    CarouselImageViewer(
+                                    // تعویض نرم گالری هنگام تغییر رنگ:
+                                    // محو‌شدن همراه با کمی بزرگ‌نمایی (fade through)
+                                    AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 320),
+                                      switchInCurve: Curves.easeOutCubic,
+                                      switchOutCurve: Curves.easeInCubic,
+                                      transitionBuilder: (child, animation) =>
+                                          FadeTransition(
+                                        opacity: animation,
+                                        child: ScaleTransition(
+                                          scale: Tween<double>(
+                                                  begin: 0.94, end: 1.0)
+                                              .animate(animation),
+                                          child: child,
+                                        ),
+                                      ),
+                                      child: CarouselImageViewer(
                                       key: ValueKey(variant_state.productVariant.id),
                                       initialIndex: _carouselIndex,
                                       onIndexChanged: (i) => _carouselIndex = i,
@@ -406,6 +422,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                       mainImageHeight: 250,
                                       thumbnailSize: 40,
                                       thumbnailSpacing: 12,
+                                    ),
                                     ),
                                     const SizedBox(height: 8),
                                   ],
