@@ -55,8 +55,13 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  AppBar _buildAppBar() {
-    return AppBar(
+  PreferredSizeWidget _buildAppBar() {
+    // چیدمان اپ‌بار راست‌به‌چپ: عنوان سمت راست و دکمه بازگشت سمت راست
+    return PreferredSize(
+      preferredSize: Size.fromHeight(kToolbarHeight),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: AppBar(
       title: BlocBuilder<CartBloc, CartState>(
         buildWhen: (previous, current) =>
             current is CartLoaded || current is CartError || current is CartInitial,
@@ -78,7 +83,13 @@ class _CartPageState extends State<CartPage> {
       ),
       leading: IconButton(
         onPressed: () => Navigator.of(context).pop(),
-        icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+        // آیکن فقط Arrow-left موجود است، برای RTL قرینه می‌شود
+        icon: Transform.flip(
+          flipX: true,
+          child: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+        ),
+      ),
+        ),
       ),
     );
   }

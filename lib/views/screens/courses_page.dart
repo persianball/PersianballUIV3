@@ -108,17 +108,24 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('دوره‌ها', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: 'همه دوره‌ها'),
-            Tab(text: 'دوره‌های من'),
-          ],
+      // چیدمان اپ‌بار راست‌به‌چپ: عنوان و تب‌ها از سمت راست شروع می‌شوند
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight + kTextTabBarHeight),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: AppBar(
+            title: const Text('دوره‌ها', style: TextStyle(color: Colors.black)),
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            elevation: 0,
+            bottom: TabBar(
+              controller: _tabController,
+              tabs: [
+                Tab(text: 'همه دوره‌ها'),
+                Tab(text: 'دوره‌های من'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(

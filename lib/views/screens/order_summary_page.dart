@@ -214,8 +214,19 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     final payable = finalDiscounted + tax + shippingCost;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('خلاصه سفارش', style: TextStyle(color: Colors.black))),
-      body: Directionality(
+      // چیدمان اپ‌بار راست‌به‌چپ: عنوان و دکمه بازگشت سمت راست
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: AppBar(
+            title: const Text('خلاصه سفارش',
+                style: TextStyle(color: Colors.black)),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
@@ -410,6 +421,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

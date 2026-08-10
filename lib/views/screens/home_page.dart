@@ -80,7 +80,9 @@ class _HomePageState extends State<HomePage> {
             return _buildError(state.message, context);
           } else if (state is ProductLoaded) {
             final products = state.products;
-            final flashProducts = products.where((p) => p.discountPercentage != null).toList();
+            final flashProducts = products
+                .where((p) => (p.discountPercentage ?? 0) > 0)
+                .toList();
 
             return RefreshIndicator(
               onRefresh: () async {
@@ -260,7 +262,7 @@ class _HomePageState extends State<HomePage> {
           Directionality(
             textDirection: TextDirection.rtl,
             child: Container(
-              height: 230,
+              height: 246,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16),
@@ -271,7 +273,7 @@ class _HomePageState extends State<HomePage> {
                   // رنگ‌های پیش‌فرض کارت روی بک‌گراند سفید خوانا هستند
                   return Padding(
                     padding: EdgeInsets.only(bottom: 8),
-                    child: ItemCard(product: p),
+                    child: ItemCard(product: p, extraSize: 8),
                   );
                 },
               ),

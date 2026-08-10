@@ -10,10 +10,14 @@ class ItemCard extends StatelessWidget {
   final Color titleColor;
   final Color priceColor;
 
+  /// مقدار اضافه‌شده به عرض/ارتفاع کارت نسبت به اندازه پیش‌فرض
+  final double extraSize;
+
   ItemCard({
     required this.product,
     this.titleColor = Colors.black,
     this.priceColor = AppColor.primary,
+    this.extraSize = 0,
   });
 
   // ارتفاع ثابت ردیف بج تخفیف + قیمت خط‌خورده
@@ -32,13 +36,20 @@ class ItemCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          thousandSeparator(finalPrice),
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            fontFamily: 'Estedad',
-            color: priceColor,
+        // اگر API قیمت نداده باشد، به‌جای صفر متن راهنما نمایش داده می‌شود
+        SizedBox(
+          height: 22,
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              originalPrice > 0 ? thousandSeparator(finalPrice) : 'مشاهده قیمت',
+              style: TextStyle(
+                fontSize: originalPrice > 0 ? 16 : 13,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Estedad',
+                color: originalPrice > 0 ? priceColor : Colors.grey,
+              ),
+            ),
           ),
         ),
         // ارتفاع ثابت تا کارت‌های با تخفیف و بدون تخفیف هم‌تراز بمانند
@@ -90,12 +101,15 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double cardWidth =
+        MediaQuery.of(context).size.width / 2 - 16 - 8 + extraSize;
+
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed('/product/${product.id}');
       },
       child: Container(
-        width: MediaQuery.of(context).size.width / 2 - 16 - 8,
+        width: cardWidth,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -115,8 +129,8 @@ class ItemCard extends StatelessWidget {
           children: [
             // item image
             Container(
-              width: MediaQuery.of(context).size.width / 2 - 16 - 8,
-              height: (MediaQuery.of(context).size.width / 2 - 16 - 8) * 0.8,
+              width: cardWidth,
+              height: cardWidth * 0.8,
               alignment: Alignment.topLeft,
               child: Stack(
                 children: [
