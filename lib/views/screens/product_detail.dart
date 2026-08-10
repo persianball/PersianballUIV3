@@ -1,9 +1,11 @@
 // views/screens/product_detail.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/services/wishlist_service.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/core/model/Review.dart';
 import 'package:marketky/models/CartModel.dart';
@@ -40,6 +42,50 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   /// اسلاید فعلی گالری تا با تعویض رنگ همان اسلاید حفظ شود
   int _carouselIndex = 0;
 
+  /// وضعیت علاقه‌مندی این محصول
+  bool _isFavorite = false;
+
+  Future<void> _loadFavorite() async {
+    final fav = await WishlistService.isFavorite(widget.productId);
+    if (mounted) setState(() => _isFavorite = fav);
+  }
+
+  Future<void> _toggleFavorite() async {
+    final now = await WishlistService.toggle(widget.productId);
+    if (!mounted) return;
+    setState(() => _isFavorite = now);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 2),
+        content: Text(
+          now ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد',
+          style: const TextStyle(fontFamily: 'Estedad'),
+        ),
+      ),
+    );
+  }
+
+  /// اشتراک‌گذاری لینک محصول (دیپ‌لینک همین اپ)
+  Future<void> _shareProduct(String productName) async {
+    final link = '${URLs.baseUrl}/product/${widget.productId}';
+    final text = Uri.encodeComponent('$productName\n$link');
+    // بدون وابستگی جدید: ارسال از طریق پیام‌رسان‌های نصب‌شده
+    final uri = Uri.parse('sms:?body=$text');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (mounted) {
+      await Clipboard.setData(ClipboardData(text: '$productName\n$link'));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('لینک محصول در کلیپ‌بورد کپی شد',
+                style: TextStyle(fontFamily: 'Estedad')),
+          ),
+        );
+      }
+    }
+  }
+
   late AnimationController animationController;
   late Animation<double> animation;
   @override
@@ -57,6 +103,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
 
     context.read<ProductDetailBloc>().add(FetchProductDetail(widget.productId));
+    _loadFavorite();
+    // ثبت در بازدیدهای اخیر
+    WishlistService.markViewed(widget.productId);
   }
 
   @override
@@ -435,10 +484,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                     CustomAppBar(
                       title: product.category.nameFarsi,
                       leftIcon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
-                      rightIcon: SvgPicture.asset('assets/icons/Bookmark.svg',
-                          color: Colors.black.withOpacity(0.5)),
+                      rightIcon: Icon(
+                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: _isFavorite ? Colors.red : Colors.black54,
+                      ),
                       leftOnTap: () => Navigator.of(context).pop(),
-                      rightOnTap: () {},
+                      rightOnTap: _toggleFavorite,
+                      extraIcon: Icon(Icons.share, color: Colors.black54),
+                      extraOnTap: () => _shareProduct(product.nameFarsi ?? ''),
                     ),
                     // variant_state.productVariant.images.length > 0 ? Positioned(
                     //   bottom: 16,

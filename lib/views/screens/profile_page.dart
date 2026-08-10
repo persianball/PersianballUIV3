@@ -192,6 +192,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     MenuTileWidget(
                       onTap: () {
+                        Navigator.of(context).pushNamed('/wishlist');
+                      },
+                      icon: Icon(Icons.favorite_border,
+                          color: AppColor.secondary.withOpacity(0.5)),
+                      title: 'علاقه‌مندی‌ها',
+                      subtitle: 'کالاهای ذخیره‌شده شما',
+                    ),
+                    MenuTileWidget(
+                      onTap: () {
                         Navigator.of(context).pushNamed('/addresses');
                       },
                       icon: SvgPicture.asset(

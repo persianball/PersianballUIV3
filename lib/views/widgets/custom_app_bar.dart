@@ -8,11 +8,17 @@ class CustomAppBar extends StatelessWidget {
     required this.rightIcon,
     required this.leftOnTap,
     required this.rightOnTap,
+    this.extraIcon,
+    this.extraOnTap,
   });
 
   final String title;
   final VoidCallback rightOnTap, leftOnTap;
   final Widget rightIcon, leftIcon;
+
+  /// دکمه اختیاری سوم (مثلاً اشتراک‌گذاری)
+  final Widget? extraIcon;
+  final VoidCallback? extraOnTap;
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +44,25 @@ class CustomAppBar extends StatelessWidget {
                 child: leftIcon,
               ),
             ),
+            if (extraIcon != null)
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: ElevatedButton(
+                  onPressed: extraOnTap,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: AppColor.primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
+                    backgroundColor: AppColor.primarySoft,
+                    elevation: 0,
+                    padding: EdgeInsets.all(8),
+                  ),
+                  child: extraIcon,
+                ),
+              ),
             Container(
-              width: MediaQuery.of(context).size.width * 5.5 / 10,
+              width: MediaQuery.of(context).size.width * (extraIcon == null ? 5.5 : 4.4) / 10,
               height: 40,
               decoration: BoxDecoration(color: AppColor.primarySoft, borderRadius: BorderRadius.circular(15)),
               alignment: Alignment.center,
