@@ -9,6 +9,7 @@ import 'package:marketky/views/screens/splash_router.dart';
 import 'package:marketky/views/screens/orders_page.dart';
 import 'package:marketky/views/screens/addresses_page.dart';
 import 'package:marketky/views/screens/wishlist_page.dart';
+import 'package:marketky/views/screens/notification_page.dart';
 import 'package:marketky/views/screens/course_detail_page.dart';
 import 'package:marketky/views/screens/my_course_detail_page.dart';
 import 'package:marketky/models/course_models.dart';
@@ -63,6 +64,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => CartPage(), settings: settings);
       case '/orders':
         return MaterialPageRoute(builder: (_) => const OrdersPage(), settings: settings);
+      case '/notifications':
+        return MaterialPageRoute(builder: (_) => const NotificationPage(), settings: settings);
       case '/wishlist':
         return MaterialPageRoute(builder: (_) => const WishlistPage(), settings: settings);
       case '/addresses':

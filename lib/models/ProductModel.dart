@@ -186,7 +186,21 @@ class SizeVariant {
   final int price;
   final int id;
 
-  SizeVariant({required this.id,required this.size, required this.discountPercentage, required this.price});
+  /// موجودی انبار این سایز (فیلد count در API)
+  final int count;
+
+  SizeVariant({
+    required this.id,
+    required this.size,
+    required this.discountPercentage,
+    required this.price,
+    this.count = 0,
+  });
+
+  bool get inStock => count > 0;
+
+  /// موجودی کم: برای ایجاد حس فوریت و شفافیت با کاربر
+  bool get isLowStock => count > 0 && count <= 3;
 
   factory SizeVariant.fromJson(Map<String, dynamic> json) {
     return SizeVariant(
@@ -194,6 +208,7 @@ class SizeVariant {
       size: json['size'],
       discountPercentage: json['discount_percentage'],
       price: json['price'],
+      count: json['count'] is int ? json['count'] : int.tryParse('${json['count']}') ?? 0,
     );
   }
 }

@@ -14,6 +14,7 @@ import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product/product_bloc.dart';
 import '../../models/ProductModel.dart';
 import '../../services/catalog_service.dart';
+import '../../services/notification_service.dart';
 import 'cart_page.dart';
 import 'catalog_page.dart';
 import '../widgets/page_container.dart';
@@ -121,11 +122,12 @@ class _HomePageState extends State<HomePage> {
     return Stack(
       children: [
         CarouselSlider(
-          items: [
-            Image.asset('assets/images/background.jpg', fit: BoxFit.cover, width: double.infinity),
-            Image.asset('assets/images/background.png', fit: BoxFit.cover, width: double.infinity),
-            Image.asset('assets/images/background2.png', fit: BoxFit.cover, width: double.infinity),
-          ],
+          // بنرها از سرویس می‌آیند تا با آماده شدن /v1/marketing/banners/
+          // فقط منبع داده عوض شود
+          items: NotificationService.banners()
+              .map((b) => Image.asset(b.assetImage,
+                  fit: BoxFit.cover, width: double.infinity))
+              .toList(),
           options: CarouselOptions(
             height: 190,
             autoPlay: true,
@@ -187,7 +189,20 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
                         ),
-                        // SizedBox(width: 16),
+                        SizedBox(width: 16),
+                        FutureBuilder<int>(
+                          future: NotificationService.unreadCount(),
+                          builder: (context, snap) => CustomIconButtonWidget(
+                            onTap: () async {
+                              await Navigator.of(context)
+                                  .pushNamed('/notifications');
+                              if (mounted) setState(() {});
+                            },
+                            value: snap.data ?? 0,
+                            icon: Icon(Icons.notifications_none,
+                                color: Colors.white),
+                          ),
+                        ),
                         // CustomIconButtonWidget(
                         //   onTap: () {
                         //     Navigator.of(context).push(MaterialPageRoute(

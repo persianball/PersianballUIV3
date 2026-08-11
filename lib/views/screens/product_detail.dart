@@ -225,6 +225,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           elevation: 0,
                                         ),
                                         onPressed: () {
+                                          // جلوگیری از افزودن کالای ناموجود
+                                          final selectedSize =
+                                              (variant_state is ProductDetailSizeChanged)
+                                                  ? variant_state.productSize
+                                                  : (variant_state is ProductDetailChangedState
+                                                      ? variant_state.productSize
+                                                      : null);
+                                          if (selectedSize != null &&
+                                              !selectedSize.inStock) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    'این سایز ناموجود است',
+                                                    style: TextStyle(
+                                                        fontFamily: 'Estedad')),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                            return;
+                                          }
                                           showModalBottomSheet(
                                             context: context,
                                             backgroundColor: Colors.transparent,
@@ -635,6 +656,62 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                           ),
                         ),
                       ),
+
+                    // وضعیت موجودی (فیلد count در size_variants)
+                    BlocBuilder<ProductDetailVariantBloc, ProductDetailState>(
+                      builder: (context, stock_state) {
+                        if (stock_state is! ProductDetailSizeChanged) {
+                          return SizedBox.shrink();
+                        }
+                        final size = stock_state.productSize;
+                        final Color color = !size.inStock
+                            ? Colors.red
+                            : (size.isLowStock
+                                ? Colors.orange.shade800
+                                : Colors.green.shade700);
+                        final String label = !size.inStock
+                            ? 'ناموجود'
+                            : (size.isLowStock
+                                ? 'تنها ${size.count} عدد باقی مانده'
+                                : 'موجود در انبار');
+                        return Align(
+                          alignment: AlignmentGeometry.centerRight,
+                          child: Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Container(
+                              margin: EdgeInsets.only(right: 16, bottom: 14),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                      size.inStock
+                                          ? Icons.check_circle_outline
+                                          : Icons.remove_shopping_cart_outlined,
+                                      size: 14,
+                                      color: color),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    label,
+                                    style: TextStyle(
+                                      fontFamily: 'Estedad',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: color,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
 
                     // بخش ۳ - انتخاب رنگ
                     if (product.variants.isNotEmpty)
