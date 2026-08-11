@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
@@ -209,6 +210,11 @@ class _AddToCartModalState extends State<AddToCartModal> {
                       flex: 6,
                       child: ElevatedButton(
                         onPressed: () {
+                          AnalyticsService.addToCart(
+                            productId: widget.cartItem.productId,
+                            quantity: _quantity,
+                            price: widget.cartItem.price,
+                          );
                           context.read<CartBloc>().add(
                               AddToCart(context, widget.cartItem.id, _quantity));
                           Navigator.of(context).pop();

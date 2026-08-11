@@ -13,6 +13,8 @@ import 'package:marketky/views/screens/notification_page.dart';
 import 'package:marketky/views/screens/account_security_page.dart';
 import 'package:marketky/views/screens/forgot_password_page.dart';
 import 'package:marketky/views/screens/static_pages.dart';
+import 'package:marketky/views/screens/compare_page.dart';
+import 'package:marketky/views/screens/catalog_page.dart';
 import 'package:marketky/views/screens/course_detail_page.dart';
 import 'package:marketky/views/screens/my_course_detail_page.dart';
 import 'package:marketky/models/course_models.dart';
@@ -67,6 +69,10 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => CartPage(), settings: settings);
       case '/orders':
         return MaterialPageRoute(builder: (_) => const OrdersPage(), settings: settings);
+      case '/compare':
+        return MaterialPageRoute(builder: (_) => const ComparePage(), settings: settings);
+      case '/catalog':
+        return MaterialPageRoute(builder: (_) => const CatalogPage(), settings: settings);
       case '/account-security':
         return MaterialPageRoute(builder: (_) => const AccountSecurityPage(), settings: settings);
       case '/forgot-password':

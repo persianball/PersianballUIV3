@@ -6,6 +6,8 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/services/catalog_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/services/analytics_service.dart';
+import 'package:marketky/views/widgets/app_network_image.dart';
 import 'package:marketky/views/widgets/item_card.dart';
 
 /// صفحه جست‌وجو و مرور کاتالوگ با فیلتر، دسته‌بندی و مرتب‌سازی
@@ -67,6 +69,7 @@ class _CatalogPageState extends State<CatalogPage> {
         _categories = CatalogService.categoriesFrom(products);
         _loading = false;
       });
+      AnalyticsService.viewItemList(listName: 'catalog', count: products.length);
     } catch (e) {
       setState(() {
         _error = 'دریافت محصولات ناموفق بود';
@@ -92,6 +95,12 @@ class _CatalogPageState extends State<CatalogPage> {
         _filter = _filter.copyWith(query: value);
         _visibleCount = _pageSize;
       });
+      if (value.trim().isNotEmpty) {
+        AnalyticsService.search(
+          query: value.trim(),
+          resultCount: CatalogService.apply(_all, _filter).length,
+        );
+      }
     });
   }
 
@@ -117,6 +126,13 @@ class _CatalogPageState extends State<CatalogPage> {
           elevation: 0,
           title: const Text('جست‌وجو در محصولات',
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+          actions: [
+            IconButton(
+              tooltip: 'مقایسه محصولات',
+              icon: const Icon(Icons.compare_arrows),
+              onPressed: () => Navigator.of(context).pushNamed('/compare'),
+            ),
+          ],
         ),
         body: Column(
           children: [
@@ -251,7 +267,18 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   Widget _buildBody(List<Product> results, List<Product> visible) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    // اسکلتون به‌جای اسپینر: پرش لِی‌اوت کمتر و حس سرعت بیشتر
+    if (_loading) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children:
+              List.generate(6, (_) => const ProductCardSkeleton()),
+        ),
+      );
+    }
 
     if (_error != null) {
       return Center(

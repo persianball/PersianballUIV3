@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/app_network_image.dart';
 
 import '../../constant/urls.dart';
 import '../../models/ProductModel.dart';
@@ -135,31 +136,13 @@ class ItemCard extends StatelessWidget {
               child: Stack(
                 children: [
                   // پس‌زمینه: تصویر از شبکه یا assets
-                  ClipRRect(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-                    child: Image.network(
-                      '${URLs.baseUrl}${product.image!}',
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                      errorBuilder: (context, error, stackTrace) {
-                        // اگر لود نشد، تصویر assets را نمایش بده
-                        return Image.asset(
-                          'assets/images/placeholder.jpg', // یا png
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        );
-                      },
-                      // اختیاری: نمایش لودینگ
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: Colors.grey[200],
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      },
-                    ),
+                  AppNetworkImage(
+                    url: '${URLs.baseUrl}${product.image ?? ''}',
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(15)),
                   ),
                   // محتوای جلو: RatingTag
                   // Positioned(

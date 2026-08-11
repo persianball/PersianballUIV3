@@ -6,6 +6,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/wishlist_service.dart';
+import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/core/model/Review.dart';
 import 'package:marketky/models/CartModel.dart';
@@ -55,6 +56,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     final now = await WishlistService.toggle(widget.productId);
     if (!mounted) return;
     setState(() => _isFavorite = now);
+    if (now) AnalyticsService.addToWishlist(productId: widget.productId);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 2),
@@ -105,8 +107,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
     context.read<ProductDetailBloc>().add(FetchProductDetail(widget.productId));
     _loadFavorite();
-    // ثبت در بازدیدهای اخیر
+    // ثبت در بازدیدهای اخیر و آنالیتیکس
     WishlistService.markViewed(widget.productId);
+    AnalyticsService.viewItem(productId: widget.productId);
   }
 
   @override
