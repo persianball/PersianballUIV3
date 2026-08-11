@@ -105,9 +105,9 @@ class _CartPageState extends State<CartPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               SvgPicture.asset(
-                'assets/icons/empty_cart.svg',
-                width: 200,
-                height: 200,
+                'assets/images/empty_cart.svg',
+                width: 220,
+                height: 220,
                 fit: BoxFit.contain,
               ),
               SizedBox(height: 24),
@@ -245,6 +245,13 @@ class _CartPageState extends State<CartPage> {
       child: BlocBuilder<CartBloc, CartState>(
         builder: (context, state) {
           if (state is CartLoaded) {
+            // سبد خالی: دکمه تسویه و انتخاب آدرس نمایش داده نمی‌شود
+            final cart = state.cart;
+            final isEmpty = cart.count == 0 ||
+                cart.results.isEmpty ||
+                cart.results[0].items.isEmpty;
+            if (isEmpty) return SizedBox.shrink();
+
             return Container(
               padding: EdgeInsets.all(16),
               child: ElevatedButton(
