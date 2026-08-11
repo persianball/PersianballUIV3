@@ -31,11 +31,24 @@
             android:name=".DeepLinkActivity"
             android:exported="true"
             android:targetActivity=".MainActivity">
+            <!-- سرور فعلی: http روی IP و پورت ۸۰۰۰.
+                 autoVerify اینجا عمداً نیست چون App Links تأییدشده به
+                 assetlinks.json روی دامنه HTTPS نیاز دارد و روی IP ممکن نیست؛
+                 بدون آن، اندروید هنگام باز کردن لینک اپ را پیشنهاد می‌دهد. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" android:host="2.144.27.195" android:port="8000" />
+                <data android:scheme="https" android:host="2.144.27.195" android:port="8000" />
+            </intent-filter>
+
+            <!-- دامنه نهایی؛ پس از راه‌اندازی HTTPS و قرار دادن
+                 /.well-known/assetlinks.json لینک‌ها بدون انتخاب کاربر باز می‌شوند -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <!-- Replace example.com with your domain if you have universal links -->
                 <data android:scheme="https" android:host="api2.persianball.ir" />
             </intent-filter>
             <intent-filter>

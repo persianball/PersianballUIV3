@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:marketky/core/app_router.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
 import 'package:app_links/app_links.dart';
+import 'package:marketky/core/deep_link_resolver.dart';
 
 import 'bloc/product/product_bloc.dart';
 import 'dart:async';
@@ -65,23 +66,24 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleUri(Uri uri) {
-    // Support both custom scheme (marketky://product/123) and https links
-    String route;
-    final isWebLink = uri.scheme == 'http' || uri.scheme == 'https';
+    final route = DeepLinkResolver.resolve(uri);
+    // لینک ناشناس (مثلاً /media/... یا هاست غیرمجاز) نادیده گرفته می‌شود
+    if (route == null || route == '/') return;
+    _pushWhenReady(route);
+  }
 
-    if (isWebLink) {
-      route = uri.path; // e.g. https://domain.com/product/123 -> /product/123
-    } else {
-      // custom scheme like marketky://product/123 => host=product, path=/123
-      if (uri.host.isNotEmpty) {
-        route = '/${uri.host}${uri.path}';
-      } else {
-        route = uri.path.isEmpty ? '/' : uri.path;
-      }
+  /// در کلد استارت ممکن است Navigator هنوز ساخته نشده باشد؛ تا آماده شدن
+  /// چند بار با فاصله کوتاه تلاش می‌کند.
+  void _pushWhenReady(String route, {int attempt = 0}) {
+    final navigator = appNavigatorKey.currentState;
+    if (navigator != null) {
+      navigator.pushNamed(route);
+      return;
     }
-
-    if (route.isEmpty) route = '/';
-    appNavigatorKey.currentState?.pushNamed(route);
+    if (attempt >= 20) return; // حدود ۵ ثانیه
+    Future.delayed(const Duration(milliseconds: 250), () {
+      _pushWhenReady(route, attempt: attempt + 1);
+    });
   }
 
   @override
