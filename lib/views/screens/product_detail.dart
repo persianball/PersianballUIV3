@@ -16,6 +16,7 @@ import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/screens/reviews_page.dart';
 import 'package:marketky/views/widgets/custom_app_bar.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
+import 'package:marketky/views/widgets/product_reviews_section.dart';
 import 'package:marketky/views/widgets/rating_tag.dart';
 import 'package:marketky/views/widgets/review_tile.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
@@ -866,18 +867,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                           ),
                         ),
                         children: [
-                          // در اینجا می‌تونی لیست نظرات واقعی رو بیاری
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: product.comments.length,
-                            itemBuilder: (ctx, i) =>
-                                ReviewTile(review: Review(
-                                    photoUrl: "assets/images/avatar_for_comments.png",
-                                    name: " ${i} : ",
-                                    review: product.comments[i].text,
-                                    rating: 5)),
-                          ),
+                          // نظرات و پرسش‌وپاسخ (سرویس اختصاصی، فعلاً داده نمایشی)
+                          ProductReviewsSection(productId: product.id),
+                          // نظرات ثبت‌شده روی خود محصول در API
+                          if (product.comments.isNotEmpty)
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: product.comments.length,
+                              itemBuilder: (ctx, i) =>
+                                  ReviewTile(review: Review(
+                                      photoUrl: "assets/images/avatar_for_comments.png",
+                                      name: " ${i} : ",
+                                      review: product.comments[i].text,
+                                      rating: 5)),
+                            ),
                           Container(
                             margin: EdgeInsets.only(
                                 left: 52, top: 12, bottom: 6),
