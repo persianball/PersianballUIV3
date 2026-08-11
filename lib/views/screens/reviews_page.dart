@@ -1,285 +1,270 @@
+// lib/views/screens/reviews_page.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Review.dart';
-import 'package:marketky/views/widgets/custom_app_bar.dart';
-import 'package:marketky/views/widgets/review_tile.dart';
-import 'package:smooth_star_rating_null_safety/smooth_star_rating_null_safety.dart';
+import 'package:marketky/services/review_service.dart';
 
+/// همه نظرات یک محصول با فیلتر بر اساس ستاره
 class ReviewsPage extends StatefulWidget {
-  final List<Review> reviews;
-  ReviewsPage({required this.reviews});
+  final int productId;
+
+  const ReviewsPage({super.key, required this.productId});
 
   @override
-  _ReviewsPageState createState() => _ReviewsPageState();
+  State<ReviewsPage> createState() => _ReviewsPageState();
 }
 
-class _ReviewsPageState extends State<ReviewsPage> with TickerProviderStateMixin {
-  int _selectedTab = 0;
-  getAverageRating() {
-    double average = 0.0;
-    for (var i = 0; i < widget.reviews.length; i++) {
-      average += widget.reviews[i].rating;
-    }
-    print(average / widget.reviews.length);
-    return average / widget.reviews.length;
-  }
+class _ReviewsPageState extends State<ReviewsPage> {
+  /// 0 یعنی همه، ۱ تا ۵ یعنی فیلتر همان تعداد ستاره
+  int _selectedStar = 0;
+
+  ReviewSummary? _summary;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final summary = await ReviewService.fetchReviews(widget.productId);
+    if (!mounted) return;
+    setState(() {
+      _summary = summary;
+      _loading = false;
+    });
+  }
+
+  List<ProductReview> get _visible {
+    final all = _summary?.reviews ?? const <ProductReview>[];
+    if (_selectedStar == 0) return all;
+    return all.where((r) => r.rating == _selectedStar).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return Directionality(
+      textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(60),
-          child: CustomAppBar(
-            title: 'Reviews',
-            leftIcon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
-            rightIcon: SvgPicture.asset(
-              'assets/icons/Bookmark.svg',
-              color: Colors.black.withOpacity(0.5),
-            ),
-            leftOnTap: () {
-              Navigator.of(context).pop();
-            },
-            rightOnTap: () {},
-          ),
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+          title: const Text('نظرات کاربران',
+              style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
         ),
-        body: ListView(
-          shrinkWrap: true,
-          physics: BouncingScrollPhysics(),
-          children: [
-            // Section 1 - Header
-            Container(
-              width: MediaQuery.of(context).size.width,
-              margin: EdgeInsets.only(top: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(right: 20),
-                    child: Text(
-                      '4.0',
-                      style: TextStyle(fontSize: 52, fontWeight: FontWeight.w700, fontFamily: 'poppins'),
-                    ),
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : SafeArea(child: _buildBody(_summary!)),
+      ),
+    );
+  }
+
+  Widget _buildBody(ReviewSummary s) {
+    return Column(
+      children: [
+        _header(s),
+        _starFilters(s),
+        const Divider(height: 1),
+        Expanded(
+          child: _visible.isEmpty
+              ? _empty()
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _visible.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (_, i) => _reviewTile(_visible[i]),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _header(ReviewSummary s) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Row(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                // لیست خالی دیگر NaN نمی‌دهد
+                s.count == 0 ? '—' : s.average.toStringAsFixed(1),
+                style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 44,
+                    fontWeight: FontWeight.w800),
+              ),
+              _stars(s.average.round(), size: 16),
+              const SizedBox(height: 4),
+              Text('بر اساس ${s.count} نظر',
+                  style: TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 11,
+                      color: Colors.grey.shade600)),
+            ],
+          ),
+          const SizedBox(width: 24),
+          Expanded(
+            child: Column(
+              children: s.breakdown.entries.map((e) {
+                final ratio = s.count == 0 ? 0.0 : e.value / s.count;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
                     children: [
-                      SmoothStarRating(
-                        allowHalfRating: false,
-                        size: 28,
-                        color: Colors.orange[400],
-                        rating: getAverageRating(),
-                        borderColor: AppColor.primarySoft,
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(top: 8),
-                        child: Text(
-                          'Based on 36 Reviews',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
+                      Text('${e.key}',
+                          style: const TextStyle(
+                              fontFamily: 'Estedad', fontSize: 11)),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.star, size: 11, color: Colors.amber),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: ratio,
+                            minHeight: 6,
+                            color: AppColor.primary,
+                            backgroundColor: AppColor.border,
                           ),
                         ),
+                      ),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 18,
+                        child: Text('${e.value}',
+                            style: TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 10,
+                                color: Colors.grey.shade600)),
                       ),
                     ],
-                  )
-                ],
-              ),
+                  ),
+                );
+              }).toList(),
             ),
-            // Section 2 - Tab
-            Container(
-              width: MediaQuery.of(context).size.width,
-              alignment: Alignment.center,
-              margin: EdgeInsets.only(top: 16, bottom: 24),
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                alignment: WrapAlignment.center,
-                runAlignment: WrapAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedTab = 0;
-                      });
-                    },
-                    child: Text(
-                      'all reviews',
-                      style: TextStyle(color: (_selectedTab == 0) ? Colors.white : Colors.grey),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), backgroundColor: (_selectedTab == 0) ? AppColor.primary : Colors.white,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedTab = 1;
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset('assets/icons/Star-active.svg', width: 14, height: 14),
-                        Container(
-                          margin: EdgeInsets.only(left: 4),
-                          child: Text(
-                            '1 (2)',
-                            style: TextStyle(color: (_selectedTab == 1) ? Colors.white : Colors.grey),
-                          ),
-                        ),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: AppColor.border, shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: AppColor.border, width: 1),
-                      ), backgroundColor: (_selectedTab == 1) ? AppColor.primary : Colors.white,
-                      elevation: 0,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedTab = 2;
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset('assets/icons/Star-active.svg', width: 14, height: 14),
-                        Container(
-                          margin: EdgeInsets.only(left: 4),
-                          child: Text(
-                            '2 (2)',
-                            style: TextStyle(color: (_selectedTab == 2) ? Colors.white : Colors.grey),
-                          ),
-                        ),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: AppColor.border, shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: AppColor.border, width: 1),
-                      ), backgroundColor: (_selectedTab == 2) ? AppColor.primary : Colors.white,
-                      elevation: 0,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedTab = 3;
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset('assets/icons/Star-active.svg', width: 14, height: 14),
-                        Container(
-                          margin: EdgeInsets.only(left: 4),
-                          child: Text(
-                            '3 (2)',
-                            style: TextStyle(color: (_selectedTab == 3) ? Colors.white : Colors.grey),
-                          ),
-                        ),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: AppColor.border, shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: AppColor.border, width: 1),
-                      ), backgroundColor: (_selectedTab == 3) ? AppColor.primary : Colors.white,
-                      elevation: 0,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedTab = 4;
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset('assets/icons/Star-active.svg', width: 14, height: 14),
-                        Container(
-                          margin: EdgeInsets.only(left: 4),
-                          child: Text(
-                            '4 (2)',
-                            style: TextStyle(color: (_selectedTab == 4) ? Colors.white : Colors.grey),
-                          ),
-                        ),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: AppColor.border, shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: AppColor.border, width: 1),
-                      ), backgroundColor: (_selectedTab == 4) ? AppColor.primary : Colors.white,
-                      elevation: 0,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedTab = 5;
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset('assets/icons/Star-active.svg', width: 14, height: 14),
-                        Container(
-                          margin: EdgeInsets.only(left: 4),
-                          child: Text(
-                            '5 (2)',
-                            style: TextStyle(color: (_selectedTab == 5) ? Colors.white : Colors.grey),
-                          ),
-                        ),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: AppColor.border, shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: AppColor.border, width: 1),
-                      ), backgroundColor: (_selectedTab == 5) ? AppColor.primary : Colors.white,
-                      elevation: 0,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Section 3 - List Review
-            IndexedStack(
-              index: _selectedTab,
-              children: [
-                ListView.separated(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                  physics: NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) => ReviewTile(review: widget.reviews[index]),
-                  separatorBuilder: (context, index) => SizedBox(height: 16),
-                  itemCount: widget.reviews.length,
-                ),
-                SizedBox(),
-                SizedBox(),
-                SizedBox(),
-                SizedBox(),
-                SizedBox(),
-              ],
-            )
-          ],
+  Widget _starFilters(ReviewSummary s) {
+    return SizedBox(
+      height: 46,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        children: [
+          _chip(label: 'همه (${s.count})', star: 0),
+          ...s.breakdown.entries
+              .map((e) => _chip(label: '${e.key} (${e.value})', star: e.key)),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip({required String label, required int star}) {
+    final selected = _selectedStar == star;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: ChoiceChip(
+        avatar: star == 0
+            ? null
+            : Icon(Icons.star,
+                size: 14, color: selected ? Colors.white : Colors.amber),
+        label: Text(label,
+            style: TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 12,
+              color: selected ? Colors.white : AppColor.secondary,
+            )),
+        selected: selected,
+        onSelected: (_) => setState(() => _selectedStar = star),
+        selectedColor: AppColor.primary,
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: AppColor.border),
         ),
       ),
     );
   }
+
+  Widget _empty() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.rate_review_outlined,
+                  size: 48, color: Colors.grey.shade400),
+              const SizedBox(height: 12),
+              Text(
+                _selectedStar == 0
+                    ? 'هنوز نظری ثبت نشده است'
+                    : 'نظری با $_selectedStar ستاره ثبت نشده است',
+                style: const TextStyle(fontFamily: 'Estedad'),
+              ),
+              if (_selectedStar != 0)
+                TextButton(
+                  onPressed: () => setState(() => _selectedStar = 0),
+                  child: const Text('نمایش همه نظرات',
+                      style: TextStyle(fontFamily: 'Estedad')),
+                ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _stars(int rating, {double size = 16}) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(
+          5,
+          (i) => Icon(i < rating ? Icons.star : Icons.star_border,
+              size: size, color: Colors.amber),
+        ),
+      );
+
+  Widget _reviewTile(ProductReview r) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColor.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _stars(r.rating, size: 13),
+                const SizedBox(width: 8),
+                Text(r.userName,
+                    style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
+                if (r.verifiedPurchase) ...[
+                  const SizedBox(width: 6),
+                  Icon(Icons.verified, size: 13, color: Colors.green.shade600),
+                ],
+                const Spacer(),
+                Text(r.createdAt,
+                    style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 10,
+                        color: Colors.grey.shade500)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(r.body,
+                style: const TextStyle(
+                    fontFamily: 'Estedad', fontSize: 12, height: 1.8)),
+          ],
+        ),
+      );
 }

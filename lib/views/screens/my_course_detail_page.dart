@@ -148,7 +148,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     }
 
     final watched = _watchedByCourse[_courseKey] ?? {};
-    // first un-watched index
     int? nextIndex;
     int idx = 0;
     String? label;

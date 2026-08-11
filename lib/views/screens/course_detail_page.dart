@@ -9,6 +9,7 @@ import 'package:marketky/services/course_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/modals/add_course_to_cart_modal.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:marketky/views/widgets/detail_tabs.dart';
 import 'package:marketky/views/widgets/modals/video_player_dialog.dart';
 
 class CourseDetailPage extends StatefulWidget {
@@ -127,6 +128,195 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     return '${minutes}دقیقه';
   }
 
+  Widget _weekCard(CourseDetailResponse data, int index) {
+                        final week = data.detail.weeks[index];
+                        return _AnimatedSlideFade(
+                          delayMs: 50 * index,
+                          child: Card(
+                            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: ExpansionTile(
+                              title: Text('هفته ${week.weekNumber}${week.weekName == null || week.weekName!.isEmpty ? '' : ' - ${week.weekName}'}'),
+                              // ویدیوهای هر هفته داخل یک کانتینر مجزا
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColor.primarySoft.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColor.border),
+                                  ),
+                                  child: Column(
+                                    children: week.sections
+                                        .asMap()
+                                        .entries
+                                        .map((entry) {
+                                      final i = entry.key;
+                                      final s = entry.value;
+                                      return _AnimatedSlideFade(
+                                        delayMs: 40 * i,
+                                        child: Container(
+                                          margin: EdgeInsets.only(
+                                              bottom: i ==
+                                                      week.sections.length - 1
+                                                  ? 0
+                                                  : 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(
+                                                color: AppColor.border),
+                                          ),
+                                          child: ListTile(
+                                            dense: true,
+                                            // ویدیوهای باز با انیمیشن در دیالوگ پخش می‌شوند
+                                            onTap: () => _onSectionTap(s),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 4),
+                                            leading: Icon(
+                                                s.isLocked
+                                                    ? Icons.lock
+                                                    : Icons.play_circle_fill,
+                                                color: s.isLocked
+                                                    ? Colors.grey
+                                                    : Colors.green),
+                                            title: Text(
+                                              s.title,
+                                              style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600),
+                                            ),
+                                            // اگر کاور ویدیو نبود یا لود نشد، عکس پیش‌فرض
+                                            trailing: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              child: (s.videoThumbnail ?? '')
+                                                      .isEmpty
+                                                  ? _sectionFallbackThumb()
+                                                  : Image.network(
+                                                      _abs(s.videoThumbnail!),
+                                                      width: 56,
+                                                      height: 36,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder:
+                                                          (_, __, ___) =>
+                                                              _sectionFallbackThumb(),
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+  }
+
+  Widget _timeLocationCard(CourseDetailResponse data, int index) {
+                        final item = data.detail.timeAndLocation[index];
+                        return _AnimatedSlideFade(
+                          delayMs: 60 * index,
+                          child: Card(
+                            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: item.image == null || item.image!.isEmpty
+                                        ? Container(width: 80, height: 80, color: Colors.grey[200])
+                                        : Image.network(_abs(item.image!), width: 80, height: 80, fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Image.asset('assets/images/placeholder.jpg',width: 80, height: 80, fit: BoxFit.cover)),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // ظرفیت بالا سمت راست، کنار عنوان مکان
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppColor.primarySoft,
+                                                borderRadius:
+                                                    BorderRadius.circular(999),
+                                              ),
+                                              child: Text(
+                                                'ظرفیت: ${item.capacity}',
+                                                style: const TextStyle(
+                                                  fontFamily: 'Estedad',
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                item.location,
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w700),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            if (item.isActive)
+                                              const Chip(label: Text('فعال')),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(item.time),
+                                        const SizedBox(height: 6),
+                                        _timeLocationPrice(item),
+                                        const SizedBox(height: 12),
+                                        if (item.isActive)
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: ElevatedButton(
+                                              onPressed: () {
+                                                showModalBottomSheet(
+                                                  context: context,
+                                                  backgroundColor: Colors.transparent,
+                                                  builder: (context) => AddCourseToCartModal(courseItem: item),
+                                                );
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: AppColor.primary,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                padding: EdgeInsets.symmetric(vertical: 12),
+                                                elevation: 0,
+                                              ),
+                                              child: Text(
+                                                'افزودن به سبد',
+                                                style: TextStyle(
+                                                  fontFamily: 'Estedad',
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -234,214 +424,32 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                     ),
                   ),
       
+                  // تب‌های جزئیات دوره با ترنزیشن نرم
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: const Text('برنامه هفتگی', style: TextStyle(fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                        final week = data.detail.weeks[index];
-                        return _AnimatedSlideFade(
-                          delayMs: 50 * index,
-                          child: Card(
-                            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: ExpansionTile(
-                              title: Text('هفته ${week.weekNumber}${week.weekName == null || week.weekName!.isEmpty ? '' : ' - ${week.weekName}'}'),
-                              // ویدیوهای هر هفته داخل یک کانتینر مجزا
-                              children: [
-                                Container(
-                                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppColor.primarySoft.withOpacity(0.5),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppColor.border),
-                                  ),
-                                  child: Column(
-                                    children: week.sections
-                                        .asMap()
-                                        .entries
-                                        .map((entry) {
-                                      final i = entry.key;
-                                      final s = entry.value;
-                                      return _AnimatedSlideFade(
-                                        delayMs: 40 * i,
-                                        child: Container(
-                                          margin: EdgeInsets.only(
-                                              bottom: i ==
-                                                      week.sections.length - 1
-                                                  ? 0
-                                                  : 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            border: Border.all(
-                                                color: AppColor.border),
-                                          ),
-                                          child: ListTile(
-                                            dense: true,
-                                            // ویدیوهای باز با انیمیشن در دیالوگ پخش می‌شوند
-                                            onTap: () => _onSectionTap(s),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 4),
-                                            leading: Icon(
-                                                s.isLocked
-                                                    ? Icons.lock
-                                                    : Icons.play_circle_fill,
-                                                color: s.isLocked
-                                                    ? Colors.grey
-                                                    : Colors.green),
-                                            title: Text(
-                                              s.title,
-                                              style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600),
-                                            ),
-                                            // اگر کاور ویدیو نبود یا لود نشد، عکس پیش‌فرض
-                                            trailing: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              child: (s.videoThumbnail ?? '')
-                                                      .isEmpty
-                                                  ? _sectionFallbackThumb()
-                                                  : Image.network(
-                                                      _abs(s.videoThumbnail!),
-                                                      width: 56,
-                                                      height: 36,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder:
-                                                          (_, __, ___) =>
-                                                              _sectionFallbackThumb(),
-                                                    ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                      childCount: data.detail.weeks.length,
-                    ),
-                  ),
-      
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: const Text('زمان و مکان برگزاری', style: TextStyle(fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                        final item = data.detail.timeAndLocation[index];
-                        return _AnimatedSlideFade(
-                          delayMs: 60 * index,
-                          child: Card(
-                            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: item.image == null || item.image!.isEmpty
-                                        ? Container(width: 80, height: 80, color: Colors.grey[200])
-                                        : Image.network(_abs(item.image!), width: 80, height: 80, fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Image.asset('assets/images/placeholder.jpg',width: 80, height: 80, fit: BoxFit.cover)),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // ظرفیت بالا سمت راست، کنار عنوان مکان
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8, vertical: 3),
-                                              decoration: BoxDecoration(
-                                                color: AppColor.primarySoft,
-                                                borderRadius:
-                                                    BorderRadius.circular(999),
-                                              ),
-                                              child: Text(
-                                                'ظرفیت: ${item.capacity}',
-                                                style: const TextStyle(
-                                                  fontFamily: 'Estedad',
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                item.location,
-                                                style: const TextStyle(
-                                                    fontWeight: FontWeight.w700),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            if (item.isActive)
-                                              const Chip(label: Text('فعال')),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(item.time),
-                                        const SizedBox(height: 6),
-                                        _timeLocationPrice(item),
-                                        const SizedBox(height: 12),
-                                        if (item.isActive)
-                                          SizedBox(
-                                            width: double.infinity,
-                                            child: ElevatedButton(
-                                              onPressed: () {
-                                                showModalBottomSheet(
-                                                  context: context,
-                                                  backgroundColor: Colors.transparent,
-                                                  builder: (context) => AddCourseToCartModal(courseItem: item),
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: AppColor.primary,
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                padding: EdgeInsets.symmetric(vertical: 12),
-                                                elevation: 0,
-                                              ),
-                                              child: Text(
-                                                'افزودن به سبد',
-                                                style: TextStyle(
-                                                  fontFamily: 'Estedad',
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: DetailTabs(
+                        tabs: [
+                          DetailTab(
+                            title: 'برنامه هفتگی',
+                            builder: (context) => Column(
+                              children: List.generate(
+                                data.detail.weeks.length,
+                                (index) => _weekCard(data, index),
                               ),
                             ),
                           ),
-                        );
-                      },
-                      childCount: data.detail.timeAndLocation.length,
+                          DetailTab(
+                            title: 'زمان و مکان برگزاری',
+                            builder: (context) => Column(
+                              children: List.generate(
+                                data.detail.timeAndLocation.length,
+                                (index) => _timeLocationCard(data, index),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),

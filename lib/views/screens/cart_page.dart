@@ -94,11 +94,71 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
+  /// حالت خالی سبد خرید
+  Widget _buildEmptyCart() {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(
+                'assets/icons/empty_cart.svg',
+                width: 200,
+                height: 200,
+                fit: BoxFit.contain,
+              ),
+              SizedBox(height: 24),
+              Text(
+                'سبد خرید خالی است',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.secondary,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'هنوز کالایی به سبد اضافه نکرده‌اید',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () =>
+                    Navigator.of(context).pushNamed('/catalog'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.primary,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'مشاهده محصولات',
+                  style: TextStyle(
+                      fontFamily: 'Estedad', color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCartContent(AllCartFromBackend cart) {
     if (cart.count == 0 || cart.results.isEmpty || cart.results[0].items.isEmpty) {
-      return Center(
-        child: Text('سبد خرید شما خالی است'),
-      );
+      return _buildEmptyCart();
     }
 
     final items = cart.results[0].items;

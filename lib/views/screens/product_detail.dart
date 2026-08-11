@@ -16,6 +16,7 @@ import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/screens/reviews_page.dart';
 import 'package:marketky/views/widgets/custom_app_bar.dart';
+import 'package:marketky/views/widgets/detail_tabs.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
 import 'package:marketky/views/widgets/rating_tag.dart';
@@ -848,106 +849,66 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               ),
 
 
-              // بخش ۵ - نظرات
-              Directionality(
-                textDirection: TextDirection.rtl,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ExpansionTile(
-                        initiallyExpanded: false,
-                        title: Text(
-                          'توضیحات تکمیلی',
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.secondary,
-                          ),
-                        ),
-                        children: [
-                          Html(
-                            data: product.editor,
-                            onLinkTap: (url,_,__)async{
-                                if (await canLaunchUrl(Uri.parse(url!))) {
-                                  await launchUrl(Uri.parse(url));
-                                }
+              // بخش ۵ - تب‌های جزئیات: توضیحات، مشابه، نظرات، سوالات متداول
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                child: DetailTabs(
+                  tabs: [
+                    DetailTab(
+                      title: 'توضیحات',
+                      builder: (context) => Html(
+                        data: product.editor,
+                        onLinkTap: (url, _, __) async {
+                          if (await canLaunchUrl(Uri.parse(url!))) {
+                            await launchUrl(Uri.parse(url));
+                          }
+                        },
+                        style: {
+                          "a": Style(
+                              color: AppColor.primary,
+                              textDecoration: TextDecoration.underline),
+                        },
+                        extensions: [
+                          // تصویر با قاب گرد و Fit کنترل‌شده
+                          TagExtension(
+                            tagsToExtend: {"img"},
+                            builder: (context) {
+                              final src =
+                                  '${URLs.baseUrl}${context.attributes['src']}';
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  src,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => Image.asset(
+                                      'assets/images/placeholder.jpg'),
+                                ),
+                              );
                             },
-                            style: {
-                              "a": Style(color: AppColor.primary, textDecoration: TextDecoration.underline),
-                            },
-                            extensions: [
-                              // تصویر با قاب گرد و Fit کنترل‌شده
-                              TagExtension(
-                                tagsToExtend: {"img"},
-                                builder: (context) {
-                                  final src = '${URLs.baseUrl}${context.attributes['src']}';
-                                  return ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      src,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => Image.asset('assets/images/placeholder.jpg'),
-                                    ),
-                                  );
-                                },
-                              ),
-
-
-
-
-                            ],
-
                           ),
-
-
                         ],
                       ),
-                      // محصولات مشابه
-                      if (product.similarProducts.isNotEmpty)
-                        ExpansionTile(
-                          initiallyExpanded: false,
-                          title: Text(
-                            'محصولات مشابه',
-                            style: TextStyle(
-                              fontFamily: 'Estedad',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: AppColor.secondary,
-                            ),
-                          ),
-                          children: [
-                            SizedBox(
-                              height: 215,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                shrinkWrap: true,
-                                physics: BouncingScrollPhysics(),
-                                itemCount: product.similarProducts.length,
-                                itemBuilder: (ctx, i) {
-                                  return SimilarProductCard(
-                                      product: product.similarProducts[i]);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      ExpansionTile(
-                        initiallyExpanded: false,
-                        title: Text(
-                          'نظرات',
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.secondary,
+                    ),
+                    if (product.similarProducts.isNotEmpty)
+                      DetailTab(
+                        title: 'محصولات مشابه',
+                        builder: (context) => SizedBox(
+                          height: 215,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            shrinkWrap: true,
+                            physics: BouncingScrollPhysics(),
+                            itemCount: product.similarProducts.length,
+                            itemBuilder: (ctx, i) => SimilarProductCard(
+                                product: product.similarProducts[i]),
                           ),
                         ),
+                      ),
+                    DetailTab(
+                      title: 'نظرات',
+                      builder: (context) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // نظرات و پرسش‌وپاسخ (سرویس اختصاصی، فعلاً داده نمایشی)
                           ProductReviewsSection(productId: product.id),
                           // نظرات ثبت‌شده روی خود محصول در API
                           if (product.comments.isNotEmpty)
@@ -955,97 +916,84 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               shrinkWrap: true,
                               physics: NeverScrollableScrollPhysics(),
                               itemCount: product.comments.length,
-                              itemBuilder: (ctx, i) =>
-                                  ReviewTile(review: Review(
-                                      photoUrl: "assets/images/avatar_for_comments.png",
-                                      name: " ${i} : ",
-                                      review: product.comments[i].text,
-                                      rating: 5)),
+                              itemBuilder: (ctx, i) => ReviewTile(
+                                review: Review(
+                                    photoUrl:
+                                        "assets/images/avatar_for_comments.png",
+                                    name: " ${i} : ",
+                                    review: product.comments[i].text,
+                                    rating: 5),
+                              ),
                             ),
-                          Container(
-                            margin: EdgeInsets.only(
-                                left: 52, top: 12, bottom: 6),
+                          SizedBox(
+                            width: double.infinity,
                             child: ElevatedButton(
                               onPressed: () {
                                 Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (context) =>
-                                      ReviewsPage(reviews: [])),
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          ReviewsPage(productId: product.id)),
                                 );
                               },
-                              child: Text(
-                                'مشاهده همه نظرات',
-                                style: TextStyle(fontFamily: 'Estedad',
-                                    color: AppColor.secondary,
-                                    fontWeight: FontWeight.w600),
-                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColor.primarySoft,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8)),
                                 elevation: 0,
                               ),
+                              child: Text(
+                                'مشاهده همه نظرات',
+                                style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    color: AppColor.secondary,
+                                    fontWeight: FontWeight.w600),
+                              ),
                             ),
-                          )
+                          ),
                         ],
                       ),
-
-
-                    ],
-                  ),
+                    ),
+                    if (product.faqs != null && product.faqs!.isNotEmpty)
+                      DetailTab(
+                        title: 'سوالات متداول',
+                        builder: (context) => Column(
+                          children: product.faqs!
+                              .map((faq) => ExpansionTile(
+                                    tilePadding: EdgeInsets.zero,
+                                    initiallyExpanded: false,
+                                    title: Text(
+                                      faq.question,
+                                      style: TextStyle(
+                                        fontFamily: 'Estedad',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColor.secondary,
+                                      ),
+                                    ),
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        padding: EdgeInsets.only(bottom: 12),
+                                        child: Text(
+                                          faq.answer,
+                                          textAlign: TextAlign.right,
+                                          style: TextStyle(
+                                            fontFamily: 'Estedad',
+                                            fontSize: 13,
+                                            height: 1.8,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                  ],
                 ),
               ),
 
-              // 🆕 سوالات متداول (FAQ)
-              if(product.faqs != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: ExpansionTile(
-                      title: Text(
-                        'سوالات متداول',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppColor.secondary,
-                        ),
-                      ),
-                      children: [
-                        ...product.faqs!.map((faq) =>
-                            ExpansionTile(
-                              initiallyExpanded: false,
-                              title: Text(
-                                faq.question,
-                                style: TextStyle(
-                                  fontFamily: 'Estedad',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColor.secondary,
-                                ),
-                              ),
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 16),
-                                  child: Text(
-                                    faq.answer,
-                                    style: TextStyle(
-                                      fontFamily: 'Estedad',
-                                      fontSize: 14,
-                                      height: 1.5,
-                                      color: Colors.black87,
-                                    ),
-                                    textAlign: TextAlign
-                                        .right, // RTL text alignment
-                                  ),
-                                ),
-                              ],
-                            )).toList(),
-                      ],
-                    ),
-                  ),
-                )
 
             ],
           );
