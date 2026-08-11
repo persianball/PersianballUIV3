@@ -221,27 +221,24 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              // Forgot Password
-              // Container(
-              //   alignment: Alignment.center,
-              //   child: TextButton(
-              //     onPressed: () {
-              //       // forgot password page
-              //     },
-              //     child: Text(
-              //       'فراموشی رمز عبور',
-              //       style: TextStyle(
-              //         fontFamily: 'Estedad',
-              //         fontSize: 12,
-              //         color: AppColor.secondary.withOpacity(0.5),
-              //         fontWeight: FontWeight.w700,
-              //       ),
-              //     ),
-              //     style: TextButton.styleFrom(
-              //       foregroundColor: AppColor.primary.withOpacity(0.1),
-              //     ),
-              //   ),
-              // ),
+              // فراموشی رمز عبور
+              Container(
+                alignment: Alignment.center,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/forgot-password');
+                  },
+                  child: Text(
+                    'فراموشی رمز عبور',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 12,
+                      color: AppColor.secondary.withOpacity(0.5),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
 
               // Error Message (با BlocConsumer)
               BlocConsumer<LoginBloc, LoginState>(

@@ -210,6 +210,56 @@ class _ProfilePageState extends State<ProfilePage> {
                       title: 'آدرس‌ها',
                       subtitle: 'آدرس‌های ثبت‌شده شما',
                     ),
+                    MenuTileWidget(
+                      onTap: () {
+                        Navigator.of(context).pushNamed('/account-security');
+                      },
+                      icon: Icon(Icons.lock_outline,
+                          color: AppColor.secondary.withOpacity(0.5)),
+                      title: 'امنیت حساب',
+                      subtitle: 'تغییر رمز عبور و حذف حساب',
+                    ),
+
+                    // ==== پشتیبانی و قوانین ====
+                    Container(
+                      margin: EdgeInsets.only(right: 16, top: 16),
+                      child: Text(
+                        'پشتیبانی و قوانین',
+                        style: TextStyle(
+                          color: AppColor.secondary.withOpacity(0.5),
+                          letterSpacing: 6 / 100,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    MenuTileWidget(
+                      onTap: () => Navigator.of(context).pushNamed('/support'),
+                      icon: Icon(Icons.headset_mic_outlined,
+                          color: AppColor.secondary.withOpacity(0.5)),
+                      title: 'تماس با پشتیبانی',
+                      subtitle: 'تلفن، ایمیل و پیام‌رسان',
+                    ),
+                    MenuTileWidget(
+                      onTap: () => Navigator.of(context).pushNamed('/terms'),
+                      icon: Icon(Icons.description_outlined,
+                          color: AppColor.secondary.withOpacity(0.5)),
+                      title: 'قوانین و مقررات',
+                      subtitle: 'شرایط خرید و مرجوعی',
+                    ),
+                    MenuTileWidget(
+                      onTap: () => Navigator.of(context).pushNamed('/privacy'),
+                      icon: Icon(Icons.privacy_tip_outlined,
+                          color: AppColor.secondary.withOpacity(0.5)),
+                      title: 'حریم خصوصی',
+                      subtitle: 'نحوه استفاده از اطلاعات شما',
+                    ),
+                    MenuTileWidget(
+                      onTap: () => Navigator.of(context).pushNamed('/about'),
+                      icon: Icon(Icons.info_outline,
+                          color: AppColor.secondary.withOpacity(0.5)),
+                      title: 'درباره ما',
+                      subtitle: 'معرفی فروشگاه',
+                    ),
                   ],
                 ),
               ),

@@ -10,6 +10,9 @@ import 'package:marketky/views/screens/orders_page.dart';
 import 'package:marketky/views/screens/addresses_page.dart';
 import 'package:marketky/views/screens/wishlist_page.dart';
 import 'package:marketky/views/screens/notification_page.dart';
+import 'package:marketky/views/screens/account_security_page.dart';
+import 'package:marketky/views/screens/forgot_password_page.dart';
+import 'package:marketky/views/screens/static_pages.dart';
 import 'package:marketky/views/screens/course_detail_page.dart';
 import 'package:marketky/views/screens/my_course_detail_page.dart';
 import 'package:marketky/models/course_models.dart';
@@ -64,6 +67,24 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => CartPage(), settings: settings);
       case '/orders':
         return MaterialPageRoute(builder: (_) => const OrdersPage(), settings: settings);
+      case '/account-security':
+        return MaterialPageRoute(builder: (_) => const AccountSecurityPage(), settings: settings);
+      case '/forgot-password':
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordPage(), settings: settings);
+      case '/terms':
+        return MaterialPageRoute(
+            builder: (_) => const StaticContentPage(content: StaticContent.terms),
+            settings: settings);
+      case '/privacy':
+        return MaterialPageRoute(
+            builder: (_) => const StaticContentPage(content: StaticContent.privacy),
+            settings: settings);
+      case '/about':
+        return MaterialPageRoute(
+            builder: (_) => const StaticContentPage(content: StaticContent.about),
+            settings: settings);
+      case '/support':
+        return MaterialPageRoute(builder: (_) => const SupportPage(), settings: settings);
       case '/notifications':
         return MaterialPageRoute(builder: (_) => const NotificationPage(), settings: settings);
       case '/wishlist':
