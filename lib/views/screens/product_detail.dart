@@ -809,10 +809,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                 ),
                                 SizedBox(height: 12),
                                 SelectableCircleSize(
+                                  // با تعویض رنگ، وضعیت موجودی سایزها هم عوض می‌شود
+                                  key: ValueKey(
+                                      variant_state.productVariant.id),
                                   productSize: variant_state.productVariant
                                       .sizeVariants
                                       .map((s) => s.size)
-
+                                      .toList(),
+                                  sizeAvailability: variant_state
+                                      .productVariant.sizeVariants
+                                      .map((s) => s.inStock)
                                       .toList(),
                                   onSizeSelected: (int sizeVariantIndex) {
                                     context

@@ -4,6 +4,11 @@ import 'package:marketky/constant/app_color.dart';
 
 class SelectableCircleSize extends StatefulWidget {
   final List<String> productSize;
+
+  /// موجود بودن هر سایز، هم‌ترتیب با [productSize].
+  /// اگر داده نشود همه سایزها موجود در نظر گرفته می‌شوند.
+  final List<bool>? sizeAvailability;
+
   final EdgeInsetsGeometry? margin, padding;
   final ValueChanged<int>? onSizeSelected;
   final int? selectedSizeIndex;
@@ -11,6 +16,7 @@ class SelectableCircleSize extends StatefulWidget {
   const SelectableCircleSize({
     Key? key,
     required this.productSize,
+    this.sizeAvailability,
     this.margin,
     this.padding,
     this.onSizeSelected,
@@ -24,6 +30,23 @@ class SelectableCircleSize extends StatefulWidget {
 class _SelectableCircleSizeState extends State<SelectableCircleSize> {
   int? _selectedIndex = 0;
 
+  bool _isAvailable(int index) {
+    final list = widget.sizeAvailability;
+    if (list == null || index >= list.length) return true;
+    return list[index];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // انتخاب اولیه روی اولین سایز موجود قرار می‌گیرد
+    final firstAvailable = List.generate(widget.productSize.length, (i) => i)
+        .where(_isAvailable)
+        .toList();
+    _selectedIndex = widget.selectedSizeIndex ??
+        (firstAvailable.isEmpty ? null : firstAvailable.first);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -36,36 +59,69 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
           widget.productSize.length,
               (index) {
             final size = widget.productSize[index];
-            final isSelected = _selectedIndex == index;
+            final available = _isAvailable(index);
+            final isSelected = _selectedIndex == index && available;
 
             return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedIndex = index;
-                });
-
-                widget.onSizeSelected?.call(_selectedIndex!);
-              },
-              child: Container(
-                width: 32,
-                height: 32,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColor.primary : Colors.white,
-                  border: Border.all(
-                    color: isSelected ? AppColor.primary : AppColor.border,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Text(
-                  size,
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColor.secondary,
-                  ),
+              // سایز ناموجود قابل انتخاب نیست
+              onTap: available
+                  ? () {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                      widget.onSizeSelected?.call(index);
+                    }
+                  : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          duration: const Duration(seconds: 2),
+                          content: Text(
+                            'سایز $size ناموجود است',
+                            style: const TextStyle(fontFamily: 'Estedad'),
+                          ),
+                        ),
+                      );
+                    },
+              child: Opacity(
+                opacity: available ? 1 : 0.5,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColor.primary
+                            : (available ? Colors.white : Colors.grey.shade100),
+                        border: Border.all(
+                          color: isSelected ? AppColor.primary : AppColor.border,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        size,
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? Colors.white
+                              : (available ? AppColor.secondary : Colors.grey),
+                        ),
+                      ),
+                    ),
+                    // ضربدر روی سایز ناموجود
+                    if (!available)
+                      IgnorePointer(
+                        child: CustomPaint(
+                          size: const Size(32, 32),
+                          painter: _UnavailableCrossPainter(),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             );
@@ -74,4 +130,26 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
       ),
     );
   }
+}
+
+/// خط ضربدر روی دایره سایز ناموجود
+class _UnavailableCrossPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red.withOpacity(0.75)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    // خط از گوشه بالا-چپ تا پایین-راست دایره
+    const inset = 5.0;
+    canvas.drawLine(
+      Offset(inset, size.height - inset),
+      Offset(size.width - inset, inset),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
