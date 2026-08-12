@@ -331,11 +331,25 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                         child: DropdownButton<int>(
                           value: _selectedWeekIndex,
                           isExpanded: true,
+                          // آیتم‌های منو راست‌به‌چپ چیده شوند
+                          alignment: AlignmentDirectional.centerEnd,
+                          icon: const Icon(Icons.keyboard_arrow_down),
                           items: weeks.asMap().entries.map((entry) {
                             final week = entry.value;
                             return DropdownMenuItem<int>(
                               value: entry.key,
-                              child: Text(week.weekName ?? 'هفته ${week.weekNumber}'),
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: Directionality(
+                                textDirection: TextDirection.rtl,
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    week.weekName ?? 'هفته ${week.weekNumber}',
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(fontFamily: 'Estedad'),
+                                  ),
+                                ),
+                              ),
                             );
                           }).toList(),
                           onChanged: (value) {
