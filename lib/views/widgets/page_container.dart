@@ -15,8 +15,11 @@ class PageContainer extends StatelessWidget {
         final maxW = maxWidth ?? Responsive.contentMaxWidth(width);
         return Align(
           alignment: Alignment.topCenter,
+          // Only tighten maxWidth; keep the incoming height constraints
+          // (via copyWith) so Expanded/Flexible descendants that rely on
+          // a bounded height from the Scaffold body still work.
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxW),
+            constraints: constraints.copyWith(maxWidth: maxW),
             child: child,
           ),
         );

@@ -9,13 +9,15 @@ import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
 import 'package:marketky/views/widgets/item_card.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 /// صفحه جست‌وجو و مرور کاتالوگ با فیلتر، دسته‌بندی و مرتب‌سازی
 class CatalogPage extends StatefulWidget {
   final String initialQuery;
   final int? initialCategoryId;
 
-  const CatalogPage({super.key, this.initialQuery = '', this.initialCategoryId});
+  const CatalogPage(
+      {super.key, this.initialQuery = '', this.initialCategoryId});
 
   @override
   State<CatalogPage> createState() => _CatalogPageState();
@@ -69,7 +71,8 @@ class _CatalogPageState extends State<CatalogPage> {
         _categories = CatalogService.categoriesFrom(products);
         _loading = false;
       });
-      AnalyticsService.viewItemList(listName: 'catalog', count: products.length);
+      AnalyticsService.viewItemList(
+          listName: 'catalog', count: products.length);
     } catch (e) {
       setState(() {
         _error = 'دریافت محصولات ناموفق بود';
@@ -134,14 +137,16 @@ class _CatalogPageState extends State<CatalogPage> {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            _buildSearchBar(),
-            if (_categories.isNotEmpty) _buildCategoryChips(),
-            _buildToolbar(results.length),
-            const Divider(height: 1),
-            Expanded(child: _buildBody(results, visible)),
-          ],
+        body: PageContainer(
+          child: Column(
+            children: [
+              _buildSearchBar(),
+              if (_categories.isNotEmpty) _buildCategoryChips(),
+              _buildToolbar(results.length),
+              const Divider(height: 1),
+              Expanded(child: _buildBody(results, visible)),
+            ],
+          ),
         ),
       ),
     );
@@ -188,8 +193,11 @@ class _CatalogPageState extends State<CatalogPage> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         children: [
-          _categoryChip(label: 'همه', selected: _filter.categoryId == null,
-              onTap: () => _updateFilter(_filter.copyWith(clearCategory: true))),
+          _categoryChip(
+              label: 'همه',
+              selected: _filter.categoryId == null,
+              onTap: () =>
+                  _updateFilter(_filter.copyWith(clearCategory: true))),
           ..._categories.map((c) {
             final count = CatalogService.countInCategory(_all, c.id);
             return _categoryChip(
@@ -274,8 +282,7 @@ class _CatalogPageState extends State<CatalogPage> {
         child: Wrap(
           spacing: 16,
           runSpacing: 16,
-          children:
-              List.generate(6, (_) => const ProductCardSkeleton()),
+          children: List.generate(6, (_) => const ProductCardSkeleton()),
         ),
       );
     }
@@ -291,7 +298,8 @@ class _CatalogPageState extends State<CatalogPage> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _fetch,
-              style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
               child: const Text('تلاش مجدد',
                   style: TextStyle(fontFamily: 'Estedad', color: Colors.white)),
             ),
@@ -383,11 +391,8 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   void _openFilterSheet() {
-    final prices = _all
-        .map(CatalogService.finalPriceOf)
-        .whereType<int>()
-        .toList()
-      ..sort();
+    final prices =
+        _all.map(CatalogService.finalPriceOf).whereType<int>().toList()..sort();
     final int bound = prices.isEmpty ? 10000000 : prices.last;
 
     RangeValues range = RangeValues(

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/notification_service.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -77,20 +78,22 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
           ],
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                color: AppColor.primary,
-                onRefresh: _load,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    if (NotificationService.isMock) _mockBanner(),
-                    if (_items.isEmpty) _empty() else ..._items.map(_tile),
-                  ],
+        body: PageContainer(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  color: AppColor.primary,
+                  onRefresh: _load,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      if (NotificationService.isMock) _mockBanner(),
+                      if (_items.isEmpty) _empty() else ..._items.map(_tile),
+                    ],
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }
