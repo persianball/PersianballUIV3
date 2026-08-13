@@ -377,7 +377,7 @@ class _HomePageState extends State<HomePage> {
           Directionality(
             textDirection: TextDirection.rtl,
             child: Container(
-              height: 246,
+              height: 270,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16),

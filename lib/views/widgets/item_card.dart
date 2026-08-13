@@ -102,8 +102,11 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double cardWidth =
+    final double rawWidth =
         MediaQuery.of(context).size.width / 2 - 16 - 8 + extraSize;
+    // Clamped so cards keep a sane, catalog-like size on tablet/desktop
+    // instead of scaling up with the full screen width.
+    final double cardWidth = rawWidth.clamp(130.0, 200.0);
 
     return GestureDetector(
       onTap: () {

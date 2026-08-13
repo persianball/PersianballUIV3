@@ -123,7 +123,8 @@ class ProductCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width / 2 - 16 - 8;
+    final width =
+        (MediaQuery.of(context).size.width / 2 - 16 - 8).clamp(130.0, 200.0);
     return SizedBox(
       width: width,
       child: Column(

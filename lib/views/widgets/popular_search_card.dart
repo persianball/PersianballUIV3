@@ -13,7 +13,7 @@ class PopularSearchCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         color: Colors.white,
-        width: MediaQuery.of(context).size.width / 2,
+        width: (MediaQuery.of(context).size.width / 2).clamp(160.0, 260.0),
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
