@@ -7,8 +7,6 @@ import 'package:marketky/models/CartModel.dart';
 import '../constant/urls.dart';
 
 class CartService {
-
-
   // دریافت سبد خرید
   static Future<AllCartFromBackend> fetchCart(BuildContext context) async {
     final token = await _getToken();
@@ -19,13 +17,17 @@ class CartService {
           textDirection: TextDirection.rtl,
           child: AlertDialog(
             title: const Text('نیاز به ورود دارید'),
-            content: const Text('برای مشاهده سبد خرید ابتدا وارد حساب کاربری شوید.'),
+            content:
+                const Text('برای مشاهده سبد خرید ابتدا وارد حساب کاربری شوید.'),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('انصراف')),
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  Navigator.of(context).pushNamed('/login', arguments: {'popOnSuccess': true});
+                  Navigator.of(context)
+                      .pushNamed('/login', arguments: {'popOnSuccess': true});
                 },
                 child: const Text('ورود'),
               ),
@@ -36,7 +38,7 @@ class CartService {
       throw Exception('نیاز به ورود');
     }
     final response = await http.get(
-      Uri.parse(URLs.baseUrl+"/v1/order/basket/"),
+      Uri.parse(URLs.baseUrl + "/v1/order/basket/"),
       headers: {
         'Authorization': 'token $token',
         'Content-Type': 'application/json',
@@ -44,21 +46,16 @@ class CartService {
     );
 
     if (response.statusCode == 200) {
-      try{
-      var AllDataAboutCartFromBack = AllCartFromBackend.fromJson(jsonDecode(response.body));
-      return AllDataAboutCartFromBack;
-      }catch(e){
-
+      try {
+        var AllDataAboutCartFromBack =
+            AllCartFromBackend.fromJson(jsonDecode(response.body));
+        return AllDataAboutCartFromBack;
+      } catch (e) {
         print("no product available + ${e.toString()}");
         throw Exception("محصول در سبد مشکلی دارد.");
       }
 
-
-        //fetch product detail
-
-
-
-
+      //fetch product detail
     } else {
       print("status code : ${response.statusCode}");
       print("error: ${response.body}");
@@ -67,7 +64,8 @@ class CartService {
   }
 
   // افزودن محصول به سبد
-  static Future<void> addToCart(BuildContext context, int productId, int quantity) async {
+  static Future<void> addToCart(
+      BuildContext context, int productId, int quantity) async {
     final token = await _getToken();
     if (token == null || token.isEmpty) {
       await showDialog<void>(
@@ -76,13 +74,17 @@ class CartService {
           textDirection: TextDirection.rtl,
           child: AlertDialog(
             title: const Text('نیاز به ورود دارید'),
-            content: const Text('برای افزودن به سبد ابتدا وارد حساب کاربری شوید.'),
+            content:
+                const Text('برای افزودن به سبد ابتدا وارد حساب کاربری شوید.'),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('انصراف')),
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  Navigator.of(ctx).pushNamed('/login', arguments: {'popOnSuccess': true});
+                  Navigator.of(ctx)
+                      .pushNamed('/login', arguments: {'popOnSuccess': true});
                 },
                 child: const Text('ورود'),
               ),
@@ -93,7 +95,7 @@ class CartService {
       throw Exception('نیاز به ورود');
     }
     final response = await http.post(
-      Uri.parse(URLs.baseUrl+"/v1/order/basket-items/"),
+      Uri.parse(URLs.baseUrl + "/v1/order/basket-items/"),
       headers: {
         'Authorization': 'token $token',
         'Content-Type': 'application/json',
@@ -110,7 +112,8 @@ class CartService {
   }
 
   // افزودن دوره به سبد
-  static Future<void> addCourseToCart(BuildContext context, int courseId, int quantity) async {
+  static Future<void> addCourseToCart(
+      BuildContext context, int courseId, int quantity) async {
     final token = await _getToken();
     if (token == null || token.isEmpty) {
       await showDialog<void>(
@@ -119,13 +122,17 @@ class CartService {
           textDirection: TextDirection.rtl,
           child: AlertDialog(
             title: const Text('نیاز به ورود دارید'),
-            content: const Text('برای افزودن دوره به سبد ابتدا وارد حساب کاربری شوید.'),
+            content: const Text(
+                'برای افزودن دوره به سبد ابتدا وارد حساب کاربری شوید.'),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('انصراف')),
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  Navigator.of(ctx).pushNamed('/login', arguments: {'popOnSuccess': true});
+                  Navigator.of(ctx)
+                      .pushNamed('/login', arguments: {'popOnSuccess': true});
                 },
                 child: const Text('ورود'),
               ),
@@ -136,7 +143,7 @@ class CartService {
       throw Exception('نیاز به ورود');
     }
     final response = await http.post(
-      Uri.parse(URLs.baseUrl+"/v1/order/basket-items/"),
+      Uri.parse(URLs.baseUrl + "/v1/order/basket-items/"),
       headers: {
         'Authorization': 'token $token',
         'Content-Type': 'application/json',
@@ -164,11 +171,14 @@ class CartService {
             title: const Text('نیاز به ورود دارید'),
             content: const Text('برای حذف آیتم ابتدا وارد حساب کاربری شوید.'),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('انصراف')),
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  Navigator.of(context).pushNamed('/login', arguments: {'popOnSuccess': true});
+                  Navigator.of(context)
+                      .pushNamed('/login', arguments: {'popOnSuccess': true});
                 },
                 child: const Text('ورود'),
               ),
@@ -179,7 +189,7 @@ class CartService {
       throw Exception('نیاز به ورود');
     }
     final response = await http.delete(
-      Uri.parse('${URLs.baseUrl+"/v1/order/basket-items"}/$itemId/'),
+      Uri.parse('${URLs.baseUrl + "/v1/order/basket-items"}/$itemId/'),
       headers: {'Authorization': 'token $token'},
     );
 
@@ -189,7 +199,8 @@ class CartService {
   }
 
   // به‌روزرسانی تعداد
-  static Future<void> updateQuantity(BuildContext context, int itemId,int? productId,int? courseid, int quantity) async {
+  static Future<void> updateQuantity(BuildContext context, int itemId,
+      int? productId, int? courseid, int quantity) async {
     final token = await _getToken();
     if (token == null || token.isEmpty) {
       await showDialog<void>(
@@ -200,11 +211,14 @@ class CartService {
             title: const Text('نیاز به ورود دارید'),
             content: const Text('برای ویرایش سبد ابتدا وارد حساب کاربری شوید.'),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('انصراف')),
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('انصراف')),
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  Navigator.of(context).pushNamed('/login', arguments: {'popOnSuccess': true});
+                  Navigator.of(context)
+                      .pushNamed('/login', arguments: {'popOnSuccess': true});
                 },
                 child: const Text('ورود'),
               ),
@@ -215,12 +229,13 @@ class CartService {
       throw Exception('نیاز به ورود');
     }
     final response = await http.put(
-      Uri.parse('${URLs.baseUrl+"/v1/order/basket-items"}/$itemId/'),
+      Uri.parse('${URLs.baseUrl + "/v1/order/basket-items"}/$itemId/'),
       headers: {
         'Authorization': 'token $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'quantity': quantity,'product':productId,'course':courseid}),
+      body: jsonEncode(
+          {'quantity': quantity, 'product': productId, 'course': courseid}),
     );
 
     if (response.statusCode != 200) {
