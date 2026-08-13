@@ -65,6 +65,21 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  /// null یعنی هنوز بررسی نشده
+  bool? _loggedIn;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    final loggedIn = await AuthService.isLoggedIn();
+    if (!mounted) return;
+    setState(() => _loggedIn = loggedIn);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,7 +87,108 @@ class _ProfilePageState extends State<ProfilePage> {
         cartValue: 2,
         chatValue: 2,
       ),
-      body: PageContainer(
+      // تا وقتی وضعیت ورود مشخص نشده چیزی از پروفایل نمایش داده نمی‌شود
+      body: BlocListener<LoginBloc, LoginState>(
+        listener: (context, state) {
+          if (state is LoginAuthenticated) {
+            setState(() => _loggedIn = true);
+          } else if (state is LoginUnauthenticated) {
+            setState(() => _loggedIn = false);
+          }
+        },
+        child: _loggedIn == null
+            ? const Center(child: CircularProgressIndicator())
+            : (_loggedIn! ? _buildProfile(context) : _buildGuestView(context)),
+      ),
+    );
+  }
+
+  /// حالت مهمان: فقط دعوت به ورود
+  Widget _buildGuestView(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColor.primarySoft,
+                ),
+                child: Icon(Icons.person_outline,
+                    size: 46, color: AppColor.primary),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'وارد حساب کاربری نشده‌اید',
+                style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.secondary,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'برای مشاهده پروفایل، سفارش‌ها و آدرس‌ها ابتدا وارد شوید',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 13,
+                  height: 1.7,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => LoginPage(popOnSuccess: true),
+                      ),
+                    );
+                    await _checkAuth();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColor.primary,
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'ورود به حساب کاربری',
+                    style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 15,
+                        color: Colors.white),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.of(context).pushNamed('/catalog'),
+                child: Text(
+                  'فعلاً فقط محصولات را ببینم',
+                  style: TextStyle(fontFamily: 'Estedad', fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfile(BuildContext context) {
+    return PageContainer(
         child: ListView(
           shrinkWrap: true,
           physics: BouncingScrollPhysics(),
@@ -116,16 +232,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   //   'Username',
                   //   style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
                   // ),
-                  BlocListener<LoginBloc, LoginState>(
-                    listener: (context, state) {
-                      if (state is LoginUnauthenticated) {
-                        // هدایت به صفحه مناسب
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (context) => LoginPage()),
-                        );
-                      }
-                    },
-                    child: ElevatedButton(
+                  // بعد از خروج، همین صفحه به حالت مهمان می‌رود
+                  // (listener بالای صفحه _loggedIn را false می‌کند)
+                  Builder(
+                    builder: (context) => ElevatedButton(
                       onPressed: () {
                         context.read<LoginBloc>().add(LogoutRequested());
                       },
@@ -266,7 +376,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
-      ),
     );
   }
 }

@@ -102,7 +102,8 @@ class AuthService {
   // بررسی وضعیت ورود
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
-    return token != null;
+    // توکن خالی هم یعنی وارد نشده
+    return token != null && token.isNotEmpty;
   }
 
   // حذف توکن (Logout)
