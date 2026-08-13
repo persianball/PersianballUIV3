@@ -6,6 +6,7 @@ import 'package:marketky/services/catalog_service.dart';
 import 'package:marketky/services/wishlist_service.dart';
 import 'package:marketky/views/screens/catalog_page.dart';
 import 'package:marketky/views/widgets/item_card.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 /// لیست علاقه‌مندی‌ها و بازدیدهای اخیر
 class WishlistPage extends StatefulWidget {
@@ -67,7 +68,7 @@ class _WishlistPageState extends State<WishlistPage> {
           title: const Text('علاقه‌مندی‌ها',
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
         ),
-        body: _buildBody(),
+        body: PageContainer(child: _buildBody()),
       ),
     );
   }
@@ -84,7 +85,8 @@ class _WishlistPageState extends State<WishlistPage> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _load,
-              style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
               child: const Text('تلاش مجدد',
                   style: TextStyle(fontFamily: 'Estedad', color: Colors.white)),
             ),

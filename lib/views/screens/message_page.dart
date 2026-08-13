@@ -5,6 +5,7 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/core/model/Message.dart';
 import 'package:marketky/core/services/MessageService.dart';
 import 'package:marketky/views/widgets/message_tile_widget.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 class MessagePage extends StatefulWidget {
   @override
@@ -23,8 +24,14 @@ class _MessagePageState extends State<MessagePage> {
         elevation: 0,
         title: Column(
           children: [
-            Text('Message', style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600)),
-            Text('1 Unreaded', style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.7))),
+            Text('Message',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600)),
+            Text('1 Unreaded',
+                style: TextStyle(
+                    fontSize: 10, color: Colors.black.withOpacity(0.7))),
           ],
         ),
         leading: IconButton(
@@ -40,16 +47,19 @@ class _MessagePageState extends State<MessagePage> {
             width: MediaQuery.of(context).size.width,
             color: AppColor.primarySoft,
           ),
-        ), systemOverlayStyle: SystemUiOverlayStyle.light,
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
-      body: ListView(
-        shrinkWrap: true,
-        physics: BouncingScrollPhysics(),
-        children: List.generate(listMessage.length, (index) {
-          return MessageTileWidget(
-            data: listMessage[index],
-          );
-        }),
+      body: PageContainer(
+        child: ListView(
+          shrinkWrap: true,
+          physics: BouncingScrollPhysics(),
+          children: List.generate(listMessage.length, (index) {
+            return MessageTileWidget(
+              data: listMessage[index],
+            );
+          }),
+        ),
       ),
     );
   }

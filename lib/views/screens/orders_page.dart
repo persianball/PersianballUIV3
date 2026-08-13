@@ -5,6 +5,7 @@ import 'package:marketky/views/screens/order_detail_page.dart';
 import 'package:marketky/models/payment_models.dart';
 import 'package:marketky/services/payment_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -13,7 +14,8 @@ class OrdersPage extends StatefulWidget {
   State<OrdersPage> createState() => _OrdersPageState();
 }
 
-class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateMixin {
+class _OrdersPageState extends State<OrdersPage>
+    with SingleTickerProviderStateMixin {
   PaymentsResponse? _data;
   bool _loading = true;
   String? _error;
@@ -24,7 +26,8 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 450));
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 450));
     _fetch();
     _scrollController.addListener(_onScroll);
   }
@@ -42,7 +45,8 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
       _error = null;
     });
     try {
-      final res = await PaymentService.fetchPayments(nextPageUrl: loadMore ? _nextUrl : null);
+      final res = await PaymentService.fetchPayments(
+          nextPageUrl: loadMore ? _nextUrl : null);
       setState(() {
         if (loadMore && _data != null) {
           _data = PaymentsResponse(
@@ -68,7 +72,8 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
 
   void _onScroll() {
     if (_nextUrl == null) return;
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       // near bottom, load next page
       final next = _nextUrl;
       // _nextUrl = null; // prevent duplicate calls
@@ -142,7 +147,8 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
                   // ردیف اول: وضعیت (مهم‌ترین اطلاعات) و شماره سفارش
                   Row(
                     children: [
-                      Icon(_statusIcon(item.status), color: statusClr, size: 20),
+                      Icon(_statusIcon(item.status),
+                          color: statusClr, size: 20),
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -256,37 +262,40 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
           ),
         ),
       ),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? _ErrorView(message: _error!, onRetry: () => _fetch())
-                : RefreshIndicator(
-                    color: AppColor.primary,
-                    onRefresh: () async {
-                      _nextUrl = null;
-                      await _fetch();
-                    },
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: (_data?.results.length ?? 0) + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                            child: Text(
-                              'مجموع سفارش‌ها: ${_data?.count ?? 0}',
-                              style: const TextStyle(fontWeight: FontWeight.w700),
-                            ),
-                          );
-                        }
-                        final item = _data!.results[index - 1];
-                        return _buildItem(item);
+      body: PageContainer(
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+                  ? _ErrorView(message: _error!, onRetry: () => _fetch())
+                  : RefreshIndicator(
+                      color: AppColor.primary,
+                      onRefresh: () async {
+                        _nextUrl = null;
+                        await _fetch();
                       },
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: (_data?.results.length ?? 0) + 1,
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                              child: Text(
+                                'مجموع سفارش‌ها: ${_data?.count ?? 0}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700),
+                              ),
+                            );
+                          }
+                          final item = _data!.results[index - 1];
+                          return _buildItem(item);
+                        },
+                      ),
                     ),
-                  ),
+        ),
       ),
     );
   }
@@ -310,7 +319,8 @@ class _ErrorView extends StatelessWidget {
           ElevatedButton(
             onPressed: onRetry,
             style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
-            child: const Text('تلاش مجدد', style: TextStyle(color: Colors.white)),
+            child:
+                const Text('تلاش مجدد', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
