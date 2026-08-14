@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/account_service.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 /// تغییر رمز عبور و حذف حساب کاربری
 class AccountSecurityPage extends StatefulWidget {
@@ -70,8 +71,8 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('انصراف',
-                  style: TextStyle(fontFamily: 'Estedad')),
+              child:
+                  const Text('انصراف', style: TextStyle(fontFamily: 'Estedad')),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -108,69 +109,71 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
           title: const Text('امنیت حساب',
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
         ),
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const Text('تغییر رمز عبور',
+        body: PageContainer(
+          child: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                const Text('تغییر رمز عبور',
+                    style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 12),
+                _field(_oldCtrl, 'رمز فعلی'),
+                const SizedBox(height: 10),
+                _field(_newCtrl, 'رمز جدید'),
+                const SizedBox(height: 10),
+                _field(_repeatCtrl, 'تکرار رمز جدید'),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _busy ? null : _changePassword,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColor.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('ثبت رمز جدید',
+                        style: TextStyle(
+                            fontFamily: 'Estedad', color: Colors.white)),
+                  ),
+                ),
+                const Divider(height: 40),
+                const Text('حذف حساب کاربری',
+                    style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                Text(
+                  'با حذف حساب همه اطلاعات شما پاک می‌شود. این عملیات قابل بازگشت نیست.',
                   style: TextStyle(
                       fontFamily: 'Estedad',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700)),
-              const SizedBox(height: 12),
-              _field(_oldCtrl, 'رمز فعلی'),
-              const SizedBox(height: 10),
-              _field(_newCtrl, 'رمز جدید'),
-              const SizedBox(height: 10),
-              _field(_repeatCtrl, 'تکرار رمز جدید'),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _busy ? null : _changePassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColor.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('ثبت رمز جدید',
-                      style: TextStyle(
-                          fontFamily: 'Estedad', color: Colors.white)),
+                      fontSize: 12,
+                      height: 1.7,
+                      color: Colors.grey.shade600),
                 ),
-              ),
-              const Divider(height: 40),
-              const Text('حذف حساب کاربری',
-                  style: TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              Text(
-                'با حذف حساب همه اطلاعات شما پاک می‌شود. این عملیات قابل بازگشت نیست.',
-                style: TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 12,
-                    height: 1.7,
-                    color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _busy ? null : _deleteAccount,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _busy ? null : _deleteAccount,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('حذف حساب کاربری',
+                        style: TextStyle(fontFamily: 'Estedad')),
                   ),
-                  child: const Text('حذف حساب کاربری',
-                      style: TextStyle(fontFamily: 'Estedad')),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -184,8 +187,7 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(fontFamily: 'Estedad', fontSize: 13),
-          border:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
 }
