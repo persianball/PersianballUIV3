@@ -6,6 +6,7 @@ import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/services/catalog_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 /// مقایسه چند محصول کنار هم.
 ///
@@ -85,21 +86,23 @@ class _ComparePageState extends State<ComparePage> {
           title: const Text('مقایسه محصولات',
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? Center(
-                    child: Text(_error!,
-                        style: const TextStyle(fontFamily: 'Estedad')))
-                : SafeArea(
-                    child: Column(
-                      children: [
-                        _picker(),
-                        const Divider(height: 1),
-                        Expanded(child: _table()),
-                      ],
+        body: PageContainer(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+                  ? Center(
+                      child: Text(_error!,
+                          style: const TextStyle(fontFamily: 'Estedad')))
+                  : SafeArea(
+                      child: Column(
+                        children: [
+                          _picker(),
+                          const Divider(height: 1),
+                          Expanded(child: _table()),
+                        ],
+                      ),
                     ),
-                  ),
+        ),
       ),
     );
   }
@@ -163,8 +166,7 @@ class _ComparePageState extends State<ComparePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.compare_arrows,
-                  size: 48, color: Colors.grey.shade400),
+              Icon(Icons.compare_arrows, size: 48, color: Colors.grey.shade400),
               const SizedBox(height: 12),
               const Text('برای شروع، حداکثر ۳ کالا را از بالا انتخاب کنید',
                   textAlign: TextAlign.center,
@@ -227,8 +229,8 @@ class _ComparePageState extends State<ComparePage> {
           ...rows.entries.map((entry) => Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200)),
+                  border:
+                      Border(bottom: BorderSide(color: Colors.grey.shade200)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,8 +264,8 @@ class _ComparePageState extends State<ComparePage> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: ElevatedButton(
-                        onPressed: () => Navigator.of(context)
-                            .pushNamed('/product/${p.id}'),
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('/product/${p.id}'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.primary,
                           padding: const EdgeInsets.symmetric(vertical: 10),

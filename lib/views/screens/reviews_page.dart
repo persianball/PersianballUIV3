@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/review_service.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 /// همه نظرات یک محصول با فیلتر بر اساس ستاره
 class ReviewsPage extends StatefulWidget {
@@ -54,9 +55,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
           title: const Text('نظرات کاربران',
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : SafeArea(child: _buildBody(_summary!)),
+        body: PageContainer(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : SafeArea(child: _buildBody(_summary!)),
+        ),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/payment_models.dart';
 import 'package:marketky/services/order_detail_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 /// جزئیات یک سفارش: اقلام، پیگیری مرسوله، صورتحساب و اقدامات
 class OrderDetailPage extends StatefulWidget {
@@ -49,9 +50,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           title: Text('سفارش #${widget.payment.id}',
               style: const TextStyle(fontFamily: 'Estedad', fontSize: 16)),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _buildContent(_detail!),
+        body: PageContainer(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildContent(_detail!),
+        ),
       ),
     );
   }
@@ -70,8 +73,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           const SizedBox(height: 12),
           _invoiceCard(d),
           const SizedBox(height: 16),
-          if (d.canCancel) _dangerButton('لغو سفارش', () => _confirmAction(d, isCancel: true)),
-          if (d.canReturn) _dangerButton('درخواست مرجوعی', () => _confirmAction(d, isCancel: false)),
+          if (d.canCancel)
+            _dangerButton('لغو سفارش', () => _confirmAction(d, isCancel: true)),
+          if (d.canReturn)
+            _dangerButton(
+                'درخواست مرجوعی', () => _confirmAction(d, isCancel: false)),
           const SizedBox(height: 24),
         ],
       ),
@@ -137,7 +143,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   Column(
                     children: [
                       Icon(
-                        done ? Icons.check_circle : Icons.radio_button_unchecked,
+                        done
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
                         size: 20,
                         color: done ? AppColor.primary : Colors.grey.shade400,
                       ),
@@ -145,7 +153,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         Expanded(
                           child: Container(
                             width: 2,
-                            color: done ? AppColor.primary : Colors.grey.shade300,
+                            color:
+                                done ? AppColor.primary : Colors.grey.shade300,
                           ),
                         ),
                     ],
@@ -243,8 +252,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             Text(d.address,
                 style: const TextStyle(fontFamily: 'Estedad', fontSize: 13)),
             const SizedBox(height: 8),
-            _infoRow('روش ارسال',
-                d.deliveryMethod == 'peyk' ? 'پیک' : 'پست'),
+            _infoRow('روش ارسال', d.deliveryMethod == 'peyk' ? 'پیک' : 'پست'),
           ],
         ),
       );
@@ -339,8 +347,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('انصراف',
-                  style: TextStyle(fontFamily: 'Estedad')),
+              child:
+                  const Text('انصراف', style: TextStyle(fontFamily: 'Estedad')),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
