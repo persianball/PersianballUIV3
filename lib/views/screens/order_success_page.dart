@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/page_switcher.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 class OrderSuccessPage extends StatelessWidget {
   @override
@@ -22,11 +23,15 @@ class OrderSuccessPage extends StatelessWidget {
                   onPressed: () {},
                   child: Text(
                     'Your Orders',
-                    style: TextStyle(color: AppColor.secondary, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        color: AppColor.secondary, fontWeight: FontWeight.w500),
                   ),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: AppColor.primary, padding: EdgeInsets.symmetric(vertical: 18), backgroundColor: AppColor.border,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    foregroundColor: AppColor.primary,
+                    padding: EdgeInsets.symmetric(vertical: 18),
+                    backgroundColor: AppColor.border,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                     shadowColor: Colors.transparent,
                   ),
@@ -36,15 +41,22 @@ class OrderSuccessPage extends StatelessWidget {
                 width: MediaQuery.of(context).size.width,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => PageSwitcher()));
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => PageSwitcher()));
                   },
                   child: Text(
                     'Continue Shopping',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18, fontFamily: 'poppins'),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        fontFamily: 'poppins'),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 18), backgroundColor: AppColor.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: EdgeInsets.symmetric(vertical: 18),
+                    backgroundColor: AppColor.primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                     shadowColor: Colors.transparent,
                   ),
@@ -55,37 +67,39 @@ class OrderSuccessPage extends StatelessWidget {
         ),
       ),
       extendBody: true,
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 124,
-              height: 124,
-              margin: EdgeInsets.only(bottom: 32),
-              child: SvgPicture.asset('assets/icons/Success.svg'),
-            ),
-            Text(
-              'Order Success! 😆',
-              style: TextStyle(
-                color: AppColor.secondary,
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'poppins',
+      body: PageContainer(
+        child: Container(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 124,
+                height: 124,
+                margin: EdgeInsets.only(bottom: 32),
+                child: SvgPicture.asset('assets/icons/Success.svg'),
               ),
-            ),
-            Container(
-              margin: EdgeInsets.only(top: 8),
-              child: Text(
-                'We have received your order',
-                style: TextStyle(color: AppColor.secondary.withOpacity(0.8)),
-                textAlign: TextAlign.center,
+              Text(
+                'Order Success! 😆',
+                style: TextStyle(
+                  color: AppColor.secondary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'poppins',
+                ),
               ),
-            ),
-          ],
+              Container(
+                margin: EdgeInsets.only(top: 8),
+                child: Text(
+                  'We have received your order',
+                  style: TextStyle(color: AppColor.secondary.withOpacity(0.8)),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
