@@ -6,6 +6,27 @@ import 'package:marketky/constant/urls.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
 
+  /// خطاهای Django REST Framework معمولاً به شکل {"message": "..."} نیستند؛
+  /// به شکل {"field_name": ["پیام خطا"]} یا {"non_field_errors": [...]} یا
+  /// {"detail": "..."} برمی‌گردند. این متد همه‌ی این حالت‌ها را پوشش می‌دهد
+  /// تا خطای واقعی بک‌اند به کاربر نمایش داده شود، نه یک پیام عمومی.
+  static String _extractErrorMessage(dynamic decoded, String fallback) {
+    if (decoded is String) return decoded;
+    if (decoded is! Map) return fallback;
+    if (decoded['message'] is String) return decoded['message'];
+    if (decoded['detail'] is String) return decoded['detail'];
+
+    final messages = <String>[];
+    decoded.forEach((key, value) {
+      if (value is List) {
+        messages.addAll(value.map((e) => e.toString()));
+      } else if (value is String) {
+        messages.add(value);
+      }
+    });
+    if (messages.isNotEmpty) return messages.join('\n');
+    return fallback;
+  }
 
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await http.post(
@@ -39,7 +60,7 @@ class AuthService {
       print(response.body);
       return {
         'success': false,
-        'message': body['message'] ?? 'ورود ناموفق بود',
+        'message': _extractErrorMessage(body, 'ورود ناموفق بود'),
       };
     }
 
@@ -140,7 +161,7 @@ class AuthService {
       }else{
         return {
           'success': false,
-          'message': data['message'] ?? 'ثبت‌نام ناموفق بود',
+          'message': _extractErrorMessage(data, 'ثبت‌نام ناموفق بود'),
         };
       }
 
@@ -148,7 +169,7 @@ class AuthService {
       final body = jsonDecode(response.body);
       return {
         'success': false,
-        'message': body['message'] ?? 'ثبت‌نام ناموفق بود',
+        'message': _extractErrorMessage(body, 'ثبت‌نام ناموفق بود'),
       };
     }
   }
@@ -181,7 +202,7 @@ class AuthService {
       final body = jsonDecode(response.body);
       return {
         'success': false,
-        'message': body['message'] ?? 'ثبت‌نام ناموفق بود',
+        'message': _extractErrorMessage(body, 'ثبت‌نام ناموفق بود'),
       };
     }
   }
@@ -227,10 +248,11 @@ class AuthService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? 'ثبت‌نام ناموفق بود',
+          'message': _extractErrorMessage(error, 'ثبت‌نام ناموفق بود'),
         };
       }
     } catch (e) {
+      print('Register error: $e');
       return {
         'success': false,
         'message': 'عدم دسترسی به سرور. اینترنت خود را بررسی کنید.',
