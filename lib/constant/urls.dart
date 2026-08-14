@@ -1,6 +1,6 @@
 class URLs{
     // static const baseUrl = "https://api2.persianball.ir";
-    static const baseUrl = "http://2.144.27.195:8000";
+    static const baseUrl = "https://pball.ah8ad3.ir/";
 
     /// اسکیم اختصاصی اپ: marketky://product/12
     static const appScheme = "marketky";
@@ -11,6 +11,7 @@ class URLs{
     static const List<String> deepLinkHosts = [
       "2.144.27.195",
       "api2.persianball.ir",
+      "pball.ah8ad3.ir"
     ];
 
     static bool isDeepLinkHost(String host) =>
