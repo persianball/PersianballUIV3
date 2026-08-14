@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/core/model/Message.dart';
+import 'package:marketky/views/widgets/page_container.dart';
 
 class MessageDetailPage extends StatefulWidget {
   final Message data;
@@ -40,7 +41,11 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
                   ),
                 ),
               ),
-              Text('${widget.data.shopName}', style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600)),
+              Text('${widget.data.shopName}',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600)),
             ],
           ),
           leading: IconButton(
@@ -56,9 +61,11 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
               width: MediaQuery.of(context).size.width,
               color: AppColor.primarySoft,
             ),
-          ), systemOverlayStyle: SystemUiOverlayStyle.light,
+          ),
+          systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
-        body: Column(
+        body: PageContainer(
+            child: Column(
           children: [
             // Section 1 - Chat
             Expanded(
@@ -69,27 +76,33 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
                   reverse: true,
                   children: [
                     MyBubbleChatWidget(
-                      chat: 'Lorem ipsum dolor ut labore et dolore magna aliqua. Ut enim ad minim veniam',
+                      chat:
+                          'Lorem ipsum dolor ut labore et dolore magna aliqua. Ut enim ad minim veniam',
                       time: '10:48',
                     ),
                     SenderBubbleChatWidget(
-                      chat: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, ad minim veniam',
+                      chat:
+                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, ad minim veniam',
                       time: '10:48',
                     ),
                     MyBubbleChatWidget(
-                      chat: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
+                      chat:
+                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
                       time: '10:48',
                     ),
                     SenderBubbleChatWidget(
-                      chat: 'Log elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
+                      chat:
+                          'Log elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
                       time: '10:48',
                     ),
                     MyBubbleChatWidget(
-                      chat: 'por incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
+                      chat:
+                          'por incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
                       time: '10:48',
                     ),
                     SenderBubbleChatWidget(
-                      chat: 'Lorem ipsum dpor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
+                      chat:
+                          'Lorem ipsum dpor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
                       time: '10:48',
                     ),
                   ],
@@ -101,7 +114,8 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
               width: MediaQuery.of(context).size.width,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: AppColor.border, width: 1)),
+                border:
+                    Border(top: BorderSide(color: AppColor.border, width: 1)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -119,13 +133,16 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
                           ),
                         ),
                         hintText: 'Type a message here...',
-                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppColor.border, width: 1),
+                          borderSide:
+                              BorderSide(color: AppColor.border, width: 1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppColor.border, width: 1),
+                          borderSide:
+                              BorderSide(color: AppColor.border, width: 1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
@@ -138,11 +155,13 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
                     height: 42,
                     child: ElevatedButton(
                       onPressed: () {},
-                      child: Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                      child: Icon(Icons.send_rounded,
+                          color: Colors.white, size: 18),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColor.primary,
                         padding: EdgeInsets.all(0),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                         shadowColor: Colors.transparent,
                       ),
                     ),
@@ -155,7 +174,7 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
               color: Colors.transparent,
             ),
           ],
-        ));
+        )));
   }
 }
 
