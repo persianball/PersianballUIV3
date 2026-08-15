@@ -213,14 +213,16 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     final shippingCost =
         isFree ? 0 : (widget.deliveryMethod == 'peyk' ? peykPrice : postPrice);
 
-    // Apply discount percentage if available
-    final finalDiscounted = _discountPercent > 0
+    // اگر کد تخفیف اعمال شده باشد جای مقدار تخفیف بک‌اند می‌نشیند
+    final discountBase = _discountPercent > 0
         ? base - (base * _discountPercent / 100)
         : discounted;
 
-    // discount value shown is (base - finalDiscounted)
-    final discountValue = base - finalDiscounted;
-    final payable = finalDiscounted + tax + shippingCost;
+    // مقداری که در ردیف «تخفیف» نمایش داده می‌شود
+    final displayedDiscount = discountBase + tax + shippingCost;
+
+    // مبلغی که کاربر باید بپردازد
+    final payable = base - discountBase;
 
     return Scaffold(
       // چیدمان اپ‌بار راست‌به‌چپ: عنوان و دکمه بازگشت سمت راست
@@ -437,7 +439,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                               _priceRow('قیمت کل',
                                   '${thousandSeparator(base)} تومان'),
                               _priceRow('تخفیف',
-                                  '-${thousandSeparator(discountValue.toInt())} تومان',
+                                  '${thousandSeparator(displayedDiscount.toInt())}- تومان',
                                   valueColor: Colors.redAccent),
                               _priceRow(
                                   'مالیات', '${thousandSeparator(tax)} تومان'),

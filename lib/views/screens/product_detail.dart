@@ -331,10 +331,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               state.product.images.add(state.product.image!);
             }
 
-            if(state.product.variants.isNotEmpty &&  state.product.variants[0].sizeVariants.isNotEmpty){
-              context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(
-                state.product.variants[0],state.product.variants[0].sizeVariants[0]
-              ));
+            if (state.product.variants.isNotEmpty &&
+                state.product.variants[0].sizeVariants.isNotEmpty) {
+              // انتخاب اولیه روی اولین سایز موجود، نه صرفاً سایز اول
+              final initialSize = firstAvailableSizeVariant(
+                  state.product.variants[0].sizeVariants)!;
+              context.read<ProductDetailVariantBloc>().add(
+                  ChangeProductColorEvent(
+                      state.product.variants[0], initialSize));
             }
             return _buildProductContent(state.product, context);
           }
@@ -771,12 +775,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                     if (product.variants.isNotEmpty &&
                                         product.variants[vIndex].sizeVariants
                                             .isNotEmpty) {
+                                      // با تعویض رنگ هم اولین سایز موجود انتخاب شود
+                                      final size = firstAvailableSizeVariant(
+                                          product.variants[vIndex]
+                                              .sizeVariants)!;
                                       context
                                           .read<ProductDetailVariantBloc>()
                                           .add(ChangeProductColorEvent(
-                                          product.variants[vIndex],
-                                          product.variants[vIndex]
-                                              .sizeVariants[0]));
+                                              product.variants[vIndex], size));
                                     }
                                   },
                                 ),

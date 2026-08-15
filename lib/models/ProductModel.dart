@@ -139,6 +139,16 @@ class ProductComment {
   }
 }
 
+/// اولین سایز موجود را برمی‌گرداند؛ اگر هیچ‌کدام موجود نبود، اولین سایز.
+/// لیست خالی نتیجه null می‌دهد.
+SizeVariant? firstAvailableSizeVariant(List<SizeVariant> sizes) {
+  if (sizes.isEmpty) return null;
+  for (final s in sizes) {
+    if (s.inStock) return s;
+  }
+  return sizes.first;
+}
+
 class ProductVariant {
   final String? image;
   final String? color;
