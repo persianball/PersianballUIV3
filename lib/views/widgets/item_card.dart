@@ -8,17 +8,30 @@ import '../../models/ProductModel.dart';
 
 class ItemCard extends StatelessWidget {
   final Product product;
-  final Color titleColor;
-  final Color priceColor;
+  final Color? titleColor;
+  final Color? priceColor;
 
   /// مقدار اضافه‌شده به عرض/ارتفاع کارت نسبت به اندازه پیش‌فرض
   final double extraSize;
 
+  /// پوسته‌ی تیره/طلایی طرح Obsidian Gold Athletics به‌جای کارت سفید فعلی.
+  /// پیش‌فرض false تا صفحاتی که هنوز بازطراحی نشده‌اند (مثل wishlist_page)
+  /// دقیقاً به همان شکل قبلی بمانند.
+  final bool dark;
+
+  /// دکمه «افزودن به سبد» زیر قیمت نمایش داده شود (طرح فروشگاه).
+  /// چون مدل لیست محصول (Product) رنگ/سایز ندارد و بدون انتخاب واریانت
+  /// نمی‌توان مطمئن به سبد افزود، این دکمه همیشه به صفحه جزئیات هدایت می‌کند
+  /// (همان‌جا که انتخاب رنگ/سایز واقعی و افزودن واقعی انجام می‌شود).
+  final bool showAddToCartButton;
+
   ItemCard({
     required this.product,
-    this.titleColor = Colors.black,
-    this.priceColor = AppColor.primary,
+    this.titleColor,
+    this.priceColor,
     this.extraSize = 0,
+    this.dark = false,
+    this.showAddToCartButton = false,
   });
 
   // ارتفاع ثابت ردیف بج تخفیف + قیمت خط‌خورده
@@ -34,6 +47,10 @@ class ItemCard extends StatelessWidget {
         ? (originalPrice * (1 - percent / 100)).toInt()
         : originalPrice;
 
+    final Color mutedColor = dark ? AppColor.onSurfaceVariant : Colors.grey;
+    final Color resolvedPriceColor =
+        priceColor ?? (dark ? AppColor.goldEnd : AppColor.primary);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -48,7 +65,7 @@ class ItemCard extends StatelessWidget {
                 fontSize: originalPrice > 0 ? 16 : 13,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Estedad',
-                color: originalPrice > 0 ? priceColor : Colors.grey,
+                color: originalPrice > 0 ? resolvedPriceColor : mutedColor,
               ),
             ),
           ),
@@ -66,7 +83,8 @@ class ItemCard extends StatelessWidget {
                           EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                       decoration: BoxDecoration(
                         color: Colors.red,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius:
+                            dark ? null : BorderRadius.circular(8),
                       ),
                       child: Text(
                         '٪$percent',
@@ -87,9 +105,9 @@ class ItemCard extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           fontFamily: 'Estedad',
-                          color: Colors.grey,
+                          color: mutedColor,
                           decoration: TextDecoration.lineThrough,
-                          decorationColor: Colors.grey,
+                          decorationColor: mutedColor,
                         ),
                       ),
                     ),
@@ -100,6 +118,10 @@ class ItemCard extends StatelessWidget {
     );
   }
 
+  void _goToDetail(BuildContext context) {
+    Navigator.of(context).pushNamed('/product/${product.id}');
+  }
+
   @override
   Widget build(BuildContext context) {
     final double rawWidth =
@@ -107,60 +129,53 @@ class ItemCard extends StatelessWidget {
     // Clamped so cards keep a sane, catalog-like size on tablet/desktop
     // instead of scaling up with the full screen width.
     final double cardWidth = rawWidth.clamp(130.0, 200.0);
+    final Color resolvedTitleColor =
+        titleColor ?? (dark ? AppColor.onSurface : Colors.black);
 
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).pushNamed('/product/${product.id}');
-      },
+      onTap: () => _goToDetail(context),
       child: Container(
         width: cardWidth,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColor.border),
-          boxShadow: [
-            BoxShadow(
-              color: AppColor.secondary.withOpacity(0.06),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
+        decoration: dark
+            ? BoxDecoration(
+                color: AppColor.surfaceContainer,
+                border: Border.all(color: AppColor.outlineVariantDark),
+              )
+            : BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColor.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColor.secondary.withOpacity(0.06),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // item image
-            Container(
-              width: cardWidth,
-              height: cardWidth * 0.8,
-              alignment: Alignment.topLeft,
-              child: Stack(
-                children: [
-                  // پس‌زمینه: تصویر از شبکه یا assets
-                  AppNetworkImage(
-                    url: '${URLs.baseUrl}${product.image ?? ''}',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(15)),
-                  ),
-                  // محتوای جلو: RatingTag
-                  // Positioned(
-                  //   top: 0,
-                  //   left: 0,
-                  //   child: RatingTag(value: product.),
-                  // ),
-                ],
+            // item image: مربع کامل در طرح تیره، نسبت قبلی در طرح روشن
+            AspectRatio(
+              aspectRatio: dark ? 1 : (1 / 0.8),
+              child: AppNetworkImage(
+                url: '${URLs.baseUrl}${product.image ?? ''}',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                borderRadius: dark
+                    ? null
+                    : BorderRadius.vertical(top: Radius.circular(15)),
               ),
             ),
 
             // item details
             Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(8, 6, 8, 8),
+              padding: EdgeInsets.fromLTRB(8, dark ? 8 : 6, 8, 8),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,18 +190,34 @@ class ItemCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         height: 1.25,
-                        color: titleColor,
+                        color: resolvedTitleColor,
                       ),
                     ),
                   ),
                   _buildPrice(),
-                  // Text(
-                  //   '${product.description}',
-                  //   style: TextStyle(
-                  //     color: Colors.grey,
-                  //     fontSize: 10,
-                  //   ),
-                  // )
+                  if (showAddToCartButton) ...[
+                    SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => _goToDetail(context),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColor.goldEnd,
+                          side: BorderSide(color: AppColor.goldEnd),
+                          shape: const RoundedRectangleBorder(),
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                        ),
+                        child: Text(
+                          'افزودن به سبد',
+                          style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             )
