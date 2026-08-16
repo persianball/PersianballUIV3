@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>فروشگاه - فوتبال لوکس</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-tertiary-fixed": "#001f2a",
+                "surface-tint": "#eac249",
+                "tertiary-container": "#82d9ff",
+                "error": "#ffb4ab",
+                "inverse-primary": "#745b00",
+                "surface-container-low": "#1f1b13",
+                "on-secondary-fixed-variant": "#454747",
+                "on-primary-container": "#6b5500",
+                "surface-dim": "#16130b",
+                "surface-container-lowest": "#110e07",
+                "on-error-container": "#ffdad6",
+                "tertiary-fixed": "#bde9ff",
+                "on-tertiary": "#003546",
+                "surface-bright": "#3d392f",
+                "on-tertiary-fixed-variant": "#004d64",
+                "secondary-fixed": "#e2e2e2",
+                "on-error": "#690005",
+                "on-surface": "#eae1d4",
+                "primary-fixed": "#ffe08a",
+                "inverse-on-surface": "#343027",
+                "inverse-surface": "#eae1d4",
+                "primary": "#ffe9b0",
+                "on-primary-fixed": "#241a00",
+                "outline-variant": "#4d4635",
+                "tertiary-fixed-dim": "#7ad1f7",
+                "tertiary": "#d1efff",
+                "primary-container": "#f2ca50",
+                "primary-fixed-dim": "#eac249",
+                "on-background": "#eae1d4",
+                "on-secondary-fixed": "#1a1c1c",
+                "outline": "#99907c",
+                "secondary-fixed-dim": "#c6c6c6",
+                "on-surface-variant": "#d0c5af",
+                "secondary": "#c6c6c6",
+                "surface-container-highest": "#38342b",
+                "obsidian-deep": "#0c0f0f",
+                "background": "#16130b",
+                "graphite-tint": "#333535",
+                "gold-metallic": "#d4af37",
+                "on-primary": "#3d2f00",
+                "on-secondary-container": "#b5b5b5",
+                "error-container": "#93000a",
+                "on-secondary": "#2f3131",
+                "secondary-container": "#454747",
+                "on-tertiary-container": "#005f7a",
+                "surface": "#16130b",
+                "surface-container-high": "#2d2a21",
+                "on-primary-fixed-variant": "#574400",
+                "surface-variant": "#38342b",
+                "surface-container": "#231f17"
+        },
+        "borderRadius": {
+                "DEFAULT": "0",
+                "lg": "0",
+                "xl": "0",
+                "full": "0"
+        },
+        "spacing": {
+                "stack-sm": "8px",
+                "margin-mobile": "20px",
+                "gutter": "16px",
+                "stack-md": "24px",
+                "max-width": "1280px",
+                "stack-lg": "48px",
+                "unit": "8px"
+        },
+        "fontFamily": {
+                "label-sm": [
+                        "Vazirmatn"
+                ],
+                "display-lg": [
+                        "Vazirmatn"
+                ],
+                "headline-md": [
+                        "Vazirmatn"
+                ],
+                "body-md": [
+                        "Vazirmatn"
+                ],
+                "headline-lg": [
+                        "Vazirmatn"
+                ],
+                "body-lg": [
+                        "Vazirmatn"
+                ]
+        },
+        "fontSize": {
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "42px",
+                        {
+                                "lineHeight": "52px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "800"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body { background-color: #0A0A0A; color: #e2e2e2; }
+        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-body-md pb-24 pt-20">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-margin h-16 bg-surface/10 backdrop-blur-xl border-b border-white/10">
+<button class="text-on-surface-variant hover:bg-white/5 transition-colors p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">فوتبال لوکس</h1>
+<button class="text-on-surface-variant hover:bg-white/5 transition-colors p-2">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="max-w-[1280px] mx-auto px-container-margin">
+<!-- Hero Banner -->
+<section class="fade-in mb-stack-lg overflow-hidden relative h-64 glass-card border-none mt-4">
+<div class="bg-cover bg-center w-full h-full absolute inset-0 mix-blend-overlay opacity-60" data-alt="A cinematic, high-contrast photograph of premium golden football boots resting on perfectly manicured dark green turf under dramatic stadium spotlighting. The lighting creates deep shadows and highlights the metallic texture of the boots, exuding a luxurious and elite sporting aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuALJAmAnydgOr74NQo67ZgVbDKMDwLf2UA6nPHggfseHabeTT43r_ak1doJtYiFGl9lmmTc6pMb2Z9TfcryQzuBB-CkW9lb4wkMR6FPwmEC0OHsnYYXBtdo1akqXETBOMMbgZjQ4G5B-6FbXmnTQVEiWUJ27Urp_QoZSQX_S0MVRixZt1TwdRjZCjTFQYeKgtYtYZjLZqcz85Oa__CI2MTAvK6DjGELFTt_DKuBi6uhZ1UwmIZM5X24Uw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-lowest to-transparent flex flex-col justify-end p-6">
+<h2 class="font-headline-md text-headline-md text-primary mb-2">کالکشن جدید طلایی</h2>
+<p class="font-body-md text-body-md text-secondary">برای حرفه‌ای‌ترین‌ها در زمین مسابقه.</p>
+</div>
+</section>
+<!-- Categories -->
+<section class="fade-in delay-100 mb-stack-md flex gap-gutter overflow-x-auto pb-4 no-scrollbar">
+<button class="px-6 py-2 border border-primary text-primary font-label-sm text-label-sm whitespace-nowrap bg-primary/10">همه</button>
+<button class="px-6 py-2 border border-white/10 text-on-surface-variant font-label-sm text-label-sm whitespace-nowrap hover:border-primary hover:text-primary transition-colors">کفش‌ها</button>
+<button class="px-6 py-2 border border-white/10 text-on-surface-variant font-label-sm text-label-sm whitespace-nowrap hover:border-primary hover:text-primary transition-colors">توپ‌ها</button>
+<button class="px-6 py-2 border border-white/10 text-on-surface-variant font-label-sm text-label-sm whitespace-nowrap hover:border-primary hover:text-primary transition-colors">پیراهن‌ها</button>
+<button class="px-6 py-2 border border-white/10 text-on-surface-variant font-label-sm text-label-sm whitespace-nowrap hover:border-primary hover:text-primary transition-colors">اکسسوری</button>
+</section>
+<!-- Product Grid -->
+<section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
+<!-- Product 1 -->
+<article class="glass-card p-4 fade-in delay-200 flex flex-col items-center group">
+<div class="relative w-full aspect-square mb-4 overflow-hidden border border-primary/20 group-hover:border-primary/50 transition-colors">
+<img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed studio shot of an elite, premium gold and black football boot floating against a pitch-black background. Soft rim lighting accentuates the sleek aerodynamic design and textured surface of the shoe, emphasizing a luxurious and high-performance product aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5vp3M1eI_Io5NA2mgG3KtvnDkq2Xsl0Pm9nO6P4a4BOTk6RSfDHhul4xD48m5ZMC6XGyR-gQ7RDFr6CnhppzDF58eOJWRO3FBeGlsp88uUh6yHhUB98FaX9eTjethuMIF9-ysa_pqxRY_7Nnv9FMizMTS8hPGRb7xEmKjJKrsAiL7Ozegl2CSwtKdZ7HCiLI7qPyrWPGrvmmylLPgUXb_JAcTqD_sF7hjVgzZ_pBapIfndwWzxYxoYw"/>
+</div>
+<h3 class="font-label-sm text-label-sm text-center mb-1">کفش طلایی الیت</h3>
+<p class="font-body-md text-body-md text-primary font-bold mb-4">۱۲,۵۰۰,۰۰۰ تومان</p>
+<button class="w-full py-2 border border-primary text-primary font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-colors">افزودن به سبد</button>
+</article>
+<!-- Product 2 -->
+<article class="glass-card p-4 fade-in delay-300 flex flex-col items-center group">
+<div class="relative w-full aspect-square mb-4 overflow-hidden border border-primary/20 group-hover:border-primary/50 transition-colors">
+<img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" data-alt="A pristine, official professional match football illuminated dramatically against a dark obsidian background. The ball features subtle gold geometric patterns. The lighting creates a high-end, premium gallery feel, highlighting the textured leather panels of the ball." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDafnUZKH3gJ_uEvOptTUyjMQRKMbB1Y3a4jSn6IA1VpWzlvm6pddT44upJalOrpzdyxFdIiO9R4PNu6uQXH4fs6W9Ue3InhCB08Wut-dsquWNdQB04mca2ywH2WnqcF5LBKA2KDN-9ntHSV_T3jAn9zR9eQBXYVDdM9x29-cdeGYcEEBAeOXyPbFQ_NhWuxqxqDxwNbBntfxy4aDVCHSNyPMJYUWNI6wSH2peZ4epOw0g9fhGlbh_wA"/>
+</div>
+<h3 class="font-label-sm text-label-sm text-center mb-1">توپ مسابقه پرو</h3>
+<p class="font-body-md text-body-md text-primary font-bold mb-4">۶,۸۰۰,۰۰۰ تومان</p>
+<button class="w-full py-2 border border-primary text-primary font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-colors">افزودن به سبد</button>
+</article>
+<!-- Product 3 -->
+<article class="glass-card p-4 fade-in delay-400 flex flex-col items-center group">
+<div class="relative w-full aspect-square mb-4 overflow-hidden border border-primary/20 group-hover:border-primary/50 transition-colors">
+<img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" data-alt="A sleek, modern black football jersey with minimalist gold accents and crest, presented flat against a dark textured background. High-contrast lighting showcases the premium breathable fabric texture, creating an exclusive and sophisticated sports apparel aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-5NlyWIP6uStRVIed0JwXsyTRcGhUhV4hy1bWyb02LwGas4FWk7gfM28nluM0ATdxnKlDJ7Vg_CsdoXGburTK0WR3BkJmgqB4bpdb9M3N6vSbBk6qMbeF0eT--_fqlyFx_oITgq5CfAWwX9VhDU6_1U6fXjCsDqFmlaezUD7DTQH7wDvcpK1vgz_R8Wgk8YO1PC8lHH_JnBd2uD8sM-xgdy7YAclkVXpzaNoOjTsHrgNMV0iIHrqw2g"/>
+</div>
+<h3 class="font-label-sm text-label-sm text-center mb-1">پیراهن مشکی لوکس</h3>
+<p class="font-body-md text-body-md text-primary font-bold mb-4">۴,۲۰۰,۰۰۰ تومان</p>
+<button class="w-full py-2 border border-primary text-primary font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-colors">افزودن به سبد</button>
+</article>
+<!-- Product 4 -->
+<article class="glass-card p-4 fade-in delay-400 flex flex-col items-center group">
+<div class="relative w-full aspect-square mb-4 overflow-hidden border border-primary/20 group-hover:border-primary/50 transition-colors">
+<img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" data-alt="A pair of high-end professional goalkeeper gloves with a matte black finish and gold detailing, resting against a dark graphite surface. The dramatic lighting highlights the grip texture and ergonomic design, conveying a sense of elite performance and luxury." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSavDM_uHXOtg1BrKvqKnMyPAN9v7qLoTLYJyMeR4xAP3Lag85OIQ7fx9icaQEfyfnfstMi5W5MpMpOxb3jgzTNlnjA3wVj_RnnSj76xY9PEJbGRE9LUz8GUj6rPe2dADoQoYJFIwdAmyspeh9IZMrUZJ4M7nm9zB5LI6lrwFfZGZjkV1onb3PgzxNHwKaFolSkN_ZJvN-N06uyYzXdb1p2UWp2X8Hurr5S1amsFZyjJJYpjj7SJeAoA"/>
+</div>
+<h3 class="font-label-sm text-label-sm text-center mb-1">دستکش دروازه‌بانی پرو</h3>
+<p class="font-body-md text-body-md text-primary font-bold mb-4">۵,۱۰۰,۰۰۰ تومان</p>
+<button class="w-full py-2 border border-primary text-primary font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-colors">افزودن به سبد</button>
+</article>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface/10 backdrop-blur-xl border-t border-white/10 md:hidden">
+<a class="flex flex-col items-center justify-center text-outline hover:text-primary-fixed transition-all" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-sm text-label-sm mt-1">خانه</span>
+</a>
+<a class="flex flex-col items-center justify-center text-outline hover:text-primary-fixed transition-all" href="#">
+<span class="material-symbols-outlined">sports_soccer</span>
+<span class="font-label-sm text-label-sm mt-1">دوره‌ها</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary font-bold scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+<span class="font-label-sm text-label-sm mt-1">فروشگاه</span>
+</a>
+<a class="flex flex-col items-center justify-center text-outline hover:text-primary-fixed transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm mt-1">پروفایل</span>
+</a>
+</nav>
+</body></html>
