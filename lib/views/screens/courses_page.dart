@@ -214,7 +214,11 @@ class _CourseCard extends StatelessWidget {
             image: DecorationImage(
           image: AssetImage("assets/images/background.jpg"), fit: BoxFit.cover,
           )),
-          child: Hero(
+          // در نمایشگرهای پهن کارت تمام‌عرض نشود
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Hero(
             tag: 'course_${course.id}',
             child: Card(
               elevation: 6,
@@ -225,9 +229,10 @@ class _CourseCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Top image
-                    AspectRatio(
-                      aspectRatio: 16 / 9,
+                    // Top image: ارتفاع محدود تا کارت روی صفحه بزرگ غول‌پیکر نشود
+                    SizedBox(
+                      height: 180,
+                      width: double.infinity,
                       child: imageUrl.isEmpty
                           ? Image.asset('assets/images/course_not_found.jpg',
                               fit: BoxFit.cover)
@@ -273,6 +278,8 @@ class _CourseCard extends StatelessWidget {
                     )
                   ],
                 ),
+              ),
+            ),
               ),
             ),
           ),
@@ -390,7 +397,10 @@ class _UserCoursesListState extends State<_UserCoursesList> {
           itemCount: widget.courses.length,
           itemBuilder: (context, i) {
             final course = widget.courses[i];
-            return Card(
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Card(
               margin: EdgeInsets.fromLTRB(16, 12, 16, 6),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: ListTile(
@@ -402,6 +412,8 @@ class _UserCoursesListState extends State<_UserCoursesList> {
                 subtitle: Text('پیشرفت: به زودی', style: TextStyle(color: Colors.grey[700], fontSize: 12)),
                 trailing: Icon(Icons.arrow_forward_ios),
                 onTap: () => widget.onTapCourse(course),
+              ),
+                ),
               ),
             );
           },
