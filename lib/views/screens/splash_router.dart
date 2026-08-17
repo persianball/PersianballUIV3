@@ -1,6 +1,7 @@
 // lib/views/screens/splash_router.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:marketky/constant/app_color.dart';
 
 /// Decides initial route based on whether welcome was seen.
 class SplashRouter extends StatelessWidget {
@@ -18,12 +19,15 @@ class SplashRouter extends StatelessWidget {
       future: _decideInitialRoute(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            backgroundColor: AppColor.obsidianBg,
+            body: Center(child: CircularProgressIndicator(color: AppColor.goldEnd)),
+          );
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(context).pushReplacementNamed(snapshot.data!);
         });
-        return const SizedBox.shrink();
+        return const Scaffold(backgroundColor: AppColor.obsidianBg);
       },
     );
   }

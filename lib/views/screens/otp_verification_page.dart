@@ -53,28 +53,32 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+      backgroundColor: AppColor.obsidianBg,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         elevation: 0,
         title: Text('اعتبارسنجی',
             style: TextStyle(
                 fontFamily: 'Estedad',
-                color: Colors.black,
+                color: AppColor.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w600)),
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+          icon: Icon(Icons.arrow_forward, color: AppColor.onSurface),
         ),
       ),
       body: BlocProvider(
         create: (context) => VerifyOtpBloc(),
         child: _buildBody(context),
+      ),
       ),
     );
   }
@@ -94,7 +98,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 'کد تایید',
                 style: TextStyle(
                   fontFamily: 'Estedad',
-                  color: AppColor.secondary,
+                  color: AppColor.onSurface,
                   fontWeight: FontWeight.w700,
                   fontSize: 20,
                 ),
@@ -112,13 +116,13 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     style: TextStyle(
                         fontFamily: 'Estedad',
                         fontSize: 14,
-                        color: AppColor.secondary.withOpacity(0.7)),
+                        color: AppColor.onSurfaceVariant),
                     children: [
                       TextSpan(text: 'کد یکبار مصرف به '),
                       TextSpan(
                         text: _maskedDestination,
                         style: TextStyle(
-                          color: AppColor.primary,
+                          color: AppColor.goldEnd,
                           fontWeight: FontWeight.w700,
                           fontFamily: "Estedad",
                         ),
@@ -141,18 +145,18 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 animationType: AnimationType.fade,
                 pinTheme: PinTheme(
                   shape: PinCodeFieldShape.box,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.zero,
                   fieldHeight: 70,
                   fieldWidth: 60,
                   borderWidth: 1.5,
-                  activeColor: AppColor.primary,
-                  inactiveColor: AppColor.border,
-                  selectedColor: AppColor.primary.withOpacity(0.5),
-                  inactiveFillColor: AppColor.primarySoft,
-                  activeFillColor: Colors.white,
-                  selectedFillColor: AppColor.primarySoft,
+                  activeColor: AppColor.goldEnd,
+                  inactiveColor: AppColor.outlineVariantDark,
+                  selectedColor: AppColor.goldEnd,
+                  inactiveFillColor: AppColor.surfaceContainer,
+                  activeFillColor: AppColor.surfaceContainer,
+                  selectedFillColor: AppColor.surfaceContainer,
                 ),
-                cursorColor: Colors.black,
+                cursorColor: AppColor.goldEnd,
                 animationDuration: Duration(milliseconds: 300),
                 enableActiveFill: true,
                 onChanged: (value) {
@@ -188,7 +192,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     state.message,
                     style: TextStyle(
                       fontFamily: 'Estedad',
-                      color: Colors.red,
+                      color: AppColor.errorDark,
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,
@@ -203,7 +207,8 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
           BlocBuilder<VerifyOtpBloc, VerifyOtpState>(
             builder: (context, state) {
               if (state is VerifyOtpLoading) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(
+                    child: CircularProgressIndicator(color: AppColor.goldEnd));
               }
 
               return ElevatedButton(
@@ -244,16 +249,15 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                   'تایید',
                   style: TextStyle(
                     fontFamily: 'Estedad',
-                    color: Colors.white,
+                    color: AppColor.onGold,
                     fontWeight: FontWeight.w600,
                     fontSize: 18,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 36, vertical: 18),
-                  backgroundColor: AppColor.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                  backgroundColor: AppColor.goldEnd,
+                  shape: const RoundedRectangleBorder(),
                   elevation: 0,
                   shadowColor: Colors.transparent,
                 ),

@@ -37,23 +37,26 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+      backgroundColor: AppColor.obsidianBg,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         elevation: 0,
         title: Text('ثبت نام',
             style: TextStyle(
                 fontFamily: 'Estedad',
-                color: Colors.black,
+                color: AppColor.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w600)),
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+          icon: Icon(Icons.arrow_forward, color: AppColor.onSurface),
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -65,12 +68,7 @@ class _RegisterPageState extends State<RegisterPage> {
             onPressed: () {
               Navigator.of(context).pushNamed('/login');
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColor.secondary.withOpacity(0.1),
-            ),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Row(
+            child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -78,7 +76,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     'حساب کاربری دارید؟',
                     style: TextStyle(
                       fontFamily: 'Estedad',
-                      color: AppColor.secondary.withOpacity(0.7),
+                      color: AppColor.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -87,13 +85,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     ' ورود',
                     style: TextStyle(
                       fontFamily: 'Estedad',
-                      color: AppColor.primary,
+                      color: AppColor.goldEnd,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
-              ),
             ),
           ),
         ),
@@ -101,6 +98,7 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocProvider(
         create: (context) => RegisterBloc(),
         child: _buildBody(context),
+      ),
       ),
     );
   }
@@ -117,10 +115,10 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Container(
               margin: EdgeInsets.only(top: 20, bottom: 12),
               child: Text(
-                'به پرشین شاپ خوش آمدید  👋',
+                'به فوتبال لوکس خوش آمدید  👋',
                 style: TextStyle(
                   fontFamily: 'Estedad',
-                  color: AppColor.secondary,
+                  color: AppColor.onSurface,
                   fontWeight: FontWeight.w700,
                   fontSize: 20,
                 ),
@@ -135,7 +133,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 'لطفاً برای ثبت نام اطلاعات زیر را وارد نمایید.',
                 style: TextStyle(
                   fontFamily: 'Estedad',
-                  color: AppColor.secondary.withOpacity(0.7),
+                  color: AppColor.onSurfaceVariant,
                   fontSize: 12,
                   height: 1.5,
                 ),
@@ -153,13 +151,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     curve: Curves.easeOutCubic,
                     decoration: BoxDecoration(
                       color: _selectedTab == 0
-                          ? AppColor.primary
-                          : AppColor.primarySoft,
-                      borderRadius: BorderRadius.circular(12),
+                          ? AppColor.goldEnd.withOpacity(0.1)
+                          : Colors.transparent,
                       border: Border.all(
                         color: _selectedTab == 0
-                            ? Colors.transparent
-                            : AppColor.border,
+                            ? AppColor.goldEnd
+                            : AppColor.outlineVariantDark,
                       ),
                     ),
                     padding: EdgeInsets.symmetric(vertical: 12),
@@ -173,8 +170,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: _selectedTab == 0
-                              ? Colors.white
-                              : AppColor.secondary,
+                              ? AppColor.goldEnd
+                              : AppColor.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -190,13 +187,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     curve: Curves.easeOutCubic,
                     decoration: BoxDecoration(
                       color: _selectedTab == 1
-                          ? AppColor.primary
-                          : AppColor.primarySoft,
-                      borderRadius: BorderRadius.circular(12),
+                          ? AppColor.goldEnd.withOpacity(0.1)
+                          : Colors.transparent,
                       border: Border.all(
                         color: _selectedTab == 1
-                            ? Colors.transparent
-                            : AppColor.border,
+                            ? AppColor.goldEnd
+                            : AppColor.outlineVariantDark,
                       ),
                     ),
                     padding: EdgeInsets.symmetric(vertical: 12),
@@ -210,8 +206,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: _selectedTab == 1
-                              ? Colors.white
-                              : AppColor.secondary,
+                              ? AppColor.goldEnd
+                              : AppColor.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -232,7 +228,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: TextFormField(
                     controller: _usernameController,
                     textDirection: TextDirection.ltr,
-                    style: TextStyle(fontFamily: 'Estedad'),
+                    style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                     decoration: InputDecoration(
                       hintText: 'نام کاربری',
                       prefixIcon: Container(
@@ -241,21 +237,21 @@ class _RegisterPageState extends State<RegisterPage> {
                             style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w600,
-                                color: AppColor.primary)),
+                                color: AppColor.goldEnd)),
                       ),
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                       enabledBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.border, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.outlineVariantDark, width: 1),
+                        borderRadius: BorderRadius.zero,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.primary, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.goldEnd, width: 2),
+                        borderRadius: BorderRadius.zero,
                       ),
-                      fillColor: AppColor.primarySoft,
+                      fillColor: AppColor.surfaceContainer,
                       filled: true,
                     ),
                     validator: (value) {
@@ -292,28 +288,28 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             textDirection: TextDirection.ltr,
-                            style: TextStyle(fontFamily: 'Estedad'),
+                            style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                             decoration: InputDecoration(
                               hintText: 'ایمیل',
                               prefixIcon: Container(
                                 padding: EdgeInsets.all(12),
                                 child: SvgPicture.asset(
                                     'assets/icons/Message.svg',
-                                    color: AppColor.primary),
+                                    color: AppColor.goldEnd),
                               ),
                               contentPadding: EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 14),
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: AppColor.border, width: 1),
-                                borderRadius: BorderRadius.circular(8),
+                                    color: AppColor.outlineVariantDark, width: 1),
+                                borderRadius: BorderRadius.zero,
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: AppColor.primary, width: 1),
-                                borderRadius: BorderRadius.circular(8),
+                                    color: AppColor.goldEnd, width: 2),
+                                borderRadius: BorderRadius.zero,
                               ),
-                              fillColor: AppColor.primarySoft,
+                              fillColor: AppColor.surfaceContainer,
                               filled: true,
                             ),
                             validator: (value) {
@@ -332,28 +328,28 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _mobileController,
                             keyboardType: TextInputType.phone,
                             textDirection: TextDirection.ltr,
-                            style: TextStyle(fontFamily: 'Estedad'),
+                            style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                             decoration: InputDecoration(
                               hintText: 'شماره موبایل',
                               prefixIcon: Container(
                                 padding: EdgeInsets.all(12),
                                 child: SvgPicture.asset(
                                     'assets/icons/Phone.svg',
-                                    color: AppColor.primary),
+                                    color: AppColor.goldEnd),
                               ),
                               contentPadding: EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 14),
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: AppColor.border, width: 1),
-                                borderRadius: BorderRadius.circular(8),
+                                    color: AppColor.outlineVariantDark, width: 1),
+                                borderRadius: BorderRadius.zero,
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: AppColor.primary, width: 1),
-                                borderRadius: BorderRadius.circular(8),
+                                    color: AppColor.goldEnd, width: 2),
+                                borderRadius: BorderRadius.zero,
                               ),
-                              fillColor: AppColor.primarySoft,
+                              fillColor: AppColor.surfaceContainer,
                               filled: true,
                             ),
                             validator: (value) {
@@ -374,13 +370,13 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: TextFormField(
                     controller: _passwordController,
                     obscureText: !_passwordVisible,
-                    style: TextStyle(fontFamily: 'Estedad'),
+                    style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                     decoration: InputDecoration(
                       hintText: 'رمز عبور',
                       prefixIcon: Container(
                         padding: EdgeInsets.all(12),
                         child: SvgPicture.asset('assets/icons/Lock.svg',
-                            color: AppColor.primary),
+                            color: AppColor.goldEnd),
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -388,7 +384,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           !_passwordVisible
                               ? Icons.visibility
                               : Icons.visibility_off,
-                          color: Theme.of(context).primaryColor,
+                          color: AppColor.onSurfaceVariant,
                         ),
                         onPressed: () {
                           // Update the state i.e. toogle the state of passwordVisible variable
@@ -401,15 +397,15 @@ class _RegisterPageState extends State<RegisterPage> {
                           EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                       enabledBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.border, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.outlineVariantDark, width: 1),
+                        borderRadius: BorderRadius.zero,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.primary, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.goldEnd, width: 2),
+                        borderRadius: BorderRadius.zero,
                       ),
-                      fillColor: AppColor.primarySoft,
+                      fillColor: AppColor.surfaceContainer,
                       filled: true,
                     ),
                     validator: (value) {
@@ -429,13 +425,13 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: !_passwordConfirmVisible,
-                    style: TextStyle(fontFamily: 'Estedad'),
+                    style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                     decoration: InputDecoration(
                       hintText: 'تکرار رمز عبور',
                       prefixIcon: Container(
                         padding: EdgeInsets.all(12),
                         child: SvgPicture.asset('assets/icons/Lock.svg',
-                            color: AppColor.primary),
+                            color: AppColor.goldEnd),
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -443,7 +439,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           !_passwordConfirmVisible
                               ? Icons.visibility
                               : Icons.visibility_off,
-                          color: Theme.of(context).primaryColor,
+                          color: AppColor.onSurfaceVariant,
                         ),
                         onPressed: () {
                           // Update the state i.e. toogle the state of passwordVisible variable
@@ -456,15 +452,15 @@ class _RegisterPageState extends State<RegisterPage> {
                           EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                       enabledBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.border, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.outlineVariantDark, width: 1),
+                        borderRadius: BorderRadius.zero,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.primary, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.goldEnd, width: 2),
+                        borderRadius: BorderRadius.zero,
                       ),
-                      fillColor: AppColor.primarySoft,
+                      fillColor: AppColor.surfaceContainer,
                       filled: true,
                     ),
                     validator: (value) {
@@ -482,27 +478,27 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: TextFormField(
                     controller: _inviteKeyController,
                     textDirection: TextDirection.ltr,
-                    style: TextStyle(fontFamily: 'Estedad'),
+                    style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                     decoration: InputDecoration(
                       hintText: 'کد دعوت (اختیاری)',
                       prefixIcon: Container(
                         padding: EdgeInsets.all(12),
                         child: SvgPicture.asset('assets/icons/Star.svg',
-                            color: AppColor.primary),
+                            color: AppColor.goldEnd),
                       ),
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                       enabledBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.border, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.outlineVariantDark, width: 1),
+                        borderRadius: BorderRadius.zero,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.primary, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.goldEnd, width: 2),
+                        borderRadius: BorderRadius.zero,
                       ),
-                      fillColor: AppColor.primarySoft,
+                      fillColor: AppColor.surfaceContainer,
                       filled: true,
                     ),
                   ),
@@ -540,7 +536,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           state.message,
                           style: TextStyle(
                             fontFamily: 'Estedad',
-                            color: Colors.red,
+                            color: AppColor.errorDark,
                             fontSize: 12,
                           ),
                           textAlign: TextAlign.center,
@@ -555,7 +551,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 BlocBuilder<RegisterBloc, RegisterState>(
                   builder: (context, state) {
                     if (state is RegisterLoading) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(
+                          child: CircularProgressIndicator(color: AppColor.goldEnd));
                     }
                     return ElevatedButton(
                       onPressed: () {
@@ -597,7 +594,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         'ثبت نام',
                         style: TextStyle(
                           fontFamily: 'Estedad',
-                          color: Colors.white,
+                          color: AppColor.onGold,
                           fontWeight: FontWeight.w600,
                           fontSize: 18,
                         ),
@@ -605,9 +602,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       style: ElevatedButton.styleFrom(
                         padding:
                             EdgeInsets.symmetric(horizontal: 36, vertical: 18),
-                        backgroundColor: AppColor.primary,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                        backgroundColor: AppColor.goldEnd,
+                        shape: const RoundedRectangleBorder(),
                         elevation: 0,
                         shadowColor: Colors.transparent,
                       ),

@@ -62,13 +62,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: const Text('بازیابی رمز عبور',
-              style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
         body: PageContainer(
           child: SafeArea(
@@ -83,19 +83,31 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       fontFamily: 'Estedad',
                       fontSize: 13,
                       height: 1.8,
-                      color: Colors.grey.shade700),
+                      color: AppColor.onSurfaceVariant),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _destCtrl,
                   enabled: !_codeSent,
-                  style: const TextStyle(fontFamily: 'Estedad'),
+                  style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                   decoration: InputDecoration(
                     labelText: 'ایمیل یا شماره موبایل',
-                    labelStyle:
-                        const TextStyle(fontFamily: 'Estedad', fontSize: 13),
+                    labelStyle: const TextStyle(
+                        fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurfaceVariant),
+                    filled: true,
+                    fillColor: AppColor.surfaceContainer,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.zero,
+                      borderSide: BorderSide(color: AppColor.outlineVariantDark),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.zero,
+                      borderSide: BorderSide(color: AppColor.outlineVariantDark),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderRadius: BorderRadius.zero,
+                      borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
+                    ),
                   ),
                 ),
                 if (_codeSent) ...[
@@ -103,26 +115,50 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   TextField(
                     controller: _codeCtrl,
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(fontFamily: 'Estedad'),
+                    style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                     decoration: InputDecoration(
                       labelText: 'کد بازیابی',
-                      labelStyle:
-                          const TextStyle(fontFamily: 'Estedad', fontSize: 13),
+                      labelStyle: const TextStyle(
+                          fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurfaceVariant),
+                      filled: true,
+                      fillColor: AppColor.surfaceContainer,
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: AppColor.outlineVariantDark),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: AppColor.outlineVariantDark),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _passCtrl,
                     obscureText: true,
-                    style: const TextStyle(fontFamily: 'Estedad'),
+                    style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                     decoration: InputDecoration(
                       labelText: 'رمز جدید',
-                      labelStyle:
-                          const TextStyle(fontFamily: 'Estedad', fontSize: 13),
+                      labelStyle: const TextStyle(
+                          fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurfaceVariant),
+                      filled: true,
+                      fillColor: AppColor.surfaceContainer,
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: AppColor.outlineVariantDark),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: AppColor.outlineVariantDark),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
+                      ),
                     ),
                   ),
                 ],
@@ -133,14 +169,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     onPressed:
                         _busy ? null : (_codeSent ? _confirm : _sendCode),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.primary,
+                      backgroundColor: AppColor.goldEnd,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                      shape: const RoundedRectangleBorder(),
                     ),
                     child: Text(_codeSent ? 'ثبت رمز جدید' : 'ارسال کد بازیابی',
                         style: const TextStyle(
-                            fontFamily: 'Estedad', color: Colors.white)),
+                            fontFamily: 'Estedad', color: AppColor.onGold)),
                   ),
                 ),
               ],

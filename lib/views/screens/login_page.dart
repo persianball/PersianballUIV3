@@ -28,16 +28,19 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+      backgroundColor: AppColor.obsidianBg,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         elevation: 0,
         title: Text('ورود',
             style: TextStyle(
                 fontFamily: 'Estedad',
-                color: Colors.black,
+                color: AppColor.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w600)),
         leading: IconButton(
@@ -49,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
                 MaterialPageRoute(builder: (context) => PageSwitcher()),
                 ModalRoute.withName("/"));
           },
-          icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+          icon: Icon(Icons.arrow_forward, color: AppColor.onSurface),
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -62,12 +65,7 @@ class _LoginPageState extends State<LoginPage> {
               Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => RegisterPage()));
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColor.secondary.withOpacity(0.1),
-            ),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Row(
+            child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -75,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
                     'حساب کاربری ندارم!',
                     style: TextStyle(
                       fontFamily: 'Estedad',
-                      color: AppColor.secondary.withOpacity(0.7),
+                      color: AppColor.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -84,13 +82,12 @@ class _LoginPageState extends State<LoginPage> {
                     'ثبت نام',
                     style: TextStyle(
                       fontFamily: 'Estedad',
-                      color: AppColor.primary,
+                      color: AppColor.goldEnd,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
-              ),
             ),
           ),
         ),
@@ -98,6 +95,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Builder(builder: (context) {
         return _buildBody(context);
       }),
+      ),
     );
   }
 
@@ -114,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
               'خوش آمدید',
               textAlign: TextAlign.right,
               style: TextStyle(
-                color: AppColor.secondary,
+                color: AppColor.onSurface,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Estedad',
                 fontSize: 20,
@@ -123,17 +121,14 @@ class _LoginPageState extends State<LoginPage> {
           ),
           Container(
             margin: EdgeInsets.only(bottom: 32),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text(
-                ' به کمک نام کاربری خود وارد شوید.',
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontFamily: 'Estedad',
-                  color: AppColor.secondary.withOpacity(0.7),
-                  fontSize: 12,
-                  height: 1.5,
-                ),
+            child: Text(
+              ' به کمک نام کاربری خود وارد شوید.',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontFamily: 'Estedad',
+                color: AppColor.onSurfaceVariant,
+                fontSize: 12,
+                height: 1.5,
               ),
             ),
           ),
@@ -150,28 +145,28 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textDirection: TextDirection.ltr,
-                    style: TextStyle(fontFamily: 'Estedad'),
+                    style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                     decoration: InputDecoration(
                       hintText: 'نام کاربری',
-                      hintStyle: TextStyle(fontFamily: 'Estedad'),
+                      hintStyle: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant),
                       prefixIcon: Container(
                         padding: EdgeInsets.all(12),
                         child: SvgPicture.asset('assets/icons/Message.svg',
-                            color: AppColor.primary),
+                            color: AppColor.goldEnd),
                       ),
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                       enabledBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.border, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.outlineVariantDark, width: 1),
+                        borderRadius: BorderRadius.zero,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.primary, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.goldEnd, width: 2),
+                        borderRadius: BorderRadius.zero,
                       ),
-                      fillColor: AppColor.primarySoft,
+                      fillColor: AppColor.surfaceContainer,
                       filled: true,
                     ),
                     validator: (value) {
@@ -191,13 +186,14 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _passwordController,
                     obscureText: !_passwordVisible,
                     textDirection: TextDirection.ltr,
-                    style: TextStyle(fontFamily: 'Estedad'),
+                    style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                     decoration: InputDecoration(
                       hintText: 'رمز عبور',
+                      hintStyle: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant),
                       prefixIcon: Container(
                         padding: EdgeInsets.all(12),
                         child: SvgPicture.asset('assets/icons/Lock.svg',
-                            color: AppColor.primary),
+                            color: AppColor.goldEnd),
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -205,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
                           !_passwordVisible
                               ? Icons.visibility
                               : Icons.visibility_off,
-                          color: Theme.of(context).primaryColor,
+                          color: AppColor.onSurfaceVariant,
                         ),
                         onPressed: () {
                           // Update the state i.e. toogle the state of passwordVisible variable
@@ -218,15 +214,15 @@ class _LoginPageState extends State<LoginPage> {
                           EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                       enabledBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.border, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.outlineVariantDark, width: 1),
+                        borderRadius: BorderRadius.zero,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
-                            BorderSide(color: AppColor.primary, width: 1),
-                        borderRadius: BorderRadius.circular(8),
+                            BorderSide(color: AppColor.goldEnd, width: 2),
+                        borderRadius: BorderRadius.zero,
                       ),
-                      fillColor: AppColor.primarySoft,
+                      fillColor: AppColor.surfaceContainer,
                       filled: true,
                     ),
                     validator: (value) {
@@ -250,7 +246,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontFamily: 'Estedad',
                         fontSize: 12,
-                        color: AppColor.secondary.withOpacity(0.5),
+                        color: AppColor.goldEnd,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -276,7 +272,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Text(
                           state.message ?? "",
                           style: TextStyle(
-                            color: Colors.red,
+                            color: AppColor.errorDark,
                             fontFamily: 'Estedad',
                             fontSize: 12,
                           ),
@@ -292,7 +288,8 @@ class _LoginPageState extends State<LoginPage> {
                 BlocBuilder<LoginBloc, LoginState>(
                   builder: (context, state) {
                     if (state is LoginLoading) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(
+                          child: CircularProgressIndicator(color: AppColor.goldEnd));
                     }
                     return ElevatedButton(
                       onPressed: () {
@@ -309,7 +306,7 @@ class _LoginPageState extends State<LoginPage> {
                         'ورود',
                         style: TextStyle(
                           fontFamily: 'Estedad',
-                          color: Colors.white,
+                          color: AppColor.onGold,
                           fontWeight: FontWeight.w600,
                           fontSize: 18,
                         ),
@@ -317,9 +314,8 @@ class _LoginPageState extends State<LoginPage> {
                       style: ElevatedButton.styleFrom(
                         padding:
                             EdgeInsets.symmetric(horizontal: 36, vertical: 18),
-                        backgroundColor: AppColor.primary,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                        backgroundColor: AppColor.goldEnd,
+                        shape: const RoundedRectangleBorder(),
                         elevation: 0,
                         shadowColor: Colors.transparent,
                       ),

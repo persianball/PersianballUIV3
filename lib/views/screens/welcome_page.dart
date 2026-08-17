@@ -22,6 +22,7 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.obsidianBg,
       body: SafeArea(
         child: BlocConsumer<LoginBloc, LoginState>(listener: (context, state) {
           if (state is LoginAuthenticated) {
@@ -59,9 +60,9 @@ class _WelcomePageState extends State<WelcomePage> {
                                 Container(
                                   margin: EdgeInsets.only(bottom: 12),
                                   child: Text(
-                                    'پرشین شاپ',
+                                    'فوتبال لوکس',
                                     style: TextStyle(
-                                      color: AppColor.secondary,
+                                      color: AppColor.goldEnd,
                                       fontWeight: FontWeight.w700,
                                       fontSize: 32,
                                       fontFamily: 'Estedad',
@@ -72,8 +73,7 @@ class _WelcomePageState extends State<WelcomePage> {
                                   'رو به سوی پیشرفت',
                                   style: TextStyle(
                                       fontFamily: 'Estedad',
-                                      color:
-                                          AppColor.secondary.withOpacity(0.7),
+                                      color: AppColor.onSurfaceVariant,
                                       fontSize: 16),
                                   textAlign: TextAlign.center,
                                 ),
@@ -99,16 +99,15 @@ class _WelcomePageState extends State<WelcomePage> {
                                   'شروع',
                                   style: TextStyle(
                                       fontFamily: 'Estedad',
-                                      color: Colors.white,
+                                      color: AppColor.onGold,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 18),
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 36, vertical: 18),
-                                  backgroundColor: AppColor.primary,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16)),
+                                  backgroundColor: AppColor.goldEnd,
+                                  shape: const RoundedRectangleBorder(),
                                   elevation: 0,
                                   shadowColor: Colors.transparent,
                                 ),
