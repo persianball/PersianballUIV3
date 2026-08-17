@@ -7,7 +7,6 @@ import 'package:marketky/bloc/address/address_event.dart';
 import 'package:marketky/bloc/address/address_state.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/address_model.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 
 class AddressesPage extends StatefulWidget {
   const AddressesPage({super.key});
@@ -25,24 +24,24 @@ class _AddressesPageState extends State<AddressesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // چیدمان اپ‌بار راست‌به‌چپ: عنوان و دکمه بازگشت سمت راست
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: AppBar(
-            title: const Text('آدرس‌ها', style: TextStyle(color: Colors.black)),
-          ),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppColor.obsidianBg,
+        appBar: AppBar(
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
+          elevation: 0,
+          title: const Text('آدرس‌ها',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openCreateDialog,
-        backgroundColor: AppColor.primary,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: PageContainer(
-        child: BlocConsumer<AddressBloc, AddressState>(
+        floatingActionButton: FloatingActionButton(
+          onPressed: _openCreateDialog,
+          backgroundColor: AppColor.goldEnd,
+          shape: const RoundedRectangleBorder(),
+          child: const Icon(Icons.add, color: AppColor.onGold),
+        ),
+        body: BlocConsumer<AddressBloc, AddressState>(
           listener: (context, state) {
             if (state is AddressError) {
               ScaffoldMessenger.of(context)
@@ -51,21 +50,18 @@ class _AddressesPageState extends State<AddressesPage> {
           },
           builder: (context, state) {
             if (state is AddressLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator(color: AppColor.goldEnd));
             }
             if (state is AddressLoaded) {
               final list = state.list;
               if (list.isEmpty) {
                 return _EmptyAddresses(onCreate: _openCreateDialog);
               }
-              return Directionality(
-                textDirection: TextDirection.rtl,
-                child: ListView.separated(
-                  padding: const EdgeInsets.only(top: 12, bottom: 96),
-                  itemCount: list.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (_, i) => _addressCard(list[i]),
-                ),
+              return ListView.separated(
+                padding: const EdgeInsets.only(top: 12, bottom: 96),
+                itemCount: list.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (_, i) => _addressCard(list[i]),
               );
             }
             return const SizedBox();
@@ -76,9 +72,12 @@ class _AddressesPageState extends State<AddressesPage> {
   }
 
   Widget _addressCard(AddressModel a) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: AppColor.surfaceContainer,
+        border: Border.all(color: AppColor.outlineVariantDark),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -90,17 +89,20 @@ class _AddressesPageState extends State<AddressesPage> {
                   child: Text(
                     a.addressName ?? 'آدرس بدون نام',
                     style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w700),
+                        fontFamily: 'Estedad',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.onSurface),
                   ),
                 ),
                 if (a.defaultAddress == true)
                   const Padding(
                     padding: EdgeInsets.only(right: 6),
                     child:
-                        Icon(Icons.check_circle, color: Colors.green, size: 18),
+                        Icon(Icons.check_circle, color: AppColor.successDark, size: 18),
                   ),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined),
+                  icon: const Icon(Icons.edit_outlined, color: AppColor.onSurfaceVariant),
                   onPressed: () => _openEditDialog(a),
                 ),
                 IconButton(
@@ -111,7 +113,8 @@ class _AddressesPageState extends State<AddressesPage> {
               ],
             ),
             const SizedBox(height: 6),
-            Text(a.address, style: const TextStyle(color: Colors.black87)),
+            Text(a.address,
+                style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
             const SizedBox(height: 6),
             Wrap(spacing: 12, runSpacing: 6, children: [
               _chip('شهر', a.city),
@@ -128,10 +131,15 @@ class _AddressesPageState extends State<AddressesPage> {
 
   Widget _chip(String label, String? value) {
     if (value == null || value.isEmpty) return const SizedBox.shrink();
-    return Chip(
-      label: Text('$label: $value'),
-      backgroundColor: Colors.grey.shade100,
-      side: BorderSide(color: Colors.grey.shade300),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColor.obsidianBg,
+        border: Border.all(color: AppColor.outlineVariantDark),
+      ),
+      child: Text('$label: $value',
+          style: const TextStyle(
+              fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant)),
     );
   }
 
@@ -158,104 +166,112 @@ class _AddressesPageState extends State<AddressesPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      backgroundColor: AppColor.surfaceContainer,
+      shape: const RoundedRectangleBorder(),
       builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(model == null ? 'افزودن آدرس' : 'ویرایش آدرس',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                      IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(ctx).pop()),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _input(postal, 'کدپستی',
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? 'کدپستی الزامی است'
-                          : null),
-                  _input(addr, 'نشانی',
-                      maxLines: 3,
-                      validator: (v) =>
-                          (v == null || v.isEmpty) ? 'نشانی الزامی است' : null),
-                  Row(children: [
-                    Expanded(child: _input(city, 'شهر')),
-                    const SizedBox(width: 8),
-                    Expanded(child: _input(province, 'استان')),
-                  ]),
-                  _input(name, 'عنوان آدرس'),
-                  Row(children: [
-                    Expanded(
-                        child: _input(mobile, 'موبایل گیرنده',
-                            validator: (v) => (v == null || v.isEmpty)
-                                ? 'موبایل الزامی است'
-                                : null)),
-                    const SizedBox(width: 8),
-                    Expanded(child: _input(home, 'تلفن ثابت')),
-                  ]),
-                  _input(email, 'ایمیل'),
-                  Row(children: [
-                    Checkbox(
-                        value: isDefault,
-                        onChanged: (b) =>
-                            setState(() => isDefault = b ?? false)),
-                    const Text('آدرس پیش‌فرض'),
-                  ]),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (!formKey.currentState!.validate()) return;
-                      final payload = AddressModel(
-                        postalCode: postal.text.trim(),
-                        address: addr.text.trim(),
-                        receiverHomePhone:
-                            home.text.trim().isEmpty ? null : home.text.trim(),
-                        receiverMobilePhone: mobile.text.trim(),
-                        email: email.text.trim().isEmpty
-                            ? null
-                            : email.text.trim(),
-                        addressName:
-                            name.text.trim().isEmpty ? null : name.text.trim(),
-                        city:
-                            city.text.trim().isEmpty ? null : city.text.trim(),
-                        province: province.text.trim().isEmpty
-                            ? null
-                            : province.text.trim(),
-                        defaultAddress: isDefault,
-                      );
-                      if (model == null) {
-                        context
-                            .read<AddressBloc>()
-                            .add(CreateAddress(context, payload));
-                      } else {
-                        context
-                            .read<AddressBloc>()
-                            .add(UpdateAddress(context, model.id!, payload));
-                      }
-                      Navigator.of(ctx).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColor.primary),
-                    child: Text(model == null ? 'افزودن' : 'ویرایش',
-                        style: const TextStyle(color: Colors.white)),
-                  ),
-                ],
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(model == null ? 'افزودن آدرس' : 'ویرایش آدرس',
+                            style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColor.onSurface)),
+                        IconButton(
+                            icon: const Icon(Icons.close, color: AppColor.onSurfaceVariant),
+                            onPressed: () => Navigator.of(ctx).pop()),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _input(postal, 'کدپستی',
+                        validator: (v) => (v == null || v.isEmpty)
+                            ? 'کدپستی الزامی است'
+                            : null),
+                    _input(addr, 'نشانی',
+                        maxLines: 3,
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? 'نشانی الزامی است' : null),
+                    Row(children: [
+                      Expanded(child: _input(city, 'شهر')),
+                      const SizedBox(width: 8),
+                      Expanded(child: _input(province, 'استان')),
+                    ]),
+                    _input(name, 'عنوان آدرس'),
+                    Row(children: [
+                      Expanded(
+                          child: _input(mobile, 'موبایل گیرنده',
+                              validator: (v) => (v == null || v.isEmpty)
+                                  ? 'موبایل الزامی است'
+                                  : null)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _input(home, 'تلفن ثابت')),
+                    ]),
+                    _input(email, 'ایمیل'),
+                    Row(children: [
+                      Checkbox(
+                          value: isDefault,
+                          activeColor: AppColor.goldEnd,
+                          onChanged: (b) =>
+                              setState(() => isDefault = b ?? false)),
+                      const Text('آدرس پیش‌فرض',
+                          style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
+                    ]),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (!formKey.currentState!.validate()) return;
+                        final payload = AddressModel(
+                          postalCode: postal.text.trim(),
+                          address: addr.text.trim(),
+                          receiverHomePhone:
+                              home.text.trim().isEmpty ? null : home.text.trim(),
+                          receiverMobilePhone: mobile.text.trim(),
+                          email: email.text.trim().isEmpty
+                              ? null
+                              : email.text.trim(),
+                          addressName:
+                              name.text.trim().isEmpty ? null : name.text.trim(),
+                          city:
+                              city.text.trim().isEmpty ? null : city.text.trim(),
+                          province: province.text.trim().isEmpty
+                              ? null
+                              : province.text.trim(),
+                          defaultAddress: isDefault,
+                        );
+                        if (model == null) {
+                          context
+                              .read<AddressBloc>()
+                              .add(CreateAddress(context, payload));
+                        } else {
+                          context
+                              .read<AddressBloc>()
+                              .add(UpdateAddress(context, model.id!, payload));
+                        }
+                        Navigator.of(ctx).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColor.goldEnd, shape: const RoundedRectangleBorder()),
+                      child: Text(model == null ? 'افزودن' : 'ویرایش',
+                          style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -272,9 +288,24 @@ class _AddressesPageState extends State<AddressesPage> {
         controller: c,
         validator: validator,
         maxLines: maxLines,
+        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          labelStyle: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant),
+          filled: true,
+          fillColor: AppColor.obsidianBg,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColor.outlineVariantDark),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColor.outlineVariantDark),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
+          ),
           isDense: true,
         ),
       ),
@@ -284,21 +315,29 @@ class _AddressesPageState extends State<AddressesPage> {
   void _confirmDelete(int id) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('حذف آدرس'),
-        content: const Text('آیا از حذف این آدرس مطمئن هستید؟'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('لغو')),
-          TextButton(
-            onPressed: () {
-              context.read<AddressBloc>().add(DeleteAddress(context, id));
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('حذف', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: AppColor.surfaceContainer,
+          shape: const RoundedRectangleBorder(),
+          title: const Text('حذف آدرس',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
+          content: const Text('آیا از حذف این آدرس مطمئن هستید؟',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('لغو',
+                    style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant))),
+            TextButton(
+              onPressed: () {
+                context.read<AddressBloc>().add(DeleteAddress(context, id));
+                Navigator.of(ctx).pop();
+              },
+              child: const Text('حذف', style: TextStyle(fontFamily: 'Estedad', color: Colors.red)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -310,26 +349,24 @@ class _EmptyAddresses extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.location_on_outlined,
-                size: 64, color: Colors.grey),
-            const SizedBox(height: 12),
-            const Text('هنوز آدرسی ثبت نکرده‌اید'),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: onCreate,
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
-              child: const Text('افزودن آدرس',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.location_on_outlined,
+              size: 64, color: AppColor.onSurfaceVariant),
+          const SizedBox(height: 12),
+          const Text('هنوز آدرسی ثبت نکرده‌اید',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: onCreate,
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColor.goldEnd, shape: const RoundedRectangleBorder()),
+            child: const Text('افزودن آدرس',
+                style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
+          ),
+        ],
       ),
     );
   }

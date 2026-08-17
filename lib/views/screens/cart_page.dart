@@ -28,6 +28,7 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.obsidianBg,
       appBar: _buildAppBar(),
       bottomNavigationBar: _buildCheckoutButton(),
       body: BlocBuilder<CartBloc, CartState>(
@@ -53,6 +54,8 @@ class _CartPageState extends State<CartPage> {
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: AppBar(
+          backgroundColor: AppColor.obsidianBg,
+          elevation: 0,
           title: BlocBuilder<CartBloc, CartState>(
             buildWhen: (previous, current) =>
                 current is CartLoaded ||
@@ -68,24 +71,18 @@ class _CartPageState extends State<CartPage> {
                 children: [
                   Text('سبد خرید',
                       style: TextStyle(
-                          fontFamily: 'Estedad', color: Colors.black)),
-                  Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: Text(' $count آیتم ',
-                          style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.black.withOpacity(0.7)))),
+                          fontFamily: 'Estedad', color: AppColor.onSurface)),
+                  Text(' $count آیتم ',
+                      style: TextStyle(
+                          fontSize: 10,
+                          color: AppColor.onSurfaceVariant)),
                 ],
               );
             },
           ),
           leading: IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            // آیکن فقط Arrow-left موجود است، برای RTL قرینه می‌شود
-            icon: Transform.flip(
-              flipX: true,
-              child: SvgPicture.asset('assets/icons/Arrow-left.svg'),
-            ),
+            icon: const Icon(Icons.arrow_forward, color: AppColor.onSurface),
           ),
         ),
       ),
@@ -116,7 +113,7 @@ class _CartPageState extends State<CartPage> {
                   fontFamily: 'Estedad',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColor.secondary,
+                  color: AppColor.onSurface,
                 ),
               ),
               SizedBox(height: 8),
@@ -126,22 +123,21 @@ class _CartPageState extends State<CartPage> {
                 style: TextStyle(
                   fontFamily: 'Estedad',
                   fontSize: 13,
-                  color: Colors.grey.shade600,
+                  color: AppColor.onSurfaceVariant,
                 ),
               ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pushNamed('/catalog'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.primary,
+                  backgroundColor: AppColor.goldEnd,
                   padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  shape: const RoundedRectangleBorder(),
                   elevation: 0,
                 ),
                 child: Text(
                   'مشاهده محصولات',
-                  style: TextStyle(fontFamily: 'Estedad', color: Colors.white),
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold),
                 ),
               ),
             ],
@@ -165,7 +161,7 @@ class _CartPageState extends State<CartPage> {
               Icon(
                 needsLogin ? Icons.lock_outline : Icons.error_outline,
                 size: 64,
-                color: AppColor.primary,
+                color: AppColor.goldEnd,
               ),
               SizedBox(height: 20),
               Text(
@@ -175,7 +171,7 @@ class _CartPageState extends State<CartPage> {
                   fontFamily: 'Estedad',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColor.secondary,
+                  color: AppColor.onSurface,
                 ),
               ),
               SizedBox(height: 8),
@@ -187,7 +183,7 @@ class _CartPageState extends State<CartPage> {
                 style: TextStyle(
                   fontFamily: 'Estedad',
                   fontSize: 13,
-                  color: Colors.grey.shade600,
+                  color: AppColor.onSurfaceVariant,
                 ),
               ),
               SizedBox(height: 20),
@@ -207,15 +203,14 @@ class _CartPageState extends State<CartPage> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.primary,
+                  backgroundColor: AppColor.goldEnd,
                   padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  shape: const RoundedRectangleBorder(),
                   elevation: 0,
                 ),
                 child: Text(
                   needsLogin ? 'ورود به حساب کاربری' : 'تلاش مجدد',
-                  style: TextStyle(fontFamily: 'Estedad', color: Colors.white),
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold),
                 ),
               ),
             ],
@@ -287,25 +282,24 @@ class _CartPageState extends State<CartPage> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColor.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.primary.withOpacity(0.2)),
+        color: AppColor.goldEnd.withOpacity(0.08),
+        border: Border.all(color: AppColor.goldEnd.withOpacity(0.3)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColor.primary, size: 24),
+          Icon(icon, color: AppColor.goldEnd, size: 24),
           SizedBox(width: 12),
           Text(
             title,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColor.primary,
+              color: AppColor.goldEnd,
               fontFamily: 'Estedad',
             ),
           ),
           Spacer(),
-          Icon(Icons.arrow_drop_down, color: AppColor.primary),
+          Icon(Icons.arrow_drop_down, color: AppColor.goldEnd),
         ],
       ),
     );
@@ -330,10 +324,10 @@ class _CartPageState extends State<CartPage> {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    backgroundColor: Colors.white,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(16)),
+                    backgroundColor: AppColor.obsidianBg,
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(color: AppColor.outlineVariantDark),
+                      borderRadius: BorderRadius.zero,
                     ),
                     builder: (ctx) {
                       return DraggableScrollableSheet(
@@ -388,13 +382,13 @@ class _CartPageState extends State<CartPage> {
                                       Text(label,
                                           style: const TextStyle(
                                               fontSize: 14,
-                                              color: Colors.black87)),
+                                              color: AppColor.onSurfaceVariant)),
                                       Text(value,
                                           style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
-                                              color:
-                                                  valueColor ?? Colors.black)),
+                                              color: valueColor ??
+                                                  AppColor.onSurface)),
                                     ],
                                   ),
                                 );
@@ -409,7 +403,7 @@ class _CartPageState extends State<CartPage> {
                                       width: 40,
                                       height: 4,
                                       decoration: BoxDecoration(
-                                          color: Colors.black12,
+                                          color: AppColor.outlineVariantDark,
                                           borderRadius:
                                               BorderRadius.circular(2)),
                                     ),
@@ -417,7 +411,8 @@ class _CartPageState extends State<CartPage> {
                                     const Text('جزئیات سفارش',
                                         style: TextStyle(
                                             fontSize: 16,
-                                            fontWeight: FontWeight.w700)),
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColor.onSurface)),
                                     const SizedBox(height: 8),
                                     Expanded(
                                       child: ListView(
@@ -428,13 +423,12 @@ class _CartPageState extends State<CartPage> {
                                           // Totals
                                           Card(
                                             elevation: 0,
-                                            color: Colors.grey.shade50,
+                                            color: AppColor.surfaceContainer,
                                             shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                                borderRadius: BorderRadius.zero,
                                                 side: BorderSide(
-                                                    color:
-                                                        Colors.grey.shade200)),
+                                                    color: AppColor
+                                                        .outlineVariantDark)),
                                             child: Padding(
                                               padding:
                                                   const EdgeInsets.all(16.0),
@@ -445,7 +439,7 @@ class _CartPageState extends State<CartPage> {
                                                   priceRow('تخفیف',
                                                       '${thousandSeparator(discounted)} تومان',
                                                       valueColor:
-                                                          Colors.redAccent),
+                                                          AppColor.errorDark),
                                                   priceRow('مالیات',
                                                       '${thousandSeparator(tax)} تومان'),
                                                   priceRow(
@@ -454,12 +448,16 @@ class _CartPageState extends State<CartPage> {
                                                           ? 'رایگان'
                                                           : '${thousandSeparator(shippingCost)} تومان',
                                                       valueColor: isFree
-                                                          ? Colors.green
+                                                          ? AppColor.successDark
                                                           : null),
-                                                  const Divider(height: 24),
+                                                  Divider(
+                                                      height: 24,
+                                                      color: AppColor
+                                                          .outlineVariantDark),
                                                   priceRow('مبلغ قابل پرداخت',
                                                       '${thousandSeparator(payable)} تومان',
-                                                      valueColor: Colors.black),
+                                                      valueColor:
+                                                          AppColor.goldEnd),
                                                 ],
                                               ),
                                             ),
@@ -471,7 +469,7 @@ class _CartPageState extends State<CartPage> {
                                           Text('روش ارسال',
                                               style: TextStyle(
                                                   fontSize: 14,
-                                                  color: Colors.grey.shade800)),
+                                                  color: AppColor.onSurfaceVariant)),
                                           const SizedBox(height: 8),
                                           if (isFree)
                                             Container(
@@ -480,20 +478,24 @@ class _CartPageState extends State<CartPage> {
                                                       horizontal: 12,
                                                       vertical: 10),
                                               decoration: BoxDecoration(
-                                                color: Colors.green.shade50,
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
+                                                color: AppColor.successDark
+                                                    .withOpacity(0.1),
                                                 border: Border.all(
-                                                    color:
-                                                        Colors.green.shade200),
+                                                    color: AppColor
+                                                        .successDark
+                                                        .withOpacity(0.4)),
                                               ),
                                               child: Row(
                                                 children: const [
                                                   Icon(Icons.local_shipping,
-                                                      color: Colors.green),
+                                                      color:
+                                                          AppColor.successDark),
                                                   SizedBox(width: 8),
                                                   Text(
-                                                      'ارسال رایگان برای سفارش شما فعال است'),
+                                                      'ارسال رایگان برای سفارش شما فعال است',
+                                                      style: TextStyle(
+                                                          color: AppColor
+                                                              .onSurface)),
                                                 ],
                                               ),
                                             )
@@ -501,28 +503,38 @@ class _CartPageState extends State<CartPage> {
                                             RadioListTile<String>(
                                               value: 'post',
                                               groupValue: selectedMethod,
+                                              activeColor: AppColor.goldEnd,
                                               onChanged: (v) => setModalState(
                                                   () => selectedMethod = v),
-                                              title:
-                                                  const Text('ارسال توسط پست'),
+                                              title: const Text('ارسال توسط پست',
+                                                  style: TextStyle(
+                                                      color:
+                                                          AppColor.onSurface)),
                                               secondary: Text(
                                                   '${thousandSeparator(postPrice)} تومان',
                                                   style: const TextStyle(
                                                       fontWeight:
-                                                          FontWeight.w600)),
+                                                          FontWeight.w600,
+                                                      color:
+                                                          AppColor.onSurface)),
                                             ),
                                             RadioListTile<String>(
                                               value: 'peyk',
                                               groupValue: selectedMethod,
+                                              activeColor: AppColor.goldEnd,
                                               onChanged: (v) => setModalState(
                                                   () => selectedMethod = v),
-                                              title:
-                                                  const Text('ارسال توسط پیک'),
+                                              title: const Text('ارسال توسط پیک',
+                                                  style: TextStyle(
+                                                      color:
+                                                          AppColor.onSurface)),
                                               secondary: Text(
                                                   '${thousandSeparator(peykPrice)} تومان',
                                                   style: const TextStyle(
                                                       fontWeight:
-                                                          FontWeight.w600)),
+                                                          FontWeight.w600,
+                                                      color:
+                                                          AppColor.onSurface)),
                                             ),
                                           ],
 
@@ -554,18 +566,16 @@ class _CartPageState extends State<CartPage> {
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor:
-                                                    AppColor.primary,
+                                                    AppColor.goldEnd,
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                         vertical: 16),
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12)),
+                                                shape:
+                                                    const RoundedRectangleBorder(),
                                               ),
                                               child: const Text('انتخاب آدرس',
                                                   style: TextStyle(
-                                                      color: Colors.white)),
+                                                      color: AppColor.onGold)),
                                             ),
                                           ),
                                         ],
@@ -583,13 +593,12 @@ class _CartPageState extends State<CartPage> {
                 },
                 child: const Text(
                   'تسویه و انتخاب آدرس',
-                  style: TextStyle(color: Colors.white70),
+                  style: TextStyle(color: AppColor.onGold, fontWeight: FontWeight.w600),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.primary,
+                  backgroundColor: AppColor.goldEnd,
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                  shape: const RoundedRectangleBorder(),
                 ),
               ),
             );

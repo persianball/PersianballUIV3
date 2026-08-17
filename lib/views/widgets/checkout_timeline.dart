@@ -16,11 +16,11 @@ class CheckoutTimeline extends StatelessWidget {
       final active = index <= currentStep;
       return CircleAvatar(
         radius: 14,
-        backgroundColor: active ? AppColor.primary : Colors.white,
+        backgroundColor: active ? AppColor.goldEnd : AppColor.surfaceContainer,
         child: Text(
           '${index + 1}',
           style: TextStyle(
-            color: active ? Colors.white : AppColor.primary,
+            color: active ? AppColor.onGold : AppColor.onSurfaceVariant,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -31,7 +31,7 @@ class CheckoutTimeline extends StatelessWidget {
           child: Container(
             height: 2,
             margin: const EdgeInsets.symmetric(horizontal: 8),
-            color: filled ? AppColor.primary : Colors.grey.shade300,
+            color: filled ? AppColor.goldEnd : AppColor.outlineVariantDark,
           ),
         );
 
@@ -40,9 +40,8 @@ class CheckoutTimeline extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          color: AppColor.surfaceContainer,
+          border: Border.all(color: AppColor.outlineVariantDark),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -60,9 +59,9 @@ class CheckoutTimeline extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(steps[0], style: TextStyle(fontSize: 12, color: currentStep >= 0 ? Colors.black : Colors.black54, fontWeight: FontWeight.w600)),
-                Text(steps[1], style: TextStyle(fontSize: 12, color: currentStep >= 1 ? Colors.black : Colors.black54, fontWeight: FontWeight.w600)),
-                Text(steps[2], style: TextStyle(fontSize: 12, color: currentStep >= 2 ? Colors.black : Colors.black54, fontWeight: FontWeight.w600)),
+                Text(steps[0], style: TextStyle(fontSize: 12, color: currentStep >= 0 ? AppColor.onSurface : AppColor.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                Text(steps[1], style: TextStyle(fontSize: 12, color: currentStep >= 1 ? AppColor.onSurface : AppColor.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                Text(steps[2], style: TextStyle(fontSize: 12, color: currentStep >= 2 ? AppColor.onSurface : AppColor.onSurfaceVariant, fontWeight: FontWeight.w600)),
               ],
             ),
           ],

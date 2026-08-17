@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 
@@ -41,15 +42,8 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
               Container(
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+                  color: AppColor.surfaceContainer,
+                  border: Border.all(color: AppColor.outlineVariantDark),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -73,7 +67,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      color: AppColor.onSurface,
                                       height: 1.3,
                                     ),
                                     textAlign: TextAlign.center,
@@ -86,7 +80,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                     colorName??"",
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.grey[600],
+                                      color: AppColor.onSurfaceVariant,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -143,7 +137,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                           'تومان',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: AppColor.onSurfaceVariant,
                           ),
                         ),
                         SizedBox(width: 8),
@@ -152,7 +146,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: AppColor.goldEnd,
                           ),
                         ),
                       ],
@@ -173,7 +167,6 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                             horizontal: 4.0),
                             decoration: BoxDecoration(
                               color: Colors.red,
-                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text("${
                             discountPercent
@@ -186,7 +179,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                           thousandSeparator(originalPrice),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: AppColor.onSurfaceVariant,
                             decoration: TextDecoration.lineThrough,
                           ),
                         ),
@@ -217,8 +210,8 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                             // Delete Button
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.red[50],
-                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.red.withOpacity(0.1),
+                                border: Border.all(color: Colors.red.withOpacity(0.4)),
                               ),
                               child: Builder(
 
@@ -251,13 +244,12 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                             // Quantity Controls
                             Container(
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AppColor.outlineVariantDark),
                               ),
                               child: Row(
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.add, color: Colors.green[600]),
+                                    icon: Icon(Icons.add, color: AppColor.successDark),
                                     onPressed: () {
                                       setState(() {
                                         quantity++;
@@ -287,13 +279,14 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w500,
+                                            color: AppColor.onSurface,
                                           ),
                                         ),
                                       );
                                     }
                                   ),
                                   IconButton(
-                                    icon: Icon(Icons.remove, color: Colors.grey[600]),
+                                    icon: Icon(Icons.remove, color: AppColor.onSurfaceVariant),
                                     onPressed: () {
                                       if (quantity > 1) {
                                         setState(() {
@@ -346,7 +339,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
         Icon(
           icon,
           size: 16,
-          color: isSpecial ? Colors.red[600] : Colors.green[600],
+          color: isSpecial ? Colors.red[600] : AppColor.successDark,
         ),
       ],
     );

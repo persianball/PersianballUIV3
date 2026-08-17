@@ -8,7 +8,6 @@ import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/address_model.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -224,270 +223,309 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     // مبلغی که کاربر باید بپردازد
     final payable = base - discountBase;
 
-    return Scaffold(
-      // چیدمان اپ‌بار راست‌به‌چپ: عنوان و دکمه بازگشت سمت راست
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: AppBar(
-            title: const Text('خلاصه سفارش',
-                style: TextStyle(color: Colors.black)),
-          ),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppColor.obsidianBg,
+        appBar: AppBar(
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
+          elevation: 0,
+          title: const Text('خلاصه سفارش',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
         ),
-      ),
-      body: PageContainer(
-        child: SafeArea(
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: CheckoutTimeline(currentStep: 2),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      // Items summary
-                      Card(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                        color: Colors.grey.shade50,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('محصولات',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w700)),
-                              const SizedBox(height: 8),
-                              ...items.map((it) => Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 6),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            it.product?.productVariant
-                                                    ?.productName ??
-                                                'محصول',
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: CheckoutTimeline(currentStep: 2),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    // Items summary
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColor.surfaceContainer,
+                        border: Border.all(color: AppColor.outlineVariantDark),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('محصولات',
+                                style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.onSurface)),
+                            const SizedBox(height: 8),
+                            ...items.map((it) => Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 6),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          it.product?.productVariant
+                                                  ?.productName ??
+                                              'محصول',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                              fontFamily: 'Estedad',
+                                              color: AppColor.onSurface),
                                         ),
-                                        const SizedBox(width: 8),
-                                        Text('x${it.quantity}'),
-                                      ],
-                                    ),
-                                  )),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Address and shipping summary
-                      Card(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                        color: Colors.white,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('آدرس و ارسال',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w700)),
-                              const SizedBox(height: 8),
-                              Text(
-                                  widget.address.addressName ?? 'آدرس انتخابی'),
-                              const SizedBox(height: 6),
-                              Text(widget.address.address),
-                              const SizedBox(height: 6),
-                              Wrap(spacing: 12, runSpacing: 6, children: [
-                                if (widget.address.city != null)
-                                  Chip(
-                                      label:
-                                          Text('شهر: ${widget.address.city}')),
-                                if (widget.address.province != null)
-                                  Chip(
-                                      label: Text(
-                                          'استان: ${widget.address.province}')),
-                                Chip(
-                                    label: Text(
-                                        'روش ارسال: ${_deliveryLabel(widget.deliveryMethod)}')),
-                              ]),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Discount code input
-                      Card(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const Text('کد تخفیف',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w700)),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _discountCtrl,
-                                      decoration: InputDecoration(
-                                        hintText: 'کد تخفیف خود را وارد کنید',
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
-                                        isDense: true,
                                       ),
-                                    ),
+                                      const SizedBox(width: 8),
+                                      Text('x${it.quantity}',
+                                          style: const TextStyle(
+                                              fontFamily: 'Estedad',
+                                              color: AppColor.onSurfaceVariant)),
+                                    ],
                                   ),
-                                  const SizedBox(width: 8),
-                                  ElevatedButton(
-                                    onPressed: _applyingDiscount
-                                        ? null
-                                        : _applyDiscountCode,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColor.primary,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 12),
-                                    ),
-                                    child: _applyingDiscount
-                                        ? const SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white,
-                                            ),
-                                          )
-                                        : const Text('اعمال',
-                                            style:
-                                                TextStyle(color: Colors.white)),
-                                  ),
-                                ],
-                              ),
-                              if (_discountPercent > 0) ...[
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.shade50,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                        color: Colors.green.shade200),
-                                  ),
-                                  child: Text(
-                                    'کد تخفیف اعمال شد: ${_discountPercent}% تخفیف',
-                                    style: TextStyle(
-                                      color: Colors.green.shade700,
-                                      fontWeight: FontWeight.w600,
+                                )),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Address and shipping summary
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColor.surfaceContainer,
+                        border: Border.all(color: AppColor.outlineVariantDark),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('آدرس و ارسال',
+                                style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.onSurface)),
+                            const SizedBox(height: 8),
+                            Text(widget.address.addressName ?? 'آدرس انتخابی',
+                                style: const TextStyle(
+                                    fontFamily: 'Estedad', color: AppColor.onSurface)),
+                            const SizedBox(height: 6),
+                            Text(widget.address.address,
+                                style: const TextStyle(
+                                    fontFamily: 'Estedad',
+                                    color: AppColor.onSurfaceVariant)),
+                            const SizedBox(height: 6),
+                            Wrap(spacing: 12, runSpacing: 6, children: [
+                              if (widget.address.city != null)
+                                _infoChip('شهر: ${widget.address.city}'),
+                              if (widget.address.province != null)
+                                _infoChip('استان: ${widget.address.province}'),
+                              _infoChip(
+                                  'روش ارسال: ${_deliveryLabel(widget.deliveryMethod)}'),
+                            ]),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Discount code input
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColor.surfaceContainer,
+                        border: Border.all(color: AppColor.outlineVariantDark),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text('کد تخفیف',
+                                style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.onSurface)),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _discountCtrl,
+                                    style: const TextStyle(
+                                        fontFamily: 'Estedad', color: AppColor.onSurface),
+                                    decoration: InputDecoration(
+                                      hintText: 'کد تخفیف خود را وارد کنید',
+                                      hintStyle: const TextStyle(
+                                          fontFamily: 'Estedad',
+                                          color: AppColor.onSurfaceVariant),
+                                      filled: true,
+                                      fillColor: AppColor.obsidianBg,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.zero,
+                                        borderSide:
+                                            BorderSide(color: AppColor.outlineVariantDark),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.zero,
+                                        borderSide:
+                                            BorderSide(color: AppColor.outlineVariantDark),
+                                      ),
+                                      focusedBorder: const OutlineInputBorder(
+                                        borderRadius: BorderRadius.zero,
+                                        borderSide:
+                                            BorderSide(color: AppColor.goldEnd, width: 2),
+                                      ),
+                                      isDense: true,
                                     ),
                                   ),
                                 ),
-                              ],
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Checkbox(
-                                    value: _useWallet,
-                                    activeColor: AppColor.primary,
-                                    onChanged: (v) =>
-                                        setState(() => _useWallet = v ?? false),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: _applyingDiscount
+                                      ? null
+                                      : _applyDiscountCode,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColor.goldEnd,
+                                    shape: const RoundedRectangleBorder(),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                   ),
-                                  const Text('استفاده از کیف پول'),
-                                ],
+                                  child: _applyingDiscount
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColor.onGold,
+                                          ),
+                                        )
+                                      : const Text('اعمال',
+                                          style: TextStyle(
+                                              fontFamily: 'Estedad',
+                                              color: AppColor.onGold)),
+                                ),
+                              ],
+                            ),
+                            if (_discountPercent > 0) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColor.successDark.withOpacity(0.08),
+                                  border: Border.all(
+                                      color: AppColor.successDark.withOpacity(0.4)),
+                                ),
+                                child: Text(
+                                  'کد تخفیف اعمال شد: ${_discountPercent}% تخفیف',
+                                  style: const TextStyle(
+                                    fontFamily: 'Estedad',
+                                    color: AppColor.successDark,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ],
-                          ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _useWallet,
+                                  activeColor: AppColor.goldEnd,
+                                  onChanged: (v) =>
+                                      setState(() => _useWallet = v ?? false),
+                                ),
+                                const Text('استفاده از کیف پول',
+                                    style: TextStyle(
+                                        fontFamily: 'Estedad', color: AppColor.onSurface)),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                      // Totals
-                      Card(
-                        elevation: 0,
-                        color: Colors.grey.shade50,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.grey.shade200)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              _priceRow('قیمت کل',
-                                  '${thousandSeparator(base)} تومان'),
-                              _priceRow('تخفیف',
-                                  '${thousandSeparator(displayedDiscount.toInt())}- تومان',
-                                  valueColor: Colors.redAccent),
-                              _priceRow(
-                                  'مالیات', '${thousandSeparator(tax)} تومان'),
-                              _priceRow(
-                                  'هزینه ارسال',
-                                  isFree
-                                      ? 'رایگان'
-                                      : '${thousandSeparator(shippingCost)} تومان',
-                                  valueColor: isFree ? Colors.green : null),
-                              const Divider(height: 24),
-                              _priceRow('مبلغ قابل پرداخت',
-                                  '${thousandSeparator(payable.toInt())} تومان',
-                                  valueColor: Colors.black),
-                            ],
-                          ),
+                    // Totals
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColor.surfaceContainer,
+                        border: Border.all(color: AppColor.outlineVariantDark),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            _priceRow('قیمت کل',
+                                '${thousandSeparator(base)} تومان'),
+                            _priceRow('تخفیف',
+                                '${thousandSeparator(displayedDiscount.toInt())}- تومان',
+                                valueColor: AppColor.errorDark),
+                            _priceRow(
+                                'مالیات', '${thousandSeparator(tax)} تومان'),
+                            _priceRow(
+                                'هزینه ارسال',
+                                isFree
+                                    ? 'رایگان'
+                                    : '${thousandSeparator(shippingCost)} تومان',
+                                valueColor: isFree ? AppColor.successDark : null),
+                            Divider(height: 24, color: AppColor.outlineVariantDark),
+                            _priceRow('مبلغ قابل پرداخت',
+                                '${thousandSeparator(payable.toInt())} تومان',
+                                valueColor: AppColor.goldEnd),
+                          ],
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _posting ? null : _submitOrder,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColor.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: _posting
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
-                              : const Text('رفتن به درگاه پرداخت',
-                                  style: TextStyle(color: Colors.white)),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _posting ? null : _submitOrder,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColor.goldEnd,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: const RoundedRectangleBorder(),
                         ),
+                        child: _posting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: AppColor.onGold))
+                            : const Text('رفتن به درگاه پرداخت',
+                                style: TextStyle(
+                                    fontFamily: 'Estedad', color: AppColor.onGold)),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _infoChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColor.obsidianBg,
+        border: Border.all(color: AppColor.outlineVariantDark),
+      ),
+      child: Text(label,
+          style: const TextStyle(
+              fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant)),
     );
   }
 
@@ -498,12 +536,14 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(fontSize: 14, color: Colors.black87)),
+              style: const TextStyle(
+                  fontFamily: 'Estedad', fontSize: 14, color: AppColor.onSurfaceVariant)),
           Text(value,
               style: TextStyle(
+                  fontFamily: 'Estedad',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: valueColor ?? Colors.black)),
+                  color: valueColor ?? AppColor.onSurface)),
         ],
       ),
     );

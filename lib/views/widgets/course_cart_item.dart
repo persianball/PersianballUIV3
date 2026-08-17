@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 
@@ -46,20 +47,8 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
             Container(
               padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade50, Colors.white],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: AppColor.surfaceContainer,
+                border: Border.all(color: AppColor.outlineVariantDark),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -81,7 +70,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.black87,
+                                    color: AppColor.onSurface,
                                     height: 1.3,
                                   ),
                                   textAlign: TextAlign.center,
@@ -92,7 +81,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                                   location ?? "",
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.grey[600],
+                                    color: AppColor.onSurfaceVariant,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -101,7 +90,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                                   'دوره آموزشی',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.blueAccent,
+                                    color: AppColor.goldEnd,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -129,9 +118,9 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                               ? Image.network(
                                   "${URLs.baseUrl}$image",
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Icon(Icons.school, size: 40, color: Colors.blueAccent),
+                                  errorBuilder: (_, __, ___) => Icon(Icons.school, size: 40, color: AppColor.goldEnd),
                                 )
-                              : Icon(Icons.school, size: 40, color: Colors.blueAccent),
+                              : Icon(Icons.school, size: 40, color: AppColor.goldEnd),
                         ),
                       ),
                     ],
@@ -153,9 +142,8 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                     Container(
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.green.shade200),
+                        color: AppColor.successDark.withOpacity(0.08),
+                        border: Border.all(color: AppColor.successDark.withOpacity(0.4)),
                       ),
                       child: Row(
                         children: [
@@ -179,9 +167,9 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                                   ? Image.network(
                                       "${URLs.baseUrl}${widget.cartItemFromBackend.course!.giftProduct!.image}",
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Icon(Icons.card_giftcard, size: 30, color: Colors.green),
+                                      errorBuilder: (_, __, ___) => Icon(Icons.card_giftcard, size: 30, color: AppColor.successDark),
                                     )
-                                  : Icon(Icons.card_giftcard, size: 30, color: Colors.green),
+                                  : Icon(Icons.card_giftcard, size: 30, color: AppColor.successDark),
                             ),
                           ),
                           SizedBox(width: 12),
@@ -195,7 +183,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.green[800],
+                                    color: AppColor.successDark,
                                   ),
                                 ),
                                 SizedBox(height: 4),
@@ -203,7 +191,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                                   widget.cartItemFromBackend.course!.giftProduct!.productName ?? 'محصول هدیه',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[700],
+                                    color: AppColor.onSurfaceVariant,
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -213,7 +201,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                                     'رنگ: ${widget.cartItemFromBackend.course!.giftProduct!.color}',
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: Colors.grey[600],
+                                      color: AppColor.onSurfaceVariant,
                                     ),
                                   ),
                               ],
@@ -231,7 +219,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                         'تومان',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColor.onSurfaceVariant,
                         ),
                       ),
                       SizedBox(width: 8),
@@ -240,7 +228,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: AppColor.goldEnd,
                         ),
                       ),
                     ],
@@ -258,7 +246,6 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                             padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                             decoration: BoxDecoration(
                               color: Colors.red,
-                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               "$discountPercent%",
@@ -271,7 +258,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                         thousandSeparator(originalPrice),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[500],
+                          color: AppColor.onSurfaceVariant,
                           decoration: TextDecoration.lineThrough,
                         ),
                       ),
@@ -298,8 +285,8 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                           // Delete Button
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.red[50],
-                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.red.withOpacity(0.1),
+                              border: Border.all(color: Colors.red.withOpacity(0.4)),
                             ),
                             child: Builder(
                               builder: (context) {
@@ -327,13 +314,12 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                           // Quantity Controls
                           Container(
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColor.outlineVariantDark),
                             ),
                             child: Row(
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.add, color: Colors.green[600]),
+                                  icon: Icon(Icons.add, color: AppColor.successDark),
                                   onPressed: () {
                                     setState(() {
                                       quantity++;
@@ -363,13 +349,14 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
+                                          color: AppColor.onSurface,
                                         ),
                                       ),
                                     );
                                   },
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.remove, color: Colors.grey[600]),
+                                  icon: Icon(Icons.remove, color: AppColor.onSurfaceVariant),
                                   onPressed: () {
                                     if (quantity > 1) {
                                       setState(() {
@@ -402,13 +389,13 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, size: 16, color: Colors.green[600]),
+        Icon(icon, size: 16, color: AppColor.successDark),
         SizedBox(width: 8),
         Text(
           text,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: AppColor.onSurfaceVariant,
           ),
         ),
       ],

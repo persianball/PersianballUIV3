@@ -1,6 +1,7 @@
 // lib/views/screens/payment_webview_page.dart
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
 
 class PaymentWebViewPage extends StatefulWidget {
@@ -50,27 +51,34 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('پرداخت آنلاین', style: TextStyle(color: Colors.black))),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: CheckoutTimeline(currentStep: 2),
-          ),
-          Expanded(
-            child: Stack(
-              children: [
-                Container(
-                    child: WebViewWidget(controller: _controller),
-                  color: Colors.red,
-                ),
-                if (loading)
-                  const Center(child: CircularProgressIndicator()),
-              ],
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppColor.obsidianBg,
+        appBar: AppBar(
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
+          elevation: 0,
+          title: const Text('پرداخت آنلاین',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
+        ),
+        body: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: CheckoutTimeline(currentStep: 2),
             ),
-          ),
-        ],
+            Expanded(
+              child: Stack(
+                children: [
+                  WebViewWidget(controller: _controller),
+                  if (loading)
+                    const Center(child: CircularProgressIndicator(color: AppColor.goldEnd)),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
