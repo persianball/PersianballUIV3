@@ -77,8 +77,8 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
         autoPlay: false,
         looping: false,
         materialProgressColors: ChewieProgressColors(
-          playedColor: AppColor.primary,
-          handleColor: AppColor.primary,
+          playedColor: AppColor.goldEnd,
+          handleColor: AppColor.goldEnd,
           backgroundColor: Colors.white24,
           bufferedColor: Colors.white54,
         ),
@@ -197,6 +197,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     final progress = totalSections == 0 ? 0.0 : watchedCount / totalSections;
 
     return Scaffold(
+      backgroundColor: AppColor.obsidianBg,
       // top: false تا SliverAppBar تمام‌عرض بالای صفحه بماند و فقط پایین
       // صفحه از نوار ناوبری سیستم فاصله بگیرد
       body: SafeArea(
@@ -210,8 +211,8 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
               elevation: 0,
               pinned: true,
               expandedHeight: 450,
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
+              backgroundColor: AppColor.obsidianBg,
+              foregroundColor: AppColor.onSurface,
               flexibleSpace: FlexibleSpaceBar(
                 background: Stack(
                   fit: StackFit.expand,
@@ -244,7 +245,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                       else if (detail.images.isNotEmpty)
                         Image.network(detail.images.first, fit: BoxFit.cover)
                       else
-                        Container(color: Colors.black12),
+                        Container(color: AppColor.surfaceContainer),
                     ],
 
                     // Title and quick actions
@@ -271,23 +272,26 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                                     value: progress,
                                     minHeight: 8,
                                     backgroundColor: Colors.white24,
-                                    color: AppColor.primary,
+                                    color: AppColor.goldEnd,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Text('${((progress) * 100).round()}%', style: const TextStyle(color: Colors.white)),
+                              Text('${((progress) * 100).round()}%',
+                                  style: const TextStyle(fontFamily: 'Estedad', color: Colors.white)),
                             ],
                           ),
                           const SizedBox(height: 8),
                           if (_continueIndex != null)
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColor.primary,
-                                foregroundColor: Colors.white,
+                                backgroundColor: AppColor.goldEnd,
+                                foregroundColor: AppColor.onGold,
+                                shape: const RoundedRectangleBorder(),
                               ),
                               onPressed: () => _scrollToIndex(_continueIndex!),
-                              child: Text(_continueLabel ?? 'ادامه تماشا'),
+                              child: Text(_continueLabel ?? 'ادامه تماشا',
+                                  style: const TextStyle(fontFamily: 'Estedad')),
                             ),
                         ],
                       ),
@@ -304,36 +308,52 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Theme(
-                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      data: Theme.of(context).copyWith(
+                          dividerColor: Colors.transparent,
+                          unselectedWidgetColor: AppColor.onSurfaceVariant),
                       child: ExpansionTile(
+                        iconColor: AppColor.goldEnd,
+                        collapsedIconColor: AppColor.onSurfaceVariant,
                         initiallyExpanded: _introExpanded,
                         tilePadding: const EdgeInsets.symmetric(horizontal: 0),
                         onExpansionChanged: (v) => setState(() => _introExpanded = v),
-                        title: const Text('معرفی دوره', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        title: const Text('معرفی دوره',
+                            style: TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColor.onSurface)),
                         children: [
                           const SizedBox(height: 6),
-                          Text(widget.myCourse.courseDescription),
+                          Text(widget.myCourse.courseDescription,
+                              style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
                           const SizedBox(height: 8),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text('ویدیوها', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    const Text('ویدیوها',
+                        style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColor.onSurface)),
                     const SizedBox(height: 12),
                     // Week dropdown
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColor.surfaceContainer,
+                        border: Border.all(color: AppColor.outlineVariantDark),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<int>(
                           value: _selectedWeekIndex,
                           isExpanded: true,
+                          dropdownColor: AppColor.surfaceContainer,
                           // آیتم‌های منو راست‌به‌چپ چیده شوند
                           alignment: AlignmentDirectional.centerEnd,
-                          icon: const Icon(Icons.keyboard_arrow_down),
+                          icon: const Icon(Icons.keyboard_arrow_down, color: AppColor.onSurfaceVariant),
                           items: weeks.asMap().entries.map((entry) {
                             final week = entry.value;
                             return DropdownMenuItem<int>(
@@ -346,7 +366,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                                   child: Text(
                                     week.weekName ?? 'هفته ${week.weekNumber}',
                                     textAlign: TextAlign.right,
-                                    style: const TextStyle(fontFamily: 'Estedad'),
+                                    style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
                                   ),
                                 ),
                               ),
@@ -389,19 +409,13 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColor.primary.withOpacity(0.1) : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            color: isSelected
+                                ? AppColor.goldEnd.withOpacity(0.1)
+                                : AppColor.surfaceContainer,
                             border: Border.all(
-                              color: isSelected ? AppColor.primary : Colors.grey.shade300,
+                              color: isSelected ? AppColor.goldEnd : AppColor.outlineVariantDark,
                               width: isSelected ? 2 : 1,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,26 +425,22 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                                 flex: 3,
                                 child: Container(
                                   width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                                    color: Colors.grey.shade200,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                                    child: section.videoThumbnail != null && section.videoThumbnail!.isNotEmpty
-                                        ? Image.network(
-                                            section.videoThumbnail!,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) => Container(
-                                              color: Colors.grey.shade300,
-                                              child: const Icon(Icons.play_circle_fill, size: 40, color: Colors.grey),
-                                            ),
-                                          )
-                                        : Container(
-                                            color: Colors.grey.shade300,
-                                            child: const Icon(Icons.play_circle_fill, size: 40, color: Colors.grey),
+                                  color: AppColor.obsidianBg,
+                                  child: section.videoThumbnail != null && section.videoThumbnail!.isNotEmpty
+                                      ? Image.network(
+                                          section.videoThumbnail!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => Container(
+                                            color: AppColor.obsidianBg,
+                                            child: const Icon(Icons.play_circle_fill,
+                                                size: 40, color: AppColor.onSurfaceVariant),
                                           ),
-                                  ),
+                                        )
+                                      : Container(
+                                          color: AppColor.obsidianBg,
+                                          child: const Icon(Icons.play_circle_fill,
+                                              size: 40, color: AppColor.onSurfaceVariant),
+                                        ),
                                 ),
                               ),
                               // Section info
@@ -445,7 +455,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                                         children: [
                                           Icon(
                                             seen ? Icons.check_circle : Icons.play_circle_fill,
-                                            color: seen ? AppColor.primary : Colors.grey,
+                                            color: seen ? AppColor.goldEnd : AppColor.onSurfaceVariant,
                                             size: 16,
                                           ),
                                           const SizedBox(width: 6),
@@ -453,8 +463,10 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                                             child: Text(
                                               section.title,
                                               style: const TextStyle(
+                                                fontFamily: 'Estedad',
                                                 fontWeight: FontWeight.w600,
                                                 fontSize: 14,
+                                                color: AppColor.onSurface,
                                               ),
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
@@ -467,6 +479,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                                         const Text(
                                           'قفل',
                                           style: TextStyle(
+                                            fontFamily: 'Estedad',
                                             color: Colors.redAccent,
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
@@ -476,7 +489,8 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                                         const Text(
                                           'دیده شد',
                                           style: TextStyle(
-                                            color: Colors.green,
+                                            fontFamily: 'Estedad',
+                                            color: AppColor.successDark,
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
                                           ),

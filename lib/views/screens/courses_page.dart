@@ -107,19 +107,25 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // چیدمان اپ‌بار راست‌به‌چپ: عنوان و تب‌ها از سمت راست شروع می‌شوند
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight + kTextTabBarHeight),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppColor.obsidianBg,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(kToolbarHeight + kTextTabBarHeight),
           child: AppBar(
-            title: const Text('دوره‌ها', style: TextStyle(color: Colors.black)),
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
+            title: const Text('دوره‌ها',
+                style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
+            backgroundColor: AppColor.obsidianBg,
+            foregroundColor: AppColor.onSurface,
             elevation: 0,
             bottom: TabBar(
               controller: _tabController,
+              indicatorColor: AppColor.goldEnd,
+              labelColor: AppColor.goldEnd,
+              unselectedLabelColor: AppColor.onSurfaceVariant,
+              labelStyle: const TextStyle(fontFamily: 'Estedad'),
+              unselectedLabelStyle: const TextStyle(fontFamily: 'Estedad'),
               tabs: [
                 Tab(text: 'همه دوره‌ها'),
                 Tab(text: 'دوره‌های من'),
@@ -127,23 +133,21 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
             ),
           ),
         ),
-      ),
-      // جهت TabBarView باید با TabBar راست‌به‌چپ یکی باشد وگرنه جهت اسلاید
-      // صفحه‌ها برعکس تب‌ها می‌شود
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: TabBarView(
-        controller: _tabController,
-        children: [
-          // Tab 1: All Courses
-          _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-                  ? Center(child: Text(_error!))
-                  : Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: RefreshIndicator(
-                        color: AppColor.primary,
+        // جهت TabBarView باید با TabBar راست‌به‌چپ یکی باشد وگرنه جهت اسلاید
+        // صفحه‌ها برعکس تب‌ها می‌شود
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            // Tab 1: All Courses
+            _loading
+                ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
+                : _error != null
+                    ? Center(
+                        child: Text(_error!,
+                            style: const TextStyle(
+                                fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)))
+                    : RefreshIndicator(
+                        color: AppColor.goldEnd,
                         onRefresh: () async {
                           _nextUrl = null;
                           await _fetch();
@@ -162,21 +166,20 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                           },
                         ),
                       ),
-                    ),
-          // Tab 2: User Courses
-          _userLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _userError != null
-                  ? Center(child: Text(_userError!))
-                  : Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: _UserCoursesList(
+            // Tab 2: User Courses
+            _userLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
+                : _userError != null
+                    ? Center(
+                        child: Text(_userError!,
+                            style: const TextStyle(
+                                fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)))
+                    : _UserCoursesList(
                         courses: _userCourses?.results ?? [],
                         abs: _abs,
                         onTapCourse: (course,{scrollToVideo}) => Navigator.of(context).pushNamed('/user-course-detail', arguments: course),
                       ),
-                    ),
-        ],
+          ],
         ),
       ),
     );
@@ -195,98 +198,94 @@ class _CourseCard extends StatelessWidget {
         ? (course.coursePrice * (1 - course.discountPercentage / 100)).toInt()
         : course.coursePrice;
 
-    return Stack(
-      children: [
-        // Blurred background based on course image
-        // if (imageUrl.isNotEmpty)
-        //   Positioned.fill(
-        //     child: Image.network(imageUrl, fit: BoxFit.cover),
-        //   ),
-        // Positioned.fill(
-        //   child: BackdropFilter(
-        //     filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        //     child: Container(color: Colors.white.withOpacity(0.75)),
-        //   ),
-        // ),
-        Container(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          decoration: BoxDecoration(
-            image: DecorationImage(
-          image: AssetImage("assets/images/background.jpg"), fit: BoxFit.cover,
-          )),
-          // در نمایشگرهای پهن کارت تمام‌عرض نشود
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Hero(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      color: AppColor.obsidianBg,
+      // در نمایشگرهای پهن کارت تمام‌عرض نشود
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Hero(
             tag: 'course_${course.id}',
-            child: Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: onTap,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Top image: ارتفاع محدود تا کارت روی صفحه بزرگ غول‌پیکر نشود
-                    SizedBox(
-                      height: 180,
-                      width: double.infinity,
-                      child: imageUrl.isEmpty
-                          ? Image.asset('assets/images/course_not_found.jpg',
-                              fit: BoxFit.cover)
-                          : Image.network(imageUrl, fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Image.asset('assets/images/course_not_found.jpg',fit: BoxFit.cover,),),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            course.nameFarsi,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(Icons.category, size: 16, color: Colors.grey.shade700),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(course.category.nameFarsi, style: TextStyle(color: Colors.grey.shade800)),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(Icons.bolt, size: 16, color: AppColor.primary),
-                              const SizedBox(width: 6),
-                              Text(course.difficulty, style: TextStyle(color: Colors.grey.shade800)),
-                              const Spacer(),
-                              Text(
-                                '${thousandSeparator(price)} تومان',
-                                style: const TextStyle(fontWeight: FontWeight.w800),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColor.surfaceContainer,
+                border: Border.all(color: AppColor.outlineVariantDark),
               ),
-            ),
+              clipBehavior: Clip.antiAlias,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Top image: ارتفاع محدود تا کارت روی صفحه بزرگ غول‌پیکر نشود
+                      SizedBox(
+                        height: 180,
+                        width: double.infinity,
+                        child: imageUrl.isEmpty
+                            ? Image.asset('assets/images/course_not_found.jpg',
+                                fit: BoxFit.cover)
+                            : Image.network(imageUrl, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset('assets/images/course_not_found.jpg',fit: BoxFit.cover,),),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              course.nameFarsi,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColor.onSurface),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(Icons.category, size: 16, color: AppColor.onSurfaceVariant),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(course.category.nameFarsi,
+                                      style: const TextStyle(
+                                          fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(Icons.bolt, size: 16, color: AppColor.goldEnd),
+                                const SizedBox(width: 6),
+                                Text(course.difficulty,
+                                    style: const TextStyle(
+                                        fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+                                const Spacer(),
+                                Text(
+                                  '${thousandSeparator(price)} تومان',
+                                  style: const TextStyle(
+                                      fontFamily: 'Estedad',
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColor.goldEnd),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
         ),
-
-
-      ],
+      ),
     );
   }
 }
@@ -358,36 +357,51 @@ class _UserCoursesListState extends State<_UserCoursesList> {
     List<Widget> children = [];
     if (_continueCourse != null && _continueVideo != null) {
       children.add(
-        Card(
-          color: Colors.deepPurple[50],
+        Container(
+          decoration: BoxDecoration(
+            color: AppColor.goldEnd.withOpacity(0.08),
+            border: Border.all(color: AppColor.goldEnd.withOpacity(0.4)),
+          ),
           margin: EdgeInsets.fromLTRB(16, 18, 16, 10),
           child: ListTile(
-            leading: Icon(Icons.play_circle_fill, color: Colors.deepPurple, size: 40),
-            title: Text('ادامه تماشا', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+            leading: Icon(Icons.play_circle_fill, color: AppColor.goldEnd, size: 40),
+            title: Text('ادامه تماشا',
+                style: TextStyle(
+                    fontFamily: 'Estedad', fontWeight: FontWeight.bold, color: AppColor.goldEnd)),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_continueCourseTitle ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(_continueVideoWeekTitle ?? ''),
-                Text(_continueVideoTitle ?? '', style: TextStyle(fontSize: 13)),
+                Text(_continueCourseTitle ?? '',
+                    style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontWeight: FontWeight.bold,
+                        color: AppColor.onSurface)),
+                Text(_continueVideoWeekTitle ?? '',
+                    style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+                Text(_continueVideoTitle ?? '',
+                    style: TextStyle(
+                        fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurfaceVariant)),
               ],
             ),
             trailing: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                backgroundColor: Colors.deepPurple,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                backgroundColor: AppColor.goldEnd,
+                shape: const RoundedRectangleBorder(),
               ),
               onPressed: () => widget.onTapCourse(_continueCourse!, scrollToVideo: _continueVideo),
-              icon: Icon(Icons.play_arrow),
-              label: Text('ادامه'),
+              icon: Icon(Icons.play_arrow, color: AppColor.onGold),
+              label: Text('ادامه',
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
             ),
           ),
         ),
       );
     }
     if (widget.courses.isEmpty) {
-      children.add(Center(child: Text('درسی خریداری نکرده‌اید')));
+      children.add(Center(
+          child: Text('درسی خریداری نکرده‌اید',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant))));
     } else {
       children.add(
         ListView.builder(
@@ -400,19 +414,25 @@ class _UserCoursesListState extends State<_UserCoursesList> {
             return Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
-                child: Card(
-              margin: EdgeInsets.fromLTRB(16, 12, 16, 6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: _CourseThumbnail(url: widget.abs(course.courseThumbnail)),
-                ),
-                title: Text(course.courseDetail.courseTitle, style: TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: Text('پیشرفت: به زودی', style: TextStyle(color: Colors.grey[700], fontSize: 12)),
-                trailing: Icon(Icons.arrow_forward_ios),
-                onTap: () => widget.onTapCourse(course),
-              ),
+                child: Container(
+                  margin: EdgeInsets.fromLTRB(16, 12, 16, 6),
+                  decoration: BoxDecoration(
+                    color: AppColor.surfaceContainer,
+                    border: Border.all(color: AppColor.outlineVariantDark),
+                  ),
+                  child: ListTile(
+                    leading: _CourseThumbnail(url: widget.abs(course.courseThumbnail)),
+                    title: Text(course.courseDetail.courseTitle,
+                        style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontWeight: FontWeight.w800,
+                            color: AppColor.onSurface)),
+                    subtitle: Text('پیشرفت: به زودی',
+                        style: TextStyle(
+                            fontFamily: 'Estedad', color: AppColor.onSurfaceVariant, fontSize: 12)),
+                    trailing: Icon(Icons.arrow_forward_ios, color: AppColor.onSurfaceVariant, size: 16),
+                    onTap: () => widget.onTapCourse(course),
+                  ),
                 ),
               ),
             );
@@ -451,12 +471,12 @@ class _CourseThumbnail extends StatelessWidget {
         return Container(
           width: size,
           height: size,
-          color: Colors.grey.shade200,
+          color: AppColor.obsidianBg,
           child: const Center(
             child: SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColor.goldEnd),
             ),
           ),
         );
