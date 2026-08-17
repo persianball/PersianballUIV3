@@ -57,13 +57,13 @@ class StaticContentPage extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: Text(content.title,
-              style: const TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: const TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
         body: SafeArea(
           child: ListView(
@@ -75,7 +75,7 @@ class StaticContentPage extends StatelessWidget {
                         p,
                         textAlign: TextAlign.justify,
                         style: const TextStyle(
-                            fontFamily: 'Estedad', fontSize: 13, height: 2),
+                            fontFamily: 'Estedad', fontSize: 13, height: 2, color: AppColor.onSurfaceVariant),
                       ),
                     ))
                 .toList(),
@@ -111,13 +111,13 @@ class SupportPage extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: const Text('پشتیبانی',
-              style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
         body: SafeArea(
           child: ListView(
@@ -125,10 +125,10 @@ class SupportPage extends StatelessWidget {
             children: [
               Text(
                 'ساعات پاسخگویی: شنبه تا چهارشنبه، ۹ تا ۱۷',
-                style: TextStyle(
+                style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 12,
-                    color: Colors.grey.shade600),
+                    color: AppColor.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               _tile(
@@ -166,22 +166,23 @@ class SupportPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColor.border),
+        color: AppColor.surfaceContainer,
+        border: Border.all(color: AppColor.outlineVariantDark),
       ),
       child: ListTile(
         onTap: onTap,
-        leading: Icon(icon, color: AppColor.primary),
+        leading: Icon(icon, color: AppColor.goldEnd),
         title: Text(title,
             style: const TextStyle(
                 fontFamily: 'Estedad',
                 fontSize: 14,
-                fontWeight: FontWeight.w600)),
+                fontWeight: FontWeight.w600,
+                color: AppColor.onSurface)),
         subtitle: Text(subtitle,
             textDirection: TextDirection.ltr,
             textAlign: TextAlign.right,
-            style: const TextStyle(fontFamily: 'Estedad', fontSize: 12)),
-        trailing: const Icon(Icons.chevron_left),
+            style: const TextStyle(fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant)),
+        trailing: const Icon(Icons.chevron_left, color: AppColor.onSurfaceVariant),
       ),
     );
   }

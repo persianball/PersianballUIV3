@@ -6,7 +6,6 @@ import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/services/catalog_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 
 /// مقایسه چند محصول کنار هم.
 ///
@@ -78,31 +77,29 @@ class _ComparePageState extends State<ComparePage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: const Text('مقایسه محصولات',
-              style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
-        body: PageContainer(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-                  ? Center(
-                      child: Text(_error!,
-                          style: const TextStyle(fontFamily: 'Estedad')))
-                  : SafeArea(
-                      child: Column(
-                        children: [
-                          _picker(),
-                          const Divider(height: 1),
-                          Expanded(child: _table()),
-                        ],
-                      ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
+            : _error != null
+                ? Center(
+                    child: Text(_error!,
+                        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)))
+                : SafeArea(
+                    child: Column(
+                      children: [
+                        _picker(),
+                        Divider(height: 1, color: AppColor.outlineVariantDark),
+                        Expanded(child: _table()),
+                      ],
                     ),
-        ),
+                  ),
       ),
     );
   }
@@ -124,9 +121,9 @@ class _ComparePageState extends State<ComparePage> {
               width: 80,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                color: AppColor.surfaceContainer,
                 border: Border.all(
-                  color: selected ? AppColor.primary : AppColor.border,
+                  color: selected ? AppColor.goldEnd : AppColor.outlineVariantDark,
                   width: selected ? 2 : 1,
                 ),
               ),
@@ -136,7 +133,7 @@ class _ComparePageState extends State<ComparePage> {
                     url: '${URLs.baseUrl}${p.image ?? ''}',
                     width: 48,
                     height: 40,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.zero,
                   ),
                   const SizedBox(height: 4),
                   Expanded(
@@ -146,7 +143,7 @@ class _ComparePageState extends State<ComparePage> {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                          fontFamily: 'Estedad', fontSize: 9, height: 1.3),
+                          fontFamily: 'Estedad', fontSize: 9, height: 1.3, color: AppColor.onSurface),
                     ),
                   ),
                 ],
@@ -166,11 +163,11 @@ class _ComparePageState extends State<ComparePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.compare_arrows, size: 48, color: Colors.grey.shade400),
+              Icon(Icons.compare_arrows, size: 48, color: AppColor.onSurfaceVariant),
               const SizedBox(height: 12),
               const Text('برای شروع، حداکثر ۳ کالا را از بالا انتخاب کنید',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'Estedad', fontSize: 13)),
+                  style: TextStyle(fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurfaceVariant)),
             ],
           ),
         ),
@@ -207,7 +204,7 @@ class _ComparePageState extends State<ComparePage> {
                         AppNetworkImage(
                           url: '${URLs.baseUrl}${p.image ?? ''}',
                           height: 70,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.zero,
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -218,7 +215,8 @@ class _ComparePageState extends State<ComparePage> {
                           style: const TextStyle(
                               fontFamily: 'Estedad',
                               fontSize: 11,
-                              fontWeight: FontWeight.w700),
+                              fontWeight: FontWeight.w700,
+                              color: AppColor.onSurface),
                         ),
                       ],
                     ),
@@ -230,7 +228,7 @@ class _ComparePageState extends State<ComparePage> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   border:
-                      Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                      Border(bottom: BorderSide(color: AppColor.outlineVariantDark)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,10 +236,10 @@ class _ComparePageState extends State<ComparePage> {
                     SizedBox(
                       width: 90,
                       child: Text(entry.key,
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontFamily: 'Estedad',
                               fontSize: 11,
-                              color: Colors.grey.shade600)),
+                              color: AppColor.onSurfaceVariant)),
                     ),
                     ..._selected.map((p) => Expanded(
                           child: Text(
@@ -250,7 +248,8 @@ class _ComparePageState extends State<ComparePage> {
                             style: const TextStyle(
                                 fontFamily: 'Estedad',
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600),
+                                fontWeight: FontWeight.w600,
+                                color: AppColor.onSurface),
                           ),
                         )),
                   ],
@@ -267,16 +266,15 @@ class _ComparePageState extends State<ComparePage> {
                         onPressed: () =>
                             Navigator.of(context).pushNamed('/product/${p.id}'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.primary,
+                          backgroundColor: AppColor.goldEnd,
                           padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                          shape: const RoundedRectangleBorder(),
                         ),
                         child: const Text('مشاهده',
                             style: TextStyle(
                                 fontFamily: 'Estedad',
                                 fontSize: 11,
-                                color: Colors.white)),
+                                color: AppColor.onGold)),
                       ),
                     ),
                   )),

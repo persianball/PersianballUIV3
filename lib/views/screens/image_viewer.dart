@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class ImageViewer extends StatefulWidget {
@@ -25,10 +24,7 @@ class _ImageViewerState extends State<ImageViewer> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: SvgPicture.asset(
-            'assets/icons/Arrow-left.svg',
-            color: Colors.white,
-          ),
+          icon: const Icon(Icons.arrow_forward, color: Colors.white),
         ), systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       body: Stack(
@@ -46,7 +42,7 @@ class _ImageViewerState extends State<ImageViewer> {
                 fit: BoxFit.fitWidth,
                 errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
                 loadingBuilder: (ctx, child, loading) {
-                  return loading == null ? child : Center(child: CircularProgressIndicator());
+                  return loading == null ? child : const Center(child: CircularProgressIndicator(color: Colors.white));
                 },
               ),
               ),

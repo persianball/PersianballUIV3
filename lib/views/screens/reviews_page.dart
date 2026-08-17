@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/review_service.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 
 /// همه نظرات یک محصول با فیلتر بر اساس ستاره
 class ReviewsPage extends StatefulWidget {
@@ -47,19 +46,17 @@ class _ReviewsPageState extends State<ReviewsPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: const Text('نظرات کاربران',
-              style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
-        body: PageContainer(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : SafeArea(child: _buildBody(_summary!)),
-        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
+            : SafeArea(child: _buildBody(_summary!)),
       ),
     );
   }
@@ -69,7 +66,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
       children: [
         _header(s),
         _starFilters(s),
-        const Divider(height: 1),
+        Divider(height: 1, color: AppColor.outlineVariantDark),
         Expanded(
           child: _visible.isEmpty
               ? _empty()
@@ -98,15 +95,16 @@ class _ReviewsPageState extends State<ReviewsPage> {
                 style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 44,
-                    fontWeight: FontWeight.w800),
+                    fontWeight: FontWeight.w800,
+                    color: AppColor.onSurface),
               ),
               _stars(s.average.round(), size: 16),
               const SizedBox(height: 4),
               Text('بر اساس ${s.count} نظر',
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontFamily: 'Estedad',
                       fontSize: 11,
-                      color: Colors.grey.shade600)),
+                      color: AppColor.onSurfaceVariant)),
             ],
           ),
           const SizedBox(width: 24),
@@ -120,7 +118,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                     children: [
                       Text('${e.key}',
                           style: const TextStyle(
-                              fontFamily: 'Estedad', fontSize: 11)),
+                              fontFamily: 'Estedad', fontSize: 11, color: AppColor.onSurfaceVariant)),
                       const SizedBox(width: 4),
                       const Icon(Icons.star, size: 11, color: Colors.amber),
                       const SizedBox(width: 6),
@@ -130,8 +128,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
                           child: LinearProgressIndicator(
                             value: ratio,
                             minHeight: 6,
-                            color: AppColor.primary,
-                            backgroundColor: AppColor.border,
+                            color: AppColor.goldEnd,
+                            backgroundColor: AppColor.outlineVariantDark,
                           ),
                         ),
                       ),
@@ -139,10 +137,10 @@ class _ReviewsPageState extends State<ReviewsPage> {
                       SizedBox(
                         width: 18,
                         child: Text('${e.value}',
-                            style: TextStyle(
+                            style: const TextStyle(
                                 fontFamily: 'Estedad',
                                 fontSize: 10,
-                                color: Colors.grey.shade600)),
+                                color: AppColor.onSurfaceVariant)),
                       ),
                     ],
                   ),
@@ -178,20 +176,19 @@ class _ReviewsPageState extends State<ReviewsPage> {
         avatar: star == 0
             ? null
             : Icon(Icons.star,
-                size: 14, color: selected ? Colors.white : Colors.amber),
+                size: 14, color: selected ? AppColor.onGold : Colors.amber),
         label: Text(label,
             style: TextStyle(
               fontFamily: 'Estedad',
               fontSize: 12,
-              color: selected ? Colors.white : AppColor.secondary,
+              color: selected ? AppColor.onGold : AppColor.onSurfaceVariant,
             )),
         selected: selected,
         onSelected: (_) => setState(() => _selectedStar = star),
-        selectedColor: AppColor.primary,
-        backgroundColor: Colors.white,
+        selectedColor: AppColor.goldEnd,
+        backgroundColor: AppColor.surfaceContainer,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: AppColor.border),
+          side: BorderSide(color: AppColor.outlineVariantDark),
         ),
       ),
     );
@@ -204,19 +201,19 @@ class _ReviewsPageState extends State<ReviewsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.rate_review_outlined,
-                  size: 48, color: Colors.grey.shade400),
+                  size: 48, color: AppColor.onSurfaceVariant),
               const SizedBox(height: 12),
               Text(
                 _selectedStar == 0
                     ? 'هنوز نظری ثبت نشده است'
                     : 'نظری با $_selectedStar ستاره ثبت نشده است',
-                style: const TextStyle(fontFamily: 'Estedad'),
+                style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
               ),
               if (_selectedStar != 0)
                 TextButton(
                   onPressed: () => setState(() => _selectedStar = 0),
                   child: const Text('نمایش همه نظرات',
-                      style: TextStyle(fontFamily: 'Estedad')),
+                      style: TextStyle(fontFamily: 'Estedad', color: AppColor.goldEnd)),
                 ),
             ],
           ),
@@ -235,9 +232,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Widget _reviewTile(ProductReview r) => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColor.border),
+          color: AppColor.surfaceContainer,
+          border: Border.all(color: AppColor.outlineVariantDark),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,23 +246,24 @@ class _ReviewsPageState extends State<ReviewsPage> {
                     style: const TextStyle(
                         fontFamily: 'Estedad',
                         fontSize: 12,
-                        fontWeight: FontWeight.w600)),
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.onSurface)),
                 if (r.verifiedPurchase) ...[
                   const SizedBox(width: 6),
-                  Icon(Icons.verified, size: 13, color: Colors.green.shade600),
+                  Icon(Icons.verified, size: 13, color: AppColor.successDark),
                 ],
                 const Spacer(),
                 Text(r.createdAt,
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontFamily: 'Estedad',
                         fontSize: 10,
-                        color: Colors.grey.shade500)),
+                        color: AppColor.onSurfaceVariant)),
               ],
             ),
             const SizedBox(height: 6),
             Text(r.body,
                 style: const TextStyle(
-                    fontFamily: 'Estedad', fontSize: 12, height: 1.8)),
+                    fontFamily: 'Estedad', fontSize: 12, height: 1.8, color: AppColor.onSurfaceVariant)),
           ],
         ),
       );
