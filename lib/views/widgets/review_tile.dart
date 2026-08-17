@@ -46,7 +46,7 @@ class ReviewTile extends StatelessWidget {
                           flex: 8,
                           child: Text(
                             '${review.name}',
-                            style: TextStyle(fontWeight: FontWeight.w600, color: AppColor.primary, fontFamily: 'poppins'),
+                            style: TextStyle(fontWeight: FontWeight.w600, color: AppColor.goldEnd, fontFamily: 'poppins'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -67,7 +67,7 @@ class ReviewTile extends StatelessWidget {
                   // Comments
                   Text(
                     '${review.review}',
-                    style: TextStyle(color: AppColor.secondary.withOpacity(0.7), height: 150 / 100),
+                    style: TextStyle(color: AppColor.onSurfaceVariant, height: 150 / 100),
                   ),
                 ],
               ),

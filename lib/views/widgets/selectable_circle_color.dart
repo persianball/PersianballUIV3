@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/ColorWay.dart';
 
+/// انتخاب‌گر رنگ، طبق طرح Obsidian Gold Athletics: نمونه‌های رنگ مربعی
+/// گوشه‌تیز به‌جای دایره («zero roundedness» و «no circular avatars» طرح).
+/// این ویجت فقط در product_detail.dart استفاده می‌شود.
 class SelectableCircleColor extends StatefulWidget {
   final EdgeInsetsGeometry? margin, padding;
   final List<ColorWay> colorWay;
@@ -41,6 +44,7 @@ class _SelectableCircleState extends State<SelectableCircleColor> {
           widget.colorWay.length,
               (index) {
             final variant = widget.colorWay[index];
+            final isSelected = index == _selectedIndex;
             return InkWell(
               onTap: () {
                 setState(() {
@@ -51,26 +55,19 @@ class _SelectableCircleState extends State<SelectableCircleColor> {
                 widget.onColorSelected(index);
               },
               child: Container(
+                padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
                   border: Border.all(
                     width: 2,
-                    color: AppColor.primarySoft,
+                    color: isSelected
+                        ? AppColor.goldEnd
+                        : AppColor.outlineVariantDark,
                   ),
-                  borderRadius: BorderRadius.circular(100),
                 ),
                 child: Container(
                   width: widget.circleSize,
                   height: widget.circleSize,
-                  decoration: BoxDecoration(
-                    color: variant.color,
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(
-                      width: (widget.circleSize / 10).clamp(2, 6),
-                      color: (index == _selectedIndex)
-                          ? AppColor.primarySoft.withOpacity(0.9)
-                          : Colors.transparent,
-                    ),
-                  ),
+                  color: variant.color,
                 ),
               ),
             );

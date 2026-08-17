@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/services/wishlist_service.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/constant/urls.dart';
@@ -15,7 +16,6 @@ import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/screens/reviews_page.dart';
-import 'package:marketky/views/widgets/custom_app_bar.dart';
 import 'package:marketky/views/widgets/detail_tabs.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
@@ -116,6 +116,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.obsidianBg,
       extendBodyBehindAppBar: true,
       extendBody: true,
       bottomNavigationBar: SafeArea(
@@ -126,25 +127,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 width: MediaQuery.of(context).size.width,
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: AppColor.border, width: 1)),
+                  color: AppColor.obsidianBg,
+                  border: Border(top: BorderSide(color: AppColor.outlineVariantDark, width: 1)),
                 ),
                 child: Row(
                   children: [
-                    // Container(
-                    //   width: 64,
-                    //   height: 64,
-                    //   margin: EdgeInsets.only(right: 14),
-                    //   child: ElevatedButton(
-                    //     style: ElevatedButton.styleFrom(
-                    //       backgroundColor: AppColor.secondary,
-                    //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    //       elevation: 0,
-                    //     ),
-                    //     onPressed: () {},
-                    //     child: SvgPicture.asset('assets/icons/Chat.svg', color: Colors.white),
-                    //   ),
-                    // ),
                     BlocBuilder<ProductDetailVariantBloc,ProductDetailState>(
                       builder: (context,variant_state) {
                         return BlocListener<CartBloc,CartState>(
@@ -154,11 +141,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               showDialog(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  backgroundColor: AppColor.obsidianBg,
+                                  shape: RoundedRectangleBorder(
+                                    side: BorderSide(color: AppColor.outlineVariantDark),
+                                    borderRadius: BorderRadius.zero,
+                                  ),
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.check_circle, color: Colors.green, size: 64),
+                                      Icon(Icons.check_circle, color: AppColor.successDark, size: 64),
                                       SizedBox(height: 16),
                                       Text(
                                         state.message,
@@ -166,16 +157,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           fontFamily: 'Estedad',
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
+                                          color: AppColor.onSurface,
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
                                       SizedBox(height: 16),
                                       ElevatedButton(
                                         onPressed: () => Navigator.of(ctx).pop(),
-                                        child: Text('باشه', style: TextStyle(fontFamily: 'Estedad',color: Colors.white70)),
+                                        child: Text('باشه', style: TextStyle(fontFamily: 'Estedad',color: AppColor.onGold)),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColor.primary,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                          backgroundColor: AppColor.goldEnd,
+                                          shape: const RoundedRectangleBorder(),
                                         ),
                                       )
                                     ],
@@ -206,14 +198,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                       margin: EdgeInsets.only(right: 14),
                                       child: ElevatedButton(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColor.secondary,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                          backgroundColor: AppColor.surfaceContainerHigh,
+                                          shape: RoundedRectangleBorder(
+                                            side: BorderSide(color: AppColor.outlineVariantDark),
+                                            borderRadius: BorderRadius.zero,
+                                          ),
                                           elevation: 0,
                                         ),
                                         onPressed: () {
                                           Navigator.of(context).pushNamed('/cart');
                                         },
-                                        child: SvgPicture.asset('assets/icons/Bag.svg', color: Colors.white,fit: BoxFit.contain,
+                                        child: SvgPicture.asset('assets/icons/Bag.svg', color: AppColor.goldEnd,fit: BoxFit.contain,
                                         ),
                                       ),
                                     ),
@@ -224,8 +219,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
                                       child: ElevatedButton(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColor.primary,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                          backgroundColor: AppColor.goldEnd,
+                                          shape: const RoundedRectangleBorder(),
                                           elevation: 0,
                                         ),
                                         onPressed: () {
@@ -288,14 +283,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                             if(variant_state is ProductDetailSizeChanged){
                                               return Text(
                                                 'افزودن به سبد',
-                                                style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
+                                                style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: AppColor.onGold, fontSize: 16),
                                               );
                                             }else{
                                               return Directionality(
                                                 textDirection: TextDirection.rtl,
                                                 child: Text(
                                                   'لطفا رنگ و اندازه را انتخاب کنید.',
-                                                  style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16),
+                                                  style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: AppColor.onGold, fontSize: 16),
                                                 ),
                                               );
                                             }
@@ -350,18 +345,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   }
 
   Widget _buildLoading() {
-    return Center(child: CircularProgressIndicator());
+    return Container(
+      color: AppColor.obsidianBg,
+      child: const Center(child: CircularProgressIndicator(color: AppColor.goldEnd)),
+    );
   }
 
   Widget _buildError(String message, BuildContext context) {
-    
-    return Center(
+    return Container(
+      color: AppColor.obsidianBg,
+      child: Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             message,
-            style: TextStyle(fontFamily: 'Estedad', color: Colors.red),
+            style: TextStyle(fontFamily: 'Estedad', color: AppColor.errorDark),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8),
@@ -369,9 +368,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
             onPressed: () {
               context.read<ProductDetailBloc>().add(FetchProductDetail(widget.productId));
             },
-            child: Text('تلاش مجدد', style: TextStyle(fontFamily: 'Estedad')),
+            child: Text('تلاش مجدد',
+                style: TextStyle(fontFamily: 'Estedad', color: AppColor.goldEnd)),
           ),
         ],
+      ),
       ),
     );
   }
@@ -511,40 +512,79 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                         ),
                       ),
                     ),
-                    CustomAppBar(
-                      title: product.category.nameFarsi,
-                      leftIcon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
-                      rightIcon: Icon(
-                        _isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: _isFavorite ? Colors.red : Colors.black54,
+                    // هدر شناور تیره: بازگشت، عنوان ثابت اپ، علاقه‌مندی/اشتراک‌گذاری/سبد
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      left: 0,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              AppColor.obsidianBg.withOpacity(0.85),
+                              AppColor.obsidianBg.withOpacity(0.0),
+                            ],
+                          ),
+                        ),
+                        child: SafeArea(
+                          bottom: false,
+                          child: Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  icon: const Icon(Icons.arrow_forward,
+                                      color: AppColor.onSurface),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'فوتبال لوکس',
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.headlineMd
+                                        .copyWith(fontSize: 18, color: AppColor.goldEnd),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: _toggleFavorite,
+                                  icon: Icon(
+                                    _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                    color: _isFavorite ? Colors.red : AppColor.onSurfaceVariant,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => _shareProduct(product.nameFarsi ?? ''),
+                                  icon: const Icon(Icons.share,
+                                      color: AppColor.onSurfaceVariant),
+                                ),
+                                BlocBuilder<CartBloc, CartState>(
+                                  builder: (context, cartState) {
+                                    final count = cartState is CartLoaded
+                                        ? (cartState.cart.results.isNotEmpty
+                                            ? cartState.cart.results[0].items.length
+                                            : 0)
+                                        : 0;
+                                    return IconButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pushNamed('/cart'),
+                                      icon: Badge(
+                                        isLabelVisible: count > 0,
+                                        label: Text('$count'),
+                                        child: const Icon(Icons.shopping_bag_outlined,
+                                            color: AppColor.onSurfaceVariant),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      leftOnTap: () => Navigator.of(context).pop(),
-                      rightOnTap: _toggleFavorite,
-                      extraIcon: Icon(Icons.share, color: Colors.black54),
-                      extraOnTap: () => _shareProduct(product.nameFarsi ?? ''),
                     ),
-                    // variant_state.productVariant.images.length > 0 ? Positioned(
-                    //   bottom: 16,
-                    //   child: SmoothPageIndicator(
-                    //     controller: imageController,
-                    //     count:  (product.video!=null && product.video!.isNotEmpty) ? variant_state.productVariant.images.length +  1 : variant_state.productVariant.images.length,
-                    //     effect: ExpandingDotsEffect(
-                    //       dotColor: AppColor.primary.withOpacity(0.2),
-                    //       activeDotColor: AppColor.primary.withOpacity(0.2),
-                    //       dotHeight: 8,
-                    //     ),
-                    //   )
-                    //   ,
-                    // ):Positioned(
-                    //   bottom: 1,
-                    //   child: Container(
-                    //     child: Image.asset(
-                    //       "assets/images/placeholder.jpg",
-                    //       fit: BoxFit.fitWidth,
-                    //       width: MediaQuery.of(context).size.width,
-                    //     ),
-                    //   ),
-                    // ),
                   ],
                 ),
               ),
@@ -553,11 +593,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               // بخش ۲ - اطلاعات محصول
               Container(
                 decoration: BoxDecoration(
-                    color: Color(int.parse(
-                        "ff" + variant_state.productVariant.colorRgb!,
-                        radix: 16))
-                        .withOpacity(0.1)
-                ),
+                    // تینت داینامیک رنگ واریانت، روی پس‌زمینه تیره ترکیب می‌شود
+                    color: Color.alphaBlend(
+                        Color(int.parse(
+                                "ff" + variant_state.productVariant.colorRgb!,
+                                radix: 16))
+                            .withOpacity(0.15),
+                        AppColor.obsidianBg)),
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -574,7 +616,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                 fontFamily: 'Estedad',
                                 fontSize: 24,
                                 fontWeight: FontWeight.w700,
-                                color: AppColor.secondary,
+                                color: AppColor.onSurface,
                               ),
                             ),
                           ),
@@ -621,7 +663,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           fontFamily: 'Estedad',
                                           fontSize: 16,
                                           fontWeight: FontWeight.w700,
-                                          color: AppColor.primary,
+                                          color: AppColor.goldEnd,
                                         ),
                                       ),
                                       if (percent > 0) SizedBox(width: 8),
@@ -631,7 +673,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
                                             color: Colors.red,
-                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
                                             '%$percent',
@@ -650,7 +691,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           style: TextStyle(
                                             fontFamily: 'Estedad',
                                             fontSize: 14,
-                                            color: Colors.grey,
+                                            color: AppColor.onSurfaceVariant,
                                             decoration: TextDecoration.lineThrough,
                                           ),
                                         ),
@@ -741,7 +782,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                         fontFamily: 'Estedad',
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColor.secondary,
+                                        color: AppColor.onSurface,
                                       ),
                                     ),
                                     Text(
@@ -750,7 +791,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                         fontFamily: 'Estedad',
                                         fontSize: 16,
                                         fontWeight: FontWeight.w400,
-                                        color: AppColor.secondary,
+                                        color: AppColor.onSurfaceVariant,
                                       ),
                                     ),
                                   ],
@@ -810,7 +851,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                     fontFamily: 'Estedad',
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColor.secondary,
+                                    color: AppColor.onSurface,
                                   ),
                                 ),
                                 SizedBox(height: 12),
@@ -850,7 +891,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                         product.description ?? '',
                         style: TextStyle(
                           fontFamily: 'Estedad',
-                          color: AppColor.secondary.withOpacity(0.7),
+                          color: AppColor.onSurfaceVariant,
                           height: 1.5,
                         ),
                         textAlign: TextAlign.justify,
@@ -865,6 +906,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 child: DetailTabs(
+                  dark: true,
                   tabs: [
                     DetailTab(
                       title: 'توضیحات',
@@ -876,8 +918,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                           }
                         },
                         style: {
+                          "body": Style(
+                              color: AppColor.onSurfaceVariant, fontFamily: 'Estedad'),
                           "a": Style(
-                              color: AppColor.primary,
+                              color: AppColor.goldEnd,
                               textDecoration: TextDecoration.underline),
                         },
                         extensions: [
@@ -905,7 +949,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                       DetailTab(
                         title: 'محصولات مشابه',
                         builder: (context) => SizedBox(
-                          height: 215,
+                          // کارت کمی بلندتر از فضای قبلی است؛ کمی حاشیه اضافه شد
+                          height: 232,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             shrinkWrap: true,
@@ -939,7 +984,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                             ),
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
+                            child: OutlinedButton(
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -947,17 +992,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           ReviewsPage(productId: product.id)),
                                 );
                               },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColor.primarySoft,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                                elevation: 0,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColor.goldEnd,
+                                side: BorderSide(color: AppColor.outlineVariantDark),
+                                shape: const RoundedRectangleBorder(),
                               ),
                               child: Text(
                                 'مشاهده همه نظرات',
                                 style: TextStyle(
                                     fontFamily: 'Estedad',
-                                    color: AppColor.secondary,
+                                    color: AppColor.goldEnd,
                                     fontWeight: FontWeight.w600),
                               ),
                             ),
@@ -973,13 +1017,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               .map((faq) => ExpansionTile(
                                     tilePadding: EdgeInsets.zero,
                                     initiallyExpanded: false,
+                                    iconColor: AppColor.goldEnd,
+                                    collapsedIconColor: AppColor.onSurfaceVariant,
                                     title: Text(
                                       faq.question,
                                       style: TextStyle(
                                         fontFamily: 'Estedad',
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColor.secondary,
+                                        color: AppColor.onSurface,
                                       ),
                                     ),
                                     children: [
@@ -993,7 +1039,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                             fontFamily: 'Estedad',
                                             fontSize: 13,
                                             height: 1.8,
-                                            color: Colors.black87,
+                                            color: AppColor.onSurfaceVariant,
                                           ),
                                         ),
                                       ),
@@ -1010,276 +1056,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
             ],
           );
         }else{
-          // return ListView(
-          //   physics: BouncingScrollPhysics(),
-          //   children: [
-          //     // بخش ۱ - تصویر و اپ‌بار
-          //     GestureDetector(
-          //       onTap: (){
-          //         Navigator.of(context).push(
-          //           MaterialPageRoute(
-          //             builder: (context) => ImageViewer(
-          //               imageUrl: product.images.map((img) => '${URLs.baseUrl}$img').toList(),
-          //             ),
-          //           ),
-          //         );
-          //       },
-          //       child: Stack(
-          //         alignment: Alignment.topCenter,
-          //         children: [
-          //           GestureDetector(
-          //             onTap: () {
-          //               Navigator.of(context).push(
-          //                 MaterialPageRoute(
-          //                   builder: (context) => ImageViewer(
-          //                     imageUrl: product.images.map((img) => '${URLs.baseUrl}$img').toList(),
-          //                   ),
-          //                 ),
-          //               );
-          //             },
-          //             child: Column(
-          //               children: [
-          //                 //video
-          //                 Container(child: VideoPlayerPage(videoDetail: new VideoDetail(hlsUrl: product.video!))),
-          //                 // Container(
-          //                 //   width: MediaQuery.of(context).size.width,
-          //                 //   height: 310,
-          //                 //   child: PageView(
-          //                 //     controller: imageController,
-          //                 //     children: [
-          //                 //
-          //                 //
-          //                 //
-          //                 //       //images
-          //                 //       ...product.images.map((url) {
-          //                 //       final fullUrl = '${URLs.baseUrl}$url';
-          //                 //
-          //                 //       return Image.network(
-          //                 //         fullUrl,
-          //                 //         fit: BoxFit.contain,
-          //                 //         errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
-          //                 //         loadingBuilder: (ctx, child, loading) {
-          //                 //           return loading == null ? child : Center(child: CircularProgressIndicator());
-          //                 //         },
-          //                 //       );
-          //                 //     }).toList(),
-          //                 //
-          //                 //
-          //                 //
-          //                 //   ]),
-          //                 // ),
-          //               ],
-          //             ),
-          //           ),
-          //           CustomAppBar(
-          //             title: product.category.nameFarsi,
-          //             leftIcon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
-          //             rightIcon: SvgPicture.asset('assets/icons/Bookmark.svg', color: Colors.black.withOpacity(0.5)),
-          //             leftOnTap: () => Navigator.of(context).pop(),
-          //             rightOnTap: () {},
-          //           ),
-          //           product.images.length > 0 ? Positioned(
-          //             bottom: 16,
-          //             child: SmoothPageIndicator(
-          //               controller: imageController,
-          //               count: product.images.length,
-          //               effect: ExpandingDotsEffect(
-          //                 dotColor: AppColor.primary.withOpacity(0.2),
-          //                 activeDotColor: AppColor.primary.withOpacity(0.2),
-          //                 dotHeight: 8,
-          //               ),
-          //             )
-          //             ,
-          //           ):Positioned(
-          //             bottom: 1,
-          //             child: Container(
-          //               child: Image.asset(
-          //                 "assets/images/placeholder.jpg",
-          //                 fit: BoxFit.fitWidth,
-          //                 width: MediaQuery.of(context).size.width,
-          //               ),
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //
-          //     // بخش ۲ - اطلاعات محصول
-          //     Container(
-          //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          //       child: Column(
-          //         crossAxisAlignment: CrossAxisAlignment.start,
-          //         children: [
-          //           Directionality(
-          //             textDirection: TextDirection.rtl,
-          //             child: Row(
-          //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //               children: [
-          //                 Expanded(
-          //                   child: Text(
-          //                     product.nameFarsi ?? '',
-          //                     style: TextStyle(
-          //                       fontFamily: 'Estedad',
-          //                       fontSize: 24,
-          //                       fontWeight: FontWeight.w700,
-          //                       color: AppColor.secondary,
-          //                     ),
-          //                   ),
-          //                 ),
-          //                 Directionality(
-          //                     textDirection: TextDirection.ltr,
-          //                     child: RatingTag(value: product.avgRate, margin: EdgeInsets.only(left: 10))),
-          //               ],
-          //             ),
-          //           ),
-          //           if (product.price != null)
-          //             Container(
-          //               margin: EdgeInsets.only(top: 8, bottom: 14),
-          //               child: Directionality(
-          //                 textDirection: TextDirection.rtl,
-          //                 child: Text(
-          //                   '${thousandSeparator(product.price!)} تومان',
-          //                   style: TextStyle(
-          //                     fontFamily: 'Estedad',
-          //                     fontSize: 16,
-          //                     fontWeight: FontWeight.w700,
-          //                     color: AppColor.primary,
-          //                   ),
-          //                 ),
-          //               ),
-          //             ),
-          //
-          //           // بخش ۳ - انتخاب رنگ
-          //           if (product.variants.isNotEmpty)
-          //             Align(
-          //               alignment: AlignmentGeometry.centerRight,
-          //               child: Directionality(
-          //                 textDirection: TextDirection.rtl,
-          //                 child: Container(
-          //                   padding: EdgeInsets.symmetric(horizontal: 16),
-          //                   margin: EdgeInsets.only(bottom: 20),
-          //                   child: Column(
-          //                     crossAxisAlignment: CrossAxisAlignment.start,
-          //                     children: [
-          //                       Text(
-          //                         'رنگ',
-          //                         style: TextStyle(
-          //                           fontFamily: 'Estedad',
-          //                           fontSize: 18,
-          //                           fontWeight: FontWeight.w600,
-          //                           color: AppColor.secondary,
-          //                         ),
-          //                       ),
-          //                       SizedBox(height: 12),
-          //                       SelectableCircleColor(
-          //                         colorWay: product.variants
-          //                             .map((v) => ColorWay(
-          //                           color: Color(int.parse("ff"+v.colorRgb! ??"00000000",radix: 16)),
-          //                           name: v.color??"ناشناس",
-          //                           imageUrl: v.image != null ? '${URLs.baseUrl}${v.image}' : null,
-          //
-          //                         )).toList(),
-          //                         onColorSelected: (int vIndex) {
-          //
-          //                           context.read<ProductDetailVariantBloc>().add(ChangeProductColorEvent(product.variants[vIndex],product.variants[vIndex].sizeVariants[0]));
-          //
-          //
-          //                           // if (imageUrl != null) {
-          //                           //   // پیدا کردن ایندکس تصویر در لیست
-          //                           //   final index = product.images.indexWhere((img) => '${URLs.baseUrl}$img' == imageUrl);
-          //                           //   if (index != -1 && index < product.images.length) {
-          //                           //     imageController.animateToPage(
-          //                           //       index,
-          //                           //       duration: Duration(milliseconds: 300),
-          //                           //       curve: Curves.easeInOut,
-          //                           //     );
-          //                           //   }
-          //                           // }
-          //                         },
-          //                       ),
-          //                     ],
-          //                   ),
-          //                 ),
-          //               ),
-          //             ),
-          //
-          //           Directionality(
-          //             textDirection: TextDirection.rtl,
-          //             child: Text(
-          //               product.description ?? '',
-          //               style: TextStyle(
-          //                 fontFamily: 'Estedad',
-          //                 color: AppColor.secondary.withOpacity(0.7),
-          //                 height: 1.5,
-          //               ),
-          //               textAlign: TextAlign.justify,
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //
-          //
-          //
-          //
-          //     // بخش ۴ - انتخاب سایز (در صورت وجود)
-          //     // (نیاز به تعریف سایز در مدل دارید — در صورت نیاز اضافه می‌شود)
-          //
-          //     // بخش ۵ - نظرات
-          //     Directionality(
-          //       textDirection: TextDirection.rtl,
-          //       child: Container(
-          //         padding: EdgeInsets.symmetric(horizontal: 16),
-          //         child: Column(
-          //           crossAxisAlignment: CrossAxisAlignment.start,
-          //           children: [
-          //             ExpansionTile(
-          //               initiallyExpanded: true,
-          //               title: Text(
-          //                 'نظرات',
-          //                 style: TextStyle(
-          //                   fontFamily: 'Estedad',
-          //                   fontSize: 18,
-          //                   fontWeight: FontWeight.w600,
-          //                   color: AppColor.secondary,
-          //                 ),
-          //               ),
-          //               children: [
-          //                 // در اینجا می‌تونی لیست نظرات واقعی رو بیاری
-          //                 ListView.builder(
-          //                   shrinkWrap: true,
-          //                   physics: NeverScrollableScrollPhysics(),
-          //                   itemCount: product.comments.length,
-          //                   itemBuilder: (ctx, i) => ReviewTile(review: Review(photoUrl: "assets/images/avatar_for_comments.png", name: " ${i} : ", review: product.comments[i].text , rating: 5)),
-          //                 ),
-          //                 Container(
-          //                   margin: EdgeInsets.only(left: 52, top: 12, bottom: 6),
-          //                   child: ElevatedButton(
-          //                     onPressed: () {
-          //                       Navigator.of(context).push(
-          //                         MaterialPageRoute(builder: (context) => ReviewsPage(reviews: [])),
-          //                       );
-          //                     },
-          //                     child: Text(
-          //                       'مشاهده همه نظرات',
-          //                       style: TextStyle(fontFamily: 'Estedad', color: AppColor.secondary, fontWeight: FontWeight.w600),
-          //                     ),
-          //                     style: ElevatedButton.styleFrom(
-          //                       backgroundColor: AppColor.primarySoft,
-          //                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          //                       elevation: 0,
-          //                     ),
-          //                   ),
-          //                 )
-          //               ],
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // );
-          return Center(child: Text("محصولی یافت نشد."),);
+          // این شاخه وقتی رخ می‌دهد که هنوز رنگ/سایزی برای واریانت انتخاب
+          // نشده (رویداد ChangeProductColorEvent اولیه هنوز پردازش نشده)
+          return Container(
+            color: AppColor.obsidianBg,
+            child: const Center(
+              child: CircularProgressIndicator(color: AppColor.goldEnd),
+            ),
+          );
         }
 
       }

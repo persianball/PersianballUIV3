@@ -28,11 +28,13 @@ class SimilarProductCard extends StatelessWidget {
       children: [
         Text(
           '${thousandSeparator(finalPrice)} تومان',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontFamily: 'Estedad',
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: AppColor.primary,
+            color: AppColor.goldEnd,
           ),
         ),
         // ارتفاع ثابت تا کارت‌های با تخفیف و بدون تخفیف هم‌تراز بمانند
@@ -93,23 +95,14 @@ class SimilarProductCard extends StatelessWidget {
         width: 160, // عرض ثابت برای اسلایدر افقی
         margin: EdgeInsetsDirectional.only(start: 8, end: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            ),
-          ],
+          color: AppColor.surfaceContainer,
+          border: Border.all(color: AppColor.outlineVariantDark),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // تصویر محصول
-            ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
+            Image.network(
                 '${URLs.baseUrl}${product.image}',
                 fit: BoxFit.cover,
                 height: 128,
@@ -126,12 +119,11 @@ class SimilarProductCard extends StatelessWidget {
                   return Container(
                     height: 128,
                     width: 160,
-                    color: Colors.grey[200],
-                    child: Center(child: CircularProgressIndicator()),
+                    color: AppColor.surfaceContainer,
+                    child: const Center(child: CircularProgressIndicator(color: AppColor.goldEnd)),
                   );
                 },
               ),
-            ),
             // نام محصول
             Padding(
               padding: EdgeInsets.fromLTRB(8, 6, 8, 0),
@@ -146,7 +138,7 @@ class SimilarProductCard extends StatelessWidget {
                     fontSize: 13,
                     height: 1.25,
                     fontWeight: FontWeight.w500,
-                    color: AppColor.secondary,
+                    color: AppColor.onSurface,
                   ),
                   textAlign: TextAlign.right,
                 ),

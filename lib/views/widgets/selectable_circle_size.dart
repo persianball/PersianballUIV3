@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 
+/// انتخاب‌گر سایز، طبق طرح Obsidian Gold Athletics: دکمه‌های مربعی گوشه‌تیز
+/// (این ویجت فقط در product_detail.dart استفاده می‌شود، پس بدون نگرانی از
+/// شکستن جای دیگر می‌تواند مستقیم به شکل جدید تغییر کند).
 class SelectableCircleSize extends StatefulWidget {
   final List<String> productSize;
 
@@ -54,7 +57,7 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
       padding: widget.padding,
       child: Wrap(
         spacing: 12,
-        runSpacing: 8,
+        runSpacing: 12,
         children: List.generate(
           widget.productSize.length,
               (index) {
@@ -88,28 +91,38 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 48,
+                      height: 48,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColor.primary
-                            : (available ? Colors.white : Colors.grey.shade100),
+                            ? AppColor.goldEnd.withOpacity(0.1)
+                            : Colors.transparent,
                         border: Border.all(
-                          color: isSelected ? AppColor.primary : AppColor.border,
-                          width: 2,
+                          color: isSelected
+                              ? AppColor.goldEnd
+                              : AppColor.outlineVariantDark,
+                          width: isSelected ? 2 : 1,
                         ),
-                        borderRadius: BorderRadius.circular(100),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: AppColor.goldEnd.withOpacity(0.2),
+                                  blurRadius: 20,
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Text(
                         size,
                         style: TextStyle(
                           fontFamily: 'Estedad',
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w400,
                           color: isSelected
-                              ? Colors.white
-                              : (available ? AppColor.secondary : Colors.grey),
+                              ? AppColor.goldEnd
+                              : AppColor.onSurface,
                         ),
                       ),
                     ),
@@ -117,7 +130,7 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
                     if (!available)
                       IgnorePointer(
                         child: CustomPaint(
-                          size: const Size(32, 32),
+                          size: const Size(48, 48),
                           painter: _UnavailableCrossPainter(),
                         ),
                       ),
@@ -132,7 +145,7 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
   }
 }
 
-/// خط ضربدر روی دایره سایز ناموجود
+/// خط ضربدر روی دکمه‌ی سایز ناموجود
 class _UnavailableCrossPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -141,8 +154,7 @@ class _UnavailableCrossPainter extends CustomPainter {
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 
-    // خط از گوشه بالا-چپ تا پایین-راست دایره
-    const inset = 5.0;
+    const inset = 8.0;
     canvas.drawLine(
       Offset(inset, size.height - inset),
       Offset(size.width - inset, inset),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'package:marketky/constant/app_color.dart';
 
 // Simple media model to support both images and videos with thumbnails
 enum MediaType { image, video }
@@ -153,8 +154,8 @@ class _CarouselImageViewerState extends State<CarouselImageViewer> {
         allowPlaybackSpeedChanging: true,
         showControls: true,
         materialProgressColors: ChewieProgressColors(
-          playedColor: Theme.of(context).colorScheme.primary,
-          handleColor: Theme.of(context).colorScheme.primary,
+          playedColor: AppColor.goldEnd,
+          handleColor: AppColor.goldEnd,
           backgroundColor: Colors.black26,
           bufferedColor: Colors.white54,
         ),
@@ -350,7 +351,7 @@ class _CarouselImageViewerState extends State<CarouselImageViewer> {
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: isSelected
-                                    ? Theme.of(context).primaryColor
+                                    ? AppColor.goldEnd
                                     : Colors.white.withOpacity(0.8),
                                 width: isSelected ? 2 : 1,
                               ),
@@ -439,7 +440,7 @@ class _CarouselImageViewerState extends State<CarouselImageViewer> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: index == _currentIndex
-                    ? Theme.of(context).primaryColor
+                    ? AppColor.goldEnd
                     : Colors.grey[300],
               ),
             ),

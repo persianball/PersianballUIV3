@@ -18,7 +18,12 @@ class DetailTabs extends StatefulWidget {
   final List<DetailTab> tabs;
   final int initialIndex;
 
-  const DetailTabs({super.key, required this.tabs, this.initialIndex = 0});
+  /// پوسته تیره/طلایی طرح Obsidian Gold Athletics. پیش‌فرض false تا
+  /// صفحاتی که هنوز بازطراحی نشده‌اند (مثل course_detail_page) بدون تغییر بمانند.
+  final bool dark;
+
+  const DetailTabs(
+      {super.key, required this.tabs, this.initialIndex = 0, this.dark = false});
 
   @override
   State<DetailTabs> createState() => _DetailTabsState();
@@ -109,20 +114,33 @@ class _DetailTabsState extends State<DetailTabs> {
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? AppColor.primary : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: selected ? AppColor.primary : AppColor.border,
-                ),
-              ),
+              decoration: widget.dark
+                  ? BoxDecoration(
+                      color: selected
+                          ? AppColor.goldEnd.withOpacity(0.1)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: selected
+                            ? AppColor.goldEnd
+                            : AppColor.outlineVariantDark,
+                      ),
+                    )
+                  : BoxDecoration(
+                      color: selected ? AppColor.primary : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selected ? AppColor.primary : AppColor.border,
+                      ),
+                    ),
               child: Text(
                 widget.tabs[i].title,
                 style: TextStyle(
                   fontFamily: 'Estedad',
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? Colors.white : AppColor.secondary,
+                  color: widget.dark
+                      ? (selected ? AppColor.goldEnd : AppColor.onSurfaceVariant)
+                      : (selected ? Colors.white : AppColor.secondary),
                 ),
               ),
             ),
