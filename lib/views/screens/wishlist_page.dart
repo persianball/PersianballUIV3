@@ -6,7 +6,6 @@ import 'package:marketky/services/catalog_service.dart';
 import 'package:marketky/services/wishlist_service.dart';
 import 'package:marketky/views/screens/catalog_page.dart';
 import 'package:marketky/views/widgets/item_card.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 
 /// لیست علاقه‌مندی‌ها و بازدیدهای اخیر
 class WishlistPage extends StatefulWidget {
@@ -60,35 +59,36 @@ class _WishlistPageState extends State<WishlistPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: const Text('علاقه‌مندی‌ها',
-              style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
-        body: PageContainer(child: _buildBody()),
+        body: _buildBody(),
       ),
     );
   }
 
   Widget _buildBody() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const Center(child: CircularProgressIndicator(color: AppColor.goldEnd));
 
     if (_error != null) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_error!, style: const TextStyle(fontFamily: 'Estedad')),
+            Text(_error!,
+                style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _load,
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.goldEnd, shape: const RoundedRectangleBorder()),
               child: const Text('تلاش مجدد',
-                  style: TextStyle(fontFamily: 'Estedad', color: Colors.white)),
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
             ),
           ],
         ),
@@ -96,7 +96,7 @@ class _WishlistPageState extends State<WishlistPage> {
     }
 
     return RefreshIndicator(
-      color: AppColor.primary,
+      color: AppColor.goldEnd,
       onRefresh: _load,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -109,7 +109,8 @@ class _WishlistPageState extends State<WishlistPage> {
                 style: TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 16,
-                    fontWeight: FontWeight.w700)),
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.onSurface)),
             const SizedBox(height: 12),
             _grid(_recent),
           ],
@@ -122,7 +123,7 @@ class _WishlistPageState extends State<WishlistPage> {
   Widget _grid(List<Product> products) => Wrap(
         spacing: 16,
         runSpacing: 16,
-        children: products.map((p) => ItemCard(product: p)).toList(),
+        children: products.map((p) => ItemCard(product: p, dark: true)).toList(),
       );
 
   Widget _emptyFavorites() {
@@ -130,17 +131,17 @@ class _WishlistPageState extends State<WishlistPage> {
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         children: [
-          Icon(Icons.favorite_border, size: 48, color: Colors.grey.shade400),
+          Icon(Icons.favorite_border, size: 48, color: AppColor.onSurfaceVariant),
           const SizedBox(height: 12),
           const Text('هنوز کالایی به علاقه‌مندی‌ها اضافه نکرده‌اید',
-              style: TextStyle(fontFamily: 'Estedad')),
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
           const SizedBox(height: 8),
           TextButton(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const CatalogPage()),
             ),
             child: const Text('مشاهده محصولات',
-                style: TextStyle(fontFamily: 'Estedad')),
+                style: TextStyle(fontFamily: 'Estedad', color: AppColor.goldEnd)),
           ),
         ],
       ),

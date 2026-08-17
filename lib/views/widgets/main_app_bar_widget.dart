@@ -5,10 +5,12 @@ import 'package:marketky/constant/app_color.dart';
 class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
   final int cartValue;
   final int chatValue;
+  final bool dark;
 
   MainAppBar({
     required this.cartValue,
     required this.chatValue,
+    this.dark = false,
   });
 
   @override
@@ -24,7 +26,7 @@ class _MainAppBarState extends State<MainAppBar> {
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: false,
-      backgroundColor: AppColor.primary,
+      backgroundColor: widget.dark ? AppColor.obsidianBg : AppColor.primary,
       elevation: 0,
       title: Row(
         children: [

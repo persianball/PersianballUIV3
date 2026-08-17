@@ -5,7 +5,6 @@ import 'package:marketky/views/screens/order_detail_page.dart';
 import 'package:marketky/models/payment_models.dart';
 import 'package:marketky/services/payment_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -119,21 +118,12 @@ class _OrdersPageState extends State<OrdersPage>
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: AppColor.surfaceContainer,
+          border: Border.all(color: AppColor.outlineVariantDark),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => OrderDetailPage(payment: item),
@@ -155,7 +145,6 @@ class _OrdersPageState extends State<OrdersPage>
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: statusClr.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
                           _statusFa(item.status),
@@ -169,13 +158,13 @@ class _OrdersPageState extends State<OrdersPage>
                       ),
                       const Spacer(),
                       Icon(Icons.chevron_left,
-                          size: 18, color: Colors.grey.shade400),
+                          size: 18, color: AppColor.onSurfaceVariant),
                       Text(
                         'سفارش #${item.id}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Estedad',
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: AppColor.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -188,23 +177,24 @@ class _OrdersPageState extends State<OrdersPage>
                       fontFamily: 'Estedad',
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
+                      color: AppColor.goldEnd,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Divider(height: 1, color: Colors.grey.shade200),
+                  Divider(height: 1, color: AppColor.outlineVariantDark),
                   const SizedBox(height: 8),
                   // ردیف سوم: کد پیگیری، اطلاعات کم‌اهمیت‌تر
                   Row(
                     children: [
                       Icon(Icons.confirmation_number_outlined,
-                          size: 15, color: Colors.grey.shade600),
+                          size: 15, color: AppColor.onSurfaceVariant),
                       const SizedBox(width: 6),
-                      Text(
+                      const Text(
                         'کد پیگیری',
                         style: TextStyle(
                           fontFamily: 'Estedad',
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: AppColor.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -218,6 +208,7 @@ class _OrdersPageState extends State<OrdersPage>
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
+                            color: AppColor.onSurface,
                           ),
                         ),
                       ),
@@ -247,55 +238,49 @@ class _OrdersPageState extends State<OrdersPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // چیدمان اپ‌بار راست‌به‌چپ: عنوان و دکمه بازگشت سمت راست
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: AppBar(
-            title: const Text('سفارش‌های من',
-                style: TextStyle(color: Colors.black)),
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            elevation: 0,
-          ),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppColor.obsidianBg,
+        appBar: AppBar(
+          title: const Text('سفارش‌های من',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
+          elevation: 0,
         ),
-      ),
-      body: PageContainer(
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-                  ? _ErrorView(message: _error!, onRetry: () => _fetch())
-                  : RefreshIndicator(
-                      color: AppColor.primary,
-                      onRefresh: () async {
-                        _nextUrl = null;
-                        await _fetch();
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
+            : _error != null
+                ? _ErrorView(message: _error!, onRetry: () => _fetch())
+                : RefreshIndicator(
+                    color: AppColor.goldEnd,
+                    onRefresh: () async {
+                      _nextUrl = null;
+                      await _fetch();
+                    },
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: (_data?.results.length ?? 0) + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                            child: Text(
+                              'مجموع سفارش‌ها: ${_data?.count ?? 0}',
+                              style: const TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColor.onSurface),
+                            ),
+                          );
+                        }
+                        final item = _data!.results[index - 1];
+                        return _buildItem(item);
                       },
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: (_data?.results.length ?? 0) + 1,
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                              child: Text(
-                                'مجموع سفارش‌ها: ${_data?.count ?? 0}',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            );
-                          }
-                          final item = _data!.results[index - 1];
-                          return _buildItem(item);
-                        },
-                      ),
                     ),
-        ),
+                  ),
       ),
     );
   }
@@ -312,15 +297,18 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.wifi_off, size: 40, color: Colors.grey),
+          const Icon(Icons.wifi_off, size: 40, color: AppColor.onSurfaceVariant),
           const SizedBox(height: 12),
-          Text(message, textAlign: TextAlign.center),
+          Text(message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
           const SizedBox(height: 12),
           ElevatedButton(
             onPressed: onRetry,
-            style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
-            child:
-                const Text('تلاش مجدد', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColor.goldEnd, shape: const RoundedRectangleBorder()),
+            child: const Text('تلاش مجدد',
+                style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
           ),
         ],
       ),

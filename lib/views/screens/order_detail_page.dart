@@ -4,7 +4,6 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/payment_models.dart';
 import 'package:marketky/services/order_detail_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 
 /// جزئیات یک سفارش: اقلام، پیگیری مرسوله، صورتحساب و اقدامات
 class OrderDetailPage extends StatefulWidget {
@@ -42,19 +41,18 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: Text('سفارش #${widget.payment.id}',
-              style: const TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: const TextStyle(
+                  fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
-        body: PageContainer(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(_detail!),
-        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
+            : _buildContent(_detail!),
       ),
     );
   }
@@ -88,18 +86,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.amber.shade50,
-          border: Border.all(color: Colors.amber.shade300),
-          borderRadius: BorderRadius.circular(10),
+          color: AppColor.goldEnd.withOpacity(0.08),
+          border: Border.all(color: AppColor.goldEnd.withOpacity(0.4)),
         ),
         child: Row(
           children: [
-            Icon(Icons.info_outline, size: 18, color: Colors.amber.shade800),
+            Icon(Icons.info_outline, size: 18, color: AppColor.goldEnd),
             const SizedBox(width: 8),
             const Expanded(
               child: Text(
                 'اقلام و وضعیت مرسوله نمایشی است؛ بک‌اند هنوز endpoint جزئیات سفارش ندارد.',
-                style: TextStyle(fontFamily: 'Estedad', fontSize: 11),
+                style: TextStyle(fontFamily: 'Estedad', fontSize: 11, color: AppColor.onSurfaceVariant),
               ),
             ),
           ],
@@ -109,9 +106,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   Widget _card({required String title, required Widget child}) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColor.border),
+          color: AppColor.surfaceContainer,
+          border: Border.all(color: AppColor.outlineVariantDark),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +116,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontWeight: FontWeight.w700,
-                    fontSize: 14)),
+                    fontSize: 14,
+                    color: AppColor.onSurface)),
             const SizedBox(height: 12),
             child,
           ],
@@ -147,14 +144,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                             ? Icons.check_circle
                             : Icons.radio_button_unchecked,
                         size: 20,
-                        color: done ? AppColor.primary : Colors.grey.shade400,
+                        color: done ? AppColor.goldEnd : AppColor.onSurfaceVariant,
                       ),
                       if (!isLast)
                         Expanded(
                           child: Container(
                             width: 2,
                             color:
-                                done ? AppColor.primary : Colors.grey.shade300,
+                                done ? AppColor.goldEnd : AppColor.outlineVariantDark,
                           ),
                         ),
                     ],
@@ -168,7 +165,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         fontFamily: 'Estedad',
                         fontSize: 13,
                         fontWeight: done ? FontWeight.w700 : FontWeight.w400,
-                        color: done ? AppColor.secondary : Colors.grey,
+                        color: done ? AppColor.onSurface : AppColor.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -176,7 +173,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
             );
           }),
-          const Divider(height: 20),
+          Divider(height: 20, color: AppColor.outlineVariantDark),
           _infoRow('شرکت حمل', d.carrier),
           if (d.shipmentTrackingNumber != null)
             _infoRow('کد رهگیری مرسوله', d.shipmentTrackingNumber!),
@@ -200,11 +197,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: AppColor.primarySoft,
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColor.obsidianBg,
+                    border: Border.all(color: AppColor.outlineVariantDark),
                   ),
                   child: const Icon(Icons.inventory_2_outlined,
-                      color: Colors.grey, size: 22),
+                      color: AppColor.onSurfaceVariant, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -215,7 +212,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                           style: const TextStyle(
                               fontFamily: 'Estedad',
                               fontSize: 13,
-                              fontWeight: FontWeight.w600)),
+                              fontWeight: FontWeight.w600,
+                              color: AppColor.onSurface)),
                       const SizedBox(height: 4),
                       Text(
                         [
@@ -223,10 +221,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                           if (item.size != null) 'سایز: ${item.size}',
                           'تعداد: ${item.quantity}',
                         ].join('  •  '),
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontFamily: 'Estedad',
                             fontSize: 11,
-                            color: Colors.grey.shade600),
+                            color: AppColor.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -235,7 +233,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     style: const TextStyle(
                         fontFamily: 'Estedad',
                         fontSize: 12,
-                        fontWeight: FontWeight.w700)),
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.goldEnd)),
               ],
             ),
           );
@@ -250,7 +249,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(d.address,
-                style: const TextStyle(fontFamily: 'Estedad', fontSize: 13)),
+                style: const TextStyle(
+                    fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurface)),
             const SizedBox(height: 8),
             _infoRow('روش ارسال', d.deliveryMethod == 'peyk' ? 'پیک' : 'پست'),
           ],
@@ -263,15 +263,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           children: [
             _infoRow('قیمت کل', '${thousandSeparator(d.price)} تومان'),
             _infoRow('تخفیف', '-${thousandSeparator(d.discount)} تومان',
-                valueColor: Colors.redAccent),
+                valueColor: AppColor.errorDark),
             _infoRow('مالیات', '${thousandSeparator(d.tax)} تومان'),
             _infoRow(
                 'هزینه ارسال',
                 d.shippingPrice == 0
                     ? 'رایگان'
                     : '${thousandSeparator(d.shippingPrice)} تومان',
-                valueColor: d.shippingPrice == 0 ? Colors.green : null),
-            const Divider(height: 20),
+                valueColor: d.shippingPrice == 0 ? AppColor.successDark : null),
+            Divider(height: 20, color: AppColor.outlineVariantDark),
             _infoRow('مبلغ پرداخت‌شده', '${thousandSeparator(d.payable)} تومان',
                 bold: true),
           ],
@@ -286,10 +286,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: TextStyle(
+              style: const TextStyle(
                   fontFamily: 'Estedad',
                   fontSize: 12,
-                  color: Colors.grey.shade600)),
+                  color: AppColor.onSurfaceVariant)),
           Flexible(
             child: Text(
               value,
@@ -298,7 +298,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 fontFamily: 'Estedad',
                 fontSize: bold ? 14 : 12,
                 fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
-                color: valueColor,
+                color: valueColor ?? AppColor.onSurface,
               ),
             ),
           ),
@@ -317,8 +317,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               foregroundColor: Colors.red,
               side: const BorderSide(color: Colors.red),
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: const RoundedRectangleBorder(),
             ),
             child: Text(label, style: const TextStyle(fontFamily: 'Estedad')),
           ),
@@ -332,23 +331,25 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: AppColor.surfaceContainer,
+          shape: const RoundedRectangleBorder(),
           title: Text(isCancel ? 'لغو سفارش' : 'درخواست مرجوعی',
-              style: const TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: const TextStyle(
+                  fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
           content: TextField(
             controller: reasonCtrl,
-            style: const TextStyle(fontFamily: 'Estedad'),
+            style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
             decoration: const InputDecoration(
               hintText: 'دلیل خود را بنویسید (اختیاری)',
-              hintStyle: TextStyle(fontFamily: 'Estedad', fontSize: 12),
+              hintStyle: TextStyle(
+                  fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child:
-                  const Text('انصراف', style: TextStyle(fontFamily: 'Estedad')),
+              child: const Text('انصراف',
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

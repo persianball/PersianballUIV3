@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/notification_service.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -47,11 +46,11 @@ class _NotificationPageState extends State<NotificationPage> {
   Color _colorFor(AppNotificationType type) {
     switch (type) {
       case AppNotificationType.order:
-        return AppColor.primary;
+        return AppColor.goldEnd;
       case AppNotificationType.promo:
-        return Colors.orange.shade700;
+        return Colors.orange.shade400;
       case AppNotificationType.system:
-        return Colors.blueGrey;
+        return Colors.blueGrey.shade200;
     }
   }
 
@@ -60,13 +59,13 @@ class _NotificationPageState extends State<NotificationPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
+          foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: const Text('اعلان‌ها',
-              style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+              style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
           actions: [
             TextButton(
               onPressed: () async {
@@ -74,26 +73,24 @@ class _NotificationPageState extends State<NotificationPage> {
                 await _load();
               },
               child: const Text('خواندن همه',
-                  style: TextStyle(fontFamily: 'Estedad', fontSize: 12)),
+                  style: TextStyle(fontFamily: 'Estedad', fontSize: 12, color: AppColor.goldEnd)),
             ),
           ],
         ),
-        body: PageContainer(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  color: AppColor.primary,
-                  onRefresh: _load,
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      if (NotificationService.isMock) _mockBanner(),
-                      if (_items.isEmpty) _empty() else ..._items.map(_tile),
-                    ],
-                  ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
+            : RefreshIndicator(
+                color: AppColor.goldEnd,
+                onRefresh: _load,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    if (NotificationService.isMock) _mockBanner(),
+                    if (_items.isEmpty) _empty() else ..._items.map(_tile),
+                  ],
                 ),
-        ),
+              ),
       ),
     );
   }
@@ -102,18 +99,17 @@ class _NotificationPageState extends State<NotificationPage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.amber.shade50,
-          border: Border.all(color: Colors.amber.shade300),
-          borderRadius: BorderRadius.circular(10),
+          color: AppColor.goldEnd.withOpacity(0.08),
+          border: Border.all(color: AppColor.goldEnd.withOpacity(0.4)),
         ),
         child: Row(
           children: [
-            Icon(Icons.info_outline, size: 18, color: Colors.amber.shade800),
+            Icon(Icons.info_outline, size: 18, color: AppColor.goldEnd),
             const SizedBox(width: 8),
             const Expanded(
               child: Text(
                 'اعلان‌ها نمایشی است؛ برای push واقعی به endpoint اعلان و FCM نیاز است.',
-                style: TextStyle(fontFamily: 'Estedad', fontSize: 11),
+                style: TextStyle(fontFamily: 'Estedad', fontSize: 11, color: AppColor.onSurfaceVariant),
               ),
             ),
           ],
@@ -125,10 +121,10 @@ class _NotificationPageState extends State<NotificationPage> {
         child: Column(
           children: [
             Icon(Icons.notifications_none,
-                size: 48, color: Colors.grey.shade400),
+                size: 48, color: AppColor.onSurfaceVariant),
             const SizedBox(height: 12),
             const Text('اعلانی ندارید',
-                style: TextStyle(fontFamily: 'Estedad')),
+                style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
           ],
         ),
       );
@@ -140,14 +136,12 @@ class _NotificationPageState extends State<NotificationPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isRead ? Colors.white : AppColor.primarySoft.withOpacity(0.35),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColor.border),
+        color: isRead ? AppColor.surfaceContainer : AppColor.goldEnd.withOpacity(0.08),
+        border: Border.all(color: AppColor.outlineVariantDark),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
           onTap: () async {
             await NotificationService.markRead(n.id);
             if (!mounted) return;
@@ -165,7 +159,6 @@ class _NotificationPageState extends State<NotificationPage> {
                   height: 38,
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(_iconFor(n.type), size: 20, color: color),
                 ),
@@ -184,6 +177,7 @@ class _NotificationPageState extends State<NotificationPage> {
                                 fontSize: 13,
                                 fontWeight:
                                     isRead ? FontWeight.w600 : FontWeight.w800,
+                                color: AppColor.onSurface,
                               ),
                             ),
                           ),
@@ -192,7 +186,7 @@ class _NotificationPageState extends State<NotificationPage> {
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: AppColor.primary,
+                                color: AppColor.goldEnd,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -203,13 +197,14 @@ class _NotificationPageState extends State<NotificationPage> {
                           style: const TextStyle(
                               fontFamily: 'Estedad',
                               fontSize: 12,
-                              height: 1.6)),
+                              height: 1.6,
+                              color: AppColor.onSurfaceVariant)),
                       const SizedBox(height: 6),
                       Text(n.createdAt,
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontFamily: 'Estedad',
                               fontSize: 10,
-                              color: Colors.grey.shade500)),
+                              color: AppColor.onSurfaceVariant)),
                     ],
                   ),
                 ),

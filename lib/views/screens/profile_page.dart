@@ -12,7 +12,6 @@ import 'otp_verification_page.dart';
 import 'package:marketky/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:marketky/views/widgets/page_container.dart';
 
 class UserService {
   static const String endpoint = '/v1/user/';
@@ -83,9 +82,11 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.obsidianBg,
       appBar: MainAppBar(
         cartValue: 2,
         chatValue: 2,
+        dark: true,
       ),
       // تا وقتی وضعیت ورود مشخص نشده چیزی از پروفایل نمایش داده نمی‌شود
       body: BlocListener<LoginBloc, LoginState>(
@@ -97,7 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
           }
         },
         child: _loggedIn == null
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
             : (_loggedIn! ? _buildProfile(context) : _buildGuestView(context)),
       ),
     );
@@ -118,10 +119,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 height: 96,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColor.primarySoft,
+                  color: AppColor.surfaceContainer,
+                  border: Border.all(color: AppColor.outlineVariantDark),
                 ),
                 child: Icon(Icons.person_outline,
-                    size: 46, color: AppColor.primary),
+                    size: 46, color: AppColor.goldEnd),
               ),
               SizedBox(height: 20),
               Text(
@@ -130,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   fontFamily: 'Estedad',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColor.secondary,
+                  color: AppColor.onSurface,
                 ),
               ),
               SizedBox(height: 8),
@@ -141,7 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   fontFamily: 'Estedad',
                   fontSize: 13,
                   height: 1.7,
-                  color: Colors.grey.shade600,
+                  color: AppColor.onSurfaceVariant,
                 ),
               ),
               SizedBox(height: 24),
@@ -157,10 +159,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     await _checkAuth();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColor.primary,
+                    backgroundColor: AppColor.goldEnd,
                     padding: EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                    shape: const RoundedRectangleBorder(),
                     elevation: 0,
                   ),
                   child: Text(
@@ -168,7 +169,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(
                         fontFamily: 'Estedad',
                         fontSize: 15,
-                        color: Colors.white),
+                        color: AppColor.onGold),
                   ),
                 ),
               ),
@@ -177,7 +178,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 onPressed: () => Navigator.of(context).pushNamed('/catalog'),
                 child: Text(
                   'فعلاً فقط محصولات را ببینم',
-                  style: TextStyle(fontFamily: 'Estedad', fontSize: 13),
+                  style: TextStyle(
+                      fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurfaceVariant),
                 ),
               ),
             ],
@@ -188,8 +190,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildProfile(BuildContext context) {
-    return PageContainer(
-        child: ListView(
+    return ListView(
           shrinkWrap: true,
           physics: BouncingScrollPhysics(),
           children: [
@@ -197,12 +198,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Container(
               width: MediaQuery.of(context).size.width,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/background.jpg'),
-                  fit: BoxFit.cover,
-                ),
-              ),
+              color: AppColor.surfaceContainer,
               child: Column(
                 children: [
                   // Profile Picture
@@ -210,8 +206,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     width: 96,
                     height: 96,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      color: Colors.grey,
+                      border: Border.all(color: AppColor.goldEnd, width: 2),
                       image: DecorationImage(
                         image:
                             AssetImage('assets/images/avatar_for_comments.png'),
@@ -219,19 +214,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-                  // Fullname
-                  // Container(
-                  //   margin: EdgeInsets.only(bottom: 4, top: 14),
-                  //   child: Text(
-                  //     'Nadsya Utari',
-                  //     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
-                  //   ),
-                  // ),
-                  // // Username
-                  // Text(
-                  //   'Username',
-                  //   style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
-                  // ),
+                  SizedBox(height: 16),
                   // بعد از خروج، همین صفحه به حالت مهمان می‌رود
                   // (listener بالای صفحه _loggedIn را false می‌کند)
                   Builder(
@@ -250,8 +233,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         backgroundColor: Colors.red,
                         padding:
                             EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                        shape: const RoundedRectangleBorder(),
                       ),
                     ),
                   ),
@@ -283,7 +265,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Text(
                         'حساب کاربری',
                         style: TextStyle(
-                          color: AppColor.secondary.withOpacity(0.5),
+                          fontFamily: 'Estedad',
+                          color: AppColor.onSurfaceVariant,
                           letterSpacing: 6 / 100,
                           fontWeight: FontWeight.w600,
                         ),
@@ -295,7 +278,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       },
                       icon: SvgPicture.asset(
                         'assets/icons/Bag.svg',
-                        color: AppColor.secondary.withOpacity(0.5),
+                        color: AppColor.goldEnd,
                       ),
                       title: 'سفارشات',
                       subtitle: 'سفارش‌های ثبت‌شده شما',
@@ -305,7 +288,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.of(context).pushNamed('/wishlist');
                       },
                       icon: Icon(Icons.favorite_border,
-                          color: AppColor.secondary.withOpacity(0.5)),
+                          color: AppColor.goldEnd),
                       title: 'علاقه‌مندی‌ها',
                       subtitle: 'کالاهای ذخیره‌شده شما',
                     ),
@@ -315,7 +298,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       },
                       icon: SvgPicture.asset(
                         'assets/icons/Location.svg',
-                        color: AppColor.secondary.withOpacity(0.5),
+                        color: AppColor.goldEnd,
                       ),
                       title: 'آدرس‌ها',
                       subtitle: 'آدرس‌های ثبت‌شده شما',
@@ -325,7 +308,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.of(context).pushNamed('/account-security');
                       },
                       icon: Icon(Icons.lock_outline,
-                          color: AppColor.secondary.withOpacity(0.5)),
+                          color: AppColor.goldEnd),
                       title: 'امنیت حساب',
                       subtitle: 'تغییر رمز عبور و حذف حساب',
                     ),
@@ -336,7 +319,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Text(
                         'پشتیبانی و قوانین',
                         style: TextStyle(
-                          color: AppColor.secondary.withOpacity(0.5),
+                          fontFamily: 'Estedad',
+                          color: AppColor.onSurfaceVariant,
                           letterSpacing: 6 / 100,
                           fontWeight: FontWeight.w600,
                         ),
@@ -345,28 +329,28 @@ class _ProfilePageState extends State<ProfilePage> {
                     MenuTileWidget(
                       onTap: () => Navigator.of(context).pushNamed('/support'),
                       icon: Icon(Icons.headset_mic_outlined,
-                          color: AppColor.secondary.withOpacity(0.5)),
+                          color: AppColor.goldEnd),
                       title: 'تماس با پشتیبانی',
                       subtitle: 'تلفن، ایمیل و پیام‌رسان',
                     ),
                     MenuTileWidget(
                       onTap: () => Navigator.of(context).pushNamed('/terms'),
                       icon: Icon(Icons.description_outlined,
-                          color: AppColor.secondary.withOpacity(0.5)),
+                          color: AppColor.goldEnd),
                       title: 'قوانین و مقررات',
                       subtitle: 'شرایط خرید و مرجوعی',
                     ),
                     MenuTileWidget(
                       onTap: () => Navigator.of(context).pushNamed('/privacy'),
                       icon: Icon(Icons.privacy_tip_outlined,
-                          color: AppColor.secondary.withOpacity(0.5)),
+                          color: AppColor.goldEnd),
                       title: 'حریم خصوصی',
                       subtitle: 'نحوه استفاده از اطلاعات شما',
                     ),
                     MenuTileWidget(
                       onTap: () => Navigator.of(context).pushNamed('/about'),
                       icon: Icon(Icons.info_outline,
-                          color: AppColor.secondary.withOpacity(0.5)),
+                          color: AppColor.goldEnd),
                       title: 'درباره ما',
                       subtitle: 'معرفی فروشگاه',
                     ),
@@ -375,8 +359,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
           ],
-        ),
-    );
+        );
   }
 }
 
@@ -481,10 +464,30 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
     setState(() => _loading = false);
   }
 
+  InputDecoration _dec(String label, {Widget? suffixIcon}) => InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: AppColor.surfaceContainer,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColor.outlineVariantDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColor.outlineVariantDark),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return _loading
-        ? Center(child: CircularProgressIndicator())
+        ? Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
         : Form(
             key: _formKey,
             child: Column(
@@ -494,14 +497,16 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                     style: TextStyle(
                         fontFamily: 'Estedad',
                         fontWeight: FontWeight.bold,
-                        fontSize: 18)),
+                        fontSize: 18,
+                        color: AppColor.onSurface)),
                 SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: TextFormField(
                         controller: _firstNameController,
-                        decoration: InputDecoration(labelText: 'نام'),
+                        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
+                        decoration: _dec('نام'),
                         validator: (val) => val == null || val.isEmpty
                             ? 'نام را وارد کنید'
                             : null,
@@ -511,7 +516,8 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                     Expanded(
                       child: TextFormField(
                         controller: _lastNameController,
-                        decoration: InputDecoration(labelText: 'نام خانوادگی'),
+                        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
+                        decoration: _dec('نام خانوادگی'),
                         validator: (val) => val == null || val.isEmpty
                             ? 'نام خانوادگی را وارد کنید'
                             : null,
@@ -524,14 +530,15 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: 'ایمیل',
+                  style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
+                  decoration: _dec(
+                    'ایمیل',
                     suffixIcon: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           _isEmailVerified ? Icons.check_circle : Icons.cancel,
-                          color: _isEmailVerified ? Colors.green : Colors.red,
+                          color: _isEmailVerified ? AppColor.successDark : Colors.red,
                           size: 20,
                         ),
                         if (!_isEmailVerified &&
@@ -541,8 +548,8 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                               destination: _emailController.text,
                               isEmail: true,
                             ),
-                            child:
-                                Text('تأیید', style: TextStyle(fontSize: 12)),
+                            child: Text('تأیید',
+                                style: TextStyle(fontFamily: 'Estedad', fontSize: 12, color: AppColor.goldEnd)),
                           ),
                       ],
                     ),
@@ -555,14 +562,15 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                 TextFormField(
                   controller: _mobileController,
                   keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'شماره موبایل',
+                  style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
+                  decoration: _dec(
+                    'شماره موبایل',
                     suffixIcon: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           _isMobileVerified ? Icons.check_circle : Icons.cancel,
-                          color: _isMobileVerified ? Colors.green : Colors.red,
+                          color: _isMobileVerified ? AppColor.successDark : Colors.red,
                           size: 20,
                         ),
                         if (!_isMobileVerified &&
@@ -572,8 +580,8 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                               destination: _mobileController.text,
                               isEmail: false,
                             ),
-                            child:
-                                Text('تأیید', style: TextStyle(fontSize: 12)),
+                            child: Text('تأیید',
+                                style: TextStyle(fontFamily: 'Estedad', fontSize: 12, color: AppColor.goldEnd)),
                           ),
                       ],
                     ),
@@ -582,26 +590,6 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                       ? 'شماره موبایل را وارد کنید'
                       : null,
                 ),
-                // SizedBox(height: 12),
-                // TextFormField(
-                //   controller: _birthDateController,
-                //   readOnly: true,
-                //   decoration: InputDecoration(
-                //     labelText: 'تاریخ تولد (اختیاری)',
-                //     suffixIcon: Icon(Icons.calendar_today),
-                //   ),
-                //   onTap: () => _selectBirthDate(context),
-                // ),
-                // SizedBox(height: 12),
-                // DropdownButtonFormField<String>(
-                //   value: _gender,
-                //   decoration: InputDecoration(labelText: 'جنسیت (اختیاری)'),
-                //   items: [
-                //     DropdownMenuItem(value: 'male', child: Text('مرد')),
-                //     DropdownMenuItem(value: 'female', child: Text('زن')),
-                //   ],
-                //   onChanged: (val) => setState(() => _gender = val),
-                // ),
                 SizedBox(height: 18),
                 SizedBox(
                   width: double.infinity,
@@ -613,12 +601,11 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                           style: TextStyle(
                               fontFamily: 'Estedad',
                               fontSize: 16,
-                              color: Colors.white)),
+                              color: AppColor.onGold)),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.primary,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                      backgroundColor: AppColor.goldEnd,
+                      shape: const RoundedRectangleBorder(),
                     ),
                   ),
                 ),

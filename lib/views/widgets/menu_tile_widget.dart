@@ -16,8 +16,8 @@ class MenuTileWidget extends StatelessWidget {
     this.subtitle,
     required this.onTap,
     this.margin,
-    this.iconBackground = AppColor.primarySoft,
-    this.titleColor = AppColor.secondary,
+    this.iconBackground = AppColor.obsidianBg,
+    this.titleColor = AppColor.onSurface,
   });
 
   @override
@@ -29,7 +29,7 @@ class MenuTileWidget extends StatelessWidget {
         width: MediaQuery.of(context).size.width,
         padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColor.primarySoft, width: 1)),
+          border: Border(bottom: BorderSide(color: AppColor.outlineVariantDark, width: 1)),
         ),
         child: Row(
           children: [
@@ -41,7 +41,7 @@ class MenuTileWidget extends StatelessWidget {
               margin: EdgeInsets.only(left: 16),
               decoration: BoxDecoration(
                 color: iconBackground,
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColor.outlineVariantDark),
               ),
               child: icon,
             ),
@@ -52,15 +52,16 @@ class MenuTileWidget extends StatelessWidget {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('$title', style: TextStyle(color: AppColor.secondary, fontFamily: 'Estedad', fontWeight: FontWeight.w500)),
+                        Text('$title', style: TextStyle(color: AppColor.onSurface, fontFamily: 'Estedad', fontWeight: FontWeight.w500)),
                         SizedBox(height: 2),
-                        Text('$subtitle', style: TextStyle(color: AppColor.secondary.withOpacity(0.7), fontSize: 12)),
+                        Text('$subtitle', style: TextStyle(color: AppColor.onSurfaceVariant, fontSize: 12)),
                       ],
                     ),
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: AppColor.border,
+              color: AppColor.onSurfaceVariant,
+              size: 16,
             ),
           ],
         ),
