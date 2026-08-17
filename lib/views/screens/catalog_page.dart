@@ -3,13 +3,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/services/catalog_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
 import 'package:marketky/views/widgets/item_card.dart';
-import 'package:marketky/views/widgets/page_container.dart';
 
 /// صفحه جست‌وجو و مرور کاتالوگ با فیلتر، دسته‌بندی و مرتب‌سازی
 class CatalogPage extends StatefulWidget {
@@ -122,31 +122,29 @@ class _CatalogPageState extends State<CatalogPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColor.obsidianBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColor.obsidianBg,
           elevation: 0,
-          title: const Text('جست‌وجو در محصولات',
-              style: TextStyle(fontFamily: 'Estedad', fontSize: 16)),
+          title: Text('فروشگاه',
+              style: AppTextStyles.headlineMd.copyWith(fontSize: 18)),
           actions: [
             IconButton(
               tooltip: 'مقایسه محصولات',
-              icon: const Icon(Icons.compare_arrows),
+              icon: const Icon(Icons.compare_arrows,
+                  color: AppColor.onSurfaceVariant),
               onPressed: () => Navigator.of(context).pushNamed('/compare'),
             ),
           ],
         ),
-        body: PageContainer(
-          child: Column(
-            children: [
-              _buildSearchBar(),
-              if (_categories.isNotEmpty) _buildCategoryChips(),
-              _buildToolbar(results.length),
-              const Divider(height: 1),
-              Expanded(child: _buildBody(results, visible)),
-            ],
-          ),
+        body: Column(
+          children: [
+            _buildSearchBar(),
+            if (_categories.isNotEmpty) _buildCategoryChips(),
+            _buildToolbar(results.length),
+            Divider(height: 1, color: AppColor.outlineVariantDark),
+            Expanded(child: _buildBody(results, visible)),
+          ],
         ),
       ),
     );
@@ -159,27 +157,37 @@ class _CatalogPageState extends State<CatalogPage> {
         controller: _searchController,
         onChanged: _onQueryChanged,
         textInputAction: TextInputAction.search,
-        style: const TextStyle(fontFamily: 'Estedad'),
+        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
         decoration: InputDecoration(
           hintText: 'نام محصول را بنویسید…',
           hintStyle: TextStyle(
-              fontFamily: 'Estedad', fontSize: 13, color: Colors.grey.shade500),
-          prefixIcon: const Icon(Icons.search),
+              fontFamily: 'Estedad',
+              fontSize: 13,
+              color: AppColor.onSurfaceVariant),
+          prefixIcon: const Icon(Icons.search, color: AppColor.onSurfaceVariant),
           suffixIcon: _searchController.text.isEmpty
               ? null
               : IconButton(
-                  icon: const Icon(Icons.clear),
+                  icon: const Icon(Icons.clear, color: AppColor.onSurfaceVariant),
                   onPressed: () {
                     _searchController.clear();
                     _updateFilter(_filter.copyWith(query: ''));
                   },
                 ),
           filled: true,
-          fillColor: AppColor.primarySoft.withOpacity(0.4),
+          fillColor: AppColor.surfaceContainer,
           contentPadding: const EdgeInsets.symmetric(vertical: 4),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColor.outlineVariantDark),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColor.outlineVariantDark),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
           ),
         ),
       ),
@@ -218,20 +226,21 @@ class _CatalogPageState extends State<CatalogPage> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: ChoiceChip(
-        label: Text(label,
-            style: TextStyle(
-              fontFamily: 'Estedad',
-              fontSize: 12,
-              color: selected ? Colors.white : AppColor.secondary,
-            )),
-        selected: selected,
-        onSelected: (_) => onTap(),
-        selectedColor: AppColor.primary,
-        backgroundColor: AppColor.primarySoft.withOpacity(0.5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-          side: BorderSide(color: AppColor.border),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? AppColor.goldEnd.withOpacity(0.1) : Colors.transparent,
+            border: Border.all(
+              color: selected ? AppColor.goldEnd : AppColor.outlineVariantDark,
+            ),
+          ),
+          child: Text(label,
+              style: AppTextStyles.labelSm.copyWith(
+                color: selected ? AppColor.goldEnd : AppColor.onSurfaceVariant,
+              )),
         ),
       ),
     );
@@ -242,28 +251,27 @@ class _CatalogPageState extends State<CatalogPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          Text('$total محصول',
-              style: TextStyle(
-                  fontFamily: 'Estedad',
-                  fontSize: 12,
-                  color: Colors.grey.shade600)),
+          Text('$total محصول', style: AppTextStyles.labelSm),
           const Spacer(),
           TextButton.icon(
             onPressed: _openSortSheet,
-            icon: const Icon(Icons.swap_vert, size: 18),
+            icon: const Icon(Icons.swap_vert,
+                size: 18, color: AppColor.onSurfaceVariant),
             label: Text(_filter.sort.label,
-                style: const TextStyle(fontFamily: 'Estedad', fontSize: 12)),
+                style: AppTextStyles.labelSm),
           ),
           TextButton.icon(
             onPressed: _openFilterSheet,
             icon: Icon(Icons.tune,
                 size: 18,
-                color: _filter.hasActiveFilter ? AppColor.primary : null),
+                color: _filter.hasActiveFilter
+                    ? AppColor.goldEnd
+                    : AppColor.onSurfaceVariant),
             label: Text('فیلتر',
-                style: TextStyle(
-                  fontFamily: 'Estedad',
-                  fontSize: 12,
-                  color: _filter.hasActiveFilter ? AppColor.primary : null,
+                style: AppTextStyles.labelSm.copyWith(
+                  color: _filter.hasActiveFilter
+                      ? AppColor.goldEnd
+                      : AppColor.onSurfaceVariant,
                   fontWeight: _filter.hasActiveFilter
                       ? FontWeight.w700
                       : FontWeight.w400,
@@ -292,16 +300,18 @@ class _CatalogPageState extends State<CatalogPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.wifi_off, size: 40, color: Colors.grey),
+            const Icon(Icons.wifi_off, size: 40, color: AppColor.outlineDark),
             const SizedBox(height: 12),
-            Text(_error!, style: const TextStyle(fontFamily: 'Estedad')),
+            Text(_error!, style: AppTextStyles.bodyMd),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _fetch,
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
-              child: const Text('تلاش مجدد',
-                  style: TextStyle(fontFamily: 'Estedad', color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColor.goldEnd,
+                shape: const RoundedRectangleBorder(),
+              ),
+              child: Text('تلاش مجدد',
+                  style: AppTextStyles.labelSm.copyWith(color: AppColor.onGold)),
             ),
           ],
         ),
@@ -315,18 +325,17 @@ class _CatalogPageState extends State<CatalogPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off, size: 48, color: Colors.grey.shade400),
+              const Icon(Icons.search_off, size: 48, color: AppColor.outlineDark),
               const SizedBox(height: 12),
-              const Text('محصولی با این مشخصات پیدا نشد',
-                  style: TextStyle(fontFamily: 'Estedad')),
+              Text('محصولی با این مشخصات پیدا نشد', style: AppTextStyles.bodyMd),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () {
                   _searchController.clear();
                   _updateFilter(const CatalogFilter());
                 },
-                child: const Text('حذف همه فیلترها',
-                    style: TextStyle(fontFamily: 'Estedad')),
+                child: Text('حذف همه فیلترها',
+                    style: AppTextStyles.labelSm.copyWith(color: AppColor.goldEnd)),
               ),
             ],
           ),
@@ -335,7 +344,8 @@ class _CatalogPageState extends State<CatalogPage> {
     }
 
     return RefreshIndicator(
-      color: AppColor.primary,
+      color: AppColor.goldEnd,
+      backgroundColor: AppColor.obsidianBg,
       onRefresh: _fetch,
       child: SingleChildScrollView(
         controller: _scrollController,
@@ -346,12 +356,15 @@ class _CatalogPageState extends State<CatalogPage> {
             Wrap(
               spacing: 16,
               runSpacing: 16,
-              children: visible.map((p) => ItemCard(product: p)).toList(),
+              children: visible
+                  .map((p) =>
+                      ItemCard(product: p, dark: true, showAddToCartButton: true))
+                  .toList(),
             ),
             if (visible.length < results.length)
               const Padding(
                 padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(color: AppColor.goldEnd),
               ),
             const SizedBox(height: 24),
           ],
@@ -363,8 +376,10 @@ class _CatalogPageState extends State<CatalogPage> {
   void _openSortSheet() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      backgroundColor: AppColor.obsidianBg,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: AppColor.outlineVariantDark),
+        borderRadius: BorderRadius.zero,
       ),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
@@ -375,9 +390,8 @@ class _CatalogPageState extends State<CatalogPage> {
                 .map((s) => RadioListTile<ProductSort>(
                       value: s,
                       groupValue: _filter.sort,
-                      activeColor: AppColor.primary,
-                      title: Text(s.label,
-                          style: const TextStyle(fontFamily: 'Estedad')),
+                      activeColor: AppColor.goldEnd,
+                      title: Text(s.label, style: AppTextStyles.bodyMd),
                       onChanged: (v) {
                         Navigator.of(ctx).pop();
                         if (v != null) _updateFilter(_filter.copyWith(sort: v));
@@ -404,8 +418,10 @@ class _CatalogPageState extends State<CatalogPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      backgroundColor: AppColor.obsidianBg,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: AppColor.outlineVariantDark),
+        borderRadius: BorderRadius.zero,
       ),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
@@ -417,34 +433,36 @@ class _CatalogPageState extends State<CatalogPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('فیلترها',
-                      style: TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700)),
+                  Text('فیلترها', style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
                   const SizedBox(height: 12),
                   Text(
                     'محدوده قیمت: ${thousandSeparator(range.start.toInt())} تا ${thousandSeparator(range.end.toInt())} تومان',
-                    style: const TextStyle(fontFamily: 'Estedad', fontSize: 12),
+                    style: AppTextStyles.labelSm,
                   ),
-                  RangeSlider(
-                    values: range,
-                    min: 0,
-                    max: bound.toDouble(),
-                    divisions: 20,
-                    activeColor: AppColor.primary,
-                    labels: RangeLabels(
-                      thousandSeparator(range.start.toInt()),
-                      thousandSeparator(range.end.toInt()),
+                  SliderTheme(
+                    data: SliderTheme.of(ctx).copyWith(
+                      activeTrackColor: AppColor.goldEnd,
+                      thumbColor: AppColor.goldEnd,
+                      inactiveTrackColor: AppColor.outlineVariantDark,
+                      valueIndicatorColor: AppColor.goldEnd,
                     ),
-                    onChanged: (v) => setSheet(() => range = v),
+                    child: RangeSlider(
+                      values: range,
+                      min: 0,
+                      max: bound.toDouble(),
+                      divisions: 20,
+                      labels: RangeLabels(
+                        thousandSeparator(range.start.toInt()),
+                        thousandSeparator(range.end.toInt()),
+                      ),
+                      onChanged: (v) => setSheet(() => range = v),
+                    ),
                   ),
                   SwitchListTile(
                     value: onlyDiscounted,
-                    activeColor: AppColor.primary,
+                    activeColor: AppColor.goldEnd,
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('فقط کالاهای تخفیف‌دار',
-                        style: TextStyle(fontFamily: 'Estedad', fontSize: 14)),
+                    title: Text('فقط کالاهای تخفیف‌دار', style: AppTextStyles.bodyMd),
                     onChanged: (v) => setSheet(() => onlyDiscounted = v),
                   ),
                   const SizedBox(height: 8),
@@ -452,6 +470,11 @@ class _CatalogPageState extends State<CatalogPage> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColor.onSurfaceVariant,
+                            side: BorderSide(color: AppColor.outlineVariantDark),
+                            shape: const RoundedRectangleBorder(),
+                          ),
                           onPressed: () {
                             Navigator.of(ctx).pop();
                             _updateFilter(CatalogFilter(
@@ -459,15 +482,15 @@ class _CatalogPageState extends State<CatalogPage> {
                               sort: _filter.sort,
                             ));
                           },
-                          child: const Text('حذف فیلترها',
-                              style: TextStyle(fontFamily: 'Estedad')),
+                          child: Text('حذف فیلترها', style: AppTextStyles.labelSm),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColor.primary,
+                            backgroundColor: AppColor.goldEnd,
+                            shape: const RoundedRectangleBorder(),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () {
@@ -482,9 +505,8 @@ class _CatalogPageState extends State<CatalogPage> {
                               onlyDiscounted: onlyDiscounted,
                             ));
                           },
-                          child: const Text('اعمال فیلتر',
-                              style: TextStyle(
-                                  fontFamily: 'Estedad', color: Colors.white)),
+                          child: Text('اعمال فیلتر',
+                              style: AppTextStyles.labelSm.copyWith(color: AppColor.onGold)),
                         ),
                       ),
                     ],
