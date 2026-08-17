@@ -12,17 +12,17 @@ class FlashsaleCountdownTile extends StatelessWidget {
       height: 28,
       width: 20,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(2),
+        color: AppColor.surfaceContainerHigh,
+        border: Border.all(color: AppColor.outlineVariantDark),
       ),
       child: Center(
         child: Text(
           digit!,
           style: TextStyle(
-            color: AppColor.primary,
+            color: AppColor.goldEnd,
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
+            fontFamily: 'Estedad',
           ),
         ),
       ),

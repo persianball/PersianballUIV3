@@ -37,9 +37,12 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
       child: Center(
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-            color: Colors.white,
+            color: AppColor.surfaceContainer,
+            border: Border(
+              top: BorderSide(color: AppColor.outlineVariantDark),
+              left: BorderSide(color: AppColor.outlineVariantDark),
+              right: BorderSide(color: AppColor.outlineVariantDark),
+            ),
           ),
           width: double.infinity,
           constraints: BoxConstraints(maxWidth: 700),
@@ -58,8 +61,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                 height: 6,
                 margin: EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(100),
-                  color: AppColor.primarySoft,
+                  color: AppColor.outlineVariantDark,
                 ),
               ),
 
@@ -70,7 +72,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.school, color: AppColor.primary, size: 20),
+                        Icon(Icons.school, color: AppColor.goldEnd, size: 20),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -79,6 +81,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                               fontFamily: 'Estedad',
                               fontWeight: FontWeight.w700,
                               fontSize: 16,
+                              color: AppColor.onSurface,
                             ),
                           ),
                         ),
@@ -88,13 +91,13 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                     Row(
                       children: [
                         Icon(Icons.location_on,
-                            color: Colors.grey[600], size: 16),
+                            color: AppColor.onSurfaceVariant, size: 16),
                         SizedBox(width: 4),
                         Text(
                           widget.courseItem.location,
                           style: TextStyle(
                             fontFamily: 'Estedad',
-                            color: Colors.grey[600],
+                            color: AppColor.onSurfaceVariant,
                             fontSize: 14,
                           ),
                         ),
@@ -104,13 +107,13 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                     Row(
                       children: [
                         Icon(Icons.access_time,
-                            color: Colors.grey[600], size: 16),
+                            color: AppColor.onSurfaceVariant, size: 16),
                         SizedBox(width: 4),
                         Text(
                           widget.courseItem.time,
                           style: TextStyle(
                             fontFamily: 'Estedad',
-                            color: Colors.grey[600],
+                            color: AppColor.onSurfaceVariant,
                             fontSize: 14,
                           ),
                         ),
@@ -133,7 +136,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                           'تعداد',
                           style: TextStyle(
                             fontFamily: 'Estedad',
-                            color: Color(0xFF0A0E2F).withOpacity(0.5),
+                            color: AppColor.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -142,13 +145,13 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                             IconButton(
                               onPressed: () => setState(() => _quantity++),
                               icon: Icon(Icons.add,
-                                  size: 20, color: Colors.black),
+                                  size: 20, color: AppColor.onGold),
                               style: ButtonStyle(
                                 backgroundColor:
-                                    MaterialStateProperty.all(AppColor.border),
+                                    WidgetStateProperty.all(AppColor.goldEnd),
                                 shape:
-                                    MaterialStateProperty.all(CircleBorder()),
-                                padding: MaterialStateProperty.all(
+                                    WidgetStateProperty.all(CircleBorder()),
+                                padding: WidgetStateProperty.all(
                                     EdgeInsets.all(0)),
                               ),
                             ),
@@ -159,7 +162,8 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                                 style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
-                                    fontFamily: 'Estedad'),
+                                    fontFamily: 'Estedad',
+                                    color: AppColor.onSurface),
                               ),
                             ),
                             IconButton(
@@ -167,13 +171,13 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                                 if (_quantity > 1) setState(() => _quantity--);
                               },
                               icon: Icon(Icons.remove,
-                                  size: 20, color: Colors.black),
+                                  size: 20, color: AppColor.onSurface),
                               style: ButtonStyle(
                                 backgroundColor:
-                                    MaterialStateProperty.all(AppColor.border),
+                                    WidgetStateProperty.all(AppColor.surfaceContainerHigh),
                                 shape:
-                                    MaterialStateProperty.all(CircleBorder()),
-                                padding: MaterialStateProperty.all(
+                                    WidgetStateProperty.all(CircleBorder()),
+                                padding: WidgetStateProperty.all(
                                     EdgeInsets.all(0)),
                               ),
                             ),
@@ -188,7 +192,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                           'قیمت',
                           style: TextStyle(
                             fontFamily: 'Estedad',
-                            color: Color(0xFF0A0E2F).withOpacity(0.5),
+                            color: AppColor.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -196,7 +200,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                           '${thousandSeparator(totalPrice)}',
                           style: TextStyle(
                             fontFamily: 'Estedad',
-                            color: Color(0xFF0A0E2F).withOpacity(0.5),
+                            color: AppColor.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -210,7 +214,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                             'تخفیف',
                             style: TextStyle(
                               fontFamily: 'Estedad',
-                              color: Color(0xFF0A0E2F).withOpacity(0.5),
+                              color: AppColor.onSurfaceVariant,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -218,7 +222,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                             '${thousandSeparator(discountedPrice)} (${widget.courseItem.discountPercentage}%)',
                             style: TextStyle(
                               fontFamily: 'Estedad',
-                              color: Color(0xFF0A0E2F).withOpacity(0.5),
+                              color: AppColor.onSurfaceVariant,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -235,8 +239,8 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                 padding: EdgeInsets.all(4),
                 height: 64,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: AppColor.primarySoft,
+                  color: AppColor.obsidianBg,
+                  border: Border.all(color: AppColor.outlineVariantDark),
                 ),
                 child: Row(
                   children: [
@@ -250,7 +254,9 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                           children: [
                             Text('مجموع',
                                 style: TextStyle(
-                                    fontSize: 10, fontFamily: 'Estedad')),
+                                    fontSize: 10,
+                                    fontFamily: 'Estedad',
+                                    color: AppColor.onSurfaceVariant)),
                             Directionality(
                               textDirection: TextDirection.rtl,
                               child: Text(
@@ -258,7 +264,8 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                                 style: TextStyle(
                                     fontSize: 16,
                                     fontFamily: 'Estedad',
-                                    fontWeight: FontWeight.w700),
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.goldEnd),
                               ),
                             ),
                           ],
@@ -279,13 +286,12 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               fontFamily: 'Estedad',
-                              color: Colors.white),
+                              color: AppColor.onGold),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.primary,
+                          backgroundColor: AppColor.goldEnd,
                           padding: EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
+                          shape: const RoundedRectangleBorder(),
                           elevation: 0,
                         ),
                       ),

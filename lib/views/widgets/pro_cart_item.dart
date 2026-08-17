@@ -220,7 +220,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                   if(isDeleteLoading){
                                     return Center(
                                       child: LoadingAnimationWidget.progressiveDots(
-                                        color: const Color(0xFF1A1A3F),
+                                        color: AppColor.goldEnd,
                                         size: 10,
                                       ),
                                     );
@@ -265,8 +265,8 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                                       if(isLoading){
                                         return Center(
                                           child: LoadingAnimationWidget.twistingDots(
-                                            leftDotColor: const Color(0xFF1A1A3F),
-                                            rightDotColor: const Color(0xFFEA3799),
+                                            leftDotColor: AppColor.goldEnd,
+                                            rightDotColor: AppColor.goldStart,
                                             size: 10,
                                           ),
                                         );

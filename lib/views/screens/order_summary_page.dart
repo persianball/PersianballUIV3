@@ -62,13 +62,17 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          title: const Text('نیاز به ورود دارید'),
-          content:
-              const Text('برای ادامه، لطفاً ابتدا وارد حساب کاربری خود شوید.'),
+          backgroundColor: AppColor.surfaceContainer,
+          shape: const RoundedRectangleBorder(),
+          title: const Text('نیاز به ورود دارید',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
+          content: const Text('برای ادامه، لطفاً ابتدا وارد حساب کاربری خود شوید.',
+              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('انصراف'),
+              child: const Text('انصراف',
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
             ),
             TextButton(
               onPressed: () {
@@ -78,7 +82,8 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                   arguments: {'popOnSuccess': true},
                 );
               },
-              child: const Text('ورود'),
+              child: const Text('ورود',
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.goldEnd)),
             ),
           ],
         ),

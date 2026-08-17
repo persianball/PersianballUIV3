@@ -13,7 +13,10 @@ class RatingTag extends StatelessWidget {
       width: 50,
       margin: margin,
       padding: EdgeInsets.only(top: 4, bottom: 4, left: 5, right: 8),
-      decoration: BoxDecoration(color: AppColor.secondary, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: AppColor.surfaceContainerHigh,
+        border: Border.all(color: AppColor.outlineVariantDark),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -27,7 +30,8 @@ class RatingTag extends StatelessWidget {
           Text(
             '$value',
             style: TextStyle(
-              color: Colors.white,
+              fontFamily: 'Estedad',
+              color: AppColor.onSurface,
               fontSize: 12,
             ),
           ),

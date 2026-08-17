@@ -78,8 +78,8 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
           DeviceOrientation.portraitUp,
         ],
         materialProgressColors: ChewieProgressColors(
-          playedColor: AppColor.primary,
-          handleColor: AppColor.primary,
+          playedColor: AppColor.goldEnd,
+          handleColor: AppColor.goldEnd,
           backgroundColor: Colors.white24,
           bufferedColor: Colors.white54,
         ),

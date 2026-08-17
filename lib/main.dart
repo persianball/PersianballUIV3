@@ -24,10 +24,10 @@ void main() {
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: AppColor.primary,
+    statusBarColor: AppColor.obsidianBg,
     statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Colors.white,
-    systemNavigationBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: AppColor.obsidianBg,
+    systemNavigationBarIconBrightness: Brightness.light,
   ));
 
 }
@@ -106,9 +106,41 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         navigatorKey: appNavigatorKey,
         debugShowCheckedModeBanner: false,
+        // همه‌ی صفحات زنده‌ی اپ به تم Obsidian Gold Athletics بازطراحی
+        // شده‌اند و رنگ خودشان را صریحاً ست می‌کنند؛ این colorScheme فقط
+        // فالبک ویجت‌های استاندارد متریال (دیالوگ/اسنک‌بار/دکمه‌ی بدون
+        // استایل و…) را از بنفش پیش‌فرض فلاتر به همین پالت طلایی/تیره
+        // تغییر می‌دهد تا هیچ رنگ بنفشی در جایی از اپ باقی نماند.
         theme: ThemeData(
-          scaffoldBackgroundColor: Colors.white,
+          useMaterial3: true,
+          scaffoldBackgroundColor: AppColor.obsidianBg,
           fontFamily: 'Estedad',
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColor.goldEnd,
+            brightness: Brightness.dark,
+            primary: AppColor.goldEnd,
+            onPrimary: AppColor.onGold,
+            secondary: AppColor.goldStart,
+            onSecondary: AppColor.onGold,
+            surface: AppColor.obsidianBg,
+            onSurface: AppColor.onSurface,
+            error: AppColor.errorDark,
+            onError: AppColor.onGold,
+          ),
+          dialogTheme: DialogThemeData(
+            backgroundColor: AppColor.surfaceContainer,
+            shape: const RoundedRectangleBorder(),
+          ),
+          snackBarTheme: SnackBarThemeData(
+            backgroundColor: AppColor.surfaceContainerHigh,
+            contentTextStyle: const TextStyle(
+                fontFamily: 'Estedad', color: AppColor.onSurface),
+            actionTextColor: AppColor.goldEnd,
+            shape: const RoundedRectangleBorder(),
+          ),
+          progressIndicatorTheme: const ProgressIndicatorThemeData(
+            color: AppColor.goldEnd,
+          ),
         ),
         onGenerateRoute: AppRouter.onGenerateRoute,
         initialRoute: '/',
