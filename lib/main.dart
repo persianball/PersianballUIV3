@@ -142,8 +142,12 @@ class _MyAppState extends State<MyApp> {
             color: AppColor.goldEnd,
           ),
         ),
+        // initialRoute عمداً ست نشده: اگر مقداردهی شود، فلاتر وب همیشه
+        // مسیر '/' را در بارگذاری اول باز می‌کند و آدرس واقعی مرورگر
+        // (مثلاً /#/product/4) نادیده گرفته می‌شود. بدون آن، مسیر اولیه
+        // به‌صورت خودکار از defaultRouteName (همان URL مرورگر) خوانده
+        // می‌شود و لینک مستقیم به صفحات داخلی درست کار می‌کند.
         onGenerateRoute: AppRouter.onGenerateRoute,
-        initialRoute: '/',
       ),
     );
   }
