@@ -497,14 +497,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           .images.map((url) => '${URLs
                                           .baseUrl}$url').toList(),
                                       mediaItems: [
-                                        MediaItem(
-                                          url: "${variant_state.productVariant
-                                              .video}",
-                                          type: MediaType.video,
-                                          thumbnailUrl: product
-                                              .videoThumbnail ??
-                                              "",
-                                        ),
                                         ...variant_state.productVariant.images
                                             .map((url) {
                                           return
@@ -514,7 +506,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                               thumbnailUrl: "${URLs
                                                   .baseUrl}$url",
                                             );
-                                        }).toList()
+                                        }).toList(),
+                                        // ویدیو آخرین آیتم گالری است، بعد از همه‌ی عکس‌ها
+                                        if (variant_state.productVariant.video != null &&
+                                            variant_state.productVariant.video!.isNotEmpty)
+                                          MediaItem(
+                                            url: variant_state.productVariant.video!,
+                                            type: MediaType.video,
+                                            thumbnailUrl: product
+                                                .videoThumbnail ??
+                                                "",
+                                          ),
                                       ],
                                       mainImageHeight: 250,
                                       thumbnailSize: 40,
