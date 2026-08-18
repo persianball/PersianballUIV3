@@ -968,16 +968,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                           TagExtension(
                             tagsToExtend: {"img"},
                             builder: (context) {
-                              final src =
-                                  '${URLs.baseUrl}${context.attributes['src']}';
-                              return ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  src,
-                                  width: double.infinity,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => Image.asset(
-                                      'assets/images/placeholder.jpg'),
+                              final rawSrc = context.attributes['src'] ?? '';
+                              // آدرس تصویر ممکن است مطلق باشد (مثلاً روی یک
+                              // CDN دیگر) یا نسبی به بک‌اند؛ فقط در حالت دوم
+                              // baseUrl اضافه می‌شود، وگرنه آدرس مطلق با
+                              // baseUrl ترکیب و خراب می‌شود.
+                              final src = rawSrc.startsWith('http')
+                                  ? rawSrc
+                                  : '${URLs.baseUrl}$rawSrc';
+                              // width/height در HTML اندازه‌ی واقعی فایل
+                              // تصویر است (مثلاً ۱۰۲۴×۱۰۲۴ برای یک لوگو)، نه
+                              // اندازه‌ی نمایش؛ عرض کامل ستون با BoxFit.contain
+                              // هم تصاویر بزرگ را کوچک می‌کند و هم از سرریز
+                              // افقی جلوگیری می‌کند. نکته‌ی مهم: باید با
+                              // FractionallySizedBox پیچیده شود نه
+                              // width:double.infinity مستقیم روی Image — چون
+                              // این ویجت داخل WidgetSpan فلاتر_html قرار
+                              // می‌گیرد و width:infinity در آن بستر ارتفاع
+                              // تصویر را صفر می‌کند (تصویر نامرئی می‌شود، بدون
+                              // خطا).
+                              return FractionallySizedBox(
+                                widthFactor: 1.0,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    src,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => Image.asset(
+                                        'assets/images/placeholder.jpg'),
+                                  ),
                                 ),
                               );
                             },

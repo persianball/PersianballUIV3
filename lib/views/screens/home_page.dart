@@ -101,9 +101,23 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: AppColor.obsidianBg,
           elevation: 0,
           centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.menu, color: AppColor.onSurfaceVariant),
-            onPressed: () {},
+          leading: BlocBuilder<CartBloc, CartState>(
+            builder: (context, cartState) {
+              final count = cartState is CartLoaded
+                  ? (cartState.cart.results.isNotEmpty
+                      ? cartState.cart.results[0].items.length
+                      : 0)
+                  : 0;
+              return IconButton(
+                icon: Badge(
+                  isLabelVisible: count > 0,
+                  label: Text('$count'),
+                  child: const Icon(Icons.shopping_bag_outlined,
+                      color: AppColor.onSurfaceVariant),
+                ),
+                onPressed: () => Navigator.of(context).pushNamed('/cart'),
+              );
+            },
           ),
           title: Text('فوتبال لوکس',
               style: AppTextStyles.headlineMd.copyWith(color: AppColor.goldEnd)),
