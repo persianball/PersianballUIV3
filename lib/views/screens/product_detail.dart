@@ -561,7 +561,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                 ),
                                 Expanded(
                                   child: Text(
-                                    'فوتبال لوکس',
+                                    'پرشین شاپ',
                                     textAlign: TextAlign.center,
                                     style: AppTextStyles.headlineMd
                                         .copyWith(fontSize: 18, color: AppColor.goldEnd),
@@ -949,9 +949,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               color: AppColor.goldEnd,
                               fontSize: FontSize(14),
                               textDecoration: TextDecoration.underline),
+                          // عرض جدول باید auto باشد؛ با عرض کامل، فضای
+                          // باقی‌مانده داخل کادر جدول مثل یک ستون خالی
+                          // اضافه دیده می‌شد.
                           "table": Style(
                               border: Border.all(color: AppColor.outlineVariantDark),
-                              width: Width(100, Unit.percent),
+                              width: Width.auto(),
                               margin: Margins.symmetric(vertical: 8)),
                           "th": Style(
                               border: Border.all(color: AppColor.outlineVariantDark),
@@ -994,6 +997,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                   child: Image.network(
                                     src,
                                     fit: BoxFit.contain,
+                                    // تصاویر متن توضیحات معمولاً روی هاست
+                                    // شخص ثالث هستند و هدر CORS ندارند. در
+                                    // وب، خواندن بایت تصویر بدون CORS بلاک
+                                    // می‌شود؛ با این گزینه فلاتر به تگ <img>
+                                    // برمی‌گردد که برای *نمایش* نیازی به
+                                    // CORS ندارد. روی موبایل بی‌اثر است.
+                                    webHtmlElementStrategy:
+                                        WebHtmlElementStrategy.fallback,
                                     errorBuilder: (_, __, ___) => Image.asset(
                                         'assets/images/placeholder.jpg'),
                                   ),

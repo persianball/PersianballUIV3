@@ -119,7 +119,7 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
-          title: Text('فوتبال لوکس',
+          title: Text('پرشین شاپ',
               style: AppTextStyles.headlineMd.copyWith(color: AppColor.goldEnd)),
           actions: [
             FutureBuilder<int>(

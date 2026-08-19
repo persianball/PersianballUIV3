@@ -60,7 +60,7 @@ class _WelcomePageState extends State<WelcomePage> {
                                 Container(
                                   margin: EdgeInsets.only(bottom: 12),
                                   child: Text(
-                                    'فوتبال لوکس',
+                                    'پرشین شاپ',
                                     style: TextStyle(
                                       color: AppColor.goldEnd,
                                       fontWeight: FontWeight.w700,
