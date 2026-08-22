@@ -290,7 +290,8 @@ class _CatalogPageState extends State<CatalogPage> {
         child: Wrap(
           spacing: 16,
           runSpacing: 16,
-          children: List.generate(6, (_) => const ProductCardSkeleton()),
+          children:
+              List.generate(6, (_) => const ProductCardSkeleton(dark: true)),
         ),
       );
     }
