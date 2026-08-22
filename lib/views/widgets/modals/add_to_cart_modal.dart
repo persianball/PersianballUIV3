@@ -38,7 +38,13 @@ class _AddToCartModalState extends State<AddToCartModal> {
         maxWidth: 700.0,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColor.surfaceContainer,
+            // AppColor.surfaceContainer فقط ۵٪ آلفا دارد (برای پنل شیشه‌ای
+            // روی پس‌زمینه‌ی صفحه طراحی شده)؛ چون این باتم‌شیت خودش
+            // showModalBottomSheet(backgroundColor: transparent) است، آن
+            // ۵٪ باعث می‌شد کل صفحه‌ی پشت مودال دیده شود. همان رنگ ولی
+            // به‌صورت کاملاً کدر (بلندشده روی obsidianBg) استفاده می‌شود.
+            color: Color.alphaBlend(
+                AppColor.surfaceContainer, AppColor.obsidianBg),
             border: Border(
               top: BorderSide(color: AppColor.outlineVariantDark),
               left: BorderSide(color: AppColor.outlineVariantDark),
