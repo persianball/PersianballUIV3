@@ -17,6 +17,7 @@ class _OrdersPageState extends State<OrdersPage>
     with SingleTickerProviderStateMixin {
   PaymentsResponse? _data;
   bool _loading = true;
+  bool _loadingMore = false;
   String? _error;
   String? _nextUrl;
   final ScrollController _scrollController = ScrollController();
@@ -41,6 +42,7 @@ class _OrdersPageState extends State<OrdersPage>
   Future<void> _fetch({bool loadMore = false}) async {
     setState(() {
       if (!loadMore) _loading = true;
+      if (loadMore) _loadingMore = true;
       _error = null;
     });
     try {
@@ -59,18 +61,23 @@ class _OrdersPageState extends State<OrdersPage>
         }
         _nextUrl = res.next;
         _loading = false;
+        _loadingMore = false;
       });
-      _fadeCtrl.forward(from: 0);
+      // فقط لود اول کل لیست fade-in می‌شود؛ صفحه‌ی بعدی نباید آیتم‌های
+      // از قبل نمایش‌داده‌شده را دوباره محو/ظاهر کند (همان چشمک‌زدن هنگام
+      // رسیدن به انتهای اسکرول).
+      if (!loadMore) _fadeCtrl.forward(from: 0);
     } catch (e) {
       setState(() {
         _error = e.toString();
         _loading = false;
+        _loadingMore = false;
       });
     }
   }
 
   void _onScroll() {
-    if (_nextUrl == null) return;
+    if (_nextUrl == null || _loadingMore) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       // near bottom, load next page
@@ -113,15 +120,13 @@ class _OrdersPageState extends State<OrdersPage>
   Widget _buildItem(PaymentItem item) {
     final statusClr = _statusColor(item.status);
     final priceText = '${thousandSeparator(item.price)} تومان';
-    return FadeTransition(
-      opacity: _fadeCtrl,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColor.surfaceContainer,
-          border: Border.all(color: AppColor.outlineVariantDark),
-        ),
-        child: Material(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColor.surfaceContainer,
+        border: Border.all(color: AppColor.outlineVariantDark),
+      ),
+      child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () => Navigator.of(context).push(
@@ -219,6 +224,22 @@ class _OrdersPageState extends State<OrdersPage>
             ),
           ),
         ),
+    );
+  }
+
+  Widget _buildLoadMoreFooter() {
+    if (!_loadingMore) return const SizedBox.shrink();
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColor.goldEnd,
+          ),
+        ),
       ),
     );
   }
@@ -259,26 +280,38 @@ class _OrdersPageState extends State<OrdersPage>
                       _nextUrl = null;
                       await _fetch();
                     },
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: (_data?.results.length ?? 0) + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                            child: Text(
-                              'مجموع سفارش‌ها: ${_data?.count ?? 0}',
-                              style: const TextStyle(
-                                  fontFamily: 'Estedad',
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColor.onSurface),
-                            ),
-                          );
-                        }
-                        final item = _data!.results[index - 1];
-                        return _buildItem(item);
-                      },
+                    child: FadeTransition(
+                      // فقط لود اول کل لیست fade-in می‌شود (توضیح در _fetch)
+                      opacity: _fadeCtrl,
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        // +۱ برای هدر «مجموع سفارش‌ها» و در صورت لود صفحه‌ی
+                        // بعدی، +۱ دیگر برای اسپینر کوچک انتهای لیست
+                        itemCount:
+                            (_data?.results.length ?? 0) + 1 + (_loadingMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                              child: Text(
+                                'مجموع سفارش‌ها: ${_data?.count ?? 0}',
+                                style: const TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.onSurface),
+                              ),
+                            );
+                          }
+                          final itemsCount = _data?.results.length ?? 0;
+                          if (index == itemsCount + 1) {
+                            return _buildLoadMoreFooter();
+                          }
+                          final item = _data!.results[index - 1];
+                          return _buildItem(item);
+                        },
+                      ),
                     ),
                   ),
       ),
