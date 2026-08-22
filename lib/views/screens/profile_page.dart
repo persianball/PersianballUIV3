@@ -206,7 +206,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     width: 96,
                     height: 96,
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppColor.goldEnd, width: 2),
+                      shape: BoxShape.circle,
+                      // همان بوردر ظریف تصویر پیش‌فرض حالت مهمان
+                      // (outlineVariantDark)؛ حلقه‌ی ضخیم طلایی قبلی با
+                      // بقیه‌ی طراحی هم‌خوانی نداشت.
+                      border: Border.all(color: AppColor.outlineVariantDark),
                       image: DecorationImage(
                         image:
                             AssetImage('assets/images/avatar_for_comments.png'),
