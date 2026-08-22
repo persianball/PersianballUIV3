@@ -2,8 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_html_table/flutter_html_table.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_text_styles.dart';
@@ -15,9 +13,11 @@ import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/ColorWay.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/utils/html_dark_theme.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/screens/reviews_page.dart';
 import 'package:marketky/views/widgets/detail_tabs.dart';
+import 'package:marketky/views/widgets/html_description_image.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
 import 'package:marketky/views/widgets/rating_tag.dart';
@@ -32,22 +32,6 @@ import '../../bloc/product_detail/product_detail_state.dart';
 import '../widgets/ProCarousel.dart';
 import '../widgets/similar_product_card.dart';
 
-
-/// خروجی ادیتور بک‌اند گاهی رنگ متن سیاه/نزدیک‌به‌سیاه را به‌صورت inline
-/// ثبت می‌کند (چون پنل ادمین پس‌زمینه‌ی روشن دارد). فقط همین رنگ‌های
-/// سیاه/نزدیک‌به‌سیاه به رنگ روشن تبدیل می‌شوند تا روی پس‌زمینه‌ی تیره‌ی
-/// اپ ناپدید نشوند؛ هر رنگ یا هایلایت دیگری که در ادمین انتخاب شده دقیقاً
-/// دست‌نخورده باقی می‌ماند.
-String _sanitizeHtmlForDarkBg(String html) {
-  const blackTokens =
-      r'#000000|#000|#0d0d0d|#111111|#111|#1a1a1a|#181818|#191919|black|rgba?\(\s*0\s*,\s*0\s*,\s*0\s*(,\s*[\d.]+\s*)?\)';
-  final colorDecl = RegExp('color\\s*:\\s*($blackTokens)\\b', caseSensitive: false);
-  final colorAttr =
-      RegExp('color\\s*=\\s*(["\'])($blackTokens)\\1', caseSensitive: false);
-  return html
-      .replaceAll(colorDecl, 'color: #E2E2E2')
-      .replaceAll(colorAttr, 'color="#E2E2E2"');
-}
 
 class ProductDetailPage extends StatefulWidget {
   final int productId;
@@ -929,90 +913,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                   tabs: [
                     DetailTab(
                       title: 'توضیحات',
-                      builder: (context) => Html(
-                        data: _sanitizeHtmlForDarkBg(product.editor ?? ''),
+                      // توضیح در HtmlDescriptionBody: تصاویر از جریان
+                      // HTML جدا و به‌صورت ویجت مستقل رندر می‌شوند، چون
+                      // تصویر «fallback»‌شده (برای دورزدن CORS در وب) وقتی
+                      // داخل WidgetSpan یک RichText اسکرول‌شونده باشد در
+                      // این نسخه‌ی فلاتر کاملاً نامرئی می‌ماند.
+                      builder: (context) => HtmlDescriptionBody(
+                        html: sanitizeHtmlForDarkBg(product.editor ?? ''),
                         onLinkTap: (url, _, __) async {
                           if (await canLaunchUrl(Uri.parse(url!))) {
                             await launchUrl(Uri.parse(url));
                           }
                         },
-                        style: {
-                          "body": Style(
-                              color: AppColor.onSurfaceVariant,
-                              fontFamily: 'Estedad',
-                              margin: Margins.zero),
-                          // پیش‌فرض فالبک برای لینک‌های بدون رنگ/سایز
-                          // اختصاصی؛ رنگ/هایلایت inline که از بک‌اند بیاید
-                          // (اولویت بالاتر در ادغام استایل) همچنان همان
-                          // چیزی می‌ماند که در پنل ادمین انتخاب شده.
-                          "a": Style(
-                              color: AppColor.goldEnd,
-                              fontSize: FontSize(14),
-                              textDecoration: TextDecoration.underline),
-                          // عرض جدول باید auto باشد؛ با عرض کامل، فضای
-                          // باقی‌مانده داخل کادر جدول مثل یک ستون خالی
-                          // اضافه دیده می‌شد.
-                          "table": Style(
-                              border: Border.all(color: AppColor.outlineVariantDark),
-                              width: Width.auto(),
-                              margin: Margins.symmetric(vertical: 8)),
-                          "th": Style(
-                              border: Border.all(color: AppColor.outlineVariantDark),
-                              backgroundColor: AppColor.surfaceContainerHigh,
-                              padding: HtmlPaddings.all(6),
-                              fontWeight: FontWeight.w700),
-                          "td": Style(
-                              border: Border.all(color: AppColor.outlineVariantDark),
-                              padding: HtmlPaddings.all(6)),
-                        },
-                        extensions: [
-                          const TableHtmlExtension(),
-                          // تصویر با قاب گرد، Fit کنترل‌شده و بدون سرریز افقی
-                          TagExtension(
-                            tagsToExtend: {"img"},
-                            builder: (context) {
-                              final rawSrc = context.attributes['src'] ?? '';
-                              // آدرس تصویر ممکن است مطلق باشد (مثلاً روی یک
-                              // CDN دیگر) یا نسبی به بک‌اند؛ فقط در حالت دوم
-                              // baseUrl اضافه می‌شود، وگرنه آدرس مطلق با
-                              // baseUrl ترکیب و خراب می‌شود.
-                              final src = rawSrc.startsWith('http')
-                                  ? rawSrc
-                                  : '${URLs.baseUrl}$rawSrc';
-                              // width/height در HTML اندازه‌ی واقعی فایل
-                              // تصویر است (مثلاً ۱۰۲۴×۱۰۲۴ برای یک لوگو)، نه
-                              // اندازه‌ی نمایش؛ عرض کامل ستون با BoxFit.contain
-                              // هم تصاویر بزرگ را کوچک می‌کند و هم از سرریز
-                              // افقی جلوگیری می‌کند. نکته‌ی مهم: باید با
-                              // FractionallySizedBox پیچیده شود نه
-                              // width:double.infinity مستقیم روی Image — چون
-                              // این ویجت داخل WidgetSpan فلاتر_html قرار
-                              // می‌گیرد و width:infinity در آن بستر ارتفاع
-                              // تصویر را صفر می‌کند (تصویر نامرئی می‌شود، بدون
-                              // خطا).
-                              return FractionallySizedBox(
-                                widthFactor: 1.0,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    src,
-                                    fit: BoxFit.contain,
-                                    // تصاویر متن توضیحات معمولاً روی هاست
-                                    // شخص ثالث هستند و هدر CORS ندارند. در
-                                    // وب، خواندن بایت تصویر بدون CORS بلاک
-                                    // می‌شود؛ با این گزینه فلاتر به تگ <img>
-                                    // برمی‌گردد که برای *نمایش* نیازی به
-                                    // CORS ندارد. روی موبایل بی‌اثر است.
-                                    webHtmlElementStrategy:
-                                        WebHtmlElementStrategy.fallback,
-                                    errorBuilder: (_, __, ___) => Image.asset(
-                                        'assets/images/placeholder.jpg'),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
                       ),
                     ),
                     if (product.similarProducts.isNotEmpty)
