@@ -158,14 +158,16 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                 const SizedBox(width: 8),
 
                 // قیمت/تخفیف و کنترل تعداد و حذف، سمت چپ - مینیمال و ریز
+                // ردیف اول: درصد تخفیف + قیمت قبلی (خط‌خورده)، ردیف دوم:
+                // قیمت نهایی.
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (percent != null && percent != 0) ...[
+                    if (percent != null && percent != 0)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 4, vertical: 1),
@@ -177,27 +179,25 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                             ),
                           ),
                           const SizedBox(width: 4),
-                        ],
-                        Text(
-                          thousandSeparator(_discountedPrice),
-                          style: const TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColor.goldEnd,
+                          Text(
+                            thousandSeparator(_originalPrice),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColor.onSurfaceVariant,
+                              decoration: TextDecoration.lineThrough,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    if (percent != null && percent != 0)
-                      Text(
-                        thousandSeparator(_originalPrice),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: AppColor.onSurfaceVariant,
-                          decoration: TextDecoration.lineThrough,
-                        ),
+                        ],
                       ),
+                    Text(
+                      thousandSeparator(_discountedPrice),
+                      style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.goldEnd,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     MiniQuantityRow(
                       quantity: widget.cartItemFromBackend.quantity,
