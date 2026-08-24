@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
 
@@ -47,9 +48,8 @@ class ItemCard extends StatelessWidget {
         ? (originalPrice * (1 - percent / 100)).toInt()
         : originalPrice;
 
-    final Color mutedColor = dark ? AppColor.onSurfaceVariant : Colors.grey;
-    final Color resolvedPriceColor =
-        priceColor ?? (dark ? AppColor.goldEnd : AppColor.primary);
+    const Color mutedColor = AppColor.inkMuted;
+    final Color resolvedPriceColor = priceColor ?? AppColor.pitchGreen;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,12 +79,10 @@ class ItemCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius:
-                            dark ? null : BorderRadius.circular(8),
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: ShapeDecoration(
+                        color: AppColor.danger,
+                        shape: AppShapes.border(6),
                       ),
                       child: Text(
                         '٪$percent',
@@ -129,99 +127,85 @@ class ItemCard extends StatelessWidget {
     // Clamped so cards keep a sane, catalog-like size on tablet/desktop
     // instead of scaling up with the full screen width.
     final double cardWidth = rawWidth.clamp(130.0, 200.0);
-    final Color resolvedTitleColor =
-        titleColor ?? (dark ? AppColor.onSurface : Colors.black);
+    final Color resolvedTitleColor = titleColor ?? AppColor.ink;
 
     return GestureDetector(
       onTap: () => _goToDetail(context),
       child: Container(
         width: cardWidth,
-        decoration: dark
-            ? BoxDecoration(
-                color: AppColor.surfaceContainer,
-                border: Border.all(color: AppColor.outlineVariantDark),
-              )
-            : BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColor.border),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColor.secondary.withOpacity(0.06),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rMd),
+          shadows: AppColor.cardShadow,
+        ),
+        child: SquircleClip(
+          radius: AppShapes.rMd,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // تصویر مربع کامل تا کارت‌ها در گرید هم‌اندازه بمانند
+              AspectRatio(
+                aspectRatio: 1,
+                child: AppNetworkImage(
+                  url: '${URLs.baseUrl}${product.image ?? ''}',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
               ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // item image: مربع کامل در طرح تیره، نسبت قبلی در طرح روشن
-            AspectRatio(
-              aspectRatio: dark ? 1 : (1 / 0.8),
-              child: AppNetworkImage(
-                url: '${URLs.baseUrl}${product.image ?? ''}',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                borderRadius: dark
-                    ? null
-                    : BorderRadius.vertical(top: Radius.circular(15)),
-              ),
-            ),
 
-            // item details
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.fromLTRB(8, dark ? 8 : 6, 8, 8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 30,
-                    child: Text(
-                      '${product.nameFarsi}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        height: 1.25,
-                        color: resolvedTitleColor,
+              // item details
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 30,
+                      child: Text(
+                        '${product.nameFarsi}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          height: 1.25,
+                          color: resolvedTitleColor,
+                        ),
                       ),
                     ),
-                  ),
-                  _buildPrice(),
-                  if (showAddToCartButton) ...[
-                    SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => _goToDetail(context),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColor.goldEnd,
-                          side: BorderSide(color: AppColor.goldEnd),
-                          shape: const RoundedRectangleBorder(),
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        child: Text(
-                          'افزودن به سبد',
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                    _buildPrice(),
+                    if (showAddToCartButton) ...[
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () => _goToDetail(context),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColor.pitchGreen,
+                            side: const BorderSide(color: AppColor.pitchGreen),
+                            shape: AppShapes.border(AppShapes.rSm),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                          child: Text(
+                            'افزودن به سبد',
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            )
-          ],
+            ],
+          ),
         ),
       ),
     );

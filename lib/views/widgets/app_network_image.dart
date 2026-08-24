@@ -2,6 +2,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_shapes.dart';
 
 /// تصویر شبکه‌ای با کش دیسک، اسکلتون لودینگ و تصویر پیش‌فرض.
 ///
@@ -111,8 +112,8 @@ class _SkeletonBoxState extends State<_SkeletonBox>
         height: widget.height,
         decoration: BoxDecoration(
           color: Color.lerp(
-            Colors.grey.shade200,
-            Colors.grey.shade300,
+            AppColor.cardMuted,
+            AppColor.line,
             _controller.value,
           ),
           // null یعنی «بدون گردی» (کارت‌های dark/گوشه‌تیز)، نه یک مقدار
@@ -140,15 +141,9 @@ class ProductCardSkeleton extends StatelessWidget {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SkeletonBox(
-          width: width,
-          height: width * (dark ? 1 : 0.8),
-          borderRadius: dark
-              ? null
-              : const BorderRadius.vertical(top: Radius.circular(15)),
-        ),
+        SkeletonBox(width: width, height: width),
         Padding(
-          padding: EdgeInsets.fromLTRB(8, dark ? 8 : 6, 8, 8),
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -166,18 +161,12 @@ class ProductCardSkeleton extends StatelessWidget {
     return SizedBox(
       width: width,
       child: Container(
-        decoration: dark
-            ? BoxDecoration(
-                color: AppColor.surfaceContainer,
-                border: Border.all(color: AppColor.outlineVariantDark),
-              )
-            : BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColor.border),
-              ),
-        clipBehavior: Clip.antiAlias,
-        child: content,
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rMd),
+          shadows: AppColor.cardShadow,
+        ),
+        child: SquircleClip(radius: AppShapes.rMd, child: content),
       ),
     );
   }

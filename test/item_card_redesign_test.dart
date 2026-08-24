@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/views/widgets/item_card.dart';
 
@@ -40,13 +41,17 @@ void main() {
     expect(find.text('افزودن به سبد'), findsOneWidget);
   });
 
-  testWidgets('dark=false همان ظاهر روشن قبلی را می‌دهد', (tester) async {
+  testWidgets('کارت سفید با گوشه‌ی اسکوئرکل و سایه‌ی برجسته است',
+      (tester) async {
     await tester.pumpWidget(_host(ItemCard(product: _product(price: 1000))));
     final container = tester.widget<Container>(find
         .descendant(of: find.byType(ItemCard), matching: find.byType(Container))
         .first);
-    final decoration = container.decoration as BoxDecoration;
-    expect(decoration.color, Colors.white);
+    final decoration = container.decoration as ShapeDecoration;
+    expect(decoration.color, AppColor.card);
+    // گوشه‌ها باید انحنای پیوسته (اسکوئرکل) داشته باشند، نه کمان دایره‌ای
+    expect(decoration.shape, isA<ContinuousRectangleBorder>());
+    expect(decoration.shadows, isNotEmpty);
   });
 
   testWidgets('بدون قیمت واقعی، متن "مشاهده قیمت" نشان داده می‌شود',

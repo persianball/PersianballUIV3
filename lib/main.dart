@@ -189,14 +189,42 @@ class _MyAppState extends State<MyApp> {
                 fontFamily: 'Estedad', color: Colors.white),
             actionTextColor: AppColor.pitchGreenLight,
             behavior: SnackBarBehavior.floating,
-            shape: AppShapes.border(AppShapes.rSm),
+            shape: AppShapes.border(AppShapes.rMd),
+          ),
+          popupMenuTheme: PopupMenuThemeData(
+            color: AppColor.card,
+            surfaceTintColor: Colors.transparent,
+            elevation: 8,
+            shadowColor: const Color(0x2214261B),
+            shape: AppShapes.border(AppShapes.rMd),
+            textStyle: const TextStyle(
+                fontFamily: 'Estedad', fontSize: 14, color: AppColor.ink),
+          ),
+          menuTheme: MenuThemeData(
+            style: MenuStyle(
+              backgroundColor: const WidgetStatePropertyAll(AppColor.card),
+              surfaceTintColor:
+                  const WidgetStatePropertyAll(Colors.transparent),
+              elevation: const WidgetStatePropertyAll(8),
+              shape: WidgetStatePropertyAll(AppShapes.border(AppShapes.rMd)),
+            ),
+          ),
+          tooltipTheme: TooltipThemeData(
+            decoration: ShapeDecoration(
+              color: AppColor.ink,
+              shape: AppShapes.pill,
+            ),
+            textStyle: const TextStyle(
+                fontFamily: 'Estedad', fontSize: 12, color: Colors.white),
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColor.pitchGreen,
               foregroundColor: AppColor.onPitchGreen,
               elevation: 0,
-              shape: AppShapes.border(AppShapes.rMd),
+              shape: AppShapes.pill,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
               textStyle: const TextStyle(
                 fontFamily: 'Estedad',
                 fontWeight: FontWeight.w700,
@@ -207,7 +235,9 @@ class _MyAppState extends State<MyApp> {
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColor.pitchGreen,
               side: const BorderSide(color: AppColor.pitchGreen),
-              shape: AppShapes.border(AppShapes.rMd),
+              shape: AppShapes.pill,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               textStyle: const TextStyle(
                 fontFamily: 'Estedad',
                 fontWeight: FontWeight.w700,
@@ -217,7 +247,7 @@ class _MyAppState extends State<MyApp> {
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(
               foregroundColor: AppColor.pitchGreen,
-              shape: AppShapes.border(AppShapes.rSm),
+              shape: AppShapes.pill,
               textStyle: const TextStyle(
                 fontFamily: 'Estedad',
                 fontWeight: FontWeight.w600,
@@ -228,7 +258,7 @@ class _MyAppState extends State<MyApp> {
             backgroundColor: AppColor.card,
             selectedColor: AppColor.pitchGreenSoft,
             side: const BorderSide(color: AppColor.line),
-            shape: AppShapes.border(AppShapes.rSm),
+            shape: AppShapes.pill,
             labelStyle: const TextStyle(
               fontFamily: 'Estedad',
               fontSize: 13,

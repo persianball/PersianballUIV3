@@ -32,6 +32,13 @@ class AppShapes {
   static ContinuousRectangleBorder borderTop(double r) =>
       ContinuousRectangleBorder(borderRadius: radiusTop(r));
 
+  /// دکمه‌ها و بج‌ها همیشه کاملاً گرد (قرصی) هستند — هیچ گوشه‌ی تیزی در
+  /// اپ نباید دیده شود.
+  static const StadiumBorder pill = StadiumBorder();
+
+  static BorderRadius pillRadius(double height) =>
+      BorderRadius.circular(height);
+
   /// شعاع‌های متداول اپ
   static const double rSm = 10;
   static const double rMd = 16;

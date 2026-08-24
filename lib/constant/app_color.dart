@@ -13,13 +13,16 @@ class AppColor {
   // ==== پالت پایه ====
 
   /// پس‌زمینه‌ی شیری کل اپ
-  static const Color milk = Color(0xFFF4F7F3);
+  static const Color milk = Color(0xFFF2F3E8);
 
   /// سطح کارت/دیالوگ (سفید خالص تا برجستگی سایه دیده شود)
   static const Color card = Color(0xFFFFFFFF);
 
-  /// سطح کمی تیره‌تر برای فیلد ورودی، چیپ خاموش، ردیف‌های تودرتو
-  static const Color cardMuted = Color(0xFFEDF2EC);
+  /// سطح خاکستری ملایم: فیلد ورودی، چیپ خاموش، ردیف‌های تودرتو
+  static const Color cardMuted = Color(0xFFEEF1F2);
+
+  /// دکمه‌ی تیره (دکمه‌ی «فیلتر» و اکشن‌های ثانویه‌ی پررنگ)
+  static const Color darkButton = Color(0xFF11191C);
 
   /// سبز چمن فوتبال — رنگ اصلی اکشن‌ها
   static const Color pitchGreen = Color(0xFF1B7A3E);
@@ -36,17 +39,17 @@ class AppColor {
   /// متن روی سطح سبز
   static const Color onPitchGreen = Color(0xFFFFFFFF);
 
-  /// متن اصلی (مشکی با ته‌رنگ سبز، نه مشکی خالص)
-  static const Color ink = Color(0xFF14261B);
+  /// متن اصلی
+  static const Color ink = Color(0xFF171717);
 
   /// متن ثانویه/توضیحی
-  static const Color inkMuted = Color(0xFF5D6E63);
+  static const Color inkMuted = Color(0xFF7A7A7A);
 
   /// خط جداکننده و بوردر ملایم
-  static const Color line = Color(0xFFE2EAE3);
+  static const Color line = Color(0xFFE6E9E2);
 
   /// بوردر پررنگ‌تر (فیلد فوکوس‌نشده، آیکن غیرفعال)
-  static const Color lineStrong = Color(0xFF9FAFA4);
+  static const Color lineStrong = Color(0xFFA6ABA2);
 
   static const Color success = Color(0xFF16A34A);
   static const Color danger = Color(0xFFDC2626);
@@ -64,9 +67,9 @@ class AppColor {
   /// سایه‌ی کارت معمولی — برجستگی ملایم روی پس‌زمینه‌ی شیری
   static const List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Color(0x0F14261B),
-      blurRadius: 14,
-      offset: Offset(0, 4),
+      color: Color(0x0F171717),
+      blurRadius: 16,
+      offset: Offset(0, 6),
     ),
     BoxShadow(
       color: Color(0x08000000),
@@ -78,9 +81,9 @@ class AppColor {
   /// سایه‌ی عناصر شناور (نوار پایین، دکمه‌ی اصلی، باتم‌شیت)
   static const List<BoxShadow> floatingShadow = [
     BoxShadow(
-      color: Color(0x1F14261B),
-      blurRadius: 26,
-      offset: Offset(0, 10),
+      color: Color(0x1F171717),
+      blurRadius: 28,
+      offset: Offset(0, 12),
     ),
   ];
 
