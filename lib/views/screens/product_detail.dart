@@ -598,8 +598,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 decoration: BoxDecoration(
                     // تینت داینامیک رنگ واریانت، روی پس‌زمینه تیره ترکیب می‌شود
                     color: Color.alphaBlend(
-                        Color(int.parse(
-                                "ff" + variant_state.productVariant.colorRgb!,
+                        Color(0xff000000+int.parse(
+                                variant_state.productVariant.colorRgb!,
                                 radix: 16))
                             .withOpacity(0.15),
                         AppColor.obsidianBg)),
@@ -806,8 +806,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                   colorWay: product.variants
                                       .map((v) =>
                                       ColorWay(
-                                        color: Color(int.parse(
-                                            "ff" + v.colorRgb!,
+                                        color: Color(0xff000000+int.parse(
+                                             v.colorRgb!,
                                             radix: 16)),
                                         name: v.color ?? "ناشناس",
                                         imageUrl: v.image != null ? '${URLs
