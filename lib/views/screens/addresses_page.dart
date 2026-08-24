@@ -166,7 +166,7 @@ class _AddressesPageState extends State<AddressesPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColor.surfaceContainer,
+      backgroundColor: AppColor.surfaceContainerOpaque,
       shape: const RoundedRectangleBorder(),
       builder: (ctx) {
         return Directionality(
@@ -318,7 +318,7 @@ class _AddressesPageState extends State<AddressesPage> {
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          backgroundColor: AppColor.surfaceContainer,
+          backgroundColor: AppColor.surfaceContainerOpaque,
           shape: const RoundedRectangleBorder(),
           title: const Text('حذف آدرس',
               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),

@@ -128,7 +128,10 @@ class _MyAppState extends State<MyApp> {
             onError: AppColor.onGold,
           ),
           dialogTheme: DialogThemeData(
-            backgroundColor: AppColor.surfaceContainer,
+            // surfaceContainer فقط ۵٪ آلفا دارد؛ دیالوگ‌ها روی یک scrim
+            // شفاف باز می‌شوند نه پس‌زمینه‌ی خودِ صفحه، پس با آن رنگ تقریباً
+            // نامرئی/شفاف دیده می‌شدند. نسخه‌ی کدرشده استفاده می‌شود.
+            backgroundColor: AppColor.surfaceContainerOpaque,
             shape: const RoundedRectangleBorder(),
           ),
           snackBarTheme: SnackBarThemeData(

@@ -59,7 +59,7 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          backgroundColor: AppColor.surfaceContainer,
+          backgroundColor: AppColor.surfaceContainerOpaque,
           shape: const RoundedRectangleBorder(),
           title: const Text('حذف حساب کاربری',
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),

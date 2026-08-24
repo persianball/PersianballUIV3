@@ -331,7 +331,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          backgroundColor: AppColor.surfaceContainer,
+          backgroundColor: AppColor.surfaceContainerOpaque,
           shape: const RoundedRectangleBorder(),
           title: Text(isCancel ? 'لغو سفارش' : 'درخواست مرجوعی',
               style: const TextStyle(

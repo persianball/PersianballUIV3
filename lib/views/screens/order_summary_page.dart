@@ -62,7 +62,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          backgroundColor: AppColor.surfaceContainer,
+          backgroundColor: AppColor.surfaceContainerOpaque,
           shape: const RoundedRectangleBorder(),
           title: const Text('نیاز به ورود دارید',
               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),

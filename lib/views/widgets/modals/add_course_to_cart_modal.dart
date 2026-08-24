@@ -37,7 +37,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
       child: Center(
         child: Container(
           decoration: BoxDecoration(
-            color: AppColor.surfaceContainer,
+            color: AppColor.surfaceContainerOpaque,
             border: Border(
               top: BorderSide(color: AppColor.outlineVariantDark),
               left: BorderSide(color: AppColor.outlineVariantDark),

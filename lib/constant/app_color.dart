@@ -16,6 +16,15 @@ class AppColor {
   static const Color onGold = Color(0xFF241A00);
   static const Color surfaceContainer = Color(0x0DFFFFFF); // white @ 5%
   static const Color surfaceContainerHigh = Color(0x1AFFFFFF); // white @ 10%
+
+  /// نسخه‌ی کاملاً کدر surfaceContainer (رنگ یکسان، بدون شفافیت). دیالوگ‌ها
+  /// و باتم‌شیت‌ها روی یک scrim/بریر شفاف باز می‌شوند، نه روی پس‌زمینه‌ی
+  /// خودِ صفحه؛ اگر از surfaceContainer معمولی (۵٪ آلفا) مستقیم به‌عنوان
+  /// پس‌زمینه‌ی خودشان استفاده کنند، تقریباً کاملاً شفاف دیده می‌شوند و
+  /// محتوای پشت آن‌ها معلوم می‌شود. همیشه به‌جای surfaceContainer برای
+  /// پس‌زمینه‌ی دیالوگ/باتم‌شیت از همین توکن استفاده شود.
+  static final Color surfaceContainerOpaque =
+      Color.alphaBlend(surfaceContainer, obsidianBg);
   static const Color onSurface = Color(0xFFE2E2E2);
   static const Color onSurfaceVariant = Color(0xFFB8B2A6);
   static const Color outlineDark = Color(0xFF99907C);
