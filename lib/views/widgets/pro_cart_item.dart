@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
@@ -12,335 +11,454 @@ class ProCartItemCard extends StatefulWidget {
   final CartItemFromBackend cartItemFromBackend;
   final TotalPriceFromBack priceFromBack;
 
-  const ProCartItemCard({Key? key, required this.cartItemFromBackend, required this.priceFromBack}) : super(key: key);
+  const ProCartItemCard(
+      {Key? key, required this.cartItemFromBackend, required this.priceFromBack})
+      : super(key: key);
 
   @override
   _ProCartItemCardState createState() => _ProCartItemCardState();
 }
 
 class _ProCartItemCardState extends State<ProCartItemCard> {
-  int quantity = 1;
   bool isLoading = false;
   bool isDeleteLoading = false;
 
+  int get _originalPrice =>
+      (widget.cartItemFromBackend.product?.price ?? 0) *
+      widget.cartItemFromBackend.quantity;
+
+  int? get _discountPercent => widget.cartItemFromBackend.product?.disountPercentage;
+
+  int get _discountedPrice {
+    final percent = _discountPercent;
+    if (percent == null || percent == 0) return _originalPrice;
+    return (_originalPrice * (1 - percent / 100.0)).toInt();
+  }
+
+  void _changeQuantity(int next) {
+    if (next < 1) return;
+    context.read<CartBloc>().add(UpdateQuantity(context,
+        widget.cartItemFromBackend.id, widget.cartItemFromBackend.product!.id, null, next));
+    setState(() => isLoading = true);
+  }
+
+  void _delete() {
+    setState(() => isDeleteLoading = true);
+    context
+        .read<CartBloc>()
+        .add(RemoveFromCart(context, widget.cartItemFromBackend.id));
+  }
+
+  void _openDetails() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColor.obsidianBg,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: AppColor.outlineVariantDark),
+        borderRadius: BorderRadius.zero,
+      ),
+      builder: (ctx) => _ProductDetailsSheet(
+        cartItemFromBackend: widget.cartItemFromBackend,
+        priceFromBack: widget.priceFromBack,
+        onQuantityChanged: _changeQuantity,
+        onDelete: () {
+          Navigator.of(ctx).pop();
+          _delete();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    quantity = widget.cartItemFromBackend.quantity;
-    String? farsiName = widget.cartItemFromBackend.product?.productVariant?.productName;
-    String? colorName = widget.cartItemFromBackend.product?.productVariant?.color;
-    int? originalPrice =widget.cartItemFromBackend.product !=null && widget.cartItemFromBackend.product?.price != null? widget.cartItemFromBackend.product!.price! * widget.cartItemFromBackend.quantity:0;
-    int? discountPercent = widget.cartItemFromBackend.product?.disountPercentage;
-    int? discountedPrice = widget.cartItemFromBackend.product?.disountPercentage != null ?  (originalPrice *(1-widget.cartItemFromBackend.product!.disountPercentage! / 100.0)).toInt() : originalPrice;
-    return SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end, // Right-to-left alignment for Persian text
-            children: [
+    final farsiName = widget.cartItemFromBackend.product?.productVariant?.productName ?? '';
+    final colorName = widget.cartItemFromBackend.product?.productVariant?.color ?? '';
+    final image = widget.cartItemFromBackend.product?.productVariant?.image ?? '';
+    final percent = _discountPercent;
 
-              // Product Card
-              Container(
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColor.surfaceContainer,
-                  border: Border.all(color: AppColor.outlineVariantDark),
+    return BlocListener<CartBloc, CartState>(
+      listener: (context, state) {
+        if (state is CartError) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.message)));
+        }
+        if (state is CartLoaded) {
+          setState(() {
+            isLoading = false;
+            isDeleteLoading = false;
+          });
+        }
+      },
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: GestureDetector(
+          onTap: _openDetails,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColor.surfaceContainer,
+              border: Border.all(color: AppColor.outlineVariantDark),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // تصویر کوچک، سمت راست
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.network(
+                    "${URLs.baseUrl}$image",
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) =>
+                        Image.asset('assets/images/placeholder.jpg', width: 48, height: 48),
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+                const SizedBox(width: 10),
 
-                    // Product Image
-                    Row(
-                      children: [
-
-                        // Product Title
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Directionality(
-                              textDirection: TextDirection.rtl,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    farsiName??"",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColor.onSurface,
-                                      height: 1.3,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-
-                                  SizedBox(height: 8),
-
-                                  // Subtitle
-                                  Text(
-                                    colorName??"",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColor.onSurfaceVariant,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                // عنوان و رنگ، وسط
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        farsiName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColor.onSurface,
                         ),
-
-                        Container(
-                          height: 64,
-                          width: 64,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              "${URLs.baseUrl}${widget.cartItemFromBackend.product!.productVariant!.image}",
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => Image.asset('assets/images/placeholder.jpg'),
-                            ),
-                          ),
-
-                        ),
-
-
-
-                      ],
-                    ),
-
-                    SizedBox(height: 16),
-
-                    // Features List
-                    Column(
-                      children: [
-                        _buildFeatureRow(Icons.check_circle_outline, 'بسته بندی حرفه‌ای'),
-                        SizedBox(height: 8),
-                        _buildFeatureRow(Icons.check_circle_outline, 'ضمانت یک ساله'),
-                        SizedBox(height: 8),
-                        widget.priceFromBack.isFreeShipping!=null&&
-                        widget.priceFromBack.isFreeShipping! ?_buildFeatureRow(Icons.check_circle_outline, 'ارسال رایگان ') :
-                        _buildFeatureRow(Icons.motorcycle, '${widget.priceFromBack.postShippingPrice}:هزینه ارسال '),
-                      ],
-                    ),
-
-                    SizedBox(height: 20),
-
-                    // Price Section
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                      ),
+                      if (colorName.isNotEmpty) ...[
+                        const SizedBox(height: 2),
                         Text(
-                          'تومان',
-                          style: TextStyle(
-                            fontSize: 14,
+                          colorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 11,
                             color: AppColor.onSurfaceVariant,
                           ),
                         ),
-                        SizedBox(width: 8),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // قیمت/تخفیف و کنترل تعداد و حذف، سمت چپ - مینیمال و ریز
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (percent != null && percent != 0) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 1),
+                            color: Colors.red,
+                            child: Text(
+                              '$percent%',
+                              style: const TextStyle(
+                                  fontSize: 9, color: Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
                         Text(
-                          thousandSeparator(discountedPrice),
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                          thousandSeparator(_discountedPrice),
+                          style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
                             color: AppColor.goldEnd,
                           ),
                         ),
                       ],
                     ),
-
-                    SizedBox(height: 8),
-
-                    // Original Price (crossed out)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        discountPercent != null
-                            || discountPercent != 0 ?
-                        Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 4.0,
-                            horizontal: 4.0),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                            ),
-                            child: Text("${
-                            discountPercent
-                            }%",
-                            style: TextStyle(color: Colors.white),),
-                          ),
-                        ):Container(),
-                        SizedBox(width: 8,),
-                        Text(
-                          thousandSeparator(originalPrice),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColor.onSurfaceVariant,
-                            decoration: TextDecoration.lineThrough,
-                          ),
+                    if (percent != null && percent != 0)
+                      Text(
+                        thousandSeparator(_originalPrice),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColor.onSurfaceVariant,
+                          decoration: TextDecoration.lineThrough,
                         ),
-                      ],
-                    ),
-
-                    SizedBox(height: 20),
-
-                    // Quantity and Action Buttons
-                    BlocConsumer<CartBloc,CartState>(
-                      listener: (context,state){
-                        if(state is CartError){
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-                        }
-                        if(state is CartLoaded){
-                          setState(() {
-                            isLoading = false;
-                            isDeleteLoading = false;
-                          });
-                        }
-
-                      },
-                      builder: (context,state) {
-
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Delete Button
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                border: Border.all(color: Colors.red.withOpacity(0.4)),
-                              ),
-                              child: Builder(
-
-                                builder: (context) {
-
-                                  if(isDeleteLoading){
-                                    return Center(
-                                      child: LoadingAnimationWidget.progressiveDots(
-                                        color: AppColor.goldEnd,
-                                        size: 10,
-                                      ),
-                                    );
-                                  }
-                                  return IconButton(
-                                    icon: Icon(Icons.delete_outline, color: Colors.red[600]),
-                                    onPressed: () {
-                                      setState(() {
-                                        isDeleteLoading = true;
-                                      });
-                                      context.read<CartBloc>().add(RemoveFromCart(context, widget.cartItemFromBackend.id));
-
-                                    },
-                                  );
-                                }
-                              ),
-                            ),
-
-                            SizedBox(width: 16),
-
-                            // Quantity Controls
-                            Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColor.outlineVariantDark),
-                              ),
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.add, color: AppColor.successDark),
-                                    onPressed: () {
-                                      setState(() {
-                                        quantity++;
-                                      });
-                                      context.read<CartBloc>().add(UpdateQuantity(context, widget.cartItemFromBackend.id,widget.cartItemFromBackend.product!.id,null,quantity));
-                                      setState(() {
-                                        isLoading = true;
-                                      });
-                                    },
-                                  ),
-                                  Builder(
-                                    builder: (context) {
-                                      if(isLoading){
-                                        return Center(
-                                          child: LoadingAnimationWidget.twistingDots(
-                                            leftDotColor: AppColor.goldEnd,
-                                            rightDotColor: AppColor.goldStart,
-                                            size: 10,
-                                          ),
-                                        );
-                                      }
-                                      return Container(
-                                        width: 40,
-                                        child: Text(
-                                          '${widget.cartItemFromBackend.quantity}',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColor.onSurface,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.remove, color: AppColor.onSurfaceVariant),
-                                    onPressed: () {
-                                      if (quantity > 1) {
-                                        setState(() {
-                                          quantity--;
-                                        });
-
-                                        context.read<CartBloc>().add(UpdateQuantity(context, widget.cartItemFromBackend.id,widget.cartItemFromBackend.product!.id,null,quantity));
-
-                                        setState(() {
-                                          isLoading = true;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }
+                      ),
+                    const SizedBox(height: 4),
+                    MiniQuantityRow(
+                      quantity: widget.cartItemFromBackend.quantity,
+                      isLoading: isLoading,
+                      isDeleteLoading: isDeleteLoading,
+                      onIncrement: () =>
+                          _changeQuantity(widget.cartItemFromBackend.quantity + 1),
+                      onDecrement: () =>
+                          _changeQuantity(widget.cartItemFromBackend.quantity - 1),
+                      onDelete: _delete,
                     ),
                   ],
                 ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ردیف ریز و مینیمال تعداد + حذف، مشترک بین محصول و دوره.
+class MiniQuantityRow extends StatelessWidget {
+  final int quantity;
+  final bool isLoading;
+  final bool isDeleteLoading;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
+  final VoidCallback onDelete;
+
+  const MiniQuantityRow({
+    required this.quantity,
+    required this.isLoading,
+    required this.isDeleteLoading,
+    required this.onIncrement,
+    required this.onDecrement,
+    required this.onDelete,
+  });
+
+  Widget _miniIcon(IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: Icon(icon, size: 14, color: color),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        isDeleteLoading
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: Padding(
+                  padding: EdgeInsets.all(2),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 1.5, color: Colors.red),
+                ),
+              )
+            : _miniIcon(Icons.delete_outline, Colors.red[400]!, onDelete),
+        const SizedBox(width: 4),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColor.outlineVariantDark),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _miniIcon(Icons.add, AppColor.successDark, onIncrement),
+              isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: Padding(
+                        padding: EdgeInsets.all(3),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 1.5, color: AppColor.goldEnd),
+                      ),
+                    )
+                  : SizedBox(
+                      width: 18,
+                      child: Text(
+                        '$quantity',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColor.onSurface,
+                        ),
+                      ),
+                    ),
+              _miniIcon(Icons.remove, AppColor.onSurfaceVariant, onDecrement),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// جزئیات کامل محصول در سبد، به‌صورت modal bottom sheet.
+class _ProductDetailsSheet extends StatelessWidget {
+  final CartItemFromBackend cartItemFromBackend;
+  final TotalPriceFromBack priceFromBack;
+  final ValueChanged<int> onQuantityChanged;
+  final VoidCallback onDelete;
+
+  const _ProductDetailsSheet({
+    required this.cartItemFromBackend,
+    required this.priceFromBack,
+    required this.onQuantityChanged,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final farsiName = cartItemFromBackend.product?.productVariant?.productName ?? '';
+    final colorName = cartItemFromBackend.product?.productVariant?.color ?? '';
+    final image = cartItemFromBackend.product?.productVariant?.image ?? '';
+    final originalPrice =
+        (cartItemFromBackend.product?.price ?? 0) * cartItemFromBackend.quantity;
+    final percent = cartItemFromBackend.product?.disountPercentage;
+    final discountedPrice = (percent != null && percent != 0)
+        ? (originalPrice * (1 - percent / 100.0)).toInt()
+        : originalPrice;
+    final isFreeShipping = priceFromBack.isFreeShipping ?? false;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                color: AppColor.outlineVariantDark,
+              ),
+              const SizedBox(height: 20),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  "${URLs.baseUrl}$image",
+                  width: 96,
+                  height: 96,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) =>
+                      Image.asset('assets/images/placeholder.jpg', width: 96, height: 96),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                farsiName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.onSurface,
+                ),
+              ),
+              if (colorName.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  colorName,
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 13,
+                      color: AppColor.onSurfaceVariant),
+                ),
+              ],
+              const SizedBox(height: 16),
+              _featureRow(Icons.check_circle_outline, 'بسته بندی حرفه‌ای'),
+              const SizedBox(height: 6),
+              _featureRow(Icons.check_circle_outline, 'ضمانت یک ساله'),
+              const SizedBox(height: 6),
+              _featureRow(
+                isFreeShipping ? Icons.check_circle_outline : Icons.motorcycle,
+                isFreeShipping
+                    ? 'ارسال رایگان'
+                    : '${priceFromBack.postShippingPrice}: هزینه ارسال',
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('تومان',
+                      style:
+                          TextStyle(fontSize: 14, color: AppColor.onSurfaceVariant)),
+                  const SizedBox(width: 8),
+                  Text(
+                    thousandSeparator(discountedPrice),
+                    style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColor.goldEnd),
+                  ),
+                ],
+              ),
+              if (percent != null && percent != 0) ...[
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
+                      color: Colors.red,
+                      child: Text('$percent%',
+                          style: const TextStyle(color: Colors.white, fontSize: 12)),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      thousandSeparator(originalPrice),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColor.onSurfaceVariant,
+                          decoration: TextDecoration.lineThrough),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 20),
+              StatefulBuilder(
+                builder: (context, setModalState) {
+                  return MiniQuantityRow(
+                    quantity: cartItemFromBackend.quantity,
+                    isLoading: false,
+                    isDeleteLoading: false,
+                    onIncrement: () =>
+                        onQuantityChanged(cartItemFromBackend.quantity + 1),
+                    onDecrement: () =>
+                        onQuantityChanged(cartItemFromBackend.quantity - 1),
+                    onDelete: onDelete,
+                  );
+                },
               ),
             ],
           ),
         ),
-      );
-
+      ),
+    );
   }
 
-  // Helper method to build feature rows
-  Widget _buildFeatureRow(IconData icon, String text, {bool isSpecial = false}) {
+  Widget _featureRow(IconData icon, String text) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              color: isSpecial ? Colors.red[600] : Colors.grey[700],
-              height: 1.3,
-            ),
-            textAlign: TextAlign.right,
-          ),
-        ),
-        SizedBox(width: 8),
-        Icon(
-          icon,
-          size: 16,
-          color: isSpecial ? Colors.red[600] : AppColor.successDark,
-        ),
+        Icon(icon, size: 16, color: AppColor.successDark),
+        const SizedBox(width: 8),
+        Text(text,
+            style:
+                const TextStyle(fontSize: 12, color: AppColor.onSurfaceVariant)),
       ],
     );
   }

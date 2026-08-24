@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/pro_cart_item.dart' show MiniQuantityRow;
 
 import '../../constant/urls.dart';
 
@@ -12,392 +12,422 @@ class CourseCartItemCard extends StatefulWidget {
   final CartItemFromBackend cartItemFromBackend;
   final TotalPriceFromBack priceFromBack;
 
-  const CourseCartItemCard({Key? key, required this.cartItemFromBackend, required this.priceFromBack}) : super(key: key);
+  const CourseCartItemCard(
+      {Key? key, required this.cartItemFromBackend, required this.priceFromBack})
+      : super(key: key);
 
   @override
   _CourseCartItemCardState createState() => _CourseCartItemCardState();
 }
 
 class _CourseCartItemCardState extends State<CourseCartItemCard> {
-  int quantity = 1;
   bool isLoading = false;
   bool isDeleteLoading = false;
 
+  int get _originalPrice =>
+      (widget.cartItemFromBackend.course?.price ?? 0) *
+      widget.cartItemFromBackend.quantity;
+
+  int? get _discountPercent => widget.cartItemFromBackend.course?.discountPercentage;
+
+  int get _discountedPrice {
+    final percent = _discountPercent;
+    if (percent == null || percent == 0) return _originalPrice;
+    return (_originalPrice * (1 - percent / 100.0)).toInt();
+  }
+
+  void _changeQuantity(int next) {
+    if (next < 1) return;
+    context.read<CartBloc>().add(UpdateQuantity(context,
+        widget.cartItemFromBackend.id, null, widget.cartItemFromBackend.course!.id, next));
+    setState(() => isLoading = true);
+  }
+
+  void _delete() {
+    setState(() => isDeleteLoading = true);
+    context
+        .read<CartBloc>()
+        .add(RemoveFromCart(context, widget.cartItemFromBackend.id));
+  }
+
+  void _openDetails() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColor.obsidianBg,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: AppColor.outlineVariantDark),
+        borderRadius: BorderRadius.zero,
+      ),
+      builder: (ctx) => _CourseDetailsSheet(
+        cartItemFromBackend: widget.cartItemFromBackend,
+        onQuantityChanged: _changeQuantity,
+        onDelete: () {
+          Navigator.of(ctx).pop();
+          _delete();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    quantity = widget.cartItemFromBackend.quantity;
-    String? courseName = widget.cartItemFromBackend.course?.courseName;
-    String? location = widget.cartItemFromBackend.course?.location;
-    String? image = widget.cartItemFromBackend.course?.image;
-    int? originalPrice = widget.cartItemFromBackend.course != null && widget.cartItemFromBackend.course?.price != null
-        ? widget.cartItemFromBackend.course!.price! * widget.cartItemFromBackend.quantity
-        : 0;
-    int? discountPercent = widget.cartItemFromBackend.course?.discountPercentage;
-    int? discountedPrice = widget.cartItemFromBackend.course?.discountPercentage != null
-        ? (originalPrice * (1 - widget.cartItemFromBackend.course!.discountPercentage! / 100.0)).toInt()
-        : originalPrice;
+    final courseName = widget.cartItemFromBackend.course?.courseName ?? '';
+    final location = widget.cartItemFromBackend.course?.location ?? '';
+    final image = widget.cartItemFromBackend.course?.image;
+    final percent = _discountPercent;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // Course Card
-            Container(
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColor.surfaceContainer,
-                border: Border.all(color: AppColor.outlineVariantDark),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Course Image
-                  Row(
+    return BlocListener<CartBloc, CartState>(
+      listener: (context, state) {
+        if (state is CartError) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.message)));
+        }
+        if (state is CartLoaded) {
+          setState(() {
+            isLoading = false;
+            isDeleteLoading = false;
+          });
+        }
+      },
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: GestureDetector(
+          onTap: _openDetails,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColor.surfaceContainer,
+              border: Border.all(color: AppColor.outlineVariantDark),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // تصویر کوچک، سمت راست
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: image != null
+                      ? Image.network(
+                          "${URLs.baseUrl}$image",
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Icon(Icons.school, size: 28, color: AppColor.goldEnd),
+                        )
+                      : Icon(Icons.school, size: 28, color: AppColor.goldEnd),
+                ),
+                const SizedBox(width: 10),
+
+                // عنوان و محل برگزاری، وسط
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Course Title
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  courseName ?? "",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColor.onSurface,
-                                    height: 1.3,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 8),
-                                // Subtitle
-                                Text(
-                                  location ?? "",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColor.onSurfaceVariant,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'دوره آموزشی',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColor.goldEnd,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      Text(
+                        courseName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColor.onSurface,
+                        ),
+                      ),
+                      if (location.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 11,
+                            color: AppColor.onSurfaceVariant,
                           ),
                         ),
-                      ),
-                      Container(
-                        height: 80,
-                        width: 80,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: image != null
-                              ? Image.network(
-                                  "${URLs.baseUrl}$image",
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Icon(Icons.school, size: 40, color: AppColor.goldEnd),
-                                )
-                              : Icon(Icons.school, size: 40, color: AppColor.goldEnd),
-                        ),
-                      ),
+                      ],
                     ],
                   ),
-                  SizedBox(height: 16),
-                  // Features List
-                  Column(
-                    children: [
-                      _buildFeatureRow(Icons.school, 'آموزش حرفه‌ای'),
-                      SizedBox(height: 8),
-                      _buildFeatureRow(Icons.group, 'کلاس گروهی'),
-                      SizedBox(height: 8),
-                      _buildFeatureRow(Icons.access_time, 'زمان‌بندی انعطاف‌پذیر'),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  // Gift Product Section
-                  if (widget.cartItemFromBackend.course?.giftProduct != null)
-                    Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColor.successDark.withOpacity(0.08),
-                        border: Border.all(color: AppColor.successDark.withOpacity(0.4)),
-                      ),
-                      child: Row(
-                        children: [
-                          // Gift Image
+                ),
+                const SizedBox(width: 8),
+
+                // قیمت/تخفیف و کنترل تعداد و حذف، سمت چپ - مینیمال و ریز
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (percent != null && percent != 0) ...[
                           Container(
-                            height: 50,
-                            width: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 6,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: widget.cartItemFromBackend.course!.giftProduct!.image != null
-                                  ? Image.network(
-                                      "${URLs.baseUrl}${widget.cartItemFromBackend.course!.giftProduct!.image}",
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Icon(Icons.card_giftcard, size: 30, color: AppColor.successDark),
-                                    )
-                                  : Icon(Icons.card_giftcard, size: 30, color: AppColor.successDark),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          // Gift Details
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'هدیه ویژه',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColor.successDark,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  widget.cartItemFromBackend.course!.giftProduct!.productName ?? 'محصول هدیه',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColor.onSurfaceVariant,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (widget.cartItemFromBackend.course!.giftProduct!.color != null)
-                                  Text(
-                                    'رنگ: ${widget.cartItemFromBackend.course!.giftProduct!.color}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: AppColor.onSurfaceVariant,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  SizedBox(height: 20),
-                  // Price Section
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'تومان',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColor.onSurfaceVariant,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        thousandSeparator(discountedPrice),
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColor.goldEnd,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  // Original Price (crossed out)
-                  if (discountPercent != null && discountPercent != 0)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-
-                        Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 1),
+                            color: Colors.red,
                             child: Text(
-                              "$discountPercent%",
-                              style: TextStyle(color: Colors.white),
+                              '$percent%',
+                              style: const TextStyle(
+                                  fontSize: 9, color: Colors.white),
                             ),
                           ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          thousandSeparator(_discountedPrice),
+                          style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColor.goldEnd,
+                          ),
                         ),
-                      SizedBox(width: 8),
+                      ],
+                    ),
+                    if (percent != null && percent != 0)
                       Text(
-                        thousandSeparator(originalPrice),
-                        style: TextStyle(
-                          fontSize: 12,
+                        thousandSeparator(_originalPrice),
+                        style: const TextStyle(
+                          fontSize: 10,
                           color: AppColor.onSurfaceVariant,
                           decoration: TextDecoration.lineThrough,
                         ),
                       ),
-                    ],
+                    const SizedBox(height: 4),
+                    MiniQuantityRow(
+                      quantity: widget.cartItemFromBackend.quantity,
+                      isLoading: isLoading,
+                      isDeleteLoading: isDeleteLoading,
+                      onIncrement: () =>
+                          _changeQuantity(widget.cartItemFromBackend.quantity + 1),
+                      onDecrement: () =>
+                          _changeQuantity(widget.cartItemFromBackend.quantity - 1),
+                      onDelete: _delete,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// جزئیات کامل دوره در سبد، به‌صورت modal bottom sheet.
+class _CourseDetailsSheet extends StatelessWidget {
+  final CartItemFromBackend cartItemFromBackend;
+  final ValueChanged<int> onQuantityChanged;
+  final VoidCallback onDelete;
+
+  const _CourseDetailsSheet({
+    required this.cartItemFromBackend,
+    required this.onQuantityChanged,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final courseName = cartItemFromBackend.course?.courseName ?? '';
+    final location = cartItemFromBackend.course?.location ?? '';
+    final image = cartItemFromBackend.course?.image;
+    final originalPrice =
+        (cartItemFromBackend.course?.price ?? 0) * cartItemFromBackend.quantity;
+    final percent = cartItemFromBackend.course?.discountPercentage;
+    final discountedPrice = (percent != null && percent != 0)
+        ? (originalPrice * (1 - percent / 100.0)).toInt()
+        : originalPrice;
+    final gift = cartItemFromBackend.course?.giftProduct;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(width: 40, height: 4, color: AppColor.outlineVariantDark),
+                const SizedBox(height: 20),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: image != null
+                      ? Image.network(
+                          "${URLs.baseUrl}$image",
+                          width: 96,
+                          height: 96,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Icon(Icons.school, size: 56, color: AppColor.goldEnd),
+                        )
+                      : Icon(Icons.school, size: 56, color: AppColor.goldEnd),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  courseName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.onSurface,
                   ),
-                  SizedBox(height: 20),
-                  // Quantity and Action Buttons
-                  BlocConsumer<CartBloc, CartState>(
-                    listener: (context, state) {
-                      if (state is CartError) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-                      }
-                      if (state is CartLoaded) {
-                        setState(() {
-                          isLoading = false;
-                          isDeleteLoading = false;
-                        });
-                      }
-                    },
-                    builder: (context, state) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Delete Button
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
-                              border: Border.all(color: Colors.red.withOpacity(0.4)),
-                            ),
-                            child: Builder(
-                              builder: (context) {
-                                if (isDeleteLoading) {
-                                  return Center(
-                                    child: LoadingAnimationWidget.progressiveDots(
-                                      color: AppColor.goldEnd,
-                                      size: 10,
-                                    ),
-                                  );
-                                }
-                                return IconButton(
-                                  icon: Icon(Icons.delete_outline, color: Colors.red[600]),
-                                  onPressed: () {
-                                    setState(() {
-                                      isDeleteLoading = true;
-                                    });
-                                    context.read<CartBloc>().add(RemoveFromCart(context, widget.cartItemFromBackend.id));
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          // Quantity Controls
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColor.outlineVariantDark),
-                            ),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.add, color: AppColor.successDark),
-                                  onPressed: () {
-                                    setState(() {
-                                      quantity++;
-                                    });
-                                    context.read<CartBloc>().add(UpdateQuantity(context, widget.cartItemFromBackend.id,null, widget.cartItemFromBackend.course!.id, quantity));
-                                    setState(() {
-                                      isLoading = true;
-                                    });
-                                  },
-                                ),
-                                Builder(
-                                  builder: (context) {
-                                    if (isLoading) {
-                                      return Center(
-                                        child: LoadingAnimationWidget.twistingDots(
-                                          leftDotColor: AppColor.goldEnd,
-                                          rightDotColor: AppColor.goldStart,
-                                          size: 10,
-                                        ),
-                                      );
-                                    }
-                                    return Container(
-                                      width: 40,
-                                      child: Text(
-                                        '${widget.cartItemFromBackend.quantity}',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColor.onSurface,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.remove, color: AppColor.onSurfaceVariant),
-                                  onPressed: () {
-                                    if (quantity > 1) {
-                                      setState(() {
-                                        quantity--;
-                                      });
-                                      context.read<CartBloc>().add(UpdateQuantity(context, widget.cartItemFromBackend.id,null, widget.cartItemFromBackend.course!.id, quantity));
-                                      setState(() {
-                                        isLoading = true;
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+                ),
+                if (location.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    location,
+                    style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 13,
+                        color: AppColor.onSurfaceVariant),
                   ),
                 ],
-              ),
+                const SizedBox(height: 4),
+                const Text(
+                  'دوره آموزشی',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 12,
+                    color: AppColor.goldEnd,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _featureRow(Icons.school, 'آموزش حرفه‌ای'),
+                const SizedBox(height: 6),
+                _featureRow(Icons.group, 'کلاس گروهی'),
+                const SizedBox(height: 6),
+                _featureRow(Icons.access_time, 'زمان‌بندی انعطاف‌پذیر'),
+                if (gift != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColor.successDark.withOpacity(0.08),
+                      border:
+                          Border.all(color: AppColor.successDark.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: gift.image != null
+                              ? Image.network(
+                                  "${URLs.baseUrl}${gift.image}",
+                                  width: 44,
+                                  height: 44,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                      Icons.card_giftcard,
+                                      size: 26,
+                                      color: AppColor.successDark),
+                                )
+                              : Icon(Icons.card_giftcard,
+                                  size: 26, color: AppColor.successDark),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('هدیه ویژه',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColor.successDark)),
+                              const SizedBox(height: 2),
+                              Text(
+                                gift.productName ?? 'محصول هدیه',
+                                style: const TextStyle(
+                                    fontSize: 11, color: AppColor.onSurfaceVariant),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('تومان',
+                        style: TextStyle(
+                            fontSize: 14, color: AppColor.onSurfaceVariant)),
+                    const SizedBox(width: 8),
+                    Text(
+                      thousandSeparator(discountedPrice),
+                      style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppColor.goldEnd),
+                    ),
+                  ],
+                ),
+                if (percent != null && percent != 0) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
+                        color: Colors.red,
+                        child: Text('$percent%',
+                            style:
+                                const TextStyle(color: Colors.white, fontSize: 12)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        thousandSeparator(originalPrice),
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColor.onSurfaceVariant,
+                            decoration: TextDecoration.lineThrough),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 20),
+                MiniQuantityRow(
+                  quantity: cartItemFromBackend.quantity,
+                  isLoading: false,
+                  isDeleteLoading: false,
+                  onIncrement: () =>
+                      onQuantityChanged(cartItemFromBackend.quantity + 1),
+                  onDecrement: () =>
+                      onQuantityChanged(cartItemFromBackend.quantity - 1),
+                  onDelete: onDelete,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFeatureRow(IconData icon, String text) {
+  Widget _featureRow(IconData icon, String text) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(icon, size: 16, color: AppColor.successDark),
-        SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColor.onSurfaceVariant,
-          ),
-        ),
+        const SizedBox(width: 8),
+        Text(text,
+            style:
+                const TextStyle(fontSize: 12, color: AppColor.onSurfaceVariant)),
       ],
     );
   }

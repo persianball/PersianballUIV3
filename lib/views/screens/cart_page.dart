@@ -18,7 +18,11 @@ class CartPage extends StatefulWidget {
   _CartPageState createState() => _CartPageState();
 }
 
+
 class _CartPageState extends State<CartPage> {
+  bool _productsExpanded = true;
+  bool _coursesExpanded = true;
+
   @override
   void initState() {
     super.initState();
@@ -241,36 +245,70 @@ class _CartPageState extends State<CartPage> {
 
           // Products Section
           if (products.isNotEmpty) ...[
-            _buildSectionHeader('محصولات', Icons.shopping_bag),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: products.length,
-              separatorBuilder: (_, i) => SizedBox(height: 16),
-              itemBuilder: (_, i) {
-                return ProCartItemCard(
-                  cartItemFromBackend: products[i],
-                  priceFromBack: cart.results[0].price,
-                );
-              },
+            _buildSectionHeader(
+              title: 'محصولات',
+              icon: Icons.shopping_bag,
+              count: products.length,
+              expanded: _productsExpanded,
+              onToggle: () =>
+                  setState(() => _productsExpanded = !_productsExpanded),
             ),
-            const SizedBox(height: 24),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 220),
+              crossFadeState: _productsExpanded
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              firstChild: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: products.length,
+                  separatorBuilder: (_, i) => SizedBox(height: 8),
+                  itemBuilder: (_, i) {
+                    return ProCartItemCard(
+                      cartItemFromBackend: products[i],
+                      priceFromBack: cart.results[0].price,
+                    );
+                  },
+                ),
+              ),
+              secondChild: const SizedBox(width: double.infinity),
+            ),
+            const SizedBox(height: 20),
           ],
 
           // Courses Section
           if (courses.isNotEmpty) ...[
-            _buildSectionHeader('دوره‌های آموزشی', Icons.school),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: courses.length,
-              separatorBuilder: (_, i) => SizedBox(height: 16),
-              itemBuilder: (_, i) {
-                return CourseCartItemCard(
-                  cartItemFromBackend: courses[i],
-                  priceFromBack: cart.results[0].price,
-                );
-              },
+            _buildSectionHeader(
+              title: 'دوره‌های آموزشی',
+              icon: Icons.school,
+              count: courses.length,
+              expanded: _coursesExpanded,
+              onToggle: () =>
+                  setState(() => _coursesExpanded = !_coursesExpanded),
+            ),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 220),
+              crossFadeState: _coursesExpanded
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              firstChild: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: courses.length,
+                  separatorBuilder: (_, i) => SizedBox(height: 8),
+                  itemBuilder: (_, i) {
+                    return CourseCartItemCard(
+                      cartItemFromBackend: courses[i],
+                      priceFromBack: cart.results[0].price,
+                    );
+                  },
+                ),
+              ),
+              secondChild: const SizedBox(width: double.infinity),
             ),
           ],
         ],
@@ -278,29 +316,62 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColor.goldEnd.withOpacity(0.08),
-        border: Border.all(color: AppColor.goldEnd.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColor.goldEnd, size: 24),
-          SizedBox(width: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColor.goldEnd,
-              fontFamily: 'Estedad',
-            ),
+  /// هدر راست‌چین و قابل جمع‌شدن هر بخش، با تعداد آیتم به‌صورت مینیمال.
+  Widget _buildSectionHeader({
+    required String title,
+    required IconData icon,
+    required int count,
+    required bool expanded,
+    required VoidCallback onToggle,
+  }) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: InkWell(
+        onTap: onToggle,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          decoration: BoxDecoration(
+            color: AppColor.goldEnd.withOpacity(0.08),
+            border: Border.all(color: AppColor.goldEnd.withOpacity(0.3)),
           ),
-          Spacer(),
-          Icon(Icons.arrow_drop_down, color: AppColor.goldEnd),
-        ],
+          child: Row(
+            children: [
+              Icon(icon, color: AppColor.goldEnd, size: 18),
+              SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColor.goldEnd,
+                  fontFamily: 'Estedad',
+                ),
+              ),
+              SizedBox(width: 6),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: AppColor.goldEnd.withOpacity(0.15),
+                ),
+                child: Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.goldEnd,
+                    fontFamily: 'Estedad',
+                  ),
+                ),
+              ),
+              Spacer(),
+              AnimatedRotation(
+                turns: expanded ? 0 : -0.25,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(Icons.expand_more, color: AppColor.goldEnd, size: 20),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
