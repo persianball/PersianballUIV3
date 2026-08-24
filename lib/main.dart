@@ -4,6 +4,7 @@ import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/bloc/login/login_bloc.dart';
 import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter/services.dart';
 import 'package:marketky/core/app_router.dart';
 import 'package:marketky/core/fade_page_transitions.dart';
@@ -25,10 +26,11 @@ void main() {
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: AppColor.obsidianBg,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppColor.obsidianBg,
-    systemNavigationBarIconBrightness: Brightness.light,
+    statusBarColor: AppColor.milk,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+    systemNavigationBarColor: AppColor.milk,
+    systemNavigationBarIconBrightness: Brightness.dark,
   ));
 
 }
@@ -107,43 +109,159 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         navigatorKey: appNavigatorKey,
         debugShowCheckedModeBanner: false,
-        // همه‌ی صفحات زنده‌ی اپ به تم Obsidian Gold Athletics بازطراحی
-        // شده‌اند و رنگ خودشان را صریحاً ست می‌کنند؛ این colorScheme فقط
-        // فالبک ویجت‌های استاندارد متریال (دیالوگ/اسنک‌بار/دکمه‌ی بدون
-        // استایل و…) را از بنفش پیش‌فرض فلاتر به همین پالت طلایی/تیره
-        // تغییر می‌دهد تا هیچ رنگ بنفشی در جایی از اپ باقی نماند.
+        // تم «چمن و شیر»: پس‌زمینه‌ی شیری، سطح کارت سفید برجسته با سایه‌ی
+        // نرم، و سبز چمن فوتبال به‌عنوان رنگ اکشن. گوشه‌ها همه‌جا اسکوئرکل
+        // (انحنای پیوسته به سبک اپل) هستند، نه کمان دایره‌ای.
         theme: ThemeData(
           useMaterial3: true,
-          scaffoldBackgroundColor: AppColor.obsidianBg,
+          scaffoldBackgroundColor: AppColor.milk,
           fontFamily: 'Estedad',
+          splashFactory: InkSparkle.splashFactory,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: AppColor.goldEnd,
-            brightness: Brightness.dark,
-            primary: AppColor.goldEnd,
-            onPrimary: AppColor.onGold,
-            secondary: AppColor.goldStart,
-            onSecondary: AppColor.onGold,
-            surface: AppColor.obsidianBg,
-            onSurface: AppColor.onSurface,
-            error: AppColor.errorDark,
-            onError: AppColor.onGold,
+            seedColor: AppColor.pitchGreen,
+            brightness: Brightness.light,
+            primary: AppColor.pitchGreen,
+            onPrimary: AppColor.onPitchGreen,
+            secondary: AppColor.pitchGreenLight,
+            onSecondary: AppColor.onPitchGreen,
+            surface: AppColor.card,
+            onSurface: AppColor.ink,
+            surfaceContainerHighest: AppColor.cardMuted,
+            outline: AppColor.lineStrong,
+            outlineVariant: AppColor.line,
+            error: AppColor.danger,
+            onError: Colors.white,
+          ),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: AppColor.milk,
+            surfaceTintColor: Colors.transparent,
+            foregroundColor: AppColor.ink,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
+            titleTextStyle: TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppColor.ink,
+            ),
+          ),
+          cardTheme: CardThemeData(
+            color: AppColor.card,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            shape: AppShapes.border(AppShapes.rMd),
+            margin: EdgeInsets.zero,
+          ),
+          dividerTheme: const DividerThemeData(
+            color: AppColor.line,
+            thickness: 1,
+            space: 1,
           ),
           dialogTheme: DialogThemeData(
-            // surfaceContainer فقط ۵٪ آلفا دارد؛ دیالوگ‌ها روی یک scrim
-            // شفاف باز می‌شوند نه پس‌زمینه‌ی خودِ صفحه، پس با آن رنگ تقریباً
-            // نامرئی/شفاف دیده می‌شدند. نسخه‌ی کدرشده استفاده می‌شود.
-            backgroundColor: AppColor.surfaceContainerOpaque,
-            shape: const RoundedRectangleBorder(),
+            backgroundColor: AppColor.card,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            shape: AppShapes.border(AppShapes.rLg),
+            titleTextStyle: const TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppColor.ink,
+            ),
+            contentTextStyle: const TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 14,
+              color: AppColor.inkMuted,
+            ),
+          ),
+          bottomSheetTheme: BottomSheetThemeData(
+            backgroundColor: AppColor.card,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            modalBackgroundColor: AppColor.card,
+            modalElevation: 0,
+            shape: AppShapes.borderTop(AppShapes.rXl),
           ),
           snackBarTheme: SnackBarThemeData(
-            backgroundColor: AppColor.surfaceContainerHigh,
+            backgroundColor: AppColor.ink,
             contentTextStyle: const TextStyle(
-                fontFamily: 'Estedad', color: AppColor.onSurface),
-            actionTextColor: AppColor.goldEnd,
-            shape: const RoundedRectangleBorder(),
+                fontFamily: 'Estedad', color: Colors.white),
+            actionTextColor: AppColor.pitchGreenLight,
+            behavior: SnackBarBehavior.floating,
+            shape: AppShapes.border(AppShapes.rSm),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColor.pitchGreen,
+              foregroundColor: AppColor.onPitchGreen,
+              elevation: 0,
+              shape: AppShapes.border(AppShapes.rMd),
+              textStyle: const TextStyle(
+                fontFamily: 'Estedad',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColor.pitchGreen,
+              side: const BorderSide(color: AppColor.pitchGreen),
+              shape: AppShapes.border(AppShapes.rMd),
+              textStyle: const TextStyle(
+                fontFamily: 'Estedad',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColor.pitchGreen,
+              shape: AppShapes.border(AppShapes.rSm),
+              textStyle: const TextStyle(
+                fontFamily: 'Estedad',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          chipTheme: ChipThemeData(
+            backgroundColor: AppColor.card,
+            selectedColor: AppColor.pitchGreenSoft,
+            side: const BorderSide(color: AppColor.line),
+            shape: AppShapes.border(AppShapes.rSm),
+            labelStyle: const TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 13,
+              color: AppColor.ink,
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: AppColor.card,
+            hintStyle: const TextStyle(
+                fontFamily: 'Estedad', color: AppColor.inkMuted, fontSize: 13),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: AppShapes.radius(AppShapes.rMd),
+              borderSide: const BorderSide(color: AppColor.line),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: AppShapes.radius(AppShapes.rMd),
+              borderSide: const BorderSide(color: AppColor.line),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: AppShapes.radius(AppShapes.rMd),
+              borderSide:
+                  const BorderSide(color: AppColor.pitchGreen, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: AppShapes.radius(AppShapes.rMd),
+              borderSide: const BorderSide(color: AppColor.danger),
+            ),
           ),
           progressIndicatorTheme: const ProgressIndicatorThemeData(
-            color: AppColor.goldEnd,
+            color: AppColor.pitchGreen,
           ),
           // ترنزیشن ورود/خروج یکدست (محو + سر خوردن ملایم از بالا) برای
           // همه‌ی صفحات اپ، چون MaterialPageRoute (همه‌جای اپ استفاده

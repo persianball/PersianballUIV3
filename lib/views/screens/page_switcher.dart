@@ -1,3 +1,4 @@
+import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/home_page.dart';
@@ -11,13 +12,12 @@ class PageSwitcher extends StatefulWidget {
 }
 
 class _PageSwitcherState extends State<PageSwitcher> {
+  /// ایندکس صفحه (منطقی): ۰ = خانه ... ۳ = پروفایل
   int _selectedIndex = 0;
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  /// کنترلر نوار پایین با ایندکس *نمایشی* کار می‌کند، نه ایندکس صفحه.
+  late final NotchBottomBarController _barController =
+      NotchBottomBarController(index: _barIndex(_selectedIndex));
 
   static const List<_NavTab> _tabs = [
     _NavTab(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'خانه'),
@@ -33,14 +33,34 @@ class _PageSwitcherState extends State<PageSwitcher> {
         icon: Icons.person_outline, activeIcon: Icons.person, label: 'پروفایل'),
   ];
 
+  /// AnimatedNotchBottomBar آیتم‌ها را با `Positioned(left:)` می‌چیند، یعنی
+  /// همیشه چپ‌به‌راست است و `Directionality` روی آن اثری ندارد. برای اینکه
+  /// «خانه» سمت راست بنشیند، ترتیب نمایشی را وارونه می‌کنیم و بین ایندکس
+  /// نمایشی و ایندکس صفحه نگاشت می‌زنیم.
+  static int _barIndex(int pageIndex) => _tabs.length - 1 - pageIndex;
+  static int _pageIndex(int barIndex) => _tabs.length - 1 - barIndex;
+
+  @override
+  void dispose() {
+    _barController.dispose();
+    super.dispose();
+  }
+
+  void _onBarTapped(int barIndex) {
+    final pageIndex = _pageIndex(barIndex);
+    if (pageIndex == _selectedIndex) return;
+    setState(() {
+      _selectedIndex = pageIndex;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // ترتیب آیتم‌ها با ترتیب طرح یکی است: اولین آیتم لیست در RTL راست‌ترین
-    // است، پس «خانه» راست و «پروفایل» چپ می‌نشیند - دقیقاً مطابق طرح.
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColor.obsidianBg,
+        backgroundColor: AppColor.milk,
+        extendBody: true,
         body: IndexedStack(
           index: _selectedIndex,
           children: [
@@ -50,46 +70,35 @@ class _PageSwitcherState extends State<PageSwitcher> {
             ProfilePage(),
           ],
         ),
-        bottomNavigationBar: SafeArea(
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColor.obsidianBg,
-              border: Border(
-                top: BorderSide(color: AppColor.outlineVariantDark, width: 1),
-              ),
-            ),
-            child: BottomNavigationBar(
-              onTap: _onItemTapped,
-              currentIndex: _selectedIndex,
-              type: BottomNavigationBarType.fixed,
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-              backgroundColor: AppColor.obsidianBg,
-              elevation: 0,
-              selectedItemColor: AppColor.goldEnd,
-              unselectedItemColor: AppColor.outlineDark,
-              selectedLabelStyle: const TextStyle(
-                fontFamily: 'Estedad',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontFamily: 'Estedad',
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-              ),
-              items: [
-                for (int i = 0; i < _tabs.length; i++)
-                  BottomNavigationBarItem(
-                    icon: Icon(
-                        i == _selectedIndex
-                            ? _tabs[i].activeIcon
-                            : _tabs[i].icon),
-                    label: _tabs[i].label,
-                  ),
-              ],
-            ),
+        bottomNavigationBar: AnimatedNotchBottomBar(
+          notchBottomBarController: _barController,
+          onTap: _onBarTapped,
+          color: AppColor.card,
+          notchColor: AppColor.pitchGreen,
+          notchGradient: AppColor.greenGradient,
+          showLabel: true,
+          textDirection: TextDirection.rtl,
+          itemLabelStyle: const TextStyle(
+            fontFamily: 'Estedad',
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: AppColor.inkMuted,
           ),
+          kIconSize: 22.0,
+          kBottomRadius: 28.0,
+          bottomBarHeight: 62.0,
+          showShadow: true,
+          shadowElevation: 12,
+          elevation: 6,
+          durationInMilliSeconds: 300,
+          bottomBarItems: [
+            for (final tab in _tabs.reversed)
+              BottomBarItem(
+                inActiveItem: Icon(tab.icon, color: AppColor.lineStrong),
+                activeItem: Icon(tab.activeIcon, color: AppColor.onPitchGreen),
+                itemLabel: tab.label,
+              ),
+          ],
         ),
       ),
     );
@@ -101,5 +110,6 @@ class _NavTab {
   final IconData activeIcon;
   final String label;
 
-  const _NavTab({required this.icon, required this.activeIcon, required this.label});
+  const _NavTab(
+      {required this.icon, required this.activeIcon, required this.label});
 }
