@@ -24,7 +24,7 @@ class _ImageViewerState extends State<ImageViewer> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: const Icon(Icons.arrow_forward, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ), systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       body: Stack(

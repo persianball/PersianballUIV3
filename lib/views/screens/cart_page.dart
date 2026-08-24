@@ -86,7 +86,7 @@ class _CartPageState extends State<CartPage> {
           ),
           leading: IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_forward, color: AppColor.onSurface),
+            icon: const Icon(Icons.arrow_back, color: AppColor.onSurface),
           ),
         ),
       ),

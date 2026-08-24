@@ -540,7 +540,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               children: [
                                 IconButton(
                                   onPressed: () => Navigator.of(context).pop(),
-                                  icon: const Icon(Icons.arrow_forward,
+                                  icon: const Icon(Icons.arrow_back,
                                       color: AppColor.onSurface),
                                 ),
                                 Expanded(

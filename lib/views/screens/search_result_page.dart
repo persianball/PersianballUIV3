@@ -35,10 +35,7 @@ class _SearchResultPageState extends State<SearchResultPage> with TickerProvider
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: SvgPicture.asset(
-            'assets/icons/Arrow-left.svg',
-            color: Colors.white,
-          ),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
         actions: [
           IconButton(

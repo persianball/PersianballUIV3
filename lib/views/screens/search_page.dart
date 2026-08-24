@@ -27,10 +27,7 @@ class _SearchPageState extends State<SearchPage> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: SvgPicture.asset(
-            'assets/icons/Arrow-left.svg',
-            color: Colors.white,
-          ),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
         title: Container(
           height: 40,

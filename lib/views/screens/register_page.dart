@@ -56,7 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: Icon(Icons.arrow_forward, color: AppColor.onSurface),
+          icon: Icon(Icons.arrow_back, color: AppColor.onSurface),
         ),
       ),
       bottomNavigationBar: SafeArea(

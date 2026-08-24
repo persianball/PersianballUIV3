@@ -52,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
                 MaterialPageRoute(builder: (context) => PageSwitcher()),
                 ModalRoute.withName("/"));
           },
-          icon: Icon(Icons.arrow_forward, color: AppColor.onSurface),
+          icon: Icon(Icons.arrow_back, color: AppColor.onSurface),
         ),
       ),
       bottomNavigationBar: SafeArea(
