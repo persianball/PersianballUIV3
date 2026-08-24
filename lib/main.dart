@@ -6,6 +6,7 @@ import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:flutter/services.dart';
 import 'package:marketky/core/app_router.dart';
+import 'package:marketky/core/fade_page_transitions.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
 import 'package:app_links/app_links.dart';
 import 'package:marketky/core/deep_link_resolver.dart';
@@ -143,6 +144,15 @@ class _MyAppState extends State<MyApp> {
           ),
           progressIndicatorTheme: const ProgressIndicatorThemeData(
             color: AppColor.goldEnd,
+          ),
+          // ترنزیشن ورود/خروج یکدست (محو + سر خوردن ملایم از بالا) برای
+          // همه‌ی صفحات اپ، چون MaterialPageRoute (همه‌جای اپ استفاده
+          // می‌شود) وقتی ترنزیشن اختصاصی ندارد به همین تنظیم رجوع می‌کند.
+          pageTransitionsTheme: PageTransitionsTheme(
+            builders: {
+              for (final platform in TargetPlatform.values)
+                platform: const FadeThroughTopPageTransitionsBuilder(),
+            },
           ),
         ),
         // initialRoute عمداً ست نشده: اگر مقداردهی شود، فلاتر وب همیشه
