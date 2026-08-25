@@ -398,6 +398,7 @@ class _CatalogPageState extends State<CatalogPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColor.card,
+      isScrollControlled: true,
       shape: AppShapes.borderTop(AppShapes.rXl),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,

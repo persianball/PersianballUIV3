@@ -330,12 +330,16 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                                 showModalBottomSheet(
                                                   context: context,
                                                   backgroundColor: Colors.transparent,
+                                                  // بدون این، شیت حداکثر نصف
+                                                  // صفحه است و دکمه‌ی پایین
+                                                  // بریده می‌شود.
+                                                  isScrollControlled: true,
                                                   builder: (context) => AddCourseToCartModal(courseItem: item),
                                                 );
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: AppColor.goldEnd,
-                                                shape: AppShapes.borderTop(AppShapes.rXl),
+                                                shape: AppShapes.pill,
                                                 padding: EdgeInsets.symmetric(vertical: 12),
                                                 elevation: 0,
                                               ),
@@ -524,31 +528,38 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
           builder: (context, cartState) {
             return Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColor.surfaceContainer,
-                border: Border(top: BorderSide(color: AppColor.outlineVariantDark)),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              decoration: ShapeDecoration(
+                color: AppColor.card,
+                shape: AppShapes.borderTop(AppShapes.rXl),
+                shadows: AppColor.floatingShadow,
               ),
               child: Row(
                 children: [
                   // Cart Button
-                  SizedBox(
-                    height: 64,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      margin: EdgeInsets.only(right: 14),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.surfaceContainerHigh,
-                          shape: RoundedRectangleBorder(
-                              side: BorderSide(color: AppColor.outlineVariantDark)),
-                          elevation: 0,
+                  Container(
+                    width: 54,
+                    height: 54,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: ShapeDecoration(
+                      color: AppColor.cardMuted,
+                      shape: AppShapes.pill,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      shape: AppShapes.pill,
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () => Navigator.of(context).pushNamed('/cart'),
+                        child: Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: SvgPicture.asset(
+                            'assets/icons/Bag.svg',
+                            fit: BoxFit.contain,
+                            colorFilter: const ColorFilter.mode(
+                                AppColor.pitchGreen, BlendMode.srcIn),
+                          ),
                         ),
-                        onPressed: () {
-                          Navigator.of(context).pushNamed('/cart');
-                        },
-                        child: SvgPicture.asset('assets/icons/Bag.svg', color: AppColor.goldEnd, fit: BoxFit.contain),
                       ),
                     ),
                   ),
@@ -564,12 +575,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                               showModalBottomSheet(
                                 context: context,
                                 backgroundColor: Colors.transparent,
+                                isScrollControlled: true,
                                 builder: (context) => AddCourseToCartModal(courseItem: firstCourse),
                               );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColor.goldEnd,
-                              shape: AppShapes.borderTop(AppShapes.rXl),
+                              shape: AppShapes.pill,
                               padding: EdgeInsets.symmetric(vertical: 16),
                               elevation: 0,
                             ),
