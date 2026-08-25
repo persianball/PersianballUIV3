@@ -99,9 +99,9 @@ class _NotificationPageState extends State<NotificationPage> {
   Widget _mockBanner() => Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: AppColor.goldEnd.withOpacity(0.08),
-          border: Border.all(color: AppColor.goldEnd.withOpacity(0.4)),
+        decoration: ShapeDecoration(
+          color: AppColor.pitchGreenSoft,
+          shape: AppShapes.border(AppShapes.rMd),
         ),
         child: Row(
           children: [
@@ -137,7 +137,7 @@ class _NotificationPageState extends State<NotificationPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: ShapeDecoration(
-            color: isRead ? AppColor.surfaceContainer : AppColor.goldEnd.withOpacity(0.08),
+            color: AppColor.card,
             shape: AppShapes.border(AppShapes.rLg),
             shadows: AppColor.cardShadow,
           ),
