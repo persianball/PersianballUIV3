@@ -2,11 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/views/widgets/accordion_section.dart';
+import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:marketky/views/widgets/modals/video_player_dialog.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/services/wishlist_service.dart';
 import 'package:marketky/services/analytics_service.dart';
@@ -21,7 +22,6 @@ import 'package:marketky/views/screens/reviews_page.dart';
 import 'package:marketky/views/widgets/html_description_image.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
-import 'package:marketky/views/widgets/rating_tag.dart';
 import 'package:marketky/views/widgets/review_tile.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
 import 'package:marketky/views/widgets/selectable_circle_size.dart';
@@ -30,7 +30,6 @@ import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product_detail/product_detail_bloc.dart';
 import '../../bloc/product_detail/product_detail_event.dart';
 import '../../bloc/product_detail/product_detail_state.dart';
-import '../widgets/ProCarousel.dart';
 import '../widgets/similar_product_card.dart';
 
 
@@ -49,6 +48,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
   /// وضعیت علاقه‌مندی این محصول
   bool _isFavorite = false;
+
+  /// تعداد انتخاب‌شده در استپر بالای کارت اطلاعات (طرح مرجع)
+  int _quantity = 1;
+
+  /// وقتی «خرید فوری» زده شود، بعد از افزودن موفق به‌جای دیالوگ به سبد می‌رود
+  bool _buyNowPending = false;
 
   Future<void> _loadFavorite() async {
     final fav = await WishlistService.isFavorite(widget.productId);
@@ -119,187 +124,113 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.milk,
-      extendBodyBehindAppBar: true,
-      extendBody: true,
-      bottomNavigationBar: SafeArea(
-        child: BlocBuilder<ProductDetailBloc, ProductDetailState>(
-          builder: (context, state) {
-            if (state is ProductDetailLoaded) {
-              return Container(
-                width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                decoration: const ShapeDecoration(
-                  color: AppColor.card,
-                  shape: ContinuousRectangleBorder(),
-                  shadows: AppColor.floatingShadow,
-                ),
-                child: Row(
-                  children: [
-                    BlocBuilder<ProductDetailVariantBloc,ProductDetailState>(
-                      builder: (context,variant_state) {
-                        return BlocListener<CartBloc,CartState>(
-                          listener: (context, state) {
-                            if (state is CartItemAdded) {
-                              // نمایش دیالوگ موفقیت
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  backgroundColor: AppColor.card,
-                                  shape: AppShapes.border(AppShapes.rLg),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.check_circle_rounded,
-                                          color: AppColor.success, size: 60),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        state.message,
-                                        style: const TextStyle(
-                                          fontFamily: 'Estedad',
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColor.ink,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 18),
-                                      GradientButton(
-                                        label: 'باشه',
-                                        height: 44,
-                                        fontSize: 14,
-                                        onPressed: () => Navigator.of(ctx).pop(),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }
-
-                            if (state is CartError) {
-                              // نمایش خطا
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(state.message, style: TextStyle(fontFamily: 'Estedad')),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          },
-                          child:  Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 54,
-                                    height: 54,
-                                    margin: const EdgeInsets.only(right: 12),
-                                    decoration: ShapeDecoration(
-                                      color: AppColor.cardMuted,
-                                      shape: AppShapes.pill,
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      shape: AppShapes.pill,
-                                      clipBehavior: Clip.antiAlias,
-                                      child: InkWell(
-                                        onTap: () => Navigator.of(context)
-                                            .pushNamed('/cart'),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(15),
-                                          child: SvgPicture.asset(
-                                            'assets/icons/Bag.svg',
-                                            fit: BoxFit.contain,
-                                            colorFilter: const ColorFilter.mode(
-                                                AppColor.pitchGreen,
-                                                BlendMode.srcIn),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: SizedBox(
-                                      height: 54,
-                                      child: _AddToCartButton(
-                                        enabled:
-                                            variant_state is ProductDetailSizeChanged,
-                                        onPressed: () {
-                                          // جلوگیری از افزودن کالای ناموجود
-                                          final selectedSize =
-                                              (variant_state is ProductDetailSizeChanged)
-                                                  ? variant_state.productSize
-                                                  : (variant_state is ProductDetailChangedState
-                                                      ? variant_state.productSize
-                                                      : null);
-                                          if (selectedSize != null &&
-                                              !selectedSize.inStock) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    'این سایز ناموجود است',
-                                                    style: TextStyle(
-                                                        fontFamily: 'Estedad')),
-                                                backgroundColor: Colors.red,
-                                              ),
-                                            );
-                                            return;
-                                          }
-                                          showModalBottomSheet(
-                                            context: context,
-                                            backgroundColor: Colors.transparent,
-                                            // محتوای شیت بلندتر از ارتفاع
-                                            // پیش‌فرض است و باید کامل جا شود
-                                            isScrollControlled: true,
-                                            builder: (context) => AddToCartModal(
-                                              cartItem:
-                                              (variant_state is ProductDetailSizeChanged) ?
-                                                CartItem(
-                                                id: variant_state.productSize.id,
-                                                name: state.product.nameFarsi??"",
-                                                image: variant_state.productVariant.image??"",
-                                                price: variant_state.productSize.price,
-                                                quantity: 1, productId: state.product.id,
-                                                discountPrice: variant_state.productSize.discountPercentage
-                                              ):
-                                              (variant_state is ProductDetailChangedState) ?
-                                              CartItem(
-                                                  id: variant_state.productSize!.id,
-                                                  name: state.product.nameFarsi??"",
-                                                  image: variant_state.productVariant.image??"",
-                                                  price: variant_state.productSize!.price,
-                                                  quantity: 1, productId: state.product.id,
-                                                  discountPrice: variant_state.productSize!.discountPercentage
-                                              ):
-                                              CartItem(
-                                                id: state.product.id,
-                                                name: state.product.nameFarsi??"",
-                                                image: state.product.image??"",
-                                                price: state.product.price!,
-                                                quantity: 1, productId: state.product.id,
-                                                discountPrice: state.product.discountPercentage,
-                                            ),)
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ],
+      // بدنه نباید زیر نوار پایین برود، وگرنه انتهای توضیحات پشت دکمه‌ها
+      // پنهان می‌ماند.
+      extendBody: false,
+      bottomNavigationBar: BlocBuilder<ProductDetailBloc, ProductDetailState>(
+        builder: (context, state) {
+          if (state is! ProductDetailLoaded) return const SizedBox.shrink();
+          final product = state.product;
+          return BlocBuilder<ProductDetailVariantBloc, ProductDetailState>(
+            builder: (context, variantState) {
+              return BlocListener<CartBloc, CartState>(
+                listener: (context, cartState) {
+                  if (cartState is CartItemAdded) {
+                    // «خرید فوری»: به‌جای دیالوگ، مستقیم به سبد می‌رود
+                    if (_buyNowPending) {
+                      _buyNowPending = false;
+                      Navigator.of(context).pushNamed('/cart');
+                      return;
+                    }
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppColor.card,
+                        shape: AppShapes.border(AppShapes.rLg),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_circle_rounded,
+                                color: AppColor.success, size: 60),
+                            const SizedBox(height: 16),
+                            Text(
+                              cartState.message,
+                              style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColor.ink,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 18),
+                            GradientButton(
+                              label: 'باشه',
+                              height: 44,
+                              fontSize: 14,
+                              onPressed: () => Navigator.of(ctx).pop(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  if (cartState is CartError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(cartState.message,
+                            style: const TextStyle(fontFamily: 'Estedad')),
+                        backgroundColor: AppColor.danger,
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  decoration: ShapeDecoration(
+                    color: AppColor.card,
+                    shape: AppShapes.borderTop(AppShapes.rXl),
+                    shadows: AppColor.floatingShadow,
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SoftButton(
+                                label: 'افزودن به سبد',
+                                height: 50,
+                                icon: const Icon(
+                                    Icons.add_shopping_cart_rounded),
+                                onPressed: () => _openAddToCart(
+                                    context, product, variantState),
                               ),
                             ),
-                        );
-                      }
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: GradientButton(
+                                label: 'خرید فوری',
+                                height: 50,
+                                icon: const Icon(Icons.bolt_rounded),
+                                onPressed: () =>
+                                    _buyNow(context, product, variantState),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               );
-            }
-            // مهم: Container() خالی در bottomNavigationBar کل ارتفاع را
-            // می‌گیرد؛ باید صراحتاً صفر باشد.
-            return const SizedBox.shrink();
-          },
-        ),
+            },
+          );
+        },
       ),
+
       body: BlocBuilder<ProductDetailBloc, ProductDetailState>(
         builder: (context, state) {
 
@@ -368,638 +299,100 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     );
   }
 
+  // ==================== منطق افزودن به سبد ====================
+
+  /// سایز انتخاب‌شده‌ی فعلی (اگر واریانت سایز داشته باشد)
+  SizeVariant? _selectedSize(ProductDetailState s) {
+    if (s is ProductDetailSizeChanged) return s.productSize;
+    if (s is ProductDetailChangedState) return s.productSize;
+    return null;
+  }
+
+  /// ساخت CartItem از همان داده‌های موجود (بدون تغییر منطق قبلی)
+  CartItem _cartItemFor(ProductDetail product, ProductDetailState s) {
+    if (s is ProductDetailSizeChanged) {
+      return CartItem(
+        id: s.productSize.id,
+        name: product.nameFarsi ?? "",
+        image: s.productVariant.image ?? "",
+        price: s.productSize.price,
+        quantity: _quantity,
+        productId: product.id,
+        discountPrice: s.productSize.discountPercentage,
+      );
+    }
+    if (s is ProductDetailChangedState) {
+      return CartItem(
+        id: s.productSize!.id,
+        name: product.nameFarsi ?? "",
+        image: s.productVariant.image ?? "",
+        price: s.productSize!.price,
+        quantity: _quantity,
+        productId: product.id,
+        discountPrice: s.productSize!.discountPercentage,
+      );
+    }
+    return CartItem(
+      id: product.id,
+      name: product.nameFarsi ?? "",
+      image: product.image ?? "",
+      price: product.price!,
+      quantity: _quantity,
+      productId: product.id,
+      discountPrice: product.discountPercentage,
+    );
+  }
+
+  /// جلوگیری از افزودن کالای ناموجود (همان بررسی قبلی)
+  bool _guardStock(BuildContext context, ProductDetailState s) {
+    final size = _selectedSize(s);
+    if (size != null && !size.inStock) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('این سایز ناموجود است',
+              style: TextStyle(fontFamily: 'Estedad')),
+          backgroundColor: AppColor.danger,
+        ),
+      );
+      return false;
+    }
+    return true;
+  }
+
+  void _openAddToCart(
+      BuildContext context, ProductDetail product, ProductDetailState s) {
+    if (!_guardStock(context, s)) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => AddToCartModal(
+        cartItem: _cartItemFor(product, s),
+        initialQuantity: _quantity,
+      ),
+    );
+  }
+
+  void _buyNow(
+      BuildContext context, ProductDetail product, ProductDetailState s) {
+    if (!_guardStock(context, s)) return;
+    final item = _cartItemFor(product, s);
+    AnalyticsService.addToCart(
+      productId: item.productId,
+      quantity: _quantity,
+      price: item.price,
+    );
+    _buyNowPending = true;
+    context.read<CartBloc>().add(AddToCart(context, item.id, _quantity));
+  }
+
+  // ==================== بدنه‌ی صفحه ====================
+
   Widget _buildProductContent(ProductDetail product, BuildContext context) {
-    return BlocBuilder<ProductDetailVariantBloc,ProductDetailState>(
-      builder: (context, variant_state) {
-        if(variant_state is ProductDetailSizeChanged){
-          return ListView(
-            physics: BouncingScrollPhysics(),
-            children: [
-              // بخش ۱ - تصویر و اپ‌بار
-              GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ImageViewer(
-                            imageUrl: variant_state.productVariant.images.map((
-                                img) => '${URLs.baseUrl}$img').toList(),
-                          ),
-                    ),
-                  );
-                },
-                child: Stack(
-                  alignment: Alignment.topCenter,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ImageViewer(
-                                  imageUrl: variant_state.productVariant.images
-                                      .map((img) => '${URLs.baseUrl}$img')
-                                      .toList(),
-                                ),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: MediaQuery
-                            .of(context)
-                            .size
-                            .width,
-
-
-                        child: Column(
-                          children: [
-                            //video
-
-                            Container(
-                                width: MediaQuery
-                                    .of(context)
-                                    .size
-                                    .width,
-
-                                // child: PageView(
-                                //   controller: imageController,
-                                //   children: [
-                                //
-                                //     product.video!=null && product.video!.isNotEmpty ? Container(child: VideoPlayerPage(videoDetail: new VideoDetail(hlsUrl: product.video!))):Container(),
-                                //
-                                //     //images
-                                //     ...variant_state.productVariant.images.map((url) {
-                                //     final fullUrl = '${URLs.baseUrl}$url';
-                                //
-                                //     return Image.network(
-                                //       fullUrl,
-                                //       fit: BoxFit.contain,
-                                //       errorBuilder: (ctx, err, stack) => Image.asset('assets/images/placeholder.jpg'),
-                                //       loadingBuilder: (ctx, child, loading) {
-                                //         return loading == null ? child : Center(child: CircularProgressIndicator());
-                                //       },
-                                //     );
-                                //   }).toList(),
-                                //
-                                //
-                                //
-                                // ]),
-                                child: Column(
-                                  children: [
-                                    const SizedBox(height: 96),
-                                    // تعویض نرم گالری هنگام تغییر رنگ:
-                                    // محو‌شدن همراه با کمی بزرگ‌نمایی (fade through)
-                                    AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 320),
-                                      switchInCurve: Curves.easeOutCubic,
-                                      switchOutCurve: Curves.easeInCubic,
-                                      transitionBuilder: (child, animation) =>
-                                          FadeTransition(
-                                        opacity: animation,
-                                        child: ScaleTransition(
-                                          scale: Tween<double>(
-                                                  begin: 0.94, end: 1.0)
-                                              .animate(animation),
-                                          child: child,
-                                        ),
-                                      ),
-                                      child: CarouselImageViewer(
-                                      key: ValueKey(variant_state.productVariant.id),
-                                      initialIndex: _carouselIndex,
-                                      onIndexChanged: (i) => _carouselIndex = i,
-                                      imageUrls: variant_state.productVariant
-                                          .images.map((url) => '${URLs
-                                          .baseUrl}$url').toList(),
-                                      mediaItems: [
-                                        ...variant_state.productVariant.images
-                                            .map((url) {
-                                          return
-                                            MediaItem(
-                                              url: "${URLs.baseUrl}$url",
-                                              type: MediaType.image,
-                                              thumbnailUrl: "${URLs
-                                                  .baseUrl}$url",
-                                            );
-                                        }).toList(),
-                                        // ویدیو آخرین آیتم گالری است، بعد از همه‌ی عکس‌ها
-                                        if (variant_state.productVariant.video != null &&
-                                            variant_state.productVariant.video!.isNotEmpty)
-                                          MediaItem(
-                                            url: variant_state.productVariant.video!,
-                                            type: MediaType.video,
-                                            thumbnailUrl: product
-                                                .videoThumbnail ??
-                                                "",
-                                          ),
-                                      ],
-                                      mainImageHeight: 250,
-                                      thumbnailSize: 40,
-                                      thumbnailSpacing: 12,
-                                    ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                  ],
-                                )
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // هدر شناور: دکمه‌های گرد برجسته روی تصویر
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      left: 0,
-                      child: SafeArea(
-                        bottom: false,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                          child: Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Row(
-                              children: [
-                                CircleIconButton(
-                                  icon: Icons.arrow_forward_rounded,
-                                  tooltip: 'بازگشت',
-                                  onTap: () => Navigator.of(context).pop(),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    'جزئیات محصول',
-                                    textAlign: TextAlign.center,
-                                    style: AppTextStyles.headlineMd.copyWith(
-                                        fontSize: 16, color: AppColor.ink),
-                                  ),
-                                ),
-                                CircleIconButton(
-                                  icon: _isFavorite
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  iconColor: _isFavorite
-                                      ? AppColor.danger
-                                      : AppColor.ink,
-                                  tooltip: 'علاقه‌مندی',
-                                  onTap: _toggleFavorite,
-                                ),
-                                const SizedBox(width: 8),
-                                CircleIconButton(
-                                  icon: Icons.ios_share_rounded,
-                                  tooltip: 'اشتراک‌گذاری',
-                                  onTap: () =>
-                                      _shareProduct(product.nameFarsi ?? ''),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-
-              // بخش ۲ - اطلاعات محصول: ورق سفید برجسته که روی گالری می‌نشیند
-              Transform.translate(
-                offset: const Offset(0, -26),
-                child: Container(
-                decoration: ShapeDecoration(
-                  color: AppColor.card,
-                  shape: ContinuousRectangleBorder(
-                    borderRadius: AppShapes.radiusTop(AppShapes.rXl),
-                  ),
-                  shadows: AppColor.floatingShadow,
-                ),
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PillTag(
-                            label: product.category.nameFarsi,
-                            icon: Icons.sell_outlined,
-                            dense: true,
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  product.nameFarsi ?? '',
-                                  style: const TextStyle(
-                                    fontFamily: 'Estedad',
-                                    fontSize: 20,
-                                    height: 1.4,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColor.ink,
-                                  ),
-                                ),
-                              ),
-                              Directionality(
-                                  textDirection: TextDirection.ltr,
-                                  child: RatingTag(
-                                      value: product.avgRate,
-                                      margin: const EdgeInsets.only(left: 10))),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (product.price != null)
-                      Container(
-                        margin: EdgeInsets.only(top: 8, bottom: 14),
-                        child: Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: BlocBuilder<
-                              ProductDetailVariantBloc,
-                              ProductDetailState>(
-                              builder: (context, size_state) {
-                                if (size_state is ProductDetailSizeChanged) {
-                                  final int originalPrice = size_state.productSize.price;
-                                  final int? discountPercentage = size_state.productSize.discountPercentage;
-
-                                  int finalPrice = originalPrice;
-                                  int percent = 0;
-
-                                  if (discountPercentage != null &&
-                                      discountPercentage > 0 &&
-                                      discountPercentage < 100) {
-                                    finalPrice = (originalPrice*(1-(discountPercentage/100))).toInt();
-                                    percent = discountPercentage;
-                                  } else if (product.discountPercentage == null || product.discountPercentage! <= 0) {
-                                    percent = 0;
-                                    finalPrice = originalPrice;
-                                  }
-
-                                  return Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        '${thousandSeparator(finalPrice)} تومان',
-                                        style: const TextStyle(
-                                          fontFamily: 'Estedad',
-                                          fontSize: 19,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColor.ink,
-                                        ),
-                                      ),
-                                      if (percent > 0) ...[
-                                        const SizedBox(width: 10),
-                                        PillTag(
-                                          label: '٪$percent تخفیف',
-                                          icon: Icons.local_offer_outlined,
-                                          color: Colors.white,
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFFEF4444),
-                                              AppColor.danger
-                                            ],
-                                          ),
-                                          dense: true,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          thousandSeparator(originalPrice),
-                                          style: const TextStyle(
-                                            fontFamily: 'Estedad',
-                                            fontSize: 13,
-                                            color: AppColor.inkMuted,
-                                            decoration:
-                                                TextDecoration.lineThrough,
-                                            decorationColor: AppColor.inkMuted,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  );
-                                } else {
-                                  return Container();
-                                }
-                              }
-                          ),
-                        ),
-                      ),
-
-                    // وضعیت موجودی (فیلد count در size_variants)
-                    BlocBuilder<ProductDetailVariantBloc, ProductDetailState>(
-                      builder: (context, stock_state) {
-                        if (stock_state is! ProductDetailSizeChanged) {
-                          return SizedBox.shrink();
-                        }
-                        final size = stock_state.productSize;
-                        final Color color = !size.inStock
-                            ? AppColor.danger
-                            : (size.isLowStock
-                                ? AppColor.warning
-                                : AppColor.success);
-                        final String label = !size.inStock
-                            ? 'ناموجود'
-                            : (size.isLowStock
-                                ? 'تنها ${size.count} عدد باقی مانده'
-                                : 'موجود در انبار');
-                        return Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: PillTag(
-                                label: label,
-                                icon: size.inStock
-                                    ? Icons.check_circle_outline
-                                    : Icons.remove_shopping_cart_outlined,
-                                color: color,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-
-                    // بخش ۳ - انتخاب رنگ
-                    if (product.variants.isNotEmpty)
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Text(
-                                      'رنگ:  ',
-                                      style: TextStyle(
-                                        fontFamily: 'Estedad',
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColor.ink,
-                                      ),
-                                    ),
-                                    Text(
-                                      variant_state.productVariant.color!,
-                                      style: const TextStyle(
-                                        fontFamily: 'Estedad',
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400,
-                                        color: AppColor.inkMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 12),
-                                SelectableCircleColor(
-                                  circleSize: 32,
-                                  spacing: 12,
-                                  colorWay: product.variants
-                                      .map((v) =>
-                                      ColorWay(
-                                        color: Color(0xff000000+int.parse(
-                                             v.colorRgb!,
-                                            radix: 16)),
-                                        name: v.color ?? "ناشناس",
-                                        imageUrl: v.image != null ? '${URLs
-                                            .baseUrl}${v.image}' : null,
-
-                                      ))
-                                      .toList(),
-                                  onColorSelected: (int vIndex) {
-                                    if (product.variants.isNotEmpty &&
-                                        product.variants[vIndex].sizeVariants
-                                            .isNotEmpty) {
-                                      // با تعویض رنگ هم اولین سایز موجود انتخاب شود
-                                      final size = firstAvailableSizeVariant(
-                                          product.variants[vIndex]
-                                              .sizeVariants)!;
-                                      context
-                                          .read<ProductDetailVariantBloc>()
-                                          .add(ChangeProductColorEvent(
-                                              product.variants[vIndex], size));
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    // بخش ۴ - انتخاب سایز (در صورت وجود)
-                    if (variant_state.productVariant.sizeVariants.isNotEmpty)
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'اندازه',
-                                  style: TextStyle(
-                                    fontFamily: 'Estedad',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColor.ink,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                SelectableCircleSize(
-                                  // با تعویض رنگ، وضعیت موجودی سایزها هم عوض می‌شود
-                                  key: ValueKey(
-                                      variant_state.productVariant.id),
-                                  productSize: variant_state.productVariant
-                                      .sizeVariants
-                                      .map((s) => s.size)
-                                      .toList(),
-                                  sizeAvailability: variant_state
-                                      .productVariant.sizeVariants
-                                      .map((s) => s.inStock)
-                                      .toList(),
-                                  onSizeSelected: (int sizeVariantIndex) {
-                                    context
-                                        .read<ProductDetailVariantBloc>()
-                                        .add(
-                                        ChangeProductColorEvent(
-                                            variant_state.productVariant,
-                                            variant_state.productVariant
-                                                .sizeVariants[sizeVariantIndex])
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-
-                    if ((product.description ?? '').trim().isNotEmpty)
-                      Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: Text(
-                          product.description!,
-                          style: const TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 13,
-                            color: AppColor.inkMuted,
-                            height: 1.8,
-                          ),
-                          textAlign: TextAlign.justify,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              ),
-
-
-              // بخش ۵ - آکاردئون جزئیات: توضیحات، مشابه، نظرات، سوالات متداول
-              Transform.translate(
-                offset: const Offset(0, -26),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                  child: Column(
-                    children: [
-                      AccordionSection(
-                        title: 'توضیحات',
-                        icon: Icons.description_outlined,
-                        // تصاویر توضیحات از جریان HTML جدا و به‌صورت ویجت
-                        // مستقل رندر می‌شوند، چون تصویر «fallback»‌شده (برای
-                        // دورزدن CORS در وب) داخل WidgetSpan نامرئی می‌ماند.
-                        child: HtmlDescriptionBody(
-                          html: product.editor ?? '',
-                          onLinkTap: (url, _, __) async {
-                            if (await canLaunchUrl(Uri.parse(url!))) {
-                              await launchUrl(Uri.parse(url));
-                            }
-                          },
-                        ),
-                      ),
-                      if (product.similarProducts.isNotEmpty)
-                        AccordionSection(
-                          title: 'محصولات مشابه',
-                          icon: Icons.grid_view_rounded,
-                          trailingBadge: '${product.similarProducts.length}',
-                          child: SizedBox(
-                            height: 232,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              shrinkWrap: true,
-                              clipBehavior: Clip.none,
-                              physics: const BouncingScrollPhysics(),
-                              itemCount: product.similarProducts.length,
-                              itemBuilder: (ctx, i) => SimilarProductCard(
-                                  product: product.similarProducts[i]),
-                            ),
-                          ),
-                        ),
-                      AccordionSection(
-                        title: 'نظرات',
-                        icon: Icons.chat_bubble_outline_rounded,
-                        trailingBadge: product.comments.isEmpty
-                            ? null
-                            : '${product.comments.length}',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ProductReviewsSection(productId: product.id),
-                            // نظرات ثبت‌شده روی خود محصول در API
-                            if (product.comments.isNotEmpty)
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: product.comments.length,
-                                itemBuilder: (ctx, i) => ReviewTile(
-                                  review: Review(
-                                      photoUrl:
-                                          "assets/images/avatar_for_comments.png",
-                                      name: " $i : ",
-                                      review: product.comments[i].text,
-                                      rating: 5),
-                                ),
-                              ),
-                            const SizedBox(height: 8),
-                            SoftButton(
-                              label: 'مشاهده همه نظرات',
-                              icon: const Icon(Icons.reviews_outlined),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          ReviewsPage(productId: product.id)),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (product.faqs != null && product.faqs!.isNotEmpty)
-                        AccordionSection(
-                          title: 'سوالات متداول',
-                          icon: Icons.help_outline_rounded,
-                          trailingBadge: '${product.faqs!.length}',
-                          child: Column(
-                            children: product.faqs!
-                                .map((faq) => Theme(
-                                      data: Theme.of(context).copyWith(
-                                          dividerColor: Colors.transparent),
-                                      child: ExpansionTile(
-                                        tilePadding: EdgeInsets.zero,
-                                        initiallyExpanded: false,
-                                        shape: const Border(),
-                                        collapsedShape: const Border(),
-                                        iconColor: AppColor.pitchGreen,
-                                        collapsedIconColor: AppColor.inkMuted,
-                                        title: Text(
-                                          faq.question,
-                                          style: const TextStyle(
-                                            fontFamily: 'Estedad',
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColor.ink,
-                                          ),
-                                        ),
-                                        children: [
-                                          Container(
-                                            width: double.infinity,
-                                            padding: const EdgeInsets.only(
-                                                bottom: 12),
-                                            child: Text(
-                                              faq.answer,
-                                              textAlign: TextAlign.right,
-                                              style: const TextStyle(
-                                                fontFamily: 'Estedad',
-                                                fontSize: 12,
-                                                height: 1.8,
-                                                color: AppColor.inkMuted,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          );
-        }else{
-          // این شاخه وقتی رخ می‌دهد که هنوز رنگ/سایزی برای واریانت انتخاب
-          // نشده (رویداد ChangeProductColorEvent اولیه هنوز پردازش نشده)
+    return BlocBuilder<ProductDetailVariantBloc, ProductDetailState>(
+      builder: (context, variantState) {
+        // تا وقتی رنگ/سایز اولیه انتخاب نشده، لودینگ نمایش داده می‌شود
+        if (variantState is! ProductDetailSizeChanged) {
           return Container(
             color: AppColor.milk,
             child: const Center(
@@ -1007,30 +400,624 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
             ),
           );
         }
-
-      }
+        return ListView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            _buildGalleryPanel(product, variantState),
+            _buildInfoPanel(product, variantState),
+            _buildAccordions(product),
+            const SizedBox(height: 20),
+          ],
+        );
+      },
     );
   }
+
+  List<String> _galleryImages(ProductVariant variant) =>
+      variant.images.map((u) => '${URLs.baseUrl}$u').toList();
+
+  /// بخش بالا: کارت گوشه‌گرد رنگی با تصویر بزرگ و ریل عمودی تامبنیل در راست
+  Widget _buildGalleryPanel(
+      ProductDetail product, ProductDetailSizeChanged state) {
+    final variant = state.productVariant;
+    final images = _galleryImages(variant);
+    final hasVideo = variant.video != null && variant.video!.isNotEmpty;
+    final int index =
+        images.isEmpty ? 0 : _carouselIndex.clamp(0, images.length - 1);
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          16, MediaQuery.of(context).padding.top + 10, 16, 0),
+      child: Container(
+        height: 400,
+        decoration: ShapeDecoration(
+          color: AppColor.pitchGreenSoft,
+          shape: AppShapes.border(AppShapes.rXl),
+          shadows: AppColor.cardShadow,
+        ),
+        child: SquircleClip(
+          radius: AppShapes.rXl,
+          child: Stack(
+            children: [
+              // تصویر اصلی — فضای سمت راست برای ریل تامبنیل خالی می‌ماند
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 76, 108, 20),
+                  child: GestureDetector(
+                    onTap: images.isEmpty
+                        ? null
+                        : () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ImageViewer(imageUrl: images),
+                              ),
+                            ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 260),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      child: AppNetworkImage(
+                        key: ValueKey('${variant.id}-$index'),
+                        url: images.isEmpty ? null : images[index],
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // هدر شناور: بازگشت (راست)، عنوان، علاقه‌مندی (چپ)
+              Positioned(
+                top: 12,
+                left: 12,
+                right: 12,
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Row(
+                    children: [
+                      CircleIconButton(
+                        icon: Icons.arrow_forward_rounded,
+                        tooltip: 'بازگشت',
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'جزئیات',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.headlineMd
+                              .copyWith(fontSize: 16, color: AppColor.ink),
+                        ),
+                      ),
+                      CircleIconButton(
+                        icon: Icons.ios_share_rounded,
+                        size: 36,
+                        tooltip: 'اشتراک‌گذاری',
+                        onTap: () => _shareProduct(product.nameFarsi ?? ''),
+                      ),
+                      const SizedBox(width: 8),
+                      CircleIconButton(
+                        icon: _isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        iconColor:
+                            _isFavorite ? AppColor.danger : AppColor.ink,
+                        tooltip: 'علاقه‌مندی',
+                        onTap: _toggleFavorite,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ریل عمودی تامبنیل، چسبیده به لبه‌ی راست
+              Positioned(
+                right: 14,
+                top: 76,
+                bottom: 18,
+                width: 76,
+                child: _buildThumbRail(
+                  images: images,
+                  selected: index,
+                  video: hasVideo ? variant.video : null,
+                  product: product,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbRail({
+    required List<String> images,
+    required int selected,
+    required String? video,
+    required ProductDetail product,
+  }) {
+    final items = <Widget>[
+      for (int i = 0; i < images.length; i++)
+        _thumb(
+          selected: i == selected,
+          onTap: () => setState(() => _carouselIndex = i),
+          child: AppNetworkImage(
+            url: images[i],
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+        ),
+      if (video != null)
+        _thumb(
+          selected: false,
+          onTap: () => showVideoPlayerDialog(context,
+              videoUrl: video, title: product.nameFarsi),
+          child: Container(
+            color: AppColor.card,
+            alignment: Alignment.center,
+            child: const Icon(Icons.play_circle_fill_rounded,
+                color: AppColor.pitchGreen, size: 30),
+          ),
+        ),
+    ];
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      physics: const BouncingScrollPhysics(),
+      children: items,
+    );
+  }
+
+  Widget _thumb({
+    required bool selected,
+    required VoidCallback onTap,
+    required Widget child,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 72,
+          decoration: ShapeDecoration(
+            color: AppColor.card,
+            shape: AppShapes.border(
+              AppShapes.rMd,
+              side: BorderSide(
+                color: selected ? AppColor.pitchGreen : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            shadows: AppColor.cardShadow,
+          ),
+          child: SquircleClip(radius: AppShapes.rMd, child: child),
+        ),
+      ),
+    );
+  }
+
+  /// بخش پایین: کارت سفید گوشه‌گرد با نام، تعداد، قیمت، رنگ، سایز و توضیح
+  Widget _buildInfoPanel(
+      ProductDetail product, ProductDetailSizeChanged state) {
+    final size = state.productSize;
+    final int original = size.price;
+    final int? pct = size.discountPercentage;
+    final bool hasDiscount = pct != null && pct > 0 && pct < 100;
+    final int finalPrice =
+        hasDiscount ? (original * (1 - pct / 100)).toInt() : original;
+
+    final Color stockColor = !size.inStock
+        ? AppColor.danger
+        : (size.isLowStock ? AppColor.warning : AppColor.success);
+    final String stockLabel = !size.inStock
+        ? 'ناموجود'
+        : (size.isLowStock
+            ? 'تنها ${size.count} عدد باقی مانده'
+            : 'موجود در انبار');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: Container(
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rXl),
+          shadows: AppColor.cardShadow,
+        ),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // نام محصول + استپر تعداد
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      product.nameFarsi ?? '',
+                      style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 19,
+                        height: 1.45,
+                        fontWeight: FontWeight.w800,
+                        color: AppColor.ink,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  _QuantityStepper(
+                    value: _quantity,
+                    onChanged: (v) => setState(() => _quantity = v),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // قیمت + نمونه‌های رنگ
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text(
+                              'از: ',
+                              style: TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 13,
+                                color: AppColor.inkMuted,
+                              ),
+                            ),
+                            Text(
+                              '${thousandSeparator(finalPrice)} تومان',
+                              style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.ink,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (hasDiscount) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              PillTag(
+                                label: '٪$pct تخفیف',
+                                icon: Icons.local_offer_outlined,
+                                color: Colors.white,
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFEF4444), AppColor.danger],
+                                ),
+                                dense: true,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                thousandSeparator(original),
+                                style: const TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 12,
+                                  color: AppColor.inkMuted,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: AppColor.inkMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (product.variants.isNotEmpty)
+                    SelectableCircleColor(
+                      circleSize: 22,
+                      spacing: 8,
+                      colorWay: product.variants
+                          .map((v) => ColorWay(
+                                color: Color(0xff000000 +
+                                    int.parse(v.colorRgb!, radix: 16)),
+                                name: v.color ?? 'ناشناس',
+                                imageUrl: v.image != null
+                                    ? '${URLs.baseUrl}${v.image}'
+                                    : null,
+                              ))
+                          .toList(),
+                      onColorSelected: (int vIndex) {
+                        if (product.variants[vIndex].sizeVariants.isNotEmpty) {
+                          final s = firstAvailableSizeVariant(
+                              product.variants[vIndex].sizeVariants)!;
+                          setState(() => _carouselIndex = 0);
+                          context.read<ProductDetailVariantBloc>().add(
+                              ChangeProductColorEvent(
+                                  product.variants[vIndex], s));
+                        }
+                      },
+                    ),
+                ],
+              ),
+
+              if (state.productVariant.sizeVariants.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                const Text(
+                  'انتخاب سایز',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.ink,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SelectableCircleSize(
+                  key: ValueKey(state.productVariant.id),
+                  productSize: state.productVariant.sizeVariants
+                      .map((s) => s.size)
+                      .toList(),
+                  sizeAvailability: state.productVariant.sizeVariants
+                      .map((s) => s.inStock)
+                      .toList(),
+                  onSizeSelected: (int i) {
+                    context.read<ProductDetailVariantBloc>().add(
+                        ChangeProductColorEvent(state.productVariant,
+                            state.productVariant.sizeVariants[i]));
+                  },
+                ),
+              ],
+
+              const SizedBox(height: 16),
+              PillTag(
+                label: stockLabel,
+                icon: size.inStock
+                    ? Icons.check_circle_outline
+                    : Icons.remove_shopping_cart_outlined,
+                color: stockColor,
+              ),
+
+              if ((product.description ?? '').trim().isNotEmpty) ...[
+                const SizedBox(height: 18),
+                const Text(
+                  'توضیحات',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  product.description!,
+                  textAlign: TextAlign.justify,
+                  style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 13,
+                    height: 1.85,
+                    color: AppColor.inkMuted,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// آکاردئون جزئیات: توضیحات کامل، مشابه، نظرات، سوالات متداول
+  Widget _buildAccordions(ProductDetail product) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          children: [
+            AccordionSection(
+              title: 'توضیحات کامل',
+              icon: Icons.description_outlined,
+              // تصاویر توضیحات از جریان HTML جدا و به‌صورت ویجت مستقل رندر
+              // می‌شوند، چون تصویر «fallback»‌شده (برای دورزدن CORS در وب)
+              // داخل WidgetSpan نامرئی می‌ماند.
+              child: HtmlDescriptionBody(
+                html: product.editor ?? '',
+                onLinkTap: (url, _, __) async {
+                  if (await canLaunchUrl(Uri.parse(url!))) {
+                    await launchUrl(Uri.parse(url));
+                  }
+                },
+              ),
+            ),
+            if (product.similarProducts.isNotEmpty)
+              AccordionSection(
+                title: 'محصولات مشابه',
+                icon: Icons.grid_view_rounded,
+                trailingBadge: '${product.similarProducts.length}',
+                child: SizedBox(
+                  height: 232,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    shrinkWrap: true,
+                    clipBehavior: Clip.none,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: product.similarProducts.length,
+                    itemBuilder: (ctx, i) =>
+                        SimilarProductCard(product: product.similarProducts[i]),
+                  ),
+                ),
+              ),
+            AccordionSection(
+              title: 'نظرات',
+              icon: Icons.chat_bubble_outline_rounded,
+              trailingBadge: product.comments.isEmpty
+                  ? null
+                  : '${product.comments.length}',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ProductReviewsSection(productId: product.id),
+                  if (product.comments.isNotEmpty)
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: product.comments.length,
+                      itemBuilder: (ctx, i) => ReviewTile(
+                        review: Review(
+                          photoUrl: "assets/images/avatar_for_comments.png",
+                          name: " $i : ",
+                          review: product.comments[i].text,
+                          rating: 5,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  SoftButton(
+                    label: 'مشاهده همه نظرات',
+                    icon: const Icon(Icons.reviews_outlined),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ReviewsPage(productId: product.id),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (product.faqs != null && product.faqs!.isNotEmpty)
+              AccordionSection(
+                title: 'سوالات متداول',
+                icon: Icons.help_outline_rounded,
+                trailingBadge: '${product.faqs!.length}',
+                child: Column(
+                  children: product.faqs!
+                      .map((faq) => Theme(
+                            data: Theme.of(context)
+                                .copyWith(dividerColor: Colors.transparent),
+                            child: ExpansionTile(
+                              tilePadding: EdgeInsets.zero,
+                              initiallyExpanded: false,
+                              shape: const Border(),
+                              collapsedShape: const Border(),
+                              iconColor: AppColor.pitchGreen,
+                              collapsedIconColor: AppColor.inkMuted,
+                              title: Text(
+                                faq.question,
+                                style: const TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColor.ink,
+                                ),
+                              ),
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(
+                                    faq.answer,
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(
+                                      fontFamily: 'Estedad',
+                                      fontSize: 12,
+                                      height: 1.8,
+                                      color: AppColor.inkMuted,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
 
-/// دکمه‌ی اصلی نوار پایین: قرصی، گرادیان سبز و سایه‌ی برجسته.
-/// تا وقتی رنگ/اندازه انتخاب نشده، متن راهنما نشان می‌دهد (همان رفتار قبلی).
-class _AddToCartButton extends StatelessWidget {
-  const _AddToCartButton({required this.enabled, required this.onPressed});
+/// استپر تعداد (− ۰۱ +) مطابق طرح مرجع
+class _QuantityStepper extends StatelessWidget {
+  const _QuantityStepper({required this.value, required this.onChanged});
 
-  final bool enabled;
-  final VoidCallback onPressed;
+  final int value;
+  final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return GradientButton(
-      label: enabled ? 'افزودن به سبد' : 'لطفا رنگ و اندازه را انتخاب کنید',
-      icon: enabled ? const Icon(Icons.add_shopping_cart_rounded) : null,
-      fontSize: enabled ? 15 : 13,
-      height: 54,
-      onPressed: onPressed,
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: ShapeDecoration(
+        color: AppColor.cardMuted,
+        shape: AppShapes.pill,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _round(
+            icon: Icons.add_rounded,
+            filled: true,
+            onTap: () => onChanged(value + 1),
+          ),
+          Container(
+            width: 34,
+            alignment: Alignment.center,
+            child: Text(
+              value.toString().padLeft(2, '0'),
+              style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppColor.ink,
+              ),
+            ),
+          ),
+          _round(
+            icon: Icons.remove_rounded,
+            filled: false,
+            onTap: value > 1 ? () => onChanged(value - 1) : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _round({
+    required IconData icon,
+    required bool filled,
+    required VoidCallback? onTap,
+  }) {
+    return Opacity(
+      opacity: onTap == null ? 0.4 : 1,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: ShapeDecoration(
+          color: filled ? null : AppColor.card,
+          gradient: filled ? AppColor.greenGradient : null,
+          shape: const CircleBorder(),
+          shadows: filled ? AppColor.greenShadow : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Icon(icon,
+                size: 17,
+                color: filled ? AppColor.onPitchGreen : AppColor.ink),
+          ),
+        ),
+      ),
     );
   }
 }
-
 

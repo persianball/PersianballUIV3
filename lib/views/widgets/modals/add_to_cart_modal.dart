@@ -15,7 +15,14 @@ import 'package:marketky/views/widgets/page_container.dart';
 class AddToCartModal extends StatefulWidget {
   final CartItem cartItem; // محصولی که کاربر می‌خواهد اضافه کند
 
-  const AddToCartModal({Key? key, required this.cartItem}) : super(key: key);
+  /// تعدادی که کاربر در صفحه‌ی محصول انتخاب کرده است
+  final int initialQuantity;
+
+  const AddToCartModal({
+    Key? key,
+    required this.cartItem,
+    this.initialQuantity = 1,
+  }) : super(key: key);
 
   @override
   _AddToCartModalState createState() => _AddToCartModalState();
@@ -27,7 +34,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
   @override
   void initState() {
     super.initState();
-    _quantity = 1;
+    _quantity = widget.initialQuantity < 1 ? 1 : widget.initialQuantity;
   }
 
   @override
