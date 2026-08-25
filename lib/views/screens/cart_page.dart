@@ -1,8 +1,8 @@
 // views/screens/cart_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/views/widgets/pro_cart_item.dart';
@@ -33,7 +33,7 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.obsidianBg,
+      backgroundColor: AppColor.milk,
       appBar: _buildAppBar(),
       bottomNavigationBar: _buildCheckoutButton(),
       body: BlocBuilder<CartBloc, CartState>(
@@ -46,7 +46,8 @@ class _CartPageState extends State<CartPage> {
           } else if (state is CartError) {
             return _buildErrorOrLoginPrompt(context, state.message);
           }
-          return Center(child: CircularProgressIndicator());
+          return const Center(
+              child: CircularProgressIndicator(color: AppColor.pitchGreen));
         },
       ),
     );
@@ -59,7 +60,7 @@ class _CartPageState extends State<CartPage> {
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: AppBar(
-          backgroundColor: AppColor.obsidianBg,
+          backgroundColor: AppColor.milk,
           elevation: 0,
           title: BlocBuilder<CartBloc, CartState>(
             buildWhen: (previous, current) =>
@@ -87,7 +88,7 @@ class _CartPageState extends State<CartPage> {
           ),
           leading: IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back, color: AppColor.onSurface),
+            icon: const Icon(Icons.arrow_forward_rounded, color: AppColor.ink),
           ),
         ),
       ),
@@ -100,50 +101,48 @@ class _CartPageState extends State<CartPage> {
       textDirection: TextDirection.rtl,
       child: Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPicture.asset(
-                'assets/images/empty_cart.svg',
-                width: 220,
-                height: 220,
-                fit: BoxFit.contain,
+              Container(
+                width: 120,
+                height: 120,
+                decoration: const ShapeDecoration(
+                  color: AppColor.pitchGreenSoft,
+                  shape: CircleBorder(),
+                ),
+                child: const Icon(Icons.shopping_bag_outlined,
+                    size: 56, color: AppColor.pitchGreen),
               ),
-              SizedBox(height: 24),
-              Text(
+              const SizedBox(height: 22),
+              const Text(
                 'سبد خرید خالی است',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Estedad',
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColor.onSurface,
+                  fontWeight: FontWeight.w800,
+                  color: AppColor.ink,
                 ),
               ),
-              SizedBox(height: 8),
-              Text(
+              const SizedBox(height: 6),
+              const Text(
                 'هنوز کالایی به سبد اضافه نکرده‌اید',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Estedad',
                   fontSize: 13,
-                  color: AppColor.onSurfaceVariant,
+                  color: AppColor.inkMuted,
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
+              const SizedBox(height: 22),
+              GradientButton(
+                label: 'مشاهده محصولات',
+                expand: false,
+                height: 46,
+                icon: const Icon(Icons.storefront_outlined),
                 onPressed: () => Navigator.of(context).pushNamed('/catalog'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.goldEnd,
-                  padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: AppShapes.pill,
-                  elevation: 0,
-                ),
-                child: Text(
-                  'مشاهده محصولات',
-                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold),
-                ),
               ),
             ],
           ),
@@ -163,12 +162,20 @@ class _CartPageState extends State<CartPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                needsLogin ? Icons.lock_outline : Icons.error_outline,
-                size: 64,
-                color: AppColor.goldEnd,
+              Container(
+                width: 120,
+                height: 120,
+                decoration: const ShapeDecoration(
+                  color: AppColor.pitchGreenSoft,
+                  shape: CircleBorder(),
+                ),
+                child: Icon(
+                  needsLogin ? Icons.lock_outline : Icons.error_outline,
+                  size: 56,
+                  color: AppColor.pitchGreen,
+                ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 22),
               Text(
                 needsLogin ? 'وارد حساب کاربری نشده‌اید' : 'خطایی رخ داد',
                 textAlign: TextAlign.center,
@@ -176,10 +183,10 @@ class _CartPageState extends State<CartPage> {
                   fontFamily: 'Estedad',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColor.onSurface,
+                  color: AppColor.ink,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 needsLogin
                     ? 'برای مشاهده سبد خرید ابتدا وارد حساب کاربری شوید'
@@ -192,7 +199,12 @@ class _CartPageState extends State<CartPage> {
                 ),
               ),
               SizedBox(height: 20),
-              ElevatedButton(
+              GradientButton(
+                label: needsLogin ? 'ورود به حساب کاربری' : 'تلاش مجدد',
+                expand: false,
+                height: 46,
+                icon: Icon(
+                    needsLogin ? Icons.login_rounded : Icons.refresh_rounded),
                 onPressed: () async {
                   if (needsLogin) {
                     await Navigator.of(context).push(
@@ -207,16 +219,6 @@ class _CartPageState extends State<CartPage> {
                     context.read<CartBloc>().add(LoadCart(context));
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.goldEnd,
-                  padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: AppShapes.pill,
-                  elevation: 0,
-                ),
-                child: Text(
-                  needsLogin ? 'ورود به حساب کاربری' : 'تلاش مجدد',
-                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold),
-                ),
               ),
             ],
           ),
@@ -396,7 +398,7 @@ class _CartPageState extends State<CartPage> {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    backgroundColor: AppColor.obsidianBg,
+                    backgroundColor: AppColor.milk,
                     shape: RoundedRectangleBorder(
                       side: BorderSide(color: AppColor.outlineVariantDark),
                       borderRadius: AppShapes.radius(AppShapes.rMd),
@@ -675,7 +677,10 @@ class _CartPageState extends State<CartPage> {
               ),
             );
           }
-          return Container();
+          // مهم: Container() خالی در bottomNavigationBar تمام ارتفاع صفحه را
+          // می‌گیرد و بدنه‌ی صفحه را به ارتفاع صفر می‌رساند (سبد خالی دیده
+          // نمی‌شد). باید صراحتاً صفر باشد.
+          return const SizedBox.shrink();
         },
       ),
     );

@@ -294,7 +294,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 ),
               );
             }
-            return Container(); // در حالت لودینگ یا خطا، نمایش نده
+            // مهم: Container() خالی در bottomNavigationBar کل ارتفاع را
+            // می‌گیرد؛ باید صراحتاً صفر باشد.
+            return const SizedBox.shrink();
           },
         ),
       ),
