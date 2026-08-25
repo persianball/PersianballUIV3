@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -57,7 +58,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
       backgroundColor: AppColor.obsidianBg,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppShapes.radius(AppShapes.rMd),
       ),
       builder: (ctx) => _CourseDetailsSheet(
         cartItemFromBackend: widget.cartItemFromBackend,

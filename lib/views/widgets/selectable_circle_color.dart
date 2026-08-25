@@ -56,18 +56,26 @@ class _SelectableCircleState extends State<SelectableCircleColor> {
               },
               child: Container(
                 padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    width: 2,
-                    color: isSelected
-                        ? AppColor.goldEnd
-                        : AppColor.outlineVariantDark,
+                decoration: ShapeDecoration(
+                  color: AppColor.card,
+                  shape: CircleBorder(
+                    side: BorderSide(
+                      width: 2,
+                      color: isSelected
+                          ? AppColor.pitchGreen
+                          : AppColor.line,
+                    ),
                   ),
+                  shadows:
+                      isSelected ? AppColor.greenShadow : AppColor.cardShadow,
                 ),
                 child: Container(
                   width: widget.circleSize,
                   height: widget.circleSize,
-                  color: variant.color,
+                  decoration: ShapeDecoration(
+                    color: variant.color,
+                    shape: const CircleBorder(),
+                  ),
                 ),
               ),
             );

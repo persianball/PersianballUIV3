@@ -1,5 +1,6 @@
 // views/screens/cart_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -136,7 +137,7 @@ class _CartPageState extends State<CartPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColor.goldEnd,
                   padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: const RoundedRectangleBorder(),
+                  shape: AppShapes.pill,
                   elevation: 0,
                 ),
                 child: Text(
@@ -209,7 +210,7 @@ class _CartPageState extends State<CartPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColor.goldEnd,
                   padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: const RoundedRectangleBorder(),
+                  shape: AppShapes.pill,
                   elevation: 0,
                 ),
                 child: Text(
@@ -398,7 +399,7 @@ class _CartPageState extends State<CartPage> {
                     backgroundColor: AppColor.obsidianBg,
                     shape: RoundedRectangleBorder(
                       side: BorderSide(color: AppColor.outlineVariantDark),
-                      borderRadius: BorderRadius.zero,
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
                     ),
                     builder: (ctx) {
                       return DraggableScrollableSheet(
@@ -496,7 +497,7 @@ class _CartPageState extends State<CartPage> {
                                             elevation: 0,
                                             color: AppColor.surfaceContainer,
                                             shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.zero,
+                                                borderRadius: AppShapes.radius(AppShapes.rMd),
                                                 side: BorderSide(
                                                     color: AppColor
                                                         .outlineVariantDark)),
@@ -642,7 +643,7 @@ class _CartPageState extends State<CartPage> {
                                                     const EdgeInsets.symmetric(
                                                         vertical: 16),
                                                 shape:
-                                                    const RoundedRectangleBorder(),
+                                                    AppShapes.pill,
                                               ),
                                               child: const Text('انتخاب آدرس',
                                                   style: TextStyle(
@@ -669,7 +670,7 @@ class _CartPageState extends State<CartPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColor.goldEnd,
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: const RoundedRectangleBorder(),
+                  shape: AppShapes.pill,
                 ),
               ),
             );

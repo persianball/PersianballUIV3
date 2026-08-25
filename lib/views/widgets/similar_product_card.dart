@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 
 import '../../constant/app_color.dart';
+import '../../constant/app_shapes.dart';
 import '../../constant/urls.dart';
 import '../../models/ProductModel.dart';
 
@@ -34,7 +35,7 @@ class SimilarProductCard extends StatelessWidget {
             fontFamily: 'Estedad',
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: AppColor.goldEnd,
+            color: AppColor.ink,
           ),
         ),
         // ارتفاع ثابت تا کارت‌های با تخفیف و بدون تخفیف هم‌تراز بمانند
@@ -48,9 +49,9 @@ class SimilarProductCard extends StatelessWidget {
                     Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(8),
+                      decoration: const ShapeDecoration(
+                        color: AppColor.danger,
+                        shape: StadiumBorder(),
                       ),
                       child: Text(
                         '٪$percent',
@@ -71,9 +72,9 @@ class SimilarProductCard extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           fontFamily: 'Estedad',
-                          color: Colors.grey,
+                          color: AppColor.inkMuted,
                           decoration: TextDecoration.lineThrough,
-                          decorationColor: Colors.grey,
+                          decorationColor: AppColor.inkMuted,
                         ),
                       ),
                     ),
@@ -93,12 +94,15 @@ class SimilarProductCard extends StatelessWidget {
       },
       child: Container(
         width: 160, // عرض ثابت برای اسلایدر افقی
-        margin: EdgeInsetsDirectional.only(start: 8, end: 8),
-        decoration: BoxDecoration(
-          color: AppColor.surfaceContainer,
-          border: Border.all(color: AppColor.outlineVariantDark),
+        margin: const EdgeInsetsDirectional.only(start: 4, end: 8, bottom: 8),
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rMd),
+          shadows: AppColor.cardShadow,
         ),
-        child: Column(
+        child: SquircleClip(
+          radius: AppShapes.rMd,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // تصویر محصول
@@ -150,6 +154,7 @@ class SimilarProductCard extends StatelessWidget {
               child: _buildPrice(),
             ),
           ],
+        ),
         ),
       ),
     );

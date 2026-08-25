@@ -119,7 +119,7 @@ class _SkeletonBoxState extends State<_SkeletonBox>
           // null یعنی «بدون گردی» (کارت‌های dark/گوشه‌تیز)، نه یک مقدار
           // پیش‌فرض دلخواه؛ وگرنه اسکلتون روی کارت‌های گوشه‌تیز گرد دیده
           // می‌شد در حالی که تصویر واقعی بعد از لود کاملاً گوشه‌تیز است.
-          borderRadius: widget.borderRadius ?? BorderRadius.zero,
+          borderRadius: widget.borderRadius ?? AppShapes.radius(AppShapes.rMd),
         ),
       ),
     );

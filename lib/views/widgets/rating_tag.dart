@@ -10,15 +10,14 @@ class RatingTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 50,
       margin: margin,
-      padding: EdgeInsets.only(top: 4, bottom: 4, left: 5, right: 8),
-      decoration: BoxDecoration(
-        color: AppColor.surfaceContainerHigh,
-        border: Border.all(color: AppColor.outlineVariantDark),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: const ShapeDecoration(
+        color: AppColor.cardMuted,
+        shape: StadiumBorder(),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SvgPicture.asset(
@@ -31,8 +30,9 @@ class RatingTag extends StatelessWidget {
             '$value',
             style: TextStyle(
               fontFamily: 'Estedad',
-              color: AppColor.onSurface,
+              color: AppColor.ink,
               fontSize: 12,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

@@ -1,5 +1,6 @@
 // views/login_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -159,12 +160,12 @@ class _LoginPageState extends State<LoginPage> {
                       enabledBorder: OutlineInputBorder(
                         borderSide:
                             BorderSide(color: AppColor.outlineVariantDark, width: 1),
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
                             BorderSide(color: AppColor.goldEnd, width: 2),
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                       ),
                       fillColor: AppColor.surfaceContainer,
                       filled: true,
@@ -215,12 +216,12 @@ class _LoginPageState extends State<LoginPage> {
                       enabledBorder: OutlineInputBorder(
                         borderSide:
                             BorderSide(color: AppColor.outlineVariantDark, width: 1),
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
                             BorderSide(color: AppColor.goldEnd, width: 2),
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                       ),
                       fillColor: AppColor.surfaceContainer,
                       filled: true,
@@ -315,7 +316,7 @@ class _LoginPageState extends State<LoginPage> {
                         padding:
                             EdgeInsets.symmetric(horizontal: 36, vertical: 18),
                         backgroundColor: AppColor.goldEnd,
-                        shape: const RoundedRectangleBorder(),
+                        shape: AppShapes.pill,
                         elevation: 0,
                         shadowColor: Colors.transparent,
                       ),

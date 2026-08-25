@@ -4,7 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_text_styles.dart';
+import 'package:marketky/views/widgets/accordion_section.dart';
+import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/services/wishlist_service.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/constant/urls.dart';
@@ -13,10 +16,8 @@ import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/ColorWay.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/utils/html_dark_theme.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/screens/reviews_page.dart';
-import 'package:marketky/views/widgets/detail_tabs.dart';
 import 'package:marketky/views/widgets/html_description_image.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
@@ -117,7 +118,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.obsidianBg,
+      backgroundColor: AppColor.milk,
       extendBodyBehindAppBar: true,
       extendBody: true,
       bottomNavigationBar: SafeArea(
@@ -126,10 +127,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
             if (state is ProductDetailLoaded) {
               return Container(
                 width: MediaQuery.of(context).size.width,
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColor.obsidianBg,
-                  border: Border(top: BorderSide(color: AppColor.outlineVariantDark, width: 1)),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                decoration: const ShapeDecoration(
+                  color: AppColor.card,
+                  shape: ContinuousRectangleBorder(),
+                  shadows: AppColor.floatingShadow,
                 ),
                 child: Row(
                   children: [
@@ -142,35 +144,31 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               showDialog(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
-                                  backgroundColor: AppColor.obsidianBg,
-                                  shape: RoundedRectangleBorder(
-                                    side: BorderSide(color: AppColor.outlineVariantDark),
-                                    borderRadius: BorderRadius.zero,
-                                  ),
+                                  backgroundColor: AppColor.card,
+                                  shape: AppShapes.border(AppShapes.rLg),
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.check_circle, color: AppColor.successDark, size: 64),
-                                      SizedBox(height: 16),
+                                      const Icon(Icons.check_circle_rounded,
+                                          color: AppColor.success, size: 60),
+                                      const SizedBox(height: 16),
                                       Text(
                                         state.message,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontFamily: 'Estedad',
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColor.onSurface,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColor.ink,
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
-                                      SizedBox(height: 16),
-                                      ElevatedButton(
+                                      const SizedBox(height: 18),
+                                      GradientButton(
+                                        label: 'باشه',
+                                        height: 44,
+                                        fontSize: 14,
                                         onPressed: () => Navigator.of(ctx).pop(),
-                                        child: Text('باشه', style: TextStyle(fontFamily: 'Estedad',color: AppColor.onGold)),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColor.goldEnd,
-                                          shape: const RoundedRectangleBorder(),
-                                        ),
-                                      )
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -191,39 +189,40 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  SizedBox(
-                                    height: 64,
-                                    child: Container(
-                                      width: 64,
-                                      height: 64,
-                                      margin: EdgeInsets.only(right: 14),
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColor.surfaceContainerHigh,
-                                          shape: RoundedRectangleBorder(
-                                            side: BorderSide(color: AppColor.outlineVariantDark),
-                                            borderRadius: BorderRadius.zero,
+                                  Container(
+                                    width: 54,
+                                    height: 54,
+                                    margin: const EdgeInsets.only(right: 12),
+                                    decoration: ShapeDecoration(
+                                      color: AppColor.cardMuted,
+                                      shape: AppShapes.pill,
+                                    ),
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      shape: AppShapes.pill,
+                                      clipBehavior: Clip.antiAlias,
+                                      child: InkWell(
+                                        onTap: () => Navigator.of(context)
+                                            .pushNamed('/cart'),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(15),
+                                          child: SvgPicture.asset(
+                                            'assets/icons/Bag.svg',
+                                            fit: BoxFit.contain,
+                                            colorFilter: const ColorFilter.mode(
+                                                AppColor.pitchGreen,
+                                                BlendMode.srcIn),
                                           ),
-                                          elevation: 0,
-                                        ),
-                                        onPressed: () {
-                                          Navigator.of(context).pushNamed('/cart');
-                                        },
-                                        child: SvgPicture.asset('assets/icons/Bag.svg', color: AppColor.goldEnd,fit: BoxFit.contain,
                                         ),
                                       ),
                                     ),
                                   ),
                                   Expanded(
                                     child: SizedBox(
-                                      height: 64,
-
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColor.goldEnd,
-                                          shape: const RoundedRectangleBorder(),
-                                          elevation: 0,
-                                        ),
+                                      height: 54,
+                                      child: _AddToCartButton(
+                                        enabled:
+                                            variant_state is ProductDetailSizeChanged,
                                         onPressed: () {
                                           // جلوگیری از افزودن کالای ناموجود
                                           final selectedSize =
@@ -249,6 +248,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           showModalBottomSheet(
                                             context: context,
                                             backgroundColor: Colors.transparent,
+                                            // محتوای شیت بلندتر از ارتفاع
+                                            // پیش‌فرض است و باید کامل جا شود
+                                            isScrollControlled: true,
                                             builder: (context) => AddToCartModal(
                                               cartItem:
                                               (variant_state is ProductDetailSizeChanged) ?
@@ -279,25 +281,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                             ),)
                                           );
                                         },
-                                        child: Builder(
-                                          builder: (context) {
-                                            if(variant_state is ProductDetailSizeChanged){
-                                              return Text(
-                                                'افزودن به سبد',
-                                                style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: AppColor.onGold, fontSize: 16),
-                                              );
-                                            }else{
-                                              return Directionality(
-                                                textDirection: TextDirection.rtl,
-                                                child: Text(
-                                                  'لطفا رنگ و اندازه را انتخاب کنید.',
-                                                  style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w600, color: AppColor.onGold, fontSize: 16),
-                                                ),
-                                              );
-                                            }
-
-                                          }
-                                        ),
                                       ),
                                     ),
                                   ),
@@ -347,33 +330,38 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
   Widget _buildLoading() {
     return Container(
-      color: AppColor.obsidianBg,
-      child: const Center(child: CircularProgressIndicator(color: AppColor.goldEnd)),
+      color: AppColor.milk,
+      child: const Center(
+          child: CircularProgressIndicator(color: AppColor.pitchGreen)),
     );
   }
 
   Widget _buildError(String message, BuildContext context) {
     return Container(
-      color: AppColor.obsidianBg,
+      color: AppColor.milk,
       child: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            message,
-            style: TextStyle(fontFamily: 'Estedad', color: AppColor.errorDark),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8),
-          TextButton(
-            onPressed: () {
-              context.read<ProductDetailBloc>().add(FetchProductDetail(widget.productId));
-            },
-            child: Text('تلاش مجدد',
-                style: TextStyle(fontFamily: 'Estedad', color: AppColor.goldEnd)),
-          ),
-        ],
-      ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(
+                  fontFamily: 'Estedad', color: AppColor.danger),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 14),
+            GradientButton(
+              label: 'تلاش مجدد',
+              expand: false,
+              height: 42,
+              fontSize: 13,
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () => context
+                  .read<ProductDetailBloc>()
+                  .add(FetchProductDetail(widget.productId)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -456,7 +444,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                 // ]),
                                 child: Column(
                                   children: [
-                                    const SizedBox(height: 90),
+                                    const SizedBox(height: 96),
                                     // تعویض نرم گالری هنگام تغییر رنگ:
                                     // محو‌شدن همراه با کمی بزرگ‌نمایی (fade through)
                                     AnimatedSwitcher(
@@ -515,72 +503,48 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                         ),
                       ),
                     ),
-                    // هدر شناور تیره: بازگشت، عنوان ثابت اپ، علاقه‌مندی/اشتراک‌گذاری/سبد
+                    // هدر شناور: دکمه‌های گرد برجسته روی تصویر
                     Positioned(
                       top: 0,
                       right: 0,
                       left: 0,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              AppColor.obsidianBg.withOpacity(0.85),
-                              AppColor.obsidianBg.withOpacity(0.0),
-                            ],
-                          ),
-                        ),
-                        child: SafeArea(
-                          bottom: false,
+                      child: SafeArea(
+                        bottom: false,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                           child: Directionality(
                             textDirection: TextDirection.rtl,
                             child: Row(
                               children: [
-                                IconButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  icon: const Icon(Icons.arrow_back,
-                                      color: AppColor.onSurface),
+                                CircleIconButton(
+                                  icon: Icons.arrow_forward_rounded,
+                                  tooltip: 'بازگشت',
+                                  onTap: () => Navigator.of(context).pop(),
                                 ),
                                 Expanded(
                                   child: Text(
-                                    'پرشین شاپ',
+                                    'جزئیات محصول',
                                     textAlign: TextAlign.center,
-                                    style: AppTextStyles.headlineMd
-                                        .copyWith(fontSize: 18, color: AppColor.goldEnd),
+                                    style: AppTextStyles.headlineMd.copyWith(
+                                        fontSize: 16, color: AppColor.ink),
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: _toggleFavorite,
-                                  icon: Icon(
-                                    _isFavorite ? Icons.favorite : Icons.favorite_border,
-                                    color: _isFavorite ? Colors.red : AppColor.onSurfaceVariant,
-                                  ),
+                                CircleIconButton(
+                                  icon: _isFavorite
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  iconColor: _isFavorite
+                                      ? AppColor.danger
+                                      : AppColor.ink,
+                                  tooltip: 'علاقه‌مندی',
+                                  onTap: _toggleFavorite,
                                 ),
-                                IconButton(
-                                  onPressed: () => _shareProduct(product.nameFarsi ?? ''),
-                                  icon: const Icon(Icons.share,
-                                      color: AppColor.onSurfaceVariant),
-                                ),
-                                BlocBuilder<CartBloc, CartState>(
-                                  builder: (context, cartState) {
-                                    final count = cartState is CartLoaded
-                                        ? (cartState.cart.results.isNotEmpty
-                                            ? cartState.cart.results[0].items.length
-                                            : 0)
-                                        : 0;
-                                    return IconButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pushNamed('/cart'),
-                                      icon: Badge(
-                                        isLabelVisible: count > 0,
-                                        label: Text('$count'),
-                                        child: const Icon(Icons.shopping_bag_outlined,
-                                            color: AppColor.onSurfaceVariant),
-                                      ),
-                                    );
-                                  },
+                                const SizedBox(width: 8),
+                                CircleIconButton(
+                                  icon: Icons.ios_share_rounded,
+                                  tooltip: 'اشتراک‌گذاری',
+                                  onTap: () =>
+                                      _shareProduct(product.nameFarsi ?? ''),
                                 ),
                               ],
                             ),
@@ -593,40 +557,54 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               ),
 
 
-              // بخش ۲ - اطلاعات محصول
-              Container(
-                decoration: BoxDecoration(
-                    // تینت داینامیک رنگ واریانت، روی پس‌زمینه تیره ترکیب می‌شود
-                    color: Color.alphaBlend(
-                        Color(0xff000000+int.parse(
-                                variant_state.productVariant.colorRgb!,
-                                radix: 16))
-                            .withOpacity(0.15),
-                        AppColor.obsidianBg)),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              // بخش ۲ - اطلاعات محصول: ورق سفید برجسته که روی گالری می‌نشیند
+              Transform.translate(
+                offset: const Offset(0, -26),
+                child: Container(
+                decoration: ShapeDecoration(
+                  color: AppColor.card,
+                  shape: ContinuousRectangleBorder(
+                    borderRadius: AppShapes.radiusTop(AppShapes.rXl),
+                  ),
+                  shadows: AppColor.floatingShadow,
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Directionality(
                       textDirection: TextDirection.rtl,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              product.nameFarsi ?? '',
-                              style: TextStyle(
-                                fontFamily: 'Estedad',
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                                color: AppColor.onSurface,
-                              ),
-                            ),
+                          PillTag(
+                            label: product.category.nameFarsi,
+                            icon: Icons.sell_outlined,
+                            dense: true,
                           ),
-                          Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: RatingTag(value: product.avgRate,
-                                  margin: EdgeInsets.only(left: 10))),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  product.nameFarsi ?? '',
+                                  style: const TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 20,
+                                    height: 1.4,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColor.ink,
+                                  ),
+                                ),
+                              ),
+                              Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: RatingTag(
+                                      value: product.avgRate,
+                                      margin: const EdgeInsets.only(left: 10))),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -657,48 +635,45 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                   }
 
                                   return Row(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      if (percent > 0) SizedBox(width: 8),
                                       Text(
                                         '${thousandSeparator(finalPrice)} تومان',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontFamily: 'Estedad',
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColor.goldEnd,
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColor.ink,
                                         ),
                                       ),
-                                      if (percent > 0) SizedBox(width: 8),
-
-                                      if (percent > 0)
-                                      Container(
-                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
+                                      if (percent > 0) ...[
+                                        const SizedBox(width: 10),
+                                        PillTag(
+                                          label: '٪$percent تخفیف',
+                                          icon: Icons.local_offer_outlined,
+                                          color: Colors.white,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFFEF4444),
+                                              AppColor.danger
+                                            ],
                                           ),
-                                          child: Text(
-                                            '%$percent',
-                                            style: TextStyle(
-                                              fontFamily: 'Estedad',
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
+                                          dense: true,
                                         ),
-                                      if (percent > 0) SizedBox(width: 8),
-                                      if (percent > 0)
+                                        const SizedBox(width: 8),
                                         Text(
-                                          '${thousandSeparator(originalPrice)} تومان',
-                                          style: TextStyle(
+                                          thousandSeparator(originalPrice),
+                                          style: const TextStyle(
                                             fontFamily: 'Estedad',
-                                            fontSize: 14,
-                                            color: AppColor.onSurfaceVariant,
-                                            decoration: TextDecoration.lineThrough,
+                                            fontSize: 13,
+                                            color: AppColor.inkMuted,
+                                            decoration:
+                                                TextDecoration.lineThrough,
+                                            decorationColor: AppColor.inkMuted,
                                           ),
                                         ),
-
+                                      ],
                                     ],
                                   );
                                 } else {
@@ -717,47 +692,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                         }
                         final size = stock_state.productSize;
                         final Color color = !size.inStock
-                            ? Colors.red
+                            ? AppColor.danger
                             : (size.isLowStock
-                                ? Colors.orange.shade800
-                                : Colors.green.shade700);
+                                ? AppColor.warning
+                                : AppColor.success);
                         final String label = !size.inStock
                             ? 'ناموجود'
                             : (size.isLowStock
                                 ? 'تنها ${size.count} عدد باقی مانده'
                                 : 'موجود در انبار');
                         return Align(
-                          alignment: AlignmentGeometry.centerRight,
+                          alignment: AlignmentDirectional.centerStart,
                           child: Directionality(
                             textDirection: TextDirection.rtl,
-                            child: Container(
-                              margin: EdgeInsets.only(right: 16, bottom: 14),
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                      size.inStock
-                                          ? Icons.check_circle_outline
-                                          : Icons.remove_shopping_cart_outlined,
-                                      size: 14,
-                                      color: color),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    label,
-                                    style: TextStyle(
-                                      fontFamily: 'Estedad',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: color,
-                                    ),
-                                  ),
-                                ],
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: PillTag(
+                                label: label,
+                                icon: size.inStock
+                                    ? Icons.check_circle_outline
+                                    : Icons.remove_shopping_cart_outlined,
+                                color: color,
                               ),
                             ),
                           ),
@@ -768,33 +723,32 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                     // بخش ۳ - انتخاب رنگ
                     if (product.variants.isNotEmpty)
                       Align(
-                        alignment: AlignmentGeometry.centerRight,
+                        alignment: AlignmentDirectional.centerStart,
                         child: Directionality(
                           textDirection: TextDirection.rtl,
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            margin: EdgeInsets.only(bottom: 20),
+                            margin: const EdgeInsets.only(bottom: 20),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    Text(
+                                    const Text(
                                       'رنگ:  ',
                                       style: TextStyle(
                                         fontFamily: 'Estedad',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColor.onSurface,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColor.ink,
                                       ),
                                     ),
                                     Text(
                                       variant_state.productVariant.color!,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontFamily: 'Estedad',
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w400,
-                                        color: AppColor.onSurfaceVariant,
+                                        color: AppColor.inkMuted,
                                       ),
                                     ),
                                   ],
@@ -839,22 +793,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                     // بخش ۴ - انتخاب سایز (در صورت وجود)
                     if (variant_state.productVariant.sizeVariants.isNotEmpty)
                       Align(
-                        alignment: AlignmentGeometry.centerRight,
+                        alignment: AlignmentDirectional.centerStart,
                         child: Directionality(
                           textDirection: TextDirection.rtl,
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            margin: EdgeInsets.only(bottom: 20),
+                            margin: const EdgeInsets.only(bottom: 20),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                const Text(
                                   'اندازه',
                                   style: TextStyle(
                                     fontFamily: 'Estedad',
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColor.onSurface,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.ink,
                                   ),
                                 ),
                                 SizedBox(height: 12),
@@ -888,85 +841,95 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                       ),
 
 
-                    Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: Text(
-                        product.description ?? '',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          color: AppColor.onSurfaceVariant,
-                          height: 1.5,
+                    if ((product.description ?? '').trim().isNotEmpty)
+                      Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: Text(
+                          product.description!,
+                          style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 13,
+                            color: AppColor.inkMuted,
+                            height: 1.8,
+                          ),
+                          textAlign: TextAlign.justify,
                         ),
-                        textAlign: TextAlign.justify,
                       ),
-                    ),
                   ],
                 ),
               ),
+              ),
 
 
-              // بخش ۵ - تب‌های جزئیات: توضیحات، مشابه، نظرات، سوالات متداول
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                child: DetailTabs(
-                  dark: true,
-                  tabs: [
-                    DetailTab(
-                      title: 'توضیحات',
-                      // توضیح در HtmlDescriptionBody: تصاویر از جریان
-                      // HTML جدا و به‌صورت ویجت مستقل رندر می‌شوند، چون
-                      // تصویر «fallback»‌شده (برای دورزدن CORS در وب) وقتی
-                      // داخل WidgetSpan یک RichText اسکرول‌شونده باشد در
-                      // این نسخه‌ی فلاتر کاملاً نامرئی می‌ماند.
-                      builder: (context) => HtmlDescriptionBody(
-                        html: sanitizeHtmlForDarkBg(product.editor ?? ''),
-                        onLinkTap: (url, _, __) async {
-                          if (await canLaunchUrl(Uri.parse(url!))) {
-                            await launchUrl(Uri.parse(url));
-                          }
-                        },
-                      ),
-                    ),
-                    if (product.similarProducts.isNotEmpty)
-                      DetailTab(
-                        title: 'محصولات مشابه',
-                        builder: (context) => SizedBox(
-                          // کارت کمی بلندتر از فضای قبلی است؛ کمی حاشیه اضافه شد
-                          height: 232,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            shrinkWrap: true,
-                            physics: BouncingScrollPhysics(),
-                            itemCount: product.similarProducts.length,
-                            itemBuilder: (ctx, i) => SimilarProductCard(
-                                product: product.similarProducts[i]),
-                          ),
+              // بخش ۵ - آکاردئون جزئیات: توضیحات، مشابه، نظرات، سوالات متداول
+              Transform.translate(
+                offset: const Offset(0, -26),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Column(
+                    children: [
+                      AccordionSection(
+                        title: 'توضیحات',
+                        icon: Icons.description_outlined,
+                        // تصاویر توضیحات از جریان HTML جدا و به‌صورت ویجت
+                        // مستقل رندر می‌شوند، چون تصویر «fallback»‌شده (برای
+                        // دورزدن CORS در وب) داخل WidgetSpan نامرئی می‌ماند.
+                        child: HtmlDescriptionBody(
+                          html: product.editor ?? '',
+                          onLinkTap: (url, _, __) async {
+                            if (await canLaunchUrl(Uri.parse(url!))) {
+                              await launchUrl(Uri.parse(url));
+                            }
+                          },
                         ),
                       ),
-                    DetailTab(
-                      title: 'نظرات',
-                      builder: (context) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ProductReviewsSection(productId: product.id),
-                          // نظرات ثبت‌شده روی خود محصول در API
-                          if (product.comments.isNotEmpty)
-                            ListView.builder(
+                      if (product.similarProducts.isNotEmpty)
+                        AccordionSection(
+                          title: 'محصولات مشابه',
+                          icon: Icons.grid_view_rounded,
+                          trailingBadge: '${product.similarProducts.length}',
+                          child: SizedBox(
+                            height: 232,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
                               shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: product.comments.length,
-                              itemBuilder: (ctx, i) => ReviewTile(
-                                review: Review(
-                                    photoUrl:
-                                        "assets/images/avatar_for_comments.png",
-                                    name: " ${i} : ",
-                                    review: product.comments[i].text,
-                                    rating: 5),
-                              ),
+                              clipBehavior: Clip.none,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: product.similarProducts.length,
+                              itemBuilder: (ctx, i) => SimilarProductCard(
+                                  product: product.similarProducts[i]),
                             ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
+                          ),
+                        ),
+                      AccordionSection(
+                        title: 'نظرات',
+                        icon: Icons.chat_bubble_outline_rounded,
+                        trailingBadge: product.comments.isEmpty
+                            ? null
+                            : '${product.comments.length}',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ProductReviewsSection(productId: product.id),
+                            // نظرات ثبت‌شده روی خود محصول در API
+                            if (product.comments.isNotEmpty)
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: product.comments.length,
+                                itemBuilder: (ctx, i) => ReviewTile(
+                                  review: Review(
+                                      photoUrl:
+                                          "assets/images/avatar_for_comments.png",
+                                      name: " $i : ",
+                                      review: product.comments[i].text,
+                                      rating: 5),
+                                ),
+                              ),
+                            const SizedBox(height: 8),
+                            SoftButton(
+                              label: 'مشاهده همه نظرات',
+                              icon: const Icon(Icons.reviews_outlined),
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -974,81 +937,96 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           ReviewsPage(productId: product.id)),
                                 );
                               },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColor.goldEnd,
-                                side: BorderSide(color: AppColor.outlineVariantDark),
-                                shape: const RoundedRectangleBorder(),
-                              ),
-                              child: Text(
-                                'مشاهده همه نظرات',
-                                style: TextStyle(
-                                    fontFamily: 'Estedad',
-                                    color: AppColor.goldEnd,
-                                    fontWeight: FontWeight.w600),
-                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (product.faqs != null && product.faqs!.isNotEmpty)
-                      DetailTab(
-                        title: 'سوالات متداول',
-                        builder: (context) => Column(
-                          children: product.faqs!
-                              .map((faq) => ExpansionTile(
-                                    tilePadding: EdgeInsets.zero,
-                                    initiallyExpanded: false,
-                                    iconColor: AppColor.goldEnd,
-                                    collapsedIconColor: AppColor.onSurfaceVariant,
-                                    title: Text(
-                                      faq.question,
-                                      style: TextStyle(
-                                        fontFamily: 'Estedad',
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColor.onSurface,
-                                      ),
-                                    ),
-                                    children: [
-                                      Container(
-                                        width: double.infinity,
-                                        padding: EdgeInsets.only(bottom: 12),
-                                        child: Text(
-                                          faq.answer,
-                                          textAlign: TextAlign.right,
-                                          style: TextStyle(
-                                            fontFamily: 'Estedad',
-                                            fontSize: 13,
-                                            height: 1.8,
-                                            color: AppColor.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ))
-                              .toList(),
+                          ],
                         ),
                       ),
-                  ],
+                      if (product.faqs != null && product.faqs!.isNotEmpty)
+                        AccordionSection(
+                          title: 'سوالات متداول',
+                          icon: Icons.help_outline_rounded,
+                          trailingBadge: '${product.faqs!.length}',
+                          child: Column(
+                            children: product.faqs!
+                                .map((faq) => Theme(
+                                      data: Theme.of(context).copyWith(
+                                          dividerColor: Colors.transparent),
+                                      child: ExpansionTile(
+                                        tilePadding: EdgeInsets.zero,
+                                        initiallyExpanded: false,
+                                        shape: const Border(),
+                                        collapsedShape: const Border(),
+                                        iconColor: AppColor.pitchGreen,
+                                        collapsedIconColor: AppColor.inkMuted,
+                                        title: Text(
+                                          faq.question,
+                                          style: const TextStyle(
+                                            fontFamily: 'Estedad',
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColor.ink,
+                                          ),
+                                        ),
+                                        children: [
+                                          Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.only(
+                                                bottom: 12),
+                                            child: Text(
+                                              faq.answer,
+                                              textAlign: TextAlign.right,
+                                              style: const TextStyle(
+                                                fontFamily: 'Estedad',
+                                                fontSize: 12,
+                                                height: 1.8,
+                                                color: AppColor.inkMuted,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ))
+                                .toList(),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-
-
             ],
           );
         }else{
           // این شاخه وقتی رخ می‌دهد که هنوز رنگ/سایزی برای واریانت انتخاب
           // نشده (رویداد ChangeProductColorEvent اولیه هنوز پردازش نشده)
           return Container(
-            color: AppColor.obsidianBg,
+            color: AppColor.milk,
             child: const Center(
-              child: CircularProgressIndicator(color: AppColor.goldEnd),
+              child: CircularProgressIndicator(color: AppColor.pitchGreen),
             ),
           );
         }
 
       }
+    );
+  }
+}
+
+/// دکمه‌ی اصلی نوار پایین: قرصی، گرادیان سبز و سایه‌ی برجسته.
+/// تا وقتی رنگ/اندازه انتخاب نشده، متن راهنما نشان می‌دهد (همان رفتار قبلی).
+class _AddToCartButton extends StatelessWidget {
+  const _AddToCartButton({required this.enabled, required this.onPressed});
+
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return GradientButton(
+      label: enabled ? 'افزودن به سبد' : 'لطفا رنگ و اندازه را انتخاب کنید',
+      icon: enabled ? const Icon(Icons.add_shopping_cart_rounded) : null,
+      fontSize: enabled ? 15 : 13,
+      height: 54,
+      onPressed: onPressed,
     );
   }
 }

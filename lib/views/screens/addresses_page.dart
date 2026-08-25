@@ -1,6 +1,7 @@
 // lib/views/screens/addresses_page.dart
 // Standalone addresses manager page based on address_selection_page
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
 import 'package:marketky/bloc/address/address_event.dart';
@@ -38,7 +39,7 @@ class _AddressesPageState extends State<AddressesPage> {
         floatingActionButton: FloatingActionButton(
           onPressed: _openCreateDialog,
           backgroundColor: AppColor.goldEnd,
-          shape: const RoundedRectangleBorder(),
+          shape: AppShapes.border(AppShapes.rMd),
           child: const Icon(Icons.add, color: AppColor.onGold),
         ),
         body: BlocConsumer<AddressBloc, AddressState>(
@@ -167,7 +168,7 @@ class _AddressesPageState extends State<AddressesPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColor.surfaceContainerOpaque,
-      shape: const RoundedRectangleBorder(),
+      shape: AppShapes.borderTop(AppShapes.rXl),
       builder: (ctx) {
         return Directionality(
           textDirection: TextDirection.rtl,
@@ -266,7 +267,7 @@ class _AddressesPageState extends State<AddressesPage> {
                         Navigator.of(ctx).pop();
                       },
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.goldEnd, shape: const RoundedRectangleBorder()),
+                          backgroundColor: AppColor.goldEnd, shape: AppShapes.pill),
                       child: Text(model == null ? 'افزودن' : 'ویرایش',
                           style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
                     ),
@@ -295,15 +296,15 @@ class _AddressesPageState extends State<AddressesPage> {
           filled: true,
           fillColor: AppColor.obsidianBg,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.outlineVariantDark),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.outlineVariantDark),
           ),
-          focusedBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
           ),
           isDense: true,
@@ -319,7 +320,7 @@ class _AddressesPageState extends State<AddressesPage> {
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           backgroundColor: AppColor.surfaceContainerOpaque,
-          shape: const RoundedRectangleBorder(),
+          shape: AppShapes.border(AppShapes.rLg),
           title: const Text('حذف آدرس',
               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
           content: const Text('آیا از حذف این آدرس مطمئن هستید؟',
@@ -362,7 +363,7 @@ class _EmptyAddresses extends StatelessWidget {
           ElevatedButton(
             onPressed: onCreate,
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColor.goldEnd, shape: const RoundedRectangleBorder()),
+                backgroundColor: AppColor.goldEnd, shape: AppShapes.pill),
             child: const Text('افزودن آدرس',
                 style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
           ),

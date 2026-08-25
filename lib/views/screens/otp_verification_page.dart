@@ -1,5 +1,6 @@
 // views/screens/otp_verification_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -145,7 +146,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 animationType: AnimationType.fade,
                 pinTheme: PinTheme(
                   shape: PinCodeFieldShape.box,
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppShapes.radius(AppShapes.rMd),
                   fieldHeight: 70,
                   fieldWidth: 60,
                   borderWidth: 1.5,
@@ -257,7 +258,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 36, vertical: 18),
                   backgroundColor: AppColor.goldEnd,
-                  shape: const RoundedRectangleBorder(),
+                  shape: AppShapes.pill,
                   elevation: 0,
                   shadowColor: Colors.transparent,
                 ),

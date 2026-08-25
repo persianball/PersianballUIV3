@@ -1,5 +1,6 @@
 // lib/views/screens/order_summary_page.dart
 import 'dart:convert';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:marketky/constant/app_color.dart';
@@ -63,7 +64,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           backgroundColor: AppColor.surfaceContainerOpaque,
-          shape: const RoundedRectangleBorder(),
+          shape: AppShapes.border(AppShapes.rLg),
           title: const Text('نیاز به ورود دارید',
               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
           content: const Text('برای ادامه، لطفاً ابتدا وارد حساب کاربری خود شوید.',
@@ -372,17 +373,17 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                       filled: true,
                                       fillColor: AppColor.obsidianBg,
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.zero,
+                                        borderRadius: AppShapes.radius(AppShapes.rMd),
                                         borderSide:
                                             BorderSide(color: AppColor.outlineVariantDark),
                                       ),
                                       enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.zero,
+                                        borderRadius: AppShapes.radius(AppShapes.rMd),
                                         borderSide:
                                             BorderSide(color: AppColor.outlineVariantDark),
                                       ),
-                                      focusedBorder: const OutlineInputBorder(
-                                        borderRadius: BorderRadius.zero,
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: AppShapes.radius(AppShapes.rMd),
                                         borderSide:
                                             BorderSide(color: AppColor.goldEnd, width: 2),
                                       ),
@@ -397,7 +398,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                       : _applyDiscountCode,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColor.goldEnd,
-                                    shape: const RoundedRectangleBorder(),
+                                    shape: AppShapes.pill,
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 12),
                                   ),
@@ -498,7 +499,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.goldEnd,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: const RoundedRectangleBorder(),
+                          shape: AppShapes.pill,
                         ),
                         child: _posting
                             ? const SizedBox(

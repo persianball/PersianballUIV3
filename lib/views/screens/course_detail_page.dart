@@ -1,5 +1,6 @@
 // lib/views/screens/course_detail_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -329,7 +330,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: AppColor.goldEnd,
-                                                shape: const RoundedRectangleBorder(),
+                                                shape: AppShapes.borderTop(AppShapes.rXl),
                                                 padding: EdgeInsets.symmetric(vertical: 12),
                                                 elevation: 0,
                                               ),
@@ -387,7 +388,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                           style: OutlinedButton.styleFrom(
                               foregroundColor: AppColor.goldEnd,
                               side: const BorderSide(color: AppColor.goldEnd),
-                              shape: const RoundedRectangleBorder()),
+                              shape: AppShapes.pill),
                           child: const Text('تلاش مجدد', style: TextStyle(fontFamily: 'Estedad')),
                         ),
                       ],
@@ -563,7 +564,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColor.goldEnd,
-                              shape: const RoundedRectangleBorder(),
+                              shape: AppShapes.borderTop(AppShapes.rXl),
                               padding: EdgeInsets.symmetric(vertical: 16),
                               elevation: 0,
                             ),
@@ -582,7 +583,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                           onPressed: null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColor.outlineVariantDark,
-                            shape: const RoundedRectangleBorder(),
+                            shape: AppShapes.pill,
                             padding: EdgeInsets.symmetric(vertical: 16),
                             elevation: 0,
                           ),

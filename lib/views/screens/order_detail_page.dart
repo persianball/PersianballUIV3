@@ -1,5 +1,6 @@
 // lib/views/screens/order_detail_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/payment_models.dart';
 import 'package:marketky/services/order_detail_service.dart';
@@ -317,7 +318,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               foregroundColor: Colors.red,
               side: const BorderSide(color: Colors.red),
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: const RoundedRectangleBorder(),
+              shape: AppShapes.pill,
             ),
             child: Text(label, style: const TextStyle(fontFamily: 'Estedad')),
           ),
@@ -332,7 +333,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           backgroundColor: AppColor.surfaceContainerOpaque,
-          shape: const RoundedRectangleBorder(),
+          shape: AppShapes.border(AppShapes.rLg),
           title: Text(isCancel ? 'لغو سفارش' : 'درخواست مرجوعی',
               style: const TextStyle(
                   fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),

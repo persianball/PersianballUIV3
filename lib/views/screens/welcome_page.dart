@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/bloc/login/login_bloc.dart';
@@ -107,7 +108,7 @@ class _WelcomePageState extends State<WelcomePage> {
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 36, vertical: 18),
                                   backgroundColor: AppColor.goldEnd,
-                                  shape: const RoundedRectangleBorder(),
+                                  shape: AppShapes.pill,
                                   elevation: 0,
                                   shadowColor: Colors.transparent,
                                 ),

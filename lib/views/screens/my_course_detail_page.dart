@@ -1,5 +1,6 @@
 // lib/views/screens/my_course_detail_page.dart
 import 'dart:async';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/course_models.dart';
@@ -287,7 +288,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColor.goldEnd,
                                 foregroundColor: AppColor.onGold,
-                                shape: const RoundedRectangleBorder(),
+                                shape: AppShapes.pill,
                               ),
                               onPressed: () => _scrollToIndex(_continueIndex!),
                               child: Text(_continueLabel ?? 'ادامه تماشا',

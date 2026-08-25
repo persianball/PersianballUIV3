@@ -4,8 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_shapes.dart';
+import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/app_buttons.dart';
+import 'package:marketky/views/widgets/app_network_image.dart';
 import 'package:marketky/views/widgets/page_container.dart';
 
 class AddToCartModal extends StatefulWidget {
@@ -28,227 +32,347 @@ class _AddToCartModalState extends State<AddToCartModal> {
 
   @override
   Widget build(BuildContext context) {
+    // محاسبات دقیقاً مثل قبل
     final totalPrice = widget.cartItem.price * _quantity;
     final discoutedPrice = widget.cartItem.discountPrice != null
         ? ((widget.cartItem.discountPrice! / 100) * totalPrice).toInt()
         : 0;
+    final payable = totalPrice - discoutedPrice;
 
-    return SingleChildScrollView(
-      child: PageContainer(
-        maxWidth: 700.0,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColor.surfaceContainerOpaque,
-            border: Border(
-              top: BorderSide(color: AppColor.outlineVariantDark),
-              left: BorderSide(color: AppColor.outlineVariantDark),
-              right: BorderSide(color: AppColor.outlineVariantDark),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: SingleChildScrollView(
+        child: PageContainer(
+          maxWidth: 700.0,
+          child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: ShapeDecoration(
+              color: AppColor.milk,
+              shape: ContinuousRectangleBorder(
+                borderRadius: AppShapes.radiusTop(AppShapes.rXl),
+              ),
+              shadows: AppColor.floatingShadow,
             ),
-          ),
-          width: double.infinity,
-          margin: EdgeInsets.symmetric(horizontal: 16),
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 14,
-            // فضای نوار ناوبری سیستم تا دکمه افزودن زیر آن گیر نکند
-            bottom: 20 + MediaQuery.of(context).viewPadding.bottom,
-          ),
-          child: Column(
-            children: [
-              // Indicator
-              Container(
-                width: 140,
-                height: 6,
-                margin: EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: AppColor.outlineVariantDark,
+            padding: EdgeInsets.only(
+              left: 14,
+              right: 14,
+              top: 10,
+              // فضای نوار ناوبری سیستم تا دکمه افزودن زیر آن گیر نکند
+              bottom: 16 + MediaQuery.of(context).viewPadding.bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // دستگیره‌ی کشیدن
+                Container(
+                  width: 46,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: const ShapeDecoration(
+                    color: AppColor.line,
+                    shape: StadiumBorder(),
+                  ),
                 ),
-              ),
 
-              // تعداد
-              Directionality(
-                textDirection: TextDirection.rtl,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'تعداد',
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            color: AppColor.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
+                // سربرگ: عنوان + میان‌بر به سبد
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(6, 0, 6, 12),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'سبد من',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColor.ink,
                         ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => setState(() => _quantity++),
-                              icon: Icon(Icons.add,
-                                  size: 20, color: AppColor.onGold),
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    WidgetStateProperty.all(AppColor.goldEnd),
-                                shape:
-                                    WidgetStateProperty.all(CircleBorder()),
-                                padding: WidgetStateProperty.all(
-                                    EdgeInsets.all(0)),
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(
-                                '$_quantity',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    fontFamily: 'Estedad',
-                                    color: AppColor.onSurface),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                if (_quantity > 1) setState(() => _quantity--);
-                              },
-                              icon: Icon(Icons.remove,
-                                  size: 20, color: AppColor.onSurface),
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    WidgetStateProperty.all(AppColor.surfaceContainerHigh),
-                                shape:
-                                    WidgetStateProperty.all(CircleBorder()),
-                                padding: WidgetStateProperty.all(
-                                    EdgeInsets.all(0)),
-                              ),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'قیمت',
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            color: AppColor.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '${thousandSeparator(totalPrice)}',
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            color: AppColor.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'تخفیف',
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            color: AppColor.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '${widget.cartItem.discountPrice != null ? thousandSeparator(discoutedPrice) : 0}(${widget.cartItem.discountPrice ?? 0}%)',
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            color: AppColor.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const Spacer(),
+                      SoftButton(
+                        label: 'مشاهده سبد',
+                        expand: false,
+                        height: 38,
+                        icon: const Icon(Icons.shopping_bag_outlined),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pushNamed('/cart');
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // دکمه افزودن
-              Container(
-                width: double.infinity,
-                margin: EdgeInsets.only(top: 18),
-                padding: EdgeInsets.all(4),
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColor.obsidianBg,
-                  border: Border.all(color: AppColor.outlineVariantDark),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 7,
-                      child: Container(
-                        padding: EdgeInsets.only(left: 24),
+                // کارت کالا
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: ShapeDecoration(
+                    color: AppColor.card,
+                    shape: AppShapes.border(AppShapes.rLg),
+                    shadows: AppColor.cardShadow,
+                  ),
+                  child: Row(
+                    children: [
+                      SquircleClip(
+                        radius: AppShapes.rMd,
+                        child: Container(
+                          width: 56,
+                          height: 56,
+                          color: AppColor.cardMuted,
+                          padding: const EdgeInsets.all(4),
+                          child: AppNetworkImage(
+                            url: _imageUrl(widget.cartItem.image),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('مجموع',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontFamily: 'Estedad',
-                                    color: AppColor.onSurfaceVariant)),
-                            Directionality(
-                              textDirection: TextDirection.rtl,
-                              child: Text(
-                                '${thousandSeparator(totalPrice - discoutedPrice)} تومان',
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontFamily: 'Estedad',
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColor.goldEnd),
+                            Text(
+                              widget.cartItem.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColor.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'تعداد: $_quantity',
+                              style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 11,
+                                color: AppColor.inkMuted,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    Expanded(
-                      flex: 6,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          AnalyticsService.addToCart(
-                            productId: widget.cartItem.productId,
-                            quantity: _quantity,
-                            price: widget.cartItem.price,
-                          );
-                          context.read<CartBloc>().add(
-                              AddToCart(context, widget.cartItem.id, _quantity));
-                          Navigator.of(context).pop();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.goldEnd,
-                          padding: EdgeInsets.symmetric(vertical: 15),
-                          shape: const RoundedRectangleBorder(),
-                          elevation: 0,
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 7),
+                        decoration: const ShapeDecoration(
+                          color: AppColor.darkButton,
+                          shape: StadiumBorder(),
                         ),
                         child: Text(
-                          'افزودن به سبد',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Estedad',
-                              color: AppColor.onGold),
+                          thousandSeparator(payable),
+                          style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 2),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.close_rounded,
+                            size: 18, color: AppColor.inkMuted),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 10),
+
+                // تعداد + جمع‌بندی مبلغ
+                Container(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                  decoration: ShapeDecoration(
+                    color: AppColor.card,
+                    shape: AppShapes.border(AppShapes.rLg),
+                    shadows: AppColor.cardShadow,
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'تعداد',
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 13,
+                              color: AppColor.inkMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          _StepperButton(
+                            icon: Icons.remove_rounded,
+                            onTap: _quantity > 1
+                                ? () => setState(() => _quantity--)
+                                : null,
+                          ),
+                          Container(
+                            width: 40,
+                            alignment: Alignment.center,
+                            child: Text(
+                              '$_quantity',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Estedad',
+                                color: AppColor.ink,
+                              ),
+                            ),
+                          ),
+                          _StepperButton(
+                            icon: Icons.add_rounded,
+                            filled: true,
+                            onTap: () => setState(() => _quantity++),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(height: 1, color: AppColor.line),
+                      const SizedBox(height: 12),
+                      _SummaryRow(
+                        label: 'قیمت',
+                        value: '${thousandSeparator(totalPrice)} تومان',
+                      ),
+                      const SizedBox(height: 8),
+                      _SummaryRow(
+                        label: 'تخفیف',
+                        value:
+                            '${widget.cartItem.discountPrice != null ? thousandSeparator(discoutedPrice) : 0} (٪${widget.cartItem.discountPrice ?? 0})',
+                        valueColor: discoutedPrice > 0
+                            ? AppColor.danger
+                            : AppColor.inkMuted,
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(height: 1, color: AppColor.line),
+                      const SizedBox(height: 12),
+                      _SummaryRow(
+                        label: 'مبلغ قابل پرداخت',
+                        value: '${thousandSeparator(payable)} تومان',
+                        bold: true,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // دکمه افزودن — همان منطق قبلی
+                GradientButton(
+                  label: 'افزودن به سبد',
+                  icon: const Icon(Icons.add_shopping_cart_rounded),
+                  onPressed: () {
+                    AnalyticsService.addToCart(
+                      productId: widget.cartItem.productId,
+                      quantity: _quantity,
+                      price: widget.cartItem.price,
+                    );
+                    context
+                        .read<CartBloc>()
+                        .add(AddToCart(context, widget.cartItem.id, _quantity));
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  String _imageUrl(String raw) {
+    if (raw.isEmpty) return '';
+    if (raw.startsWith('http')) return raw;
+    return '${URLs.baseUrl}$raw';
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  const _StepperButton({
+    required this.icon,
+    required this.onTap,
+    this.filled = false,
+  });
+
+  final IconData icon;
+  final VoidCallback? onTap;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.4,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: ShapeDecoration(
+          color: filled ? null : AppColor.cardMuted,
+          gradient: filled ? AppColor.greenGradient : null,
+          shape: const CircleBorder(),
+          shadows: filled && enabled ? AppColor.greenShadow : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Icon(icon,
+                size: 18,
+                color: filled ? AppColor.onPitchGreen : AppColor.ink),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    this.bold = false,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final bool bold;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Estedad',
+            fontSize: bold ? 14 : 13,
+            color: bold ? AppColor.ink : AppColor.inkMuted,
+            fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontFamily: 'Estedad',
+            fontSize: bold ? 15 : 13,
+            color: valueColor ?? (bold ? AppColor.pitchGreen : AppColor.ink),
+            fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

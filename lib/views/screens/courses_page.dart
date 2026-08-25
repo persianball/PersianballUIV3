@@ -1,5 +1,6 @@
 // lib/views/screens/courses_page.dart
 import 'dart:ui';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
@@ -387,7 +388,7 @@ class _UserCoursesListState extends State<_UserCoursesList> {
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 backgroundColor: AppColor.goldEnd,
-                shape: const RoundedRectangleBorder(),
+                shape: AppShapes.pill,
               ),
               onPressed: () => widget.onTapCourse(_continueCourse!, scrollToVideo: _continueVideo),
               icon: Icon(Icons.play_arrow, color: AppColor.onGold),

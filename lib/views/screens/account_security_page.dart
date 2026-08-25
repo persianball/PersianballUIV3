@@ -1,5 +1,6 @@
 // lib/views/screens/account_security_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/account_service.dart';
 
@@ -60,7 +61,7 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           backgroundColor: AppColor.surfaceContainerOpaque,
-          shape: const RoundedRectangleBorder(),
+          shape: AppShapes.border(AppShapes.rLg),
           title: const Text('حذف حساب کاربری',
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
           content: const Text(
@@ -133,7 +134,7 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.goldEnd,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const RoundedRectangleBorder(),
+                    shape: AppShapes.pill,
                   ),
                   child: const Text('ثبت رمز جدید',
                       style: TextStyle(
@@ -165,7 +166,7 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const RoundedRectangleBorder(),
+                    shape: AppShapes.pill,
                   ),
                   child: const Text('حذف حساب کاربری',
                       style: TextStyle(fontFamily: 'Estedad')),
@@ -189,15 +190,15 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
           filled: true,
           fillColor: AppColor.surfaceContainer,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.outlineVariantDark),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.outlineVariantDark),
           ),
-          focusedBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
           ),
         ),

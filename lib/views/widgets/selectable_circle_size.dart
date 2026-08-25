@@ -94,35 +94,31 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
                       width: 48,
                       height: 48,
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColor.goldEnd.withOpacity(0.1)
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColor.goldEnd
-                              : AppColor.outlineVariantDark,
-                          width: isSelected ? 2 : 1,
+                      decoration: ShapeDecoration(
+                        color: isSelected ? null : AppColor.card,
+                        gradient:
+                            isSelected ? AppColor.greenGradient : null,
+                        shape: StadiumBorder(
+                          side: BorderSide(
+                            color: isSelected
+                                ? Colors.transparent
+                                : AppColor.line,
+                          ),
                         ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: AppColor.goldEnd.withOpacity(0.2),
-                                  blurRadius: 20,
-                                ),
-                              ]
-                            : null,
+                        shadows: isSelected
+                            ? AppColor.greenShadow
+                            : AppColor.cardShadow,
                       ),
                       child: Text(
                         size,
                         style: TextStyle(
                           fontFamily: 'Estedad',
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w400,
+                              isSelected ? FontWeight.w800 : FontWeight.w500,
                           color: isSelected
-                              ? AppColor.goldEnd
-                              : AppColor.onSurface,
+                              ? AppColor.onPitchGreen
+                              : AppColor.ink,
                         ),
                       ),
                     ),

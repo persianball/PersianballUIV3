@@ -1,5 +1,6 @@
 // lib/views/screens/catalog_page.dart
 import 'dart:async';
+import 'package:marketky/constant/app_shapes.dart';
 
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -178,15 +179,15 @@ class _CatalogPageState extends State<CatalogPage> {
           fillColor: AppColor.surfaceContainer,
           contentPadding: const EdgeInsets.symmetric(vertical: 4),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.outlineVariantDark),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.outlineVariantDark),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
           ),
         ),
@@ -309,7 +310,7 @@ class _CatalogPageState extends State<CatalogPage> {
               onPressed: _fetch,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColor.goldEnd,
-                shape: const RoundedRectangleBorder(),
+                shape: AppShapes.pill,
               ),
               child: Text('تلاش مجدد',
                   style: AppTextStyles.labelSm.copyWith(color: AppColor.onGold)),
@@ -380,7 +381,7 @@ class _CatalogPageState extends State<CatalogPage> {
       backgroundColor: AppColor.obsidianBg,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppShapes.radius(AppShapes.rMd),
       ),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
@@ -422,7 +423,7 @@ class _CatalogPageState extends State<CatalogPage> {
       backgroundColor: AppColor.obsidianBg,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppShapes.radius(AppShapes.rMd),
       ),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
@@ -474,7 +475,7 @@ class _CatalogPageState extends State<CatalogPage> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColor.onSurfaceVariant,
                             side: BorderSide(color: AppColor.outlineVariantDark),
-                            shape: const RoundedRectangleBorder(),
+                            shape: AppShapes.pill,
                           ),
                           onPressed: () {
                             Navigator.of(ctx).pop();
@@ -491,7 +492,7 @@ class _CatalogPageState extends State<CatalogPage> {
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColor.goldEnd,
-                            shape: const RoundedRectangleBorder(),
+                            shape: AppShapes.pill,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () {

@@ -1,5 +1,6 @@
 // views/widgets/modals/add_course_to_cart_modal.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/course_detail_model.dart';
@@ -291,7 +292,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.goldEnd,
                           padding: EdgeInsets.symmetric(vertical: 15),
-                          shape: const RoundedRectangleBorder(),
+                          shape: AppShapes.pill,
                           elevation: 0,
                         ),
                       ),

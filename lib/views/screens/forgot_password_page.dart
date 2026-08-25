@@ -1,5 +1,6 @@
 // lib/views/screens/forgot_password_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/account_service.dart';
 import 'package:marketky/views/widgets/page_container.dart';
@@ -97,15 +98,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     filled: true,
                     fillColor: AppColor.surfaceContainer,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.zero,
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
                       borderSide: BorderSide(color: AppColor.outlineVariantDark),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.zero,
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
                       borderSide: BorderSide(color: AppColor.outlineVariantDark),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.zero,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
                       borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
                     ),
                   ),
@@ -123,15 +124,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       filled: true,
                       fillColor: AppColor.surfaceContainer,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                         borderSide: BorderSide(color: AppColor.outlineVariantDark),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                         borderSide: BorderSide(color: AppColor.outlineVariantDark),
                       ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                         borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
                       ),
                     ),
@@ -148,15 +149,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       filled: true,
                       fillColor: AppColor.surfaceContainer,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                         borderSide: BorderSide(color: AppColor.outlineVariantDark),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                         borderSide: BorderSide(color: AppColor.outlineVariantDark),
                       ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppShapes.radius(AppShapes.rMd),
                         borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
                       ),
                     ),
@@ -171,7 +172,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColor.goldEnd,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: const RoundedRectangleBorder(),
+                      shape: AppShapes.pill,
                     ),
                     child: Text(_codeSent ? 'ثبت رمز جدید' : 'ارسال کد بازیابی',
                         style: const TextStyle(

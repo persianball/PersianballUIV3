@@ -1,5 +1,6 @@
 // lib/views/screens/orders_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/order_detail_page.dart';
 import 'package:marketky/models/payment_models.dart';
@@ -339,7 +340,7 @@ class _ErrorView extends StatelessWidget {
           ElevatedButton(
             onPressed: onRetry,
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColor.goldEnd, shape: const RoundedRectangleBorder()),
+                backgroundColor: AppColor.goldEnd, shape: AppShapes.pill),
             child: const Text('تلاش مجدد',
                 style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
           ),

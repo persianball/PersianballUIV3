@@ -1,5 +1,6 @@
 // lib/views/widgets/product_reviews_section.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/services/review_service.dart';
@@ -280,7 +281,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
       backgroundColor: AppColor.obsidianBg,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppShapes.radius(AppShapes.rMd),
       ),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
@@ -311,7 +312,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
       backgroundColor: AppColor.obsidianBg,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppShapes.radius(AppShapes.rMd),
       ),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
@@ -357,15 +358,15 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                     filled: true,
                     fillColor: AppColor.surfaceContainer,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.zero,
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
                       borderSide: BorderSide(color: AppColor.outlineVariantDark),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.zero,
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
                       borderSide: BorderSide(color: AppColor.outlineVariantDark),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.zero,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
                       borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
                     ),
                   ),
@@ -376,7 +377,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColor.goldEnd,
-                      shape: const RoundedRectangleBorder(),
+                      shape: AppShapes.pill,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () async {
@@ -415,7 +416,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
       backgroundColor: AppColor.obsidianBg,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppShapes.radius(AppShapes.rMd),
       ),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
@@ -446,15 +447,15 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                   filled: true,
                   fillColor: AppColor.surfaceContainer,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.zero,
+                    borderRadius: AppShapes.radius(AppShapes.rMd),
                     borderSide: BorderSide(color: AppColor.outlineVariantDark),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.zero,
+                    borderRadius: AppShapes.radius(AppShapes.rMd),
                     borderSide: BorderSide(color: AppColor.outlineVariantDark),
                   ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.zero,
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: AppShapes.radius(AppShapes.rMd),
                     borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
                   ),
                 ),
@@ -465,7 +466,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.goldEnd,
-                    shape: const RoundedRectangleBorder(),
+                    shape: AppShapes.pill,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   onPressed: () async {

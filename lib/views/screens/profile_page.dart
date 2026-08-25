@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/views/widgets/menu_tile_widget.dart';
@@ -161,7 +162,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.goldEnd,
                     padding: EdgeInsets.symmetric(vertical: 14),
-                    shape: const RoundedRectangleBorder(),
+                    shape: AppShapes.pill,
                     elevation: 0,
                   ),
                   child: Text(
@@ -237,7 +238,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         backgroundColor: Colors.red,
                         padding:
                             EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                        shape: const RoundedRectangleBorder(),
+                        shape: AppShapes.pill,
                       ),
                     ),
                   ),
@@ -475,15 +476,15 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
         filled: true,
         fillColor: AppColor.surfaceContainer,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
+          borderRadius: AppShapes.radius(AppShapes.rMd),
           borderSide: BorderSide(color: AppColor.outlineVariantDark),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
+          borderRadius: AppShapes.radius(AppShapes.rMd),
           borderSide: BorderSide(color: AppColor.outlineVariantDark),
         ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppShapes.radius(AppShapes.rMd),
           borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
         ),
       );
@@ -609,7 +610,7 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColor.goldEnd,
-                      shape: const RoundedRectangleBorder(),
+                      shape: AppShapes.pill,
                     ),
                   ),
                 ),

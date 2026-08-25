@@ -1,5 +1,6 @@
 // lib/views/screens/address_selection_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/address/address_event.dart';
 import 'package:timeline_tile/timeline_tile.dart';
@@ -44,7 +45,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
         floatingActionButton: FloatingActionButton(
           onPressed: _openCreateDialog,
           backgroundColor: AppColor.goldEnd,
-          shape: const RoundedRectangleBorder(),
+          shape: AppShapes.border(AppShapes.rMd),
           child: const Icon(Icons.add, color: AppColor.onGold),
         ),
         body: BlocConsumer<AddressBloc, AddressState>(
@@ -111,7 +112,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColor.goldEnd,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: const RoundedRectangleBorder(),
+                            shape: AppShapes.pill,
                           ),
                           child: const Text('نهایی‌سازی و پرداخت',
                               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
@@ -236,7 +237,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColor.surfaceContainerOpaque,
-      shape: const RoundedRectangleBorder(),
+      shape: AppShapes.borderTop(AppShapes.rXl),
       builder: (ctx) {
         return Directionality(
           textDirection: TextDirection.rtl,
@@ -313,7 +314,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                         Navigator.of(ctx).pop();
                       },
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.goldEnd, shape: const RoundedRectangleBorder()),
+                          backgroundColor: AppColor.goldEnd, shape: AppShapes.pill),
                       child: Text(model == null ? 'افزودن' : 'ویرایش',
                           style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
                     ),
@@ -341,15 +342,15 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
           filled: true,
           fillColor: AppColor.obsidianBg,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.outlineVariantDark),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.outlineVariantDark),
           ),
-          focusedBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppShapes.radius(AppShapes.rMd),
             borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
           ),
           isDense: true,
@@ -365,7 +366,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           backgroundColor: AppColor.surfaceContainerOpaque,
-          shape: const RoundedRectangleBorder(),
+          shape: AppShapes.border(AppShapes.rLg),
           title: const Text('حذف آدرس',
               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
           content: const Text('آیا از حذف این آدرس مطمئن هستید؟',

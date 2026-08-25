@@ -1,5 +1,6 @@
 // lib/views/screens/compare_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/ProductModel.dart';
@@ -133,7 +134,7 @@ class _ComparePageState extends State<ComparePage> {
                     url: '${URLs.baseUrl}${p.image ?? ''}',
                     width: 48,
                     height: 40,
-                    borderRadius: BorderRadius.zero,
+                    borderRadius: AppShapes.radius(AppShapes.rMd),
                   ),
                   const SizedBox(height: 4),
                   Expanded(
@@ -204,7 +205,7 @@ class _ComparePageState extends State<ComparePage> {
                         AppNetworkImage(
                           url: '${URLs.baseUrl}${p.image ?? ''}',
                           height: 70,
-                          borderRadius: BorderRadius.zero,
+                          borderRadius: AppShapes.radius(AppShapes.rMd),
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -268,7 +269,7 @@ class _ComparePageState extends State<ComparePage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.goldEnd,
                           padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: const RoundedRectangleBorder(),
+                          shape: AppShapes.pill,
                         ),
                         child: const Text('مشاهده',
                             style: TextStyle(
