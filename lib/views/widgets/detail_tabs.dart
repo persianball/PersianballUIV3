@@ -1,12 +1,16 @@
 // lib/views/widgets/detail_tabs.dart
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_shapes.dart';
 
 class DetailTab {
   final String title;
   final WidgetBuilder builder;
 
-  const DetailTab({required this.title, required this.builder});
+  /// آیکن کوچک کنار عنوان تب
+  final IconData? icon;
+
+  const DetailTab({required this.title, required this.builder, this.icon});
 }
 
 /// تب‌های صفحه جزئیات (کالا/دوره) با ترنزیشن نرم بین محتواها.
@@ -18,12 +22,7 @@ class DetailTabs extends StatefulWidget {
   final List<DetailTab> tabs;
   final int initialIndex;
 
-  /// پوسته تیره/طلایی طرح Obsidian Gold Athletics. پیش‌فرض false تا
-  /// صفحاتی که هنوز بازطراحی نشده‌اند (مثل course_detail_page) بدون تغییر بمانند.
-  final bool dark;
-
-  const DetailTabs(
-      {super.key, required this.tabs, this.initialIndex = 0, this.dark = false});
+  const DetailTabs({super.key, required this.tabs, this.initialIndex = 0});
 
   @override
   State<DetailTabs> createState() => _DetailTabsState();
@@ -100,48 +99,49 @@ class _DetailTabsState extends State<DetailTabs> {
 
   Widget _tabBar() {
     return SizedBox(
-      height: 40,
+      height: 42,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
         itemCount: widget.tabs.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
+          final tab = widget.tabs[i];
           final selected = i == _index;
           return GestureDetector(
             onTap: () => _select(i),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               alignment: Alignment.center,
-              decoration: widget.dark
-                  ? BoxDecoration(
-                      color: selected
-                          ? AppColor.goldEnd.withOpacity(0.1)
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: selected
-                            ? AppColor.goldEnd
-                            : AppColor.outlineVariantDark,
-                      ),
-                    )
-                  : BoxDecoration(
-                      color: selected ? AppColor.primary : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: selected ? AppColor.primary : AppColor.border,
-                      ),
+              decoration: ShapeDecoration(
+                color: selected ? null : AppColor.cardMuted,
+                gradient: selected ? AppColor.greenGradient : null,
+                shape: AppShapes.pill,
+                shadows: selected ? AppColor.greenShadow : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (tab.icon != null) ...[
+                    Icon(
+                      tab.icon,
+                      size: 16,
+                      color: selected ? Colors.white : AppColor.inkMuted,
                     ),
-              child: Text(
-                widget.tabs[i].title,
-                style: TextStyle(
-                  fontFamily: 'Estedad',
-                  fontSize: 13,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: widget.dark
-                      ? (selected ? AppColor.goldEnd : AppColor.onSurfaceVariant)
-                      : (selected ? Colors.white : AppColor.secondary),
-                ),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    tab.title,
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 13,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      color: selected ? Colors.white : AppColor.inkMuted,
+                    ),
+                  ),
+                ],
               ),
             ),
           );

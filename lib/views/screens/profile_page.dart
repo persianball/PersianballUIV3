@@ -176,7 +176,10 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               SizedBox(height: 10),
               TextButton(
-                onPressed: () => Navigator.of(context).pushNamed('/catalog'),
+                // به صفحه‌ی خانه برمی‌گردد (تب خانه‌ی نوار پایین)، نه یک
+                // صفحه‌ی جدید روی پشته
+                onPressed: () => Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/home', (route) => false),
                 child: Text(
                   'فعلاً فقط محصولات را ببینم',
                   style: TextStyle(

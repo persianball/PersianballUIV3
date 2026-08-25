@@ -1,5 +1,6 @@
 // lib/views/screens/course_detail_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -90,18 +91,9 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     );
   }
 
-  Widget _infoChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: ShapeDecoration(
-            color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
-      child: Text(label,
-          style: const TextStyle(
-              fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant)),
-    );
+  /// بج اطلاعات دوره با آیکن و رنگ اختصاصی
+  Widget _infoChip(String label, {required IconData icon, required Color color}) {
+    return PillTag(label: label, icon: icon, color: color);
   }
 
   /// کاور پیش‌فرض بخش‌های هفته
@@ -461,11 +453,21 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              _infoChip('سطح: ${data.courseDifficulty}'),
-                              _infoChip('تعداد هفته: ${data.weekCount}'),
-                              _infoChip('تعداد سکشن: ${data.sectionCount}'),
-                              _infoChip('مدت دوره: ${_formatDuration(data.courseDuration)}'),
-                              _infoChip('تعداد ویدیو: ${data.detail.videoCount}'),
+                              _infoChip('سطح: ${data.courseDifficulty}',
+                                  icon: Icons.military_tech_rounded,
+                                  color: AppColor.levelExpert),
+                              _infoChip('تعداد هفته: ${data.weekCount}',
+                                  icon: Icons.calendar_month_rounded,
+                                  color: AppColor.categoryBadge),
+                              _infoChip('تعداد سکشن: ${data.sectionCount}',
+                                  icon: Icons.view_list_rounded,
+                                  color: AppColor.pitchGreen),
+                              _infoChip('مدت دوره: ${_formatDuration(data.courseDuration)}',
+                                  icon: Icons.schedule_rounded,
+                                  color: AppColor.warning),
+                              _infoChip('تعداد ویدیو: ${data.detail.videoCount}',
+                                  icon: Icons.play_circle_fill_rounded,
+                                  color: AppColor.danger),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -495,10 +497,10 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: DetailTabs(
-                        dark: true,
                         tabs: [
                           DetailTab(
                             title: 'برنامه هفتگی',
+                            icon: Icons.calendar_month_rounded,
                             builder: (context) => Column(
                               children: List.generate(
                                 data.detail.weeks.length,
@@ -508,6 +510,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                           ),
                           DetailTab(
                             title: 'زمان و مکان برگزاری',
+                            icon: Icons.place_rounded,
                             builder: (context) => Column(
                               children: List.generate(
                                 data.detail.timeAndLocation.length,
