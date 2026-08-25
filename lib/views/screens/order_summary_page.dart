@@ -253,10 +253,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                   children: [
                     // Items summary
                     Container(
-                      decoration: BoxDecoration(
-                        color: AppColor.surfaceContainer,
-                        border: Border.all(color: AppColor.outlineVariantDark),
-                      ),
+                      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Column(
@@ -302,10 +303,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
 
                     // Address and shipping summary
                     Container(
-                      decoration: BoxDecoration(
-                        color: AppColor.surfaceContainer,
-                        border: Border.all(color: AppColor.outlineVariantDark),
-                      ),
+                      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Column(
@@ -343,10 +345,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
 
                     // Discount code input
                     Container(
-                      decoration: BoxDecoration(
-                        color: AppColor.surfaceContainer,
-                        border: Border.all(color: AppColor.outlineVariantDark),
-                      ),
+                      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Column(
@@ -460,10 +463,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
 
                     // Totals
                     Container(
-                      decoration: BoxDecoration(
-                        color: AppColor.surfaceContainer,
-                        border: Border.all(color: AppColor.outlineVariantDark),
-                      ),
+                      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -525,10 +529,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   Widget _infoChip(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColor.obsidianBg,
-        border: Border.all(color: AppColor.outlineVariantDark),
-      ),
+      decoration: ShapeDecoration(
+            color: AppColor.obsidianBg,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
       child: Text(label,
           style: const TextStyle(
               fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant)),

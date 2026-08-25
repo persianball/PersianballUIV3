@@ -1,5 +1,6 @@
 // lib/views/screens/reviews_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/review_service.dart';
 
@@ -231,10 +232,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
 
   Widget _reviewTile(ProductReview r) => Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColor.surfaceContainer,
-          border: Border.all(color: AppColor.outlineVariantDark),
-        ),
+        decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

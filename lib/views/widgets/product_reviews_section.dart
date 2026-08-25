@@ -187,10 +187,11 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
   Widget _reviewTile(ProductReview r) => Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColor.surfaceContainer,
-          border: Border.all(color: AppColor.outlineVariantDark),
-        ),
+        decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -226,10 +227,11 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
   Widget _questionTile(ProductQuestion q) => Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColor.goldEnd.withOpacity(0.06),
-          border: Border.all(color: AppColor.outlineVariantDark),
-        ),
+        decoration: ShapeDecoration(
+            color: AppColor.goldEnd.withOpacity(0.06),
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

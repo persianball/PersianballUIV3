@@ -111,14 +111,19 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColor.obsidianBg,
+        backgroundColor: AppColor.milk,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight + kTextTabBarHeight),
           child: AppBar(
+            automaticallyImplyLeading: false,
+            centerTitle: true,
             title: const Text('دوره‌ها',
-                style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
-            backgroundColor: AppColor.obsidianBg,
-            foregroundColor: AppColor.onSurface,
+                style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontWeight: FontWeight.w800,
+                    color: AppColor.ink)),
+            backgroundColor: AppColor.milk,
+            foregroundColor: AppColor.ink,
             elevation: 0,
             bottom: TabBar(
               controller: _tabController,
@@ -155,7 +160,7 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                         },
                         child: ListView.builder(
                           controller: _controller,
-                          padding: const EdgeInsets.only(bottom: 32),
+                          padding: const EdgeInsets.only(bottom: 110),
                           itemCount: _data!.results.length,
                           itemBuilder: (_, i) {
                             final c = _data!.results[i];
@@ -201,7 +206,7 @@ class _CourseCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      color: AppColor.obsidianBg,
+      color: AppColor.milk,
       // در نمایشگرهای پهن کارت تمام‌عرض نشود
       child: Center(
         child: ConstrainedBox(
@@ -209,9 +214,10 @@ class _CourseCard extends StatelessWidget {
           child: Hero(
             tag: 'course_${course.id}',
             child: Container(
-              decoration: BoxDecoration(
-                color: AppColor.surfaceContainer,
-                border: Border.all(color: AppColor.outlineVariantDark),
+              decoration: ShapeDecoration(
+                color: AppColor.card,
+                shape: AppShapes.border(AppShapes.rLg),
+                shadows: AppColor.cardShadow,
               ),
               clipBehavior: Clip.antiAlias,
               child: Material(
@@ -359,9 +365,10 @@ class _UserCoursesListState extends State<_UserCoursesList> {
     if (_continueCourse != null && _continueVideo != null) {
       children.add(
         Container(
-          decoration: BoxDecoration(
-            color: AppColor.goldEnd.withOpacity(0.08),
-            border: Border.all(color: AppColor.goldEnd.withOpacity(0.4)),
+          decoration: ShapeDecoration(
+            color: AppColor.pitchGreenSoft,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
           ),
           margin: EdgeInsets.fromLTRB(16, 18, 16, 10),
           child: ListTile(
@@ -408,7 +415,7 @@ class _UserCoursesListState extends State<_UserCoursesList> {
         ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 32),
+          padding: const EdgeInsets.only(bottom: 110),
           itemCount: widget.courses.length,
           itemBuilder: (context, i) {
             final course = widget.courses[i];
@@ -417,10 +424,12 @@ class _UserCoursesListState extends State<_UserCoursesList> {
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: Container(
                   margin: EdgeInsets.fromLTRB(16, 12, 16, 6),
-                  decoration: BoxDecoration(
-                    color: AppColor.surfaceContainer,
-                    border: Border.all(color: AppColor.outlineVariantDark),
+                  decoration: ShapeDecoration(
+                    color: AppColor.card,
+                    shape: AppShapes.border(AppShapes.rLg),
+                    shadows: AppColor.cardShadow,
                   ),
+                  clipBehavior: Clip.antiAlias,
                   child: ListTile(
                     leading: _CourseThumbnail(url: widget.abs(course.courseThumbnail)),
                     title: Text(course.courseDetail.courseTitle,

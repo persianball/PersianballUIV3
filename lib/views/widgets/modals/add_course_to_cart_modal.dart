@@ -239,10 +239,11 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                 margin: EdgeInsets.only(top: 18),
                 padding: EdgeInsets.all(4),
                 height: 64,
-                decoration: BoxDecoration(
-                  color: AppColor.obsidianBg,
-                  border: Border.all(color: AppColor.outlineVariantDark),
-                ),
+                decoration: ShapeDecoration(
+            color: AppColor.obsidianBg,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                 child: Row(
                   children: [
                     Expanded(

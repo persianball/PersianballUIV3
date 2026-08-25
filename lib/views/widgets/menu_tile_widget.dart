@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_shapes.dart';
 
 class MenuTileWidget extends StatelessWidget {
   final Widget icon;
@@ -16,8 +17,8 @@ class MenuTileWidget extends StatelessWidget {
     this.subtitle,
     required this.onTap,
     this.margin,
-    this.iconBackground = AppColor.obsidianBg,
-    this.titleColor = AppColor.onSurface,
+    this.iconBackground = AppColor.pitchGreenSoft,
+    this.titleColor = AppColor.ink,
   });
 
   @override
@@ -25,11 +26,13 @@ class MenuTileWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: margin,
+        margin: margin ?? const EdgeInsets.fromLTRB(16, 0, 16, 10),
         width: MediaQuery.of(context).size.width,
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColor.outlineVariantDark, width: 1)),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rLg),
+          shadows: AppColor.cardShadow,
         ),
         child: Row(
           children: [
@@ -38,10 +41,10 @@ class MenuTileWidget extends StatelessWidget {
               width: 46,
               height: 46,
               padding: EdgeInsets.all(10),
-              margin: EdgeInsets.only(left: 16),
-              decoration: BoxDecoration(
+              margin: EdgeInsets.only(left: 14),
+              decoration: ShapeDecoration(
                 color: iconBackground,
-                border: Border.all(color: AppColor.outlineVariantDark),
+                shape: const CircleBorder(),
               ),
               child: icon,
             ),
@@ -58,10 +61,10 @@ class MenuTileWidget extends StatelessWidget {
                       ],
                     ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppColor.onSurfaceVariant,
-              size: 16,
+            const Icon(
+              Icons.chevron_left_rounded,
+              color: AppColor.lineStrong,
+              size: 22,
             ),
           ],
         ),

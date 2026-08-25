@@ -1,5 +1,6 @@
 // lib/views/screens/notification_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/notification_service.dart';
 
@@ -135,10 +136,11 @@ class _NotificationPageState extends State<NotificationPage> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: isRead ? AppColor.surfaceContainer : AppColor.goldEnd.withOpacity(0.08),
-        border: Border.all(color: AppColor.outlineVariantDark),
-      ),
+      decoration: ShapeDecoration(
+            color: isRead ? AppColor.surfaceContainer : AppColor.goldEnd.withOpacity(0.08),
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

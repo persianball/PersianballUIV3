@@ -1,5 +1,6 @@
 // lib/views/widgets/checkout_timeline.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 
 /// A simple 3-step horizontal checkout timeline.
@@ -39,10 +40,11 @@ class CheckoutTimeline extends StatelessWidget {
       textDirection: TextDirection.rtl,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColor.surfaceContainer,
-          border: Border.all(color: AppColor.outlineVariantDark),
-        ),
+        decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

@@ -198,20 +198,24 @@ class _ProfilePageState extends State<ProfilePage> {
             // Section 1 - Profile Picture - Username - Name
             Container(
               width: MediaQuery.of(context).size.width,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              color: AppColor.surfaceContainer,
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              decoration: ShapeDecoration(
+                color: AppColor.card,
+                shape: AppShapes.border(AppShapes.rLg),
+                shadows: AppColor.cardShadow,
+              ),
               child: Column(
                 children: [
                   // Profile Picture
                   Container(
                     width: 96,
                     height: 96,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      // همان بوردر ظریف تصویر پیش‌فرض حالت مهمان
-                      // (outlineVariantDark)؛ حلقه‌ی ضخیم طلایی قبلی با
-                      // بقیه‌ی طراحی هم‌خوانی نداشت.
-                      border: Border.all(color: AppColor.outlineVariantDark),
+                    decoration: ShapeDecoration(
+                      shape: CircleBorder(
+                        side: BorderSide(color: AppColor.line),
+                      ),
+                      shadows: AppColor.cardShadow,
                       image: DecorationImage(
                         image:
                             AssetImage('assets/images/avatar_for_comments.png'),

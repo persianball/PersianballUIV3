@@ -6,6 +6,7 @@
 // پیشنهاد: GET /v1/content/pages/<slug>/ → {title, body_html, updated_at}
 // تا متن‌ها بدون آپدیت اپ قابل تغییر باشند. فعلاً متن نمونه داخل اپ است.
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -165,10 +166,11 @@ class SupportPage extends StatelessWidget {
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: AppColor.surfaceContainer,
-        border: Border.all(color: AppColor.outlineVariantDark),
-      ),
+      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
       child: ListTile(
         onTap: onTap,
         leading: Icon(icon, color: AppColor.goldEnd),

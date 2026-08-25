@@ -93,10 +93,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Widget _infoChip(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColor.surfaceContainer,
-        border: Border.all(color: AppColor.outlineVariantDark),
-      ),
+      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
       child: Text(label,
           style: const TextStyle(
               fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant)),
@@ -148,10 +149,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                           delayMs: 50 * index,
                           child: Container(
                             margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            decoration: BoxDecoration(
-                              color: AppColor.surfaceContainer,
-                              border: Border.all(color: AppColor.outlineVariantDark),
-                            ),
+                            decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                             child: Theme(
                               data: Theme.of(context).copyWith(
                                   dividerColor: Colors.transparent,
@@ -166,10 +168,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                 Container(
                                   margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                                   padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppColor.obsidianBg,
-                                    border: Border.all(color: AppColor.outlineVariantDark),
-                                  ),
+                                  decoration: ShapeDecoration(
+            color: AppColor.obsidianBg,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                                   child: Column(
                                     children: week.sections
                                         .asMap()
@@ -249,10 +252,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                           delayMs: 60 * index,
                           child: Container(
                             margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            decoration: BoxDecoration(
-                              color: AppColor.surfaceContainer,
-                              border: Border.all(color: AppColor.outlineVariantDark),
-                            ),
+                            decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                             child: Padding(
                               padding: const EdgeInsets.all(12.0),
                               child: Row(
@@ -273,10 +277,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                             Container(
                                               padding: const EdgeInsets.symmetric(
                                                   horizontal: 8, vertical: 3),
-                                              decoration: BoxDecoration(
-                                                color: AppColor.obsidianBg,
-                                                border: Border.all(color: AppColor.outlineVariantDark),
-                                              ),
+                                              decoration: ShapeDecoration(
+            color: AppColor.obsidianBg,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                                               child: Text(
                                                 'ظرفیت: ${item.capacity}',
                                                 style: const TextStyle(

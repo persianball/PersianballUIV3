@@ -26,7 +26,7 @@ class _MainAppBarState extends State<MainAppBar> {
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: false,
-      backgroundColor: widget.dark ? AppColor.obsidianBg : AppColor.primary,
+      backgroundColor: AppColor.milk,
       elevation: 0,
       title: Row(
         children: [
@@ -62,7 +62,7 @@ class _MainAppBarState extends State<MainAppBar> {
           //   ),
           // ),
         ],
-      ), systemOverlayStyle: SystemUiOverlayStyle.light,
+      ), systemOverlayStyle: SystemUiOverlayStyle.dark,
     );
   }
 }

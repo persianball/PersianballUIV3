@@ -98,10 +98,11 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
           behavior: HitTestBehavior.opaque,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColor.surfaceContainer,
-              border: Border.all(color: AppColor.outlineVariantDark),
-            ),
+            decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [

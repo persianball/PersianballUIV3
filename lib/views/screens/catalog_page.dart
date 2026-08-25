@@ -10,7 +10,8 @@ import 'package:marketky/services/catalog_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
-import 'package:marketky/views/widgets/item_card.dart';
+import 'package:marketky/views/widgets/app_buttons.dart';
+import 'package:marketky/views/widgets/product_grid_card.dart';
 
 /// صفحه جست‌وجو و مرور کاتالوگ با فیلتر، دسته‌بندی و مرتب‌سازی
 class CatalogPage extends StatefulWidget {
@@ -123,18 +124,25 @@ class _CatalogPageState extends State<CatalogPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColor.obsidianBg,
+        backgroundColor: AppColor.milk,
         appBar: AppBar(
-          backgroundColor: AppColor.obsidianBg,
+          backgroundColor: AppColor.milk,
           elevation: 0,
+          centerTitle: true,
+          // این صفحه یکی از تب‌های نوار پایین است؛ دکمه‌ی بازگشت خودکار
+          // نباید نمایش داده شود.
+          automaticallyImplyLeading: false,
           title: Text('فروشگاه',
-              style: AppTextStyles.headlineMd.copyWith(fontSize: 18)),
+              style: AppTextStyles.headlineMd
+                  .copyWith(fontSize: 17, color: AppColor.ink)),
           actions: [
-            IconButton(
-              tooltip: 'مقایسه محصولات',
-              icon: const Icon(Icons.compare_arrows,
-                  color: AppColor.onSurfaceVariant),
-              onPressed: () => Navigator.of(context).pushNamed('/compare'),
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: CircleIconButton(
+                icon: Icons.compare_arrows_rounded,
+                tooltip: 'مقایسه محصولات',
+                onTap: () => Navigator.of(context).pushNamed('/compare'),
+              ),
             ),
           ],
         ),
@@ -143,7 +151,7 @@ class _CatalogPageState extends State<CatalogPage> {
             _buildSearchBar(),
             if (_categories.isNotEmpty) _buildCategoryChips(),
             _buildToolbar(results.length),
-            Divider(height: 1, color: AppColor.outlineVariantDark),
+            Divider(height: 1, color: AppColor.line),
             Expanded(child: _buildBody(results, visible)),
           ],
         ),
@@ -154,11 +162,17 @@ class _CatalogPageState extends State<CatalogPage> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: TextField(
+      child: Container(
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.pill,
+          shadows: AppColor.cardShadow,
+        ),
+        child: TextField(
         controller: _searchController,
         onChanged: _onQueryChanged,
         textInputAction: TextInputAction.search,
-        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
+        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.ink),
         decoration: InputDecoration(
           hintText: 'نام محصول را بنویسید…',
           hintStyle: TextStyle(
@@ -175,21 +189,12 @@ class _CatalogPageState extends State<CatalogPage> {
                     _updateFilter(_filter.copyWith(query: ''));
                   },
                 ),
-          filled: true,
-          fillColor: AppColor.surfaceContainer,
-          contentPadding: const EdgeInsets.symmetric(vertical: 4),
-          border: OutlineInputBorder(
-            borderRadius: AppShapes.radius(AppShapes.rMd),
-            borderSide: BorderSide(color: AppColor.outlineVariantDark),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: AppShapes.radius(AppShapes.rMd),
-            borderSide: BorderSide(color: AppColor.outlineVariantDark),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: AppShapes.radius(AppShapes.rMd),
-            borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
-          ),
+          filled: false,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+        ),
         ),
       ),
     );
@@ -227,21 +232,31 @@ class _CatalogPageState extends State<CatalogPage> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected ? AppColor.goldEnd.withOpacity(0.1) : Colors.transparent,
-            border: Border.all(
-              color: selected ? AppColor.goldEnd : AppColor.outlineVariantDark,
+      child: Container(
+        decoration: ShapeDecoration(
+          color: selected ? null : AppColor.cardMuted,
+          gradient: selected ? AppColor.greenGradient : null,
+          shape: AppShapes.pill,
+          shadows: selected ? AppColor.greenShadow : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: AppShapes.pill,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
+              child: Text(label,
+                  style: AppTextStyles.labelSm.copyWith(
+                    letterSpacing: 0,
+                    fontWeight:
+                        selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected ? Colors.white : AppColor.inkMuted,
+                  )),
             ),
           ),
-          child: Text(label,
-              style: AppTextStyles.labelSm.copyWith(
-                color: selected ? AppColor.goldEnd : AppColor.onSurfaceVariant,
-              )),
         ),
       ),
     );
@@ -292,7 +307,7 @@ class _CatalogPageState extends State<CatalogPage> {
           spacing: 16,
           runSpacing: 16,
           children:
-              List.generate(6, (_) => const ProductCardSkeleton(dark: true)),
+              List.generate(6, (_) => const ProductCardSkeleton()),
         ),
       );
     }
@@ -346,29 +361,33 @@ class _CatalogPageState extends State<CatalogPage> {
     }
 
     return RefreshIndicator(
-      color: AppColor.goldEnd,
-      backgroundColor: AppColor.obsidianBg,
+      color: AppColor.pitchGreen,
+      backgroundColor: AppColor.card,
       onRefresh: _fetch,
       child: SingleChildScrollView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         child: Column(
           children: [
             Wrap(
               spacing: 16,
               runSpacing: 16,
               children: visible
-                  .map((p) =>
-                      ItemCard(product: p, dark: true, showAddToCartButton: true))
+                  .map((p) => SizedBox(
+                      width: (MediaQuery.of(context).size.width / 2 - 16 - 8)
+                          .clamp(130.0, 200.0),
+                      child: ProductGridCard(
+                          product: p, showAddToCartButton: true)))
                   .toList(),
             ),
             if (visible.length < results.length)
               const Padding(
                 padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(color: AppColor.goldEnd),
+                child: CircularProgressIndicator(color: AppColor.pitchGreen),
               ),
-            const SizedBox(height: 24),
+            // فضای خالی زیر لیست تا نوار ناوبری شناور روی محتوا نیفتد
+            const SizedBox(height: 110),
           ],
         ),
       ),
@@ -378,11 +397,8 @@ class _CatalogPageState extends State<CatalogPage> {
   void _openSortSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColor.obsidianBg,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: AppShapes.radius(AppShapes.rMd),
-      ),
+      backgroundColor: AppColor.card,
+      shape: AppShapes.borderTop(AppShapes.rXl),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: SafeArea(
@@ -420,11 +436,8 @@ class _CatalogPageState extends State<CatalogPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColor.obsidianBg,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: AppShapes.radius(AppShapes.rMd),
-      ),
+      backgroundColor: AppColor.card,
+      shape: AppShapes.borderTop(AppShapes.rXl),
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: StatefulBuilder(

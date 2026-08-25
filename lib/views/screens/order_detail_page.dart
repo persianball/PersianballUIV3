@@ -106,10 +106,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   Widget _card({required String title, required Widget child}) => Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColor.surfaceContainer,
-          border: Border.all(color: AppColor.outlineVariantDark),
-        ),
+        decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -197,10 +198,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 Container(
                   width: 52,
                   height: 52,
-                  decoration: BoxDecoration(
-                    color: AppColor.obsidianBg,
-                    border: Border.all(color: AppColor.outlineVariantDark),
-                  ),
+                  decoration: ShapeDecoration(
+            color: AppColor.obsidianBg,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                   child: const Icon(Icons.inventory_2_outlined,
                       color: AppColor.onSurfaceVariant, size: 22),
                 ),

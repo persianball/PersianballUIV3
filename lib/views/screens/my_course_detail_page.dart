@@ -343,10 +343,11 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                     // Week dropdown
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColor.surfaceContainer,
-                        border: Border.all(color: AppColor.outlineVariantDark),
-                      ),
+                      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<int>(
                           value: _selectedWeekIndex,

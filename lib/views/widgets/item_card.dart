@@ -80,9 +80,9 @@ class ItemCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                      decoration: ShapeDecoration(
+                      decoration: const ShapeDecoration(
                         color: AppColor.danger,
-                        shape: AppShapes.border(6),
+                        shape: StadiumBorder(),
                       ),
                       child: Text(
                         '٪$percent',
@@ -187,7 +187,7 @@ class ItemCard extends StatelessWidget {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColor.pitchGreen,
                             side: const BorderSide(color: AppColor.pitchGreen),
-                            shape: AppShapes.border(AppShapes.rSm),
+                            shape: AppShapes.pill,
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
                           child: Text(

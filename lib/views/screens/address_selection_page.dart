@@ -133,10 +133,11 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   Widget _addressCard(AddressModel a) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColor.surfaceContainer,
-        border: Border.all(color: AppColor.outlineVariantDark),
-      ),
+      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
       child: InkWell(
         onTap: () => setState(() => selectedAddressId = a.id),
         child: Padding(
@@ -203,10 +204,11 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
     if (value == null || value.isEmpty) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColor.obsidianBg,
-        border: Border.all(color: AppColor.outlineVariantDark),
-      ),
+      decoration: ShapeDecoration(
+            color: AppColor.obsidianBg,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
       child: Text('$label: $value',
           style: const TextStyle(
               fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant)),

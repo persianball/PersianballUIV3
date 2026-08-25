@@ -123,10 +123,11 @@ class _OrdersPageState extends State<OrdersPage>
     final priceText = '${thousandSeparator(item.price)} تومان';
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColor.surfaceContainer,
-        border: Border.all(color: AppColor.outlineVariantDark),
-      ),
+      decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
       child: Material(
           color: Colors.transparent,
           child: InkWell(

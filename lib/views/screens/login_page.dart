@@ -1,6 +1,7 @@
 // views/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_shapes.dart';
+import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -290,9 +291,11 @@ class _LoginPageState extends State<LoginPage> {
                   builder: (context, state) {
                     if (state is LoginLoading) {
                       return const Center(
-                          child: CircularProgressIndicator(color: AppColor.goldEnd));
+                          child: CircularProgressIndicator(color: AppColor.pitchGreen));
                     }
-                    return ElevatedButton(
+                    return GradientButton(
+                      label: 'ورود',
+                      icon: const Icon(Icons.login_rounded),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           context.read<LoginBloc>().add(
@@ -303,23 +306,6 @@ class _LoginPageState extends State<LoginPage> {
                               );
                         }
                       },
-                      child: Text(
-                        'ورود',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          color: AppColor.onGold,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 36, vertical: 18),
-                        backgroundColor: AppColor.goldEnd,
-                        shape: AppShapes.pill,
-                        elevation: 0,
-                        shadowColor: Colors.transparent,
-                      ),
                     );
                   },
                 ),

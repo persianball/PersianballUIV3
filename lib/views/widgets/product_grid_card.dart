@@ -18,9 +18,14 @@ class ProductGridCard extends StatefulWidget {
     super.key,
     required this.product,
     this.onTap,
+    this.showAddToCartButton = false,
   });
 
   final Product product;
+
+  /// دکمه‌ی «افزودن به سبد» زیر کارت (صفحه‌ی فروشگاه). چون مدل لیست محصول
+  /// رنگ/سایز ندارد، این دکمه مثل قبل به صفحه‌ی جزئیات هدایت می‌کند.
+  final bool showAddToCartButton;
 
   /// اگر داده نشود، رفتار پیش‌فرض قبلی (رفتن به صفحه‌ی جزئیات) اجرا می‌شود.
   final VoidCallback? onTap;
@@ -214,6 +219,29 @@ class _ProductGridCardState extends State<ProductGridCard> {
                 ],
               ),
             ),
+            if (widget.showAddToCartButton) ...[
+              const SizedBox(height: 4),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _open,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColor.pitchGreen,
+                    side: const BorderSide(color: AppColor.pitchGreen),
+                    shape: AppShapes.pill,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  child: const Text(
+                    'افزودن به سبد',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
