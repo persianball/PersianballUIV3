@@ -37,6 +37,34 @@ class UserService {
     throw Exception('خطا در دریافت اطلاعات پروفایل');
   }
 
+  /// پیام خطای سرور را به فارسی برمی‌گرداند.
+  ///
+  /// بک‌اند خطا را به شکل {"code": "...", "message": "..."} می‌دهد؛ نمایش
+  /// پیام واقعی خیلی مفیدتر از «خطا در ذخیره اطلاعات» عمومی است.
+  static String _errorMessage(http.Response response) {
+    try {
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      if (body is Map) {
+        switch (body['code']) {
+          case 'email_exists':
+            return 'این ایمیل قبلاً برای حساب دیگری ثبت شده است';
+          case 'mobile_exists':
+          case 'mobile_number_exists':
+            return 'این شماره موبایل قبلاً برای حساب دیگری ثبت شده است';
+        }
+        final message = body['message'];
+        if (message is String && message.isNotEmpty) return message;
+        // خطاهای اعتبارسنجی DRF به شکل {"field": ["..."]} می‌آیند
+        final first = body.values.first;
+        if (first is List && first.isNotEmpty) return '${first.first}';
+        if (first is String && first.isNotEmpty) return first;
+      }
+    } catch (_) {
+      // بدنه‌ی غیر JSON: پیام پیش‌فرض
+    }
+    return 'ذخیره اطلاعات ناموفق بود (${response.statusCode})';
+  }
+
   static Future<bool> updateUserProfile(
       BuildContext context, Map<String, dynamic> data) async {
     final token = await AuthService.getToken();
@@ -50,12 +78,12 @@ class UserService {
         'Authorization': 'token $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode(data),
+      body: utf8.encode(jsonEncode(data)),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
       return true;
     }
-    throw Exception('ذخیره اطلاعات ناموفق بود');
+    throw Exception(_errorMessage(response));
   }
 }
 
@@ -394,6 +422,15 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
   bool _isEmailVerified = false;
   bool _isMobileVerified = false;
 
+  /// مقادیری که سرور برگردانده است.
+  ///
+  /// مهم: اندپوینت POST /v1/user اگر همان ایمیل فعلی کاربر را دوباره
+  /// دریافت کند، با خطای «email_exists» رد می‌کند (یکتایی را نسبت به خود
+  /// کاربر هم چک می‌کند). پس ایمیل/موبایل فقط وقتی فرستاده می‌شوند که
+  /// واقعاً عوض شده باشند.
+  String _serverEmail = '';
+  String _serverMobile = '';
+
   @override
   void initState() {
     super.initState();
@@ -409,6 +446,8 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
         _lastNameController.text = profile['last_name'] ?? '';
         _emailController.text = profile['email'] ?? '';
         _mobileController.text = profile['mobile_number'] ?? '';
+        _serverEmail = _emailController.text;
+        _serverMobile = _mobileController.text;
         _birthDateController.text = profile['birth_date'] ?? '';
         _gender = profile['gender'];
         _isEmailVerified = profile['is_email_verified'] == true;
@@ -446,34 +485,55 @@ class _ProfileCompletionFormState extends State<_ProfileCompletionForm> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    Map<String, dynamic> data = {
-      "first_name": _firstNameController.text,
-      "last_name": _lastNameController.text,
-      "email": _emailController.text.isNotEmpty ? _emailController.text : null,
-      "mobile_number":
-          _mobileController.text.isNotEmpty ? _mobileController.text : null,
-      "birth_date": _birthDateController.text.isNotEmpty
-          ? _birthDateController.text
-          : null,
-      "gender": _gender,
+
+    final email = _emailController.text.trim();
+    final mobile = _mobileController.text.trim();
+    final emailChanged = email != _serverEmail;
+    final mobileChanged = mobile != _serverMobile;
+
+    final Map<String, dynamic> data = {
+      'first_name': _firstNameController.text.trim(),
+      'last_name': _lastNameController.text.trim(),
+      // فقط در صورت تغییر ارسال می‌شوند، وگرنه سرور خطای «تکراری» می‌دهد
+      if (emailChanged) 'email': email,
+      if (mobileChanged) 'mobile_number': mobile,
+      if (_birthDateController.text.trim().isNotEmpty)
+        'birth_date': _birthDateController.text.trim(),
+      if (_gender != null) 'gender': _gender,
     };
     data.removeWhere((k, v) => v == null || (v is String && v.isEmpty));
+
     try {
       await UserService.updateUserProfile(context, data);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('اطلاعات با موفقیت ذخیره شد'),
-            backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('اطلاعات با موفقیت ذخیره شد',
+              style: TextStyle(fontFamily: 'Estedad')),
+          backgroundColor: AppColor.success,
+        ),
       );
-      // Refresh profile after successful update
-      _fetchProfile();
+      await _fetchProfile();
+      if (!mounted) return;
+      // ایمیل/موبایل تازه باید تأیید شوند؛ کاربر مستقیم به صفحه‌ی کد می‌رود
+      if (emailChanged && email.isNotEmpty && !_isEmailVerified) {
+        _navigateToOtpVerification(destination: email, isEmail: true);
+      } else if (mobileChanged && mobile.isNotEmpty && !_isMobileVerified) {
+        _navigateToOtpVerification(destination: mobile, isEmail: false);
+      }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('خطا در ذخیره اطلاعات'), backgroundColor: Colors.red),
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+            style: const TextStyle(fontFamily: 'Estedad'),
+          ),
+          backgroundColor: AppColor.danger,
+        ),
       );
     }
-    setState(() => _loading = false);
+    if (mounted) setState(() => _loading = false);
   }
 
   InputDecoration _dec(String label, {Widget? suffixIcon}) => InputDecoration(
