@@ -475,12 +475,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
     // آخرین آیتم ریل، ویدیو است (اگر وجود داشته باشد)
     final int itemCount = images.length + (hasVideo ? 1 : 0);
-    final int index = itemCount == 0 ? 0 : _carouselIndex.clamp(0, itemCount - 1);
+    // با تعویض رنگ، همان ایندکسی که کاربر قبلاً انتخاب کرده حفظ می‌شود؛
+    // اگر واریانت جدید آن ایندکس را نداشته باشد، تصویر اول نشان داده می‌شود.
+    final int index =
+        (_carouselIndex >= 0 && _carouselIndex < itemCount) ? _carouselIndex : 0;
     final bool showVideo = hasVideo && index == images.length;
 
-    // پس‌زمینه‌ی قاب با رنگ همان واریانت و آلفای بسیار کم
+    // پس‌زمینه‌ی قاب تصویر با رنگ همان واریانت و آلفای ۰٫۵
     final Color panelTint = Color.alphaBlend(
-      _variantColor(variant).withValues(alpha: 0.14),
+      _variantColor(variant).withValues(alpha: 0.5),
       AppColor.milk,
     );
 
@@ -793,7 +796,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                         if (product.variants[vIndex].sizeVariants.isNotEmpty) {
                           final s = firstAvailableSizeVariant(
                               product.variants[vIndex].sizeVariants)!;
-                          setState(() => _carouselIndex = 0);
+                          // ایندکس تصویر انتخاب‌شده عمداً ریست نمی‌شود؛ اگر
+                          // واریانت جدید همان تعداد تصویر را داشته باشد،
+                          // کاربر روی همان زاویه‌ی قبلی می‌ماند.
                           context.read<ProductDetailVariantBloc>().add(
                               ChangeProductColorEvent(
                                   product.variants[vIndex], s));
