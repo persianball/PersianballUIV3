@@ -18,6 +18,11 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
   final _repeatCtrl = TextEditingController();
   bool _busy = false;
 
+  /// نمایش/پنهان‌کردن هر فیلد رمز به‌صورت مستقل
+  bool _showOld = false;
+  bool _showNew = false;
+  bool _showRepeat = false;
+
   @override
   void dispose() {
     _oldCtrl.dispose();
@@ -121,11 +126,17 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
                       fontWeight: FontWeight.w700,
                       color: AppColor.onSurface)),
               const SizedBox(height: 12),
-              _field(_oldCtrl, 'رمز فعلی'),
+              _field(_oldCtrl, 'رمز فعلی',
+                  visible: _showOld,
+                  onToggle: () => setState(() => _showOld = !_showOld)),
               const SizedBox(height: 10),
-              _field(_newCtrl, 'رمز جدید'),
+              _field(_newCtrl, 'رمز جدید',
+                  visible: _showNew,
+                  onToggle: () => setState(() => _showNew = !_showNew)),
               const SizedBox(height: 10),
-              _field(_repeatCtrl, 'تکرار رمز جدید'),
+              _field(_repeatCtrl, 'تکرار رمز جدید',
+                  visible: _showRepeat,
+                  onToggle: () => setState(() => _showRepeat = !_showRepeat)),
               const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
@@ -179,27 +190,48 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
     );
   }
 
-  Widget _field(TextEditingController c, String label) => TextField(
+  Widget _field(
+    TextEditingController c,
+    String label, {
+    required bool visible,
+    required VoidCallback onToggle,
+  }) =>
+      TextField(
         controller: c,
-        obscureText: true,
-        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
+        obscureText: !visible,
+        style: const TextStyle(fontFamily: 'Estedad', color: AppColor.ink),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(
-              fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurfaceVariant),
+              fontFamily: 'Estedad', fontSize: 13, color: AppColor.inkMuted),
           filled: true,
-          fillColor: AppColor.surfaceContainer,
+          fillColor: AppColor.card,
+          prefixIcon: const Icon(Icons.lock_outline_rounded,
+              size: 20, color: AppColor.inkMuted),
+          // دکمه‌ی نمایش/پنهان رمز، هم‌اندازه‌ی بقیه‌ی آیکن‌های فیلد
+          suffixIcon: IconButton(
+            onPressed: onToggle,
+            tooltip: visible ? 'پنهان کردن رمز' : 'نمایش رمز',
+            splashRadius: 20,
+            icon: Icon(
+              visible
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+              size: 20,
+              color: visible ? AppColor.pitchGreen : AppColor.inkMuted,
+            ),
+          ),
           border: OutlineInputBorder(
             borderRadius: AppShapes.radius(AppShapes.rMd),
-            borderSide: BorderSide(color: AppColor.outlineVariantDark),
+            borderSide: const BorderSide(color: AppColor.line),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: AppShapes.radius(AppShapes.rMd),
-            borderSide: BorderSide(color: AppColor.outlineVariantDark),
+            borderSide: const BorderSide(color: AppColor.line),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: AppShapes.radius(AppShapes.rMd),
-            borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
+            borderSide: const BorderSide(color: AppColor.pitchGreen, width: 2),
           ),
         ),
       );
