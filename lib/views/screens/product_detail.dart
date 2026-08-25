@@ -553,7 +553,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                   child: Row(
                     children: [
                       CircleIconButton(
-                        icon: Icons.arrow_forward_rounded,
+                        icon: Icons.arrow_back_rounded,
                         tooltip: 'بازگشت',
                         onTap: () => Navigator.of(context).pop(),
                       ),

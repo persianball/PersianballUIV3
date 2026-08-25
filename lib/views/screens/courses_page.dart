@@ -1,5 +1,6 @@
 // lib/views/screens/courses_page.dart
 import 'dart:ui';
+import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -250,36 +251,52 @@ class _CourseCard extends StatelessWidget {
                                   fontFamily: 'Estedad',
                                   fontSize: 16,
                                   fontWeight: FontWeight.w800,
-                                  color: AppColor.onSurface),
+                                  color: AppColor.ink),
                             ),
-                            const SizedBox(height: 6),
-                            Row(
+                            const SizedBox(height: 10),
+                            // بج‌های رنگی زیر تصویر: دسته‌بندی، سطح و تخفیف
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
                               children: [
-                                Icon(Icons.category, size: 16, color: AppColor.onSurfaceVariant),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(course.category.nameFarsi,
-                                      style: const TextStyle(
-                                          fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+                                PillTag(
+                                  label: course.category.nameFarsi,
+                                  icon: Icons.local_library_rounded,
+                                  color: AppColor.categoryBadge,
+                                  dense: true,
                                 ),
+                                PillTag(
+                                  label: course.difficulty,
+                                  icon: _difficultyIcon(course.difficulty),
+                                  color: _difficultyColor(course.difficulty),
+                                  dense: true,
+                                ),
+                                if (course.discountPercentage > 0)
+                                  PillTag(
+                                    label: '٪${course.discountPercentage} تخفیف',
+                                    icon: Icons.local_offer_rounded,
+                                    color: Colors.white,
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFEF4444), AppColor.danger],
+                                    ),
+                                    dense: true,
+                                  ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 12),
                             Row(
                               children: [
-                                Icon(Icons.bolt, size: 16, color: AppColor.goldEnd),
-                                const SizedBox(width: 6),
-                                Text(course.difficulty,
-                                    style: const TextStyle(
-                                        fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
-                                const Spacer(),
                                 Text(
                                   '${thousandSeparator(price)} تومان',
                                   style: const TextStyle(
                                       fontFamily: 'Estedad',
+                                      fontSize: 15,
                                       fontWeight: FontWeight.w800,
-                                      color: AppColor.goldEnd),
+                                      color: AppColor.ink),
                                 ),
+                                const Spacer(),
+                                const Icon(Icons.chevron_right_rounded,
+                                    color: AppColor.lineStrong),
                               ],
                             ),
                           ],
@@ -295,6 +312,29 @@ class _CourseCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// آیکن و رنگ بج «سطح دوره» بر اساس متن سطح (داده‌ی واقعی بک‌اند)
+IconData _difficultyIcon(String difficulty) {
+  final d = difficulty.trim();
+  if (d.contains('مقدماتی') || d.contains('مبتدی')) {
+    return Icons.trending_up_rounded;
+  }
+  if (d.contains('پیشرفته') || d.contains('حرفه')) {
+    return Icons.military_tech_rounded;
+  }
+  if (d.contains('تخصصی')) return Icons.workspace_premium_rounded;
+  if (d.contains('متوسط')) return Icons.speed_rounded;
+  return Icons.bolt_rounded;
+}
+
+Color _difficultyColor(String difficulty) {
+  final d = difficulty.trim();
+  if (d.contains('مقدماتی') || d.contains('مبتدی')) return AppColor.success;
+  if (d.contains('پیشرفته') || d.contains('حرفه')) return AppColor.danger;
+  if (d.contains('تخصصی')) return AppColor.levelExpert;
+  if (d.contains('متوسط')) return AppColor.warning;
+  return AppColor.pitchGreen;
 }
 
 class _UserCoursesList extends StatefulWidget {
@@ -440,7 +480,7 @@ class _UserCoursesListState extends State<_UserCoursesList> {
                     subtitle: Text('پیشرفت: به زودی',
                         style: TextStyle(
                             fontFamily: 'Estedad', color: AppColor.onSurfaceVariant, fontSize: 12)),
-                    trailing: Icon(Icons.arrow_forward_ios, color: AppColor.onSurfaceVariant, size: 16),
+                    trailing: Icon(Icons.arrow_back_ios_new_rounded, color: AppColor.onSurfaceVariant, size: 16),
                     onTap: () => widget.onTapCourse(course),
                   ),
                 ),

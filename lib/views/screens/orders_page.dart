@@ -164,7 +164,7 @@ class _OrdersPageState extends State<OrdersPage>
                         ),
                       ),
                       const Spacer(),
-                      Icon(Icons.chevron_left,
+                      Icon(Icons.chevron_right,
                           size: 18, color: AppColor.onSurfaceVariant),
                       Text(
                         'سفارش #${item.id}',

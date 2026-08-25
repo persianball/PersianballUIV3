@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/core/model/Message.dart';
 import 'package:marketky/core/services/MessageService.dart';
@@ -38,7 +37,7 @@ class _MessagePageState extends State<MessagePage> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),

@@ -30,7 +30,7 @@ class EmptyCartPage extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: SvgPicture.asset('assets/icons/Arrow-left.svg'),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),

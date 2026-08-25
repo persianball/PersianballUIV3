@@ -52,6 +52,10 @@ class AppColor {
   static const Color lineStrong = Color(0xFFA6ABA2);
 
   static const Color success = Color(0xFF16A34A);
+
+  /// رنگ بج دسته‌بندی و سطح‌های دوره (برای تفکیک بصری بج‌ها)
+  static const Color categoryBadge = Color(0xFF2563EB);
+  static const Color levelExpert = Color(0xFF7C3AED);
   static const Color danger = Color(0xFFDC2626);
   static const Color warning = Color(0xFFD97706);
 

@@ -184,7 +184,7 @@ class SupportPage extends StatelessWidget {
             textDirection: TextDirection.ltr,
             textAlign: TextAlign.right,
             style: const TextStyle(fontFamily: 'Estedad', fontSize: 12, color: AppColor.onSurfaceVariant)),
-        trailing: const Icon(Icons.chevron_left, color: AppColor.onSurfaceVariant),
+        trailing: const Icon(Icons.chevron_right, color: AppColor.onSurfaceVariant),
       ),
     );
   }
