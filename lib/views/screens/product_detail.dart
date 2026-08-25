@@ -7,7 +7,7 @@ import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/views/widgets/accordion_section.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
-import 'package:marketky/views/widgets/modals/video_player_dialog.dart';
+import 'package:marketky/views/widgets/inline_video_player.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/services/wishlist_service.dart';
 import 'package:marketky/services/analytics_service.dart';
@@ -49,8 +49,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   /// وضعیت علاقه‌مندی این محصول
   bool _isFavorite = false;
 
-  /// تعداد انتخاب‌شده در استپر بالای کارت اطلاعات (طرح مرجع)
-  int _quantity = 1;
+  /// شناسه‌ی محصولی که واریانت اولیه‌اش یک‌بار ست شده است.
+  ///
+  /// مهم: قبلاً رویداد «انتخاب واریانت اول» در هر بار build ارسال می‌شد، پس
+  /// هر setState (مثلاً عوض‌کردن تصویر گالری) رنگ انتخابی کاربر را به رنگ
+  /// اول برمی‌گرداند و تغییر رنگ عملاً کار نمی‌کرد.
+  int? _variantInitializedFor;
 
   /// وقتی «خرید فوری» زده شود، بعد از افزودن موفق به‌جای دیالوگ به سبد می‌رود
   bool _buyNowPending = false;
@@ -239,19 +243,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
           } else if (state is ProductDetailError) {
             return _buildError(state.message, context);
           } else if (state is ProductDetailLoaded) {
-            if(state.product.image != null){
-              state.product.images.add(state.product.image!);
-            }
-
-            if (state.product.variants.isNotEmpty &&
-                state.product.variants[0].sizeVariants.isNotEmpty) {
-              // انتخاب اولیه روی اولین سایز موجود، نه صرفاً سایز اول
-              final initialSize = firstAvailableSizeVariant(
-                  state.product.variants[0].sizeVariants)!;
-              context.read<ProductDetailVariantBloc>().add(
-                  ChangeProductColorEvent(
-                      state.product.variants[0], initialSize));
-            }
+            _ensureInitialVariant(state.product);
             return _buildProductContent(state.product, context);
           }
 
@@ -259,6 +251,31 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
         },
       ),
     );
+  }
+
+  /// فقط یک‌بار برای هر محصول، رنگ/سایز اولیه را انتخاب می‌کند
+  void _ensureInitialVariant(ProductDetail product) {
+    if (_variantInitializedFor == product.id) return;
+    _variantInitializedFor = product.id;
+
+    // تصویر شاخص محصول به انتهای گالری اضافه می‌شود (فقط یک‌بار، وگرنه در
+    // هر build لیست بزرگ‌تر می‌شد)
+    if (product.image != null && !product.images.contains(product.image)) {
+      product.images.add(product.image!);
+    }
+
+    if (product.variants.isEmpty || product.variants[0].sizeVariants.isEmpty) {
+      return;
+    }
+    final initialSize =
+        firstAvailableSizeVariant(product.variants[0].sizeVariants)!;
+    // ارسال بعد از پایان فریم، تا در حین build رویداد فرستاده نشود
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context
+          .read<ProductDetailVariantBloc>()
+          .add(ChangeProductColorEvent(product.variants[0], initialSize));
+    });
   }
 
   Widget _buildLoading() {
@@ -316,7 +333,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
         name: product.nameFarsi ?? "",
         image: s.productVariant.image ?? "",
         price: s.productSize.price,
-        quantity: _quantity,
+        quantity: 1,
         productId: product.id,
         discountPrice: s.productSize.discountPercentage,
       );
@@ -327,7 +344,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
         name: product.nameFarsi ?? "",
         image: s.productVariant.image ?? "",
         price: s.productSize!.price,
-        quantity: _quantity,
+        quantity: 1,
         productId: product.id,
         discountPrice: s.productSize!.discountPercentage,
       );
@@ -337,7 +354,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
       name: product.nameFarsi ?? "",
       image: product.image ?? "",
       price: product.price!,
-      quantity: _quantity,
+      quantity: 1,
       productId: product.id,
       discountPrice: product.discountPercentage,
     );
@@ -366,10 +383,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => AddToCartModal(
-        cartItem: _cartItemFor(product, s),
-        initialQuantity: _quantity,
-      ),
+      builder: (_) => AddToCartModal(cartItem: _cartItemFor(product, s)),
     );
   }
 
@@ -379,11 +393,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     final item = _cartItemFor(product, s);
     AnalyticsService.addToCart(
       productId: item.productId,
-      quantity: _quantity,
+      quantity: 1,
       price: item.price,
     );
     _buyNowPending = true;
-    context.read<CartBloc>().add(AddToCart(context, item.id, _quantity));
+    context.read<CartBloc>().add(AddToCart(context, item.id, 1));
   }
 
   // ==================== بدنه‌ی صفحه ====================
@@ -417,22 +431,68 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   List<String> _galleryImages(ProductVariant variant) =>
       variant.images.map((u) => '${URLs.baseUrl}$u').toList();
 
-  /// بخش بالا: کارت گوشه‌گرد رنگی با تصویر بزرگ و ریل عمودی تامبنیل در راست
+  /// رنگ واریانت انتخاب‌شده (برای تینت پس‌زمینه‌ی قاب تصویر)
+  Color _variantColor(ProductVariant variant) {
+    final rgb = variant.colorRgb;
+    if (rgb == null || rgb.isEmpty) return AppColor.pitchGreen;
+    try {
+      return Color(0xff000000 + int.parse(rgb, radix: 16));
+    } catch (_) {
+      return AppColor.pitchGreen;
+    }
+  }
+
+  /// انتقال «مورف»: هم‌زمان محو، مقیاس و کمی جابه‌جایی عمودی، تا تعویض
+  /// تصویر/رنگ به‌جای پرش، تبدیل نرم دیده شود.
+  Widget _morph(Widget child, Animation<double> animation) {
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 0.88, end: 1).animate(curved),
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.04),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  /// بخش بالا: کارت گوشه‌گرد با تینت رنگ واریانت، تصویر بزرگ و ریل عمودی
+  /// تامبنیل چسبیده به لبه‌ی راست
   Widget _buildGalleryPanel(
       ProductDetail product, ProductDetailSizeChanged state) {
     final variant = state.productVariant;
     final images = _galleryImages(variant);
     final hasVideo = variant.video != null && variant.video!.isNotEmpty;
-    final int index =
-        images.isEmpty ? 0 : _carouselIndex.clamp(0, images.length - 1);
+
+    // آخرین آیتم ریل، ویدیو است (اگر وجود داشته باشد)
+    final int itemCount = images.length + (hasVideo ? 1 : 0);
+    final int index = itemCount == 0 ? 0 : _carouselIndex.clamp(0, itemCount - 1);
+    final bool showVideo = hasVideo && index == images.length;
+
+    // پس‌زمینه‌ی قاب با رنگ همان واریانت و آلفای بسیار کم
+    final Color panelTint = Color.alphaBlend(
+      _variantColor(variant).withValues(alpha: 0.14),
+      AppColor.milk,
+    );
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
           16, MediaQuery.of(context).padding.top + 10, 16, 0),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
         height: 400,
         decoration: ShapeDecoration(
-          color: AppColor.pitchGreenSoft,
+          color: panelTint,
           shape: AppShapes.border(AppShapes.rXl),
           shadows: AppColor.cardShadow,
         ),
@@ -440,35 +500,47 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
           radius: AppShapes.rXl,
           child: Stack(
             children: [
-              // تصویر اصلی — فضای سمت راست برای ریل تامبنیل خالی می‌ماند
+              // رسانه‌ی اصلی — فضای سمت راست برای ریل تامبنیل خالی می‌ماند
               Positioned.fill(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 76, 108, 20),
-                  child: GestureDetector(
-                    onTap: images.isEmpty
-                        ? null
-                        : () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ImageViewer(imageUrl: images),
-                              ),
-                            ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 260),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      child: AppNetworkImage(
-                        key: ValueKey('${variant.id}-$index'),
-                        url: images.isEmpty ? null : images[index],
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 420),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: _morph,
+                    layoutBuilder: (current, previous) => Stack(
+                      alignment: Alignment.center,
+                      children: [...previous, if (current != null) current],
                     ),
+                    child: showVideo
+                        // ویدیو داخل همان قاب تصویر پخش می‌شود، نه دیالوگ جدا
+                        ? InlineVideoPlayer(
+                            key: ValueKey('video-${variant.id}'),
+                            videoUrl: variant.video!,
+                          )
+                        : GestureDetector(
+                            key: ValueKey('img-${variant.id}-$index'),
+                            onTap: images.isEmpty
+                                ? null
+                                : () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            ImageViewer(imageUrl: images),
+                                      ),
+                                    ),
+                            child: AppNetworkImage(
+                              url: images.isEmpty ? null : images[index],
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          ),
                   ),
                 ),
               ),
 
-              // هدر شناور: بازگشت (راست)، عنوان، علاقه‌مندی (چپ)
+              // هدر شناور: بازگشت (راست)، عنوان، اشتراک‌گذاری و علاقه‌مندی (چپ)
               Positioned(
                 top: 12,
                 left: 12,
@@ -521,7 +593,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                   images: images,
                   selected: index,
                   video: hasVideo ? variant.video : null,
-                  product: product,
+                  variantId: variant.id,
                 ),
               ),
             ],
@@ -535,38 +607,36 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     required List<String> images,
     required int selected,
     required String? video,
-    required ProductDetail product,
+    required int variantId,
   }) {
-    final items = <Widget>[
-      for (int i = 0; i < images.length; i++)
-        _thumb(
-          selected: i == selected,
-          onTap: () => setState(() => _carouselIndex = i),
-          child: AppNetworkImage(
-            url: images[i],
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-        ),
-      if (video != null)
-        _thumb(
-          selected: false,
-          onTap: () => showVideoPlayerDialog(context,
-              videoUrl: video, title: product.nameFarsi),
-          child: Container(
-            color: AppColor.card,
-            alignment: Alignment.center,
-            child: const Icon(Icons.play_circle_fill_rounded,
-                color: AppColor.pitchGreen, size: 30),
-          ),
-        ),
-    ];
-
     return ListView(
+      key: ValueKey('rail-$variantId'),
       padding: EdgeInsets.zero,
       physics: const BouncingScrollPhysics(),
-      children: items,
+      children: [
+        for (int i = 0; i < images.length; i++)
+          _thumb(
+            selected: i == selected,
+            onTap: () => setState(() => _carouselIndex = i),
+            child: AppNetworkImage(
+              url: images[i],
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+        if (video != null)
+          _thumb(
+            selected: selected == images.length,
+            onTap: () => setState(() => _carouselIndex = images.length),
+            child: Container(
+              color: AppColor.card,
+              alignment: Alignment.center,
+              child: const Icon(Icons.play_circle_fill_rounded,
+                  color: AppColor.pitchGreen, size: 30),
+            ),
+          ),
+      ],
     );
   }
 
@@ -579,7 +649,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
       padding: const EdgeInsets.only(bottom: 10),
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
           height: 72,
           decoration: ShapeDecoration(
             color: AppColor.card,
@@ -590,7 +662,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 width: 2,
               ),
             ),
-            shadows: AppColor.cardShadow,
+            shadows: selected ? AppColor.greenShadow : AppColor.cardShadow,
           ),
           child: SquircleClip(radius: AppShapes.rMd, child: child),
         ),
@@ -631,28 +703,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // نام محصول + استپر تعداد
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      product.nameFarsi ?? '',
-                      style: const TextStyle(
-                        fontFamily: 'Estedad',
-                        fontSize: 19,
-                        height: 1.45,
-                        fontWeight: FontWeight.w800,
-                        color: AppColor.ink,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  _QuantityStepper(
-                    value: _quantity,
-                    onChanged: (v) => setState(() => _quantity = v),
-                  ),
-                ],
+              // نام محصول (انتخاب تعداد در شیت افزودن به سبد انجام می‌شود)
+              Text(
+                product.nameFarsi ?? '',
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 19,
+                  height: 1.45,
+                  fontWeight: FontWeight.w800,
+                  color: AppColor.ink,
+                ),
               ),
               const SizedBox(height: 14),
 
@@ -942,82 +1002,3 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   }
 
 }
-
-/// استپر تعداد (− ۰۱ +) مطابق طرح مرجع
-class _QuantityStepper extends StatelessWidget {
-  const _QuantityStepper({required this.value, required this.onChanged});
-
-  final int value;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: ShapeDecoration(
-        color: AppColor.cardMuted,
-        shape: AppShapes.pill,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _round(
-            icon: Icons.add_rounded,
-            filled: true,
-            onTap: () => onChanged(value + 1),
-          ),
-          Container(
-            width: 34,
-            alignment: Alignment.center,
-            child: Text(
-              value.toString().padLeft(2, '0'),
-              style: const TextStyle(
-                fontFamily: 'Estedad',
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: AppColor.ink,
-              ),
-            ),
-          ),
-          _round(
-            icon: Icons.remove_rounded,
-            filled: false,
-            onTap: value > 1 ? () => onChanged(value - 1) : null,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _round({
-    required IconData icon,
-    required bool filled,
-    required VoidCallback? onTap,
-  }) {
-    return Opacity(
-      opacity: onTap == null ? 0.4 : 1,
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: ShapeDecoration(
-          color: filled ? null : AppColor.card,
-          gradient: filled ? AppColor.greenGradient : null,
-          shape: const CircleBorder(),
-          shadows: filled ? AppColor.greenShadow : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Icon(icon,
-                size: 17,
-                color: filled ? AppColor.onPitchGreen : AppColor.ink),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
