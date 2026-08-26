@@ -889,7 +889,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ProductReviewsSection(productId: product.id),
+                  ProductReviewsSection(
+                    productId: product.id,
+                    avgRate: product.avgRate,
+                    comments: product.comments,
+                    // بعد از ثبت نظر/امتیاز، محصول دوباره از سرور خوانده
+                    // می‌شود تا میانگین امتیاز به‌روز شود
+                    onSubmitted: () => context
+                        .read<ProductDetailBloc>()
+                        .add(FetchProductDetail(widget.productId)),
+                  ),
                   if (product.comments.isNotEmpty)
                     ListView.builder(
                       shrinkWrap: true,

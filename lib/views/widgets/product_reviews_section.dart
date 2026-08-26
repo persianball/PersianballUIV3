@@ -3,22 +3,40 @@ import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_text_styles.dart';
+import 'package:marketky/models/ProductModel.dart';
+import 'package:marketky/services/rating_service.dart';
 import 'package:marketky/services/review_service.dart';
 
 /// بخش نظرات و پرسش‌وپاسخ محصول در صفحه جزئیات کالا
 class ProductReviewsSection extends StatefulWidget {
   final int productId;
 
-  const ProductReviewsSection({super.key, required this.productId});
+  /// میانگین امتیاز واقعی محصول (فیلد avg_rate در پاسخ محصول)
+  final double avgRate;
+
+  /// نظرهای *تأییدشده*ی محصول (فیلد comments در پاسخ محصول).
+  /// بک‌اند endpoint جداگانه‌ای برای خواندن نظرها ندارد.
+  final List<ProductComment> comments;
+
+  /// بعد از ثبت نظر/امتیاز، صفحه‌ی محصول دوباره از سرور خوانده می‌شود
+  final VoidCallback? onSubmitted;
+
+  const ProductReviewsSection({
+    super.key,
+    required this.productId,
+    this.avgRate = 0,
+    this.comments = const [],
+    this.onSubmitted,
+  });
 
   @override
   State<ProductReviewsSection> createState() => _ProductReviewsSectionState();
 }
 
 class _ProductReviewsSectionState extends State<ProductReviewsSection> {
-  ReviewSummary? _summary;
   List<ProductQuestion> _questions = [];
   bool _loading = true;
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -27,14 +45,25 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
   }
 
   Future<void> _load() async {
-    final summary = await ReviewService.fetchReviews(widget.productId);
+    // نظرها و امتیاز از پاسخ خود محصول می‌آیند؛ فقط پرسش‌وپاسخ هنوز
+    // endpoint ندارد و نمایشی است.
     final questions = await ReviewService.fetchQuestions(widget.productId);
     if (!mounted) return;
     setState(() {
-      _summary = summary;
       _questions = questions;
       _loading = false;
     });
+  }
+
+  void _snack(String message, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content:
+            Text(message, style: const TextStyle(fontFamily: 'Estedad')),
+        backgroundColor: error ? AppColor.danger : AppColor.success,
+      ),
+    );
   }
 
   @override
@@ -53,16 +82,18 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (ReviewService.isMock) _mockBanner(),
             _sectionHeader('نظرات کاربران', 'ثبت نظر', _openReviewSheet),
             const SizedBox(height: 8),
-            _ratingSummary(_summary!),
+            _ratingSummary(),
             const SizedBox(height: 12),
-            ..._summary!.reviews.take(3).map(_reviewTile),
-            if (_summary!.reviews.length > 3)
+            if (widget.comments.isEmpty)
+              Text('هنوز نظر تأییدشده‌ای برای این کالا ثبت نشده است',
+                  style: AppTextStyles.labelSm),
+            ...widget.comments.take(3).map(_commentTile),
+            if (widget.comments.length > 3)
               TextButton(
                 onPressed: _openAllReviews,
-                child: Text('مشاهده همه ${_summary!.count} نظر',
+                child: Text('مشاهده همه ${widget.comments.length} نظر',
                     style: const TextStyle(fontFamily: 'Estedad', fontSize: 12)),
               ),
             const SizedBox(height: 20),
@@ -79,28 +110,6 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
     );
   }
 
-  Widget _mockBanner() => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.amber.withOpacity(0.08),
-          border: Border.all(color: Colors.amber.shade700),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.info_outline, size: 16, color: Colors.amber.shade800),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                'نظرات و پرسش‌ها نمایشی است؛ بک‌اند هنوز endpoint نظرات ندارد.',
-                style: TextStyle(
-                    fontFamily: 'Estedad', fontSize: 10, color: Colors.amber.shade200),
-              ),
-            ),
-          ],
-        ),
-      );
-
   Widget _sectionHeader(String title, String action, VoidCallback onTap) => Row(
         children: [
           Text(title, style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
@@ -113,8 +122,9 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
         ],
       );
 
-  Widget _ratingSummary(ReviewSummary s) {
-    if (s.count == 0) {
+  Widget _ratingSummary() {
+    final count = widget.comments.length;
+    if (widget.avgRate <= 0 && count == 0) {
       return Text('هنوز نظری ثبت نشده است', style: AppTextStyles.labelSm);
     }
     return Row(
@@ -122,21 +132,21 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
       children: [
         Column(
           children: [
-            Text(s.average.toStringAsFixed(1),
+            Text(widget.avgRate.toStringAsFixed(1),
                 style: TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     color: AppColor.goldEnd)),
-            _stars(s.average.round(), size: 14),
-            Text('${s.count} نظر', style: AppTextStyles.labelSm),
+            _stars(widget.avgRate.round(), size: 14),
+            Text('$count نظر', style: AppTextStyles.labelSm),
           ],
         ),
         const SizedBox(width: 20),
         Expanded(
           child: Column(
-            children: s.breakdown.entries.map((e) {
-              final ratio = s.count == 0 ? 0.0 : e.value / s.count;
+            children: _breakdown().entries.map((e) {
+              final ratio = count == 0 ? 0.0 : e.value / count;
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Row(
@@ -184,45 +194,72 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
         ),
       );
 
-  Widget _reviewTile(ProductReview r) => Container(
+  /// نظر واقعی محصول (مدل ProductComment از پاسخ بک‌اند)
+  Widget _commentTile(ProductComment c) => Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: ShapeDecoration(
-            color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rLg),
+          shadows: AppColor.cardShadow,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                _stars(r.rating, size: 13),
-                const SizedBox(width: 8),
-                Text(r.userName,
-                    style: const TextStyle(
+                const Icon(Icons.verified, size: 14, color: AppColor.success),
+                const SizedBox(width: 6),
+                const Text('نظر تأییدشده',
+                    style: TextStyle(
                         fontFamily: 'Estedad',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColor.onSurface)),
-                if (r.verifiedPurchase) ...[
-                  const SizedBox(width: 6),
-                  Icon(Icons.verified, size: 13, color: AppColor.successDark),
-                ],
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.ink)),
                 const Spacer(),
-                Text(r.createdAt, style: AppTextStyles.labelSm),
+                Text(_shortDate(c.createAt), style: AppTextStyles.labelSm),
               ],
             ),
             const SizedBox(height: 6),
-            Text(r.body,
+            Text(c.text,
                 style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 12,
-                    height: 1.6,
-                    color: AppColor.onSurfaceVariant)),
+                    height: 1.7,
+                    color: AppColor.inkMuted)),
+            if (c.adminResponse.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: ShapeDecoration(
+                  color: AppColor.pitchGreenSoft,
+                  shape: AppShapes.border(AppShapes.rMd),
+                ),
+                child: Text('پاسخ فروشگاه: ${c.adminResponse}',
+                    style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 11,
+                        height: 1.7,
+                        color: AppColor.ink)),
+              ),
+            ],
           ],
         ),
       );
+
+  /// تاریخ ISO بک‌اند فقط تا روز نمایش داده می‌شود
+  String _shortDate(String raw) =>
+      raw.length >= 10 ? raw.substring(0, 10) : raw;
+
+  /// بک‌اند تفکیک ستاره‌ای نمی‌دهد؛ تا وقتی چنین فیلدی اضافه نشود، همه‌ی
+  /// نظرها زیر میانگین امتیاز شمرده می‌شوند.
+  Map<int, int> _breakdown() {
+    final map = {for (int i = 5; i >= 1; i--) i: 0};
+    final bucket = widget.avgRate.round().clamp(1, 5);
+    map[bucket] = widget.comments.length;
+    return map;
+  }
 
   Widget _questionTile(ProductQuestion q) => Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -296,12 +333,45 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
             children: [
               Text('همه نظرات', style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
               const SizedBox(height: 12),
-              ..._summary!.reviews.map(_reviewTile),
+              ...widget.comments.map(_commentTile),
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// امتیاز و متن نظر را به APIهای واقعی v2/rating می‌فرستد.
+  ///
+  /// این دو، دو اندپوینت جدا هستند: اگر ثبت امتیاز شکست بخورد، متن نظر
+  /// همچنان ارسال می‌شود و برعکس؛ نتیجه‌ی هرکدام جدا به کاربر گفته می‌شود.
+  Future<void> _submitReview({required int rating, required String text}) async {
+    setState(() => _submitting = true);
+
+    final commentResult = await RatingService.commentOnProduct(
+      productId: widget.productId,
+      text: text,
+    );
+    final rateResult = await RatingService.rateProduct(
+      productId: widget.productId,
+      rating: rating,
+    );
+
+    if (!mounted) return;
+    setState(() => _submitting = false);
+
+    if (commentResult.success) {
+      _snack(commentResult.message);
+    } else {
+      _snack(commentResult.message, error: true);
+    }
+    if (!rateResult.success) {
+      _snack('ثبت امتیاز: ${rateResult.message}', error: true);
+    }
+
+    if (commentResult.success || rateResult.success) {
+      widget.onSubmitted?.call();
+    }
   }
 
   void _openReviewSheet() {
@@ -382,21 +452,14 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                       shape: AppShapes.pill,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    onPressed: () async {
-                      final text = bodyCtrl.text.trim();
-                      if (text.isEmpty) return;
-                      Navigator.of(ctx).pop();
-                      await ReviewService.addReview(widget.productId,
-                          rating: rating, body: text);
-                      await _load();
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('نظر شما ثبت شد',
-                              style: TextStyle(fontFamily: 'Estedad')),
-                        ),
-                      );
-                    },
+                    onPressed: _submitting
+                        ? null
+                        : () async {
+                            final text = bodyCtrl.text.trim();
+                            if (text.isEmpty) return;
+                            Navigator.of(ctx).pop();
+                            await _submitReview(rating: rating, text: text);
+                          },
                     child: const Text('ثبت نظر',
                         style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
                   ),
