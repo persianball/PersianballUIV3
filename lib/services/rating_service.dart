@@ -11,6 +11,23 @@
 //   POST /v2/rating/comment/  {text, user, product}  → 201، با authorized:false
 //                                                      یعنی منتظر تأیید ادمین
 //   POST /v2/rating/rate/     {product, rating}      → ثبت امتیاز ۱ تا ۵
+//
+// ⚠️ وضعیت فعلی rate/: سرور روی هر درخواست ۵۰۰ می‌دهد (باگ سمت بک‌اند).
+// بازتولید:
+//   curl -i -X POST "<base>/v2/rating/rate/" \
+//     -H "Authorization: token <TOKEN>" -H "Content-Type: application/json" \
+//     -d '{"product":4,"rating":5}'
+// پاسخ: HTTP 500 — IntegrityError
+//   null value in column "user_id" of relation "rating_rating"
+//   violates not-null constraint
+// علت (از صفحه‌ی دیباگ جنگو):
+//   apps/rating/views.py:27  user = validated_data.get('user')
+//   سریالایزر Rating اصلاً فیلد user ندارد، پس user برابر None می‌شود و
+//   apps/rating/models.py:74  get_or_create(user=None, product=…) با
+//   user_id = NULL اینسرت می‌کند.
+// اصلاح سمت سرور: user = request.user (یا افزودن
+//   user = HiddenField(default=CurrentUserDefault()) به سریالایزر).
+// تا آن زمان این متد پیام خطای سرور را برمی‌گرداند و اپ کرش نمی‌کند.
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
