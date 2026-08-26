@@ -5,6 +5,7 @@ import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 /// کارت محصول به سبک طرح مرجع: کارت سفید با گوشه‌های کاملاً گرد و سایه‌ی
 /// نرم، تصویر بزرگ روی زمینه‌ی ملایم، و پاورقی «نام + دسته‌بندی» در یک طرف
@@ -47,7 +48,7 @@ class ProductGridCard extends StatelessWidget {
     final int finalPrice =
         hasDiscount ? (original * (1 - percent / 100)).toInt() : original;
 
-    return GestureDetector(
+    return PressableScale(
       onTap: () => _open(context),
       child: Container(
         decoration: ShapeDecoration(

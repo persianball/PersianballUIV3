@@ -24,6 +24,7 @@ import '../../services/notification_service.dart';
 import 'catalog_page.dart';
 import 'course_detail_page.dart';
 import 'profile_page.dart' show UserService;
+import 'package:marketky/views/widgets/motion.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -417,7 +418,12 @@ class _HomePageState extends State<HomePage> {
               childAspectRatio: 0.68,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, i) => ProductGridCard(product: results[i]),
+              // ورود پلکانی کارت‌ها؛ تأخیر سقف دارد تا اسکرول به پایین
+              // لیست بلند، منتظر انیمیشن نماند.
+              (context, i) => FadeSlideIn(
+                delay: Duration(milliseconds: 40 * (i % 8)),
+                child: ProductGridCard(product: results[i]),
+              ),
               childCount: results.length,
             ),
           );

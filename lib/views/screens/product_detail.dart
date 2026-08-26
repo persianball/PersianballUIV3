@@ -824,7 +824,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                   onSizeSelected: (int i) {
                     context.read<ProductDetailVariantBloc>().add(
                         ChangeProductColorEvent(
-                            variant!, variant.sizeVariants[i]));
+                            variant, variant.sizeVariants[i]));
                   },
                 ),
               ],

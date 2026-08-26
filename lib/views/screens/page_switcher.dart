@@ -1,6 +1,7 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/views/widgets/motion.dart';
 import 'package:marketky/views/screens/home_page.dart';
 import 'package:marketky/views/screens/profile_page.dart';
 import 'package:marketky/views/screens/courses_page.dart';
@@ -61,7 +62,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
       child: Scaffold(
         backgroundColor: AppColor.milk,
         extendBody: true,
-        body: IndexedStack(
+        body: FadeIndexedStack(
           index: _selectedIndex,
           children: [
             HomePage(),

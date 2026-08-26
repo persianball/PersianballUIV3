@@ -3,6 +3,7 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 import '../../constant/urls.dart';
 import '../../models/ProductModel.dart';
@@ -128,7 +129,7 @@ class ItemCard extends StatelessWidget {
     final double cardWidth = rawWidth.clamp(130.0, 200.0);
     final Color resolvedTitleColor = titleColor ?? AppColor.ink;
 
-    return GestureDetector(
+    return PressableScale(
       onTap: () => _goToDetail(context),
       child: Container(
         width: cardWidth,
