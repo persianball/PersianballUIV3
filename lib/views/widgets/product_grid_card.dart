@@ -3,17 +3,16 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/ProductModel.dart';
-import 'package:marketky/services/wishlist_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
 
 /// کارت محصول به سبک طرح مرجع: کارت سفید با گوشه‌های کاملاً گرد و سایه‌ی
-/// نرم، تصویر بزرگ روی زمینه‌ی ملایم، دکمه‌ی قلب شناور در گوشه، و پاورقی
-/// «نام + دسته‌بندی» در یک طرف و «قیمت» در طرف دیگر.
+/// نرم، تصویر بزرگ روی زمینه‌ی ملایم، و پاورقی «نام + دسته‌بندی» در یک طرف
+/// و «قیمت» در طرف دیگر.
 ///
-/// هیچ داده‌ای اینجا ساخته نمی‌شود: همان [Product] موجود، همان
-/// [WishlistService] موجود و همان مسیر `/product/{id}` موجود استفاده می‌شود.
-class ProductGridCard extends StatefulWidget {
+/// هیچ داده‌ای اینجا ساخته نمی‌شود: همان [Product] موجود و همان مسیر
+/// `/product/{id}` موجود استفاده می‌شود.
+class ProductGridCard extends StatelessWidget {
   const ProductGridCard({
     super.key,
     required this.product,
@@ -30,40 +29,17 @@ class ProductGridCard extends StatefulWidget {
   /// اگر داده نشود، رفتار پیش‌فرض قبلی (رفتن به صفحه‌ی جزئیات) اجرا می‌شود.
   final VoidCallback? onTap;
 
-  @override
-  State<ProductGridCard> createState() => _ProductGridCardState();
-}
-
-class _ProductGridCardState extends State<ProductGridCard> {
-  bool _favorite = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFavorite();
-  }
-
-  Future<void> _loadFavorite() async {
-    final fav = await WishlistService.isFavorite(widget.product.id);
-    if (mounted) setState(() => _favorite = fav);
-  }
-
-  Future<void> _toggleFavorite() async {
-    final now = await WishlistService.toggle(widget.product.id);
-    if (mounted) setState(() => _favorite = now);
-  }
-
-  void _open() {
-    if (widget.onTap != null) {
-      widget.onTap!();
+  void _open(BuildContext context) {
+    if (onTap != null) {
+      onTap!();
       return;
     }
-    Navigator.of(context).pushNamed('/product/${widget.product.id}');
+    Navigator.of(context).pushNamed('/product/${product.id}');
   }
 
   @override
   Widget build(BuildContext context) {
-    final p = widget.product;
+    final p = product;
     final int original = p.price ?? 0;
     final int? percent = p.discountPercentage;
     final bool hasDiscount =
@@ -72,7 +48,7 @@ class _ProductGridCardState extends State<ProductGridCard> {
         hasDiscount ? (original * (1 - percent / 100)).toInt() : original;
 
     return GestureDetector(
-      onTap: _open,
+      onTap: () => _open(context),
       child: Container(
         decoration: ShapeDecoration(
           color: AppColor.card,
@@ -108,14 +84,6 @@ class _ProductGridCardState extends State<ProductGridCard> {
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  PositionedDirectional(
-                    top: 6,
-                    end: 6,
-                    child: _HeartButton(
-                      active: _favorite,
-                      onTap: _toggleFavorite,
                     ),
                   ),
                   if (hasDiscount)
@@ -219,12 +187,12 @@ class _ProductGridCardState extends State<ProductGridCard> {
                 ],
               ),
             ),
-            if (widget.showAddToCartButton) ...[
+            if (showAddToCartButton) ...[
               const SizedBox(height: 4),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: _open,
+                  onPressed: () => _open(context),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColor.pitchGreen,
                     side: const BorderSide(color: AppColor.pitchGreen),
@@ -243,36 +211,6 @@ class _ProductGridCardState extends State<ProductGridCard> {
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeartButton extends StatelessWidget {
-  const _HeartButton({required this.active, required this.onTap});
-
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColor.card,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      elevation: 2,
-      shadowColor: const Color(0x22171717),
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          width: 30,
-          height: 30,
-          child: Icon(
-            active ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-            size: 16,
-            color: active ? AppColor.danger : AppColor.ink,
-          ),
         ),
       ),
     );

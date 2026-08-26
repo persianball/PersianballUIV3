@@ -77,7 +77,7 @@ class NotificationService {
       title: 'فروش ویژه تابستان',
       body: 'تا ۳۰٪ تخفیف روی کفش‌های ورزشی، فقط تا پایان هفته.',
       createdAt: 'دیروز، ۱۸:۰۰',
-      route: '/wishlist',
+      route: '/catalog',
     ),
     AppNotification(
       id: 3,

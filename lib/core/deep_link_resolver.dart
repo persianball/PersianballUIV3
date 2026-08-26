@@ -20,7 +20,6 @@ class DeepLinkResolver {
     '/cart',
     '/orders',
     '/addresses',
-    '/wishlist',
     '/notifications',
     '/catalog',
     '/compare',

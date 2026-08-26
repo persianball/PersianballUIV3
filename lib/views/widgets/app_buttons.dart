@@ -163,7 +163,7 @@ class SoftButton extends StatelessWidget {
   }
 }
 
-/// دکمه‌ی آیکنی گرد و برجسته (بازگشت، علاقه‌مندی، اشتراک‌گذاری و…)
+/// دکمه‌ی آیکنی گرد و برجسته (بازگشت، اشتراک‌گذاری و…)
 class CircleIconButton extends StatelessWidget {
   const CircleIconButton({
     super.key,

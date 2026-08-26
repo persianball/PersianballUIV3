@@ -9,7 +9,7 @@ import 'package:marketky/views/widgets/accordion_section.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
 import 'package:marketky/views/widgets/inline_video_player.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
-import 'package:marketky/services/wishlist_service.dart';
+import 'package:marketky/services/recently_viewed_service.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/core/model/Review.dart';
@@ -46,9 +46,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   /// اسلاید فعلی گالری تا با تعویض رنگ همان اسلاید حفظ شود
   int _carouselIndex = 0;
 
-  /// وضعیت علاقه‌مندی این محصول
-  bool _isFavorite = false;
-
   /// شناسه‌ی محصولی که واریانت اولیه‌اش یک‌بار ست شده است.
   ///
   /// مهم: قبلاً رویداد «انتخاب واریانت اول» در هر بار build ارسال می‌شد، پس
@@ -58,27 +55,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
   /// وقتی «خرید فوری» زده شود، بعد از افزودن موفق به‌جای دیالوگ به سبد می‌رود
   bool _buyNowPending = false;
-
-  Future<void> _loadFavorite() async {
-    final fav = await WishlistService.isFavorite(widget.productId);
-    if (mounted) setState(() => _isFavorite = fav);
-  }
-
-  Future<void> _toggleFavorite() async {
-    final now = await WishlistService.toggle(widget.productId);
-    if (!mounted) return;
-    setState(() => _isFavorite = now);
-    if (now) AnalyticsService.addToWishlist(productId: widget.productId);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 2),
-        content: Text(
-          now ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد',
-          style: const TextStyle(fontFamily: 'Estedad'),
-        ),
-      ),
-    );
-  }
 
   /// اشتراک‌گذاری لینک محصول (دیپ‌لینک همین اپ)
   Future<void> _shareProduct(String productName) async {
@@ -118,9 +94,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
 
     context.read<ProductDetailBloc>().add(FetchProductDetail(widget.productId));
-    _loadFavorite();
     // ثبت در بازدیدهای اخیر و آنالیتیکس
-    WishlistService.markViewed(widget.productId);
+    RecentlyViewedService.markViewed(widget.productId);
     AnalyticsService.viewItem(productId: widget.productId);
   }
 
@@ -543,7 +518,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 ),
               ),
 
-              // هدر شناور: بازگشت (راست)، عنوان، اشتراک‌گذاری و علاقه‌مندی (چپ)
+              // هدر شناور: بازگشت (راست)، عنوان و اشتراک‌گذاری (چپ)
               Positioned(
                 top: 12,
                 left: 12,
@@ -567,19 +542,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                       ),
                       CircleIconButton(
                         icon: Icons.ios_share_rounded,
-                        size: 36,
                         tooltip: 'اشتراک‌گذاری',
                         onTap: () => _shareProduct(product.nameFarsi ?? ''),
-                      ),
-                      const SizedBox(width: 8),
-                      CircleIconButton(
-                        icon: _isFavorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        iconColor:
-                            _isFavorite ? AppColor.danger : AppColor.ink,
-                        tooltip: 'علاقه‌مندی',
-                        onTap: _toggleFavorite,
                       ),
                     ],
                   ),

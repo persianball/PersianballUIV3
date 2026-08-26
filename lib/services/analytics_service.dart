@@ -9,7 +9,7 @@
 //
 // رویدادهای استاندارد تجارت الکترونیک که اینجا پوشش داده شده‌اند:
 //   view_item، add_to_cart، begin_checkout، purchase، search،
-//   view_item_list، add_to_wishlist
+//   view_item_list
 import 'package:flutter/foundation.dart';
 
 class AnalyticsEvent {
@@ -50,9 +50,6 @@ class AnalyticsService {
   }) =>
       _send('add_to_cart',
           {'product_id': productId, 'quantity': quantity, 'price': price});
-
-  static void addToWishlist({required int productId}) =>
-      _send('add_to_wishlist', {'product_id': productId});
 
   static void beginCheckout({required int itemCount, required int value}) =>
       _send('begin_checkout', {'items': itemCount, 'value': value});
