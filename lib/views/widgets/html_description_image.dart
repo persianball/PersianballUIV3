@@ -172,8 +172,152 @@ void _openLink() {
   }
 }
 
+/// ویدیوی امبدشده در توضیحات محصول.
+///
+/// ادیتور بک‌اند (CKEditor) ویدیو را به شکل
+/// `<figure class="media"><oembed url="…"></oembed></figure>` ذخیره می‌کند.
+/// `oembed` یک تگ استاندارد HTML نیست و هیچ مرورگر/رندرری آن را پخش
+/// نمی‌کند، پس اگر دست‌نخورده به flutter_html برسد کاربر فقط یک فضای خالی
+/// می‌بیند. اینجا لینک استخراج و به‌جای آن یک کارت قابل‌کلیک با کاور
+/// ویدیو نمایش داده می‌شود.
+///
+/// پخش داخل‌برنامه‌ای یوتیوب به یک پکیج جدید (مثل youtube_player_iframe)
+/// نیاز دارد؛ فعلاً بدون افزودن وابستگی، ویدیو در اپ/مرورگر باز می‌شود.
+class HtmlDescriptionVideo extends StatelessWidget {
+  const HtmlDescriptionVideo({super.key, required this.url});
+
+  final String url;
+
+  /// شناسه‌ی ویدیوی یوتیوب از حالت‌های watch?v= / youtu.be / embed / shorts
+  static String? youtubeId(String raw) {
+    final uri = Uri.tryParse(raw);
+    if (uri == null) return null;
+    final host = uri.host.toLowerCase();
+    if (!host.contains('youtube.com') && !host.contains('youtu.be')) {
+      return null;
+    }
+    String? id;
+    if (host.contains('youtu.be')) {
+      id = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+    } else if (uri.queryParameters['v'] != null) {
+      id = uri.queryParameters['v'];
+    } else {
+      final segments = uri.pathSegments;
+      final i = segments.indexWhere((s) => s == 'embed' || s == 'shorts' || s == 'v');
+      if (i != -1 && i + 1 < segments.length) id = segments[i + 1];
+    }
+    if (id == null || id.isEmpty) return null;
+    // شناسه‌ی یوتیوب ۱۱ کاراکتر است؛ هر چیز اضافه‌ای نادیده گرفته می‌شود
+    return id.length > 11 ? id.substring(0, 11) : id;
+  }
+
+  void _open() {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    // بدون await قبلی، وگرنه مرورگر آن را پاپ‌آپ مسدودشده می‌بیند
+    launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final id = youtubeId(url);
+    // ادیتور فقط یوتیوب امبد نمی‌کند؛ اینستاگرام و… هم ممکن است بیایند و
+    // برای آن‌ها نه کاور داریم و نه «ویدیو» عنوان درستی است.
+    final isVideo = id != null;
+    final host = Uri.tryParse(url)?.host.replaceFirst('www.', '') ?? '';
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: _open,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (id != null)
+                  // کاور رسمی یوتیوب؛ همان مسیر امنِ بدون CORS تصاویر توضیحات
+                  HtmlDescriptionImage(
+                    key: ValueKey('yt-$id'),
+                    src: 'https://img.youtube.com/vi/$id/hqdefault.jpg',
+                    aspectRatio: 16 / 9,
+                  )
+                else
+                  Container(color: AppColor.cardMuted),
+                // پرده‌ی تیره تا دکمه‌ی پخش روی هر کاوری دیده شود
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0x22000000), Color(0x66000000)],
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: ShapeDecoration(
+                      color: isVideo
+                          ? const Color(0xE6FF0000)
+                          : const Color(0xE6171717),
+                      shape: const CircleBorder(),
+                    ),
+                    child: Icon(
+                      isVideo
+                          ? Icons.play_arrow_rounded
+                          : Icons.open_in_new_rounded,
+                      color: Colors.white,
+                      size: isVideo ? 34 : 26,
+                    ),
+                  ),
+                ),
+                PositionedDirectional(
+                  start: 10,
+                  bottom: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: const ShapeDecoration(
+                      color: Color(0xCC000000),
+                      shape: StadiumBorder(),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.open_in_new_rounded,
+                            size: 13, color: Colors.white),
+                        const SizedBox(width: 5),
+                        Text(
+                          isVideo
+                              ? 'تماشای ویدیو'
+                              : (host.isEmpty ? 'باز کردن' : 'باز کردن در $host'),
+                          style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DescriptionSegment {
   final bool isImage;
+  final bool isVideo;
   final String? html;
   final String? src;
   final double? aspectRatio;
@@ -181,13 +325,23 @@ class _DescriptionSegment {
 
   _DescriptionSegment.html(this.html)
       : isImage = false,
+        isVideo = false,
         src = null,
         aspectRatio = null,
         linkUrl = null;
 
   _DescriptionSegment.image(this.src, this.aspectRatio, this.linkUrl)
       : isImage = true,
+        isVideo = false,
         html = null;
+
+  /// ویدیوی امبدشده؛ [src] همان لینک اصلی (یوتیوب، آپارات و…) است
+  _DescriptionSegment.video(this.src)
+      : isImage = false,
+        isVideo = true,
+        html = null,
+        aspectRatio = null,
+        linkUrl = null;
 }
 
 /// خروجی ادیتور بک‌اند تصاویر مستقل را داخل `<figure class="image ...">`
@@ -206,33 +360,69 @@ final RegExp _figureImageRegExp = RegExp(
   dotAll: true,
 );
 
+/// `<figure class="media"><oembed url="…"></oembed></figure>` خروجی
+/// CKEditor برای ویدیوی امبدشده. گاهی به‌جای `oembed` یک `<iframe src="…">`
+/// داخل همان figure می‌آید، پس هر دو حالت پوشش داده می‌شود.
+final RegExp _figureMediaRegExp = RegExp(
+  r'<figure[^>]*class="[^"]*\bmedia\b[^"]*"[^>]*>\s*'
+  r'(?:<oembed\b[^>]*\burl\s*=\s*["\x27]([^"\x27]*)["\x27][^>]*>\s*(?:</oembed>)?'
+  r'|<iframe\b[^>]*\bsrc\s*=\s*["\x27]([^"\x27]*)["\x27][^>]*>\s*(?:</iframe>)?)'
+  r'\s*</figure>',
+  caseSensitive: false,
+  dotAll: true,
+);
+
+/// `&amp;` و امثال آن در مقدار url خروجی ادیتور اسکیپ شده‌اند
+String _unescapeHtml(String value) => value
+    .replaceAll('&amp;', '&')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'")
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>');
+
 List<_DescriptionSegment> _splitDescriptionHtml(String html) {
+  // هر دو نوع figure (تصویر و ویدیو) با هم جمع و بر اساس جای ظهورشان در
+  // متن مرتب می‌شوند تا ترتیب اصلی توضیحات حفظ شود.
+  final matches = <RegExpMatch>[
+    ..._figureImageRegExp.allMatches(html),
+    ..._figureMediaRegExp.allMatches(html),
+  ]..sort((a, b) => a.start.compareTo(b.start));
+
   final segments = <_DescriptionSegment>[];
   var last = 0;
-  for (final match in _figureImageRegExp.allMatches(html)) {
+  for (final match in matches) {
+    if (match.start < last) continue; // همپوشانی (نباید رخ دهد)
     if (match.start > last) {
       segments.add(_DescriptionSegment.html(html.substring(last, match.start)));
     }
-    final linkUrl = match.group(1);
-    final attrs = match.group(2) ?? '';
-    final rawSrc =
-        RegExp(r'''src\s*=\s*["']([^"']*)["']''').firstMatch(attrs)?.group(1) ??
-            '';
-    if (rawSrc.isNotEmpty) {
-      final src =
-          rawSrc.startsWith('http') ? rawSrc : '${URLs.baseUrl}$rawSrc';
-      final w = double.tryParse(
-          RegExp(r'''width\s*=\s*["']?(\d+)''').firstMatch(attrs)?.group(1) ??
-              '');
-      final h = double.tryParse(
-          RegExp(r'''height\s*=\s*["']?(\d+)''').firstMatch(attrs)?.group(1) ??
-              '');
-      final aspectRatio = (w != null && h != null && h > 0) ? w / h : null;
-      segments.add(_DescriptionSegment.image(
-        src,
-        aspectRatio,
-        (linkUrl != null && linkUrl.isNotEmpty) ? linkUrl : null,
-      ));
+    final isMedia = match.pattern == _figureMediaRegExp;
+    if (isMedia) {
+      final raw = match.group(1) ?? match.group(2) ?? '';
+      final url = _unescapeHtml(raw).trim();
+      if (url.isNotEmpty) segments.add(_DescriptionSegment.video(url));
+    } else {
+      final linkUrl = match.group(1);
+      final attrs = match.group(2) ?? '';
+      final rawSrc = RegExp(r"""src\s*=\s*["']([^"']*)["']""")
+              .firstMatch(attrs)
+              ?.group(1) ??
+          '';
+      if (rawSrc.isNotEmpty) {
+        final src =
+            rawSrc.startsWith('http') ? rawSrc : '${URLs.baseUrl}$rawSrc';
+        final w = double.tryParse(
+            RegExp(r"""width\s*=\s*["']?(\d+)""").firstMatch(attrs)?.group(1) ??
+                '');
+        final h = double.tryParse(
+            RegExp(r"""height\s*=\s*["']?(\d+)""").firstMatch(attrs)?.group(1) ??
+                '');
+        final aspectRatio = (w != null && h != null && h > 0) ? w / h : null;
+        segments.add(_DescriptionSegment.image(
+          src,
+          aspectRatio,
+          (linkUrl != null && linkUrl.isNotEmpty) ? linkUrl : null,
+        ));
+      }
     }
     last = match.end;
   }
@@ -285,7 +475,15 @@ class HtmlDescriptionBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final segment in segments)
-          if (segment.isImage)
+          if (segment.isVideo)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: HtmlDescriptionVideo(
+                key: ValueKey(segment.src),
+                url: segment.src!,
+              ),
+            )
+          else if (segment.isImage)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: HtmlDescriptionImage(
