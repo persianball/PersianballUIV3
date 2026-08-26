@@ -13,6 +13,7 @@ import 'package:marketky/views/screens/address_selection_page.dart';
 import 'package:marketky/views/screens/login_page.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import 'package:marketky/views/widgets/page_container.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 class CartPage extends StatefulWidget {
   @override
@@ -269,9 +270,12 @@ class _CartPageState extends State<CartPage> {
                   itemCount: products.length,
                   separatorBuilder: (_, i) => SizedBox(height: 8),
                   itemBuilder: (_, i) {
-                    return ProCartItemCard(
-                      cartItemFromBackend: products[i],
-                      priceFromBack: cart.results[0].price,
+                    return FadeSlideIn(
+                      delay: Duration(milliseconds: 45 * (i % 6)),
+                      child: ProCartItemCard(
+                        cartItemFromBackend: products[i],
+                        priceFromBack: cart.results[0].price,
+                      ),
                     );
                   },
                 ),
@@ -304,9 +308,12 @@ class _CartPageState extends State<CartPage> {
                   itemCount: courses.length,
                   separatorBuilder: (_, i) => SizedBox(height: 8),
                   itemBuilder: (_, i) {
-                    return CourseCartItemCard(
-                      cartItemFromBackend: courses[i],
-                      priceFromBack: cart.results[0].price,
+                    return FadeSlideIn(
+                      delay: Duration(milliseconds: 45 * (i % 6)),
+                      child: CourseCartItemCard(
+                        cartItemFromBackend: courses[i],
+                        priceFromBack: cart.results[0].price,
+                      ),
                     );
                   },
                 ),

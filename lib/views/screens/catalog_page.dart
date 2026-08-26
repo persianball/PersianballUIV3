@@ -12,6 +12,7 @@ import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/views/widgets/product_grid_card.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 /// صفحه جست‌وجو و مرور کاتالوگ با فیلتر، دسته‌بندی و مرتب‌سازی
 class CatalogPage extends StatefulWidget {
@@ -373,13 +374,18 @@ class _CatalogPageState extends State<CatalogPage> {
             Wrap(
               spacing: 16,
               runSpacing: 16,
-              children: visible
-                  .map((p) => SizedBox(
-                      width: (MediaQuery.of(context).size.width / 2 - 16 - 8)
-                          .clamp(130.0, 200.0),
+              children: [
+                for (int i = 0; i < visible.length; i++)
+                  SizedBox(
+                    width: (MediaQuery.of(context).size.width / 2 - 16 - 8)
+                        .clamp(130.0, 200.0),
+                    child: FadeSlideIn(
+                      delay: Duration(milliseconds: 40 * (i % 8)),
                       child: ProductGridCard(
-                          product: p, showAddToCartButton: true)))
-                  .toList(),
+                          product: visible[i], showAddToCartButton: true),
+                    ),
+                  ),
+              ],
             ),
             if (visible.length < results.length)
               const Padding(

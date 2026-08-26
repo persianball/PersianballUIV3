@@ -8,6 +8,7 @@ import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/course_models.dart';
 import 'package:marketky/services/course_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -165,10 +166,13 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                           itemCount: _data!.results.length,
                           itemBuilder: (_, i) {
                             final c = _data!.results[i];
-                            return _CourseCard(
-                              course: c,
-                              imageUrl: _abs(c.image),
-                              onTap: () => Navigator.of(context).pushNamed('/course/${c.id}', arguments: c),
+                            return FadeSlideIn(
+                              delay: Duration(milliseconds: 50 * (i % 6)),
+                              child: _CourseCard(
+                                course: c,
+                                imageUrl: _abs(c.image),
+                                onTap: () => Navigator.of(context).pushNamed('/course/${c.id}', arguments: c),
+                              ),
                             );
                           },
                         ),
@@ -459,7 +463,9 @@ class _UserCoursesListState extends State<_UserCoursesList> {
           itemCount: widget.courses.length,
           itemBuilder: (context, i) {
             final course = widget.courses[i];
-            return Center(
+            return FadeSlideIn(
+              delay: Duration(milliseconds: 50 * (i % 6)),
+              child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: Container(
@@ -485,6 +491,7 @@ class _UserCoursesListState extends State<_UserCoursesList> {
                   ),
                 ),
               ),
+            ),
             );
           },
         ),

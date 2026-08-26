@@ -6,6 +6,7 @@ import 'package:marketky/views/screens/order_detail_page.dart';
 import 'package:marketky/models/payment_models.dart';
 import 'package:marketky/services/payment_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -311,7 +312,11 @@ class _OrdersPageState extends State<OrdersPage>
                             return _buildLoadMoreFooter();
                           }
                           final item = _data!.results[index - 1];
-                          return _buildItem(item);
+                          return FadeSlideIn(
+                            delay:
+                                Duration(milliseconds: 45 * ((index - 1) % 6)),
+                            child: _buildItem(item),
+                          );
                         },
                       ),
                     ),
