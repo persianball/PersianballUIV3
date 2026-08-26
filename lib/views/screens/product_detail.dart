@@ -380,21 +380,33 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   Widget _buildProductContent(ProductDetail product, BuildContext context) {
     return BlocBuilder<ProductDetailVariantBloc, ProductDetailState>(
       builder: (context, variantState) {
-        // تا وقتی رنگ/سایز اولیه انتخاب نشده، لودینگ نمایش داده می‌شود
-        if (variantState is! ProductDetailSizeChanged) {
+        ProductVariant? variant;
+        SizeVariant? size;
+        if (variantState is ProductDetailSizeChanged) {
+          variant = variantState.productVariant;
+          size = variantState.productSize;
+        } else if (variantState is ProductDetailChangedState) {
+          variant = variantState.productVariant;
+          size = variantState.productSize;
+        } else if (_hasAnySize(product)) {
+          // محصول سایز دارد ولی هنوز انتخاب اولیه نرسیده است
           return Container(
             color: AppColor.milk,
             child: const Center(
               child: CircularProgressIndicator(color: AppColor.pitchGreen),
             ),
           );
+        } else {
+          // محصولی که هیچ سایزی ندارد هرگز رویداد انتخاب سایز نمی‌گیرد؛
+          // پیش از این صفحه‌اش برای همیشه روی لودینگ می‌ماند.
+          variant = product.variants.isEmpty ? null : product.variants.first;
         }
         return ListView(
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.zero,
           children: [
-            _buildGalleryPanel(product, variantState),
-            _buildInfoPanel(product, variantState),
+            _buildGalleryPanel(product, variant),
+            _buildInfoPanel(product, variant, size),
             _buildAccordions(product),
             const SizedBox(height: 20),
           ],
@@ -403,12 +415,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     );
   }
 
-  List<String> _galleryImages(ProductVariant variant) =>
-      variant.images.map((u) => '${URLs.baseUrl}$u').toList();
+  /// تصاویر گالری: تصاویر خودِ واریانت، و اگر واریانت تصویری نداشت (مثل
+  /// محصولاتی که فقط تصاویر عمومی دارند) تصاویر خود محصول.
+  List<String> _galleryImages(ProductDetail product, ProductVariant? variant) {
+    final source = (variant != null && variant.images.isNotEmpty)
+        ? variant.images
+        : product.images;
+    return source.map((u) => '${URLs.baseUrl}$u').toList();
+  }
+
+  /// آیا این محصول اصلاً واریانت سایزداری دارد؟
+  static bool _hasAnySize(ProductDetail product) =>
+      product.variants.any((v) => v.sizeVariants.isNotEmpty);
 
   /// رنگ واریانت انتخاب‌شده (برای تینت پس‌زمینه‌ی قاب تصویر)
-  Color _variantColor(ProductVariant variant) {
-    final rgb = variant.colorRgb;
+  Color _variantColor(ProductVariant? variant) {
+    final rgb = variant?.colorRgb;
     if (rgb == null || rgb.isEmpty) return AppColor.pitchGreen;
     try {
       return Color(0xff000000 + int.parse(rgb, radix: 16));
@@ -442,11 +464,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
   /// بخش بالا: کارت گوشه‌گرد با تینت رنگ واریانت، تصویر بزرگ و ریل عمودی
   /// تامبنیل چسبیده به لبه‌ی راست
-  Widget _buildGalleryPanel(
-      ProductDetail product, ProductDetailSizeChanged state) {
-    final variant = state.productVariant;
-    final images = _galleryImages(variant);
-    final hasVideo = variant.video != null && variant.video!.isNotEmpty;
+  Widget _buildGalleryPanel(ProductDetail product, ProductVariant? variant) {
+    // محصولاتی که واریانت ندارند هم باید گالری داشته باشند؛ شناسه‌ی خود
+    // محصول برای کلید انیمیشن استفاده می‌شود.
+    final int variantKey = variant?.id ?? product.id;
+    final images = _galleryImages(product, variant);
+    final video = (variant?.video ?? product.video);
+    final hasVideo = video != null && video.isNotEmpty;
 
     // آخرین آیتم ریل، ویدیو است (اگر وجود داشته باشد)
     final int itemCount = images.length + (hasVideo ? 1 : 0);
@@ -494,11 +518,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                     child: showVideo
                         // ویدیو داخل همان قاب تصویر پخش می‌شود، نه دیالوگ جدا
                         ? InlineVideoPlayer(
-                            key: ValueKey('video-${variant.id}'),
-                            videoUrl: variant.video!,
+                            key: ValueKey('video-$variantKey'),
+                            videoUrl: video,
                           )
                         : GestureDetector(
-                            key: ValueKey('img-${variant.id}-$index'),
+                            key: ValueKey('img-$variantKey-$index'),
                             onTap: images.isEmpty
                                 ? null
                                 : () => Navigator.of(context).push(
@@ -559,8 +583,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 child: _buildThumbRail(
                   images: images,
                   selected: index,
-                  video: hasVideo ? variant.video : null,
-                  variantId: variant.id,
+                  video: hasVideo ? video : null,
+                  variantId: variantKey,
                 ),
               ),
             ],
@@ -639,22 +663,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
   /// بخش پایین: کارت سفید گوشه‌گرد با نام، تعداد، قیمت، رنگ، سایز و توضیح
   Widget _buildInfoPanel(
-      ProductDetail product, ProductDetailSizeChanged state) {
-    final size = state.productSize;
-    final int original = size.price;
-    final int? pct = size.discountPercentage;
-    final bool hasDiscount = pct != null && pct > 0 && pct < 100;
+      ProductDetail product, ProductVariant? variant, SizeVariant? size) {
+    // اگر سایزی وجود ندارد، قیمت از خود محصول خوانده می‌شود؛ اگر آن هم
+    // نباشد (بک‌اند price را null داده) به‌جای عدد، «تماس بگیرید» می‌آید.
+    final int original = size?.price ?? product.price ?? 0;
+    final int? pct = size?.discountPercentage ?? product.discountPercentage;
+    final bool hasDiscount = pct != null && pct > 0 && pct < 100 && original > 0;
     final int finalPrice =
         hasDiscount ? (original * (1 - pct / 100)).toInt() : original;
 
-    final Color stockColor = !size.inStock
-        ? AppColor.danger
-        : (size.isLowStock ? AppColor.warning : AppColor.success);
-    final String stockLabel = !size.inStock
-        ? 'ناموجود'
-        : (size.isLowStock
-            ? 'تنها ${size.count} عدد باقی مانده'
-            : 'موجود در انبار');
+    final Color stockColor = size == null
+        ? AppColor.inkMuted
+        : (!size.inStock
+            ? AppColor.danger
+            : (size.isLowStock ? AppColor.warning : AppColor.success));
+    final String stockLabel = size == null
+        ? 'برای اطلاع از موجودی تماس بگیرید'
+        : (!size.inStock
+            ? 'ناموجود'
+            : (size.isLowStock
+                ? 'تنها ${size.count} عدد باقی مانده'
+                : 'موجود در انبار'));
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
@@ -702,7 +731,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               ),
                             ),
                             Text(
-                              '${thousandSeparator(finalPrice)} تومان',
+                              original > 0
+                                  ? '${thousandSeparator(finalPrice)} تومان'
+                                  : 'استعلام قیمت',
                               style: const TextStyle(
                                 fontFamily: 'Estedad',
                                 fontSize: 17,
@@ -772,7 +803,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 ],
               ),
 
-              if (state.productVariant.sizeVariants.isNotEmpty) ...[
+              if (variant != null && variant.sizeVariants.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 const Text(
                   'انتخاب سایز',
@@ -785,17 +816,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 ),
                 const SizedBox(height: 10),
                 SelectableCircleSize(
-                  key: ValueKey(state.productVariant.id),
-                  productSize: state.productVariant.sizeVariants
-                      .map((s) => s.size)
-                      .toList(),
-                  sizeAvailability: state.productVariant.sizeVariants
-                      .map((s) => s.inStock)
-                      .toList(),
+                  key: ValueKey(variant.id),
+                  productSize:
+                      variant.sizeVariants.map((s) => s.size).toList(),
+                  sizeAvailability:
+                      variant.sizeVariants.map((s) => s.inStock).toList(),
                   onSizeSelected: (int i) {
                     context.read<ProductDetailVariantBloc>().add(
-                        ChangeProductColorEvent(state.productVariant,
-                            state.productVariant.sizeVariants[i]));
+                        ChangeProductColorEvent(
+                            variant!, variant.sizeVariants[i]));
                   },
                 ),
               ],
@@ -803,7 +832,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               const SizedBox(height: 16),
               PillTag(
                 label: stockLabel,
-                icon: size.inStock
+                icon: size == null || size.inStock
                     ? Icons.check_circle_outline
                     : Icons.remove_shopping_cart_outlined,
                 color: stockColor,
