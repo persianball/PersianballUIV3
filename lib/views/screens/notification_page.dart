@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/notification_service.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -88,7 +89,14 @@ class _NotificationPageState extends State<NotificationPage> {
                   padding: const EdgeInsets.all(16),
                   children: [
                     if (NotificationService.isMock) _mockBanner(),
-                    if (_items.isEmpty) _empty() else ..._items.map(_tile),
+                    if (_items.isEmpty)
+                      _empty()
+                    else
+                      for (int i = 0; i < _items.length; i++)
+                        FadeSlideIn(
+                          delay: Duration(milliseconds: 45 * (i % 6)),
+                          child: _tile(_items[i]),
+                        ),
                   ],
                 ),
               ),

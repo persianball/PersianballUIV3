@@ -8,6 +8,7 @@ import 'package:marketky/bloc/address/address_event.dart';
 import 'package:marketky/bloc/address/address_state.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/address_model.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 class AddressesPage extends StatefulWidget {
   const AddressesPage({super.key});
@@ -62,7 +63,10 @@ class _AddressesPageState extends State<AddressesPage> {
                 padding: const EdgeInsets.only(top: 12, bottom: 96),
                 itemCount: list.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (_, i) => _addressCard(list[i]),
+                itemBuilder: (_, i) => FadeSlideIn(
+                  delay: Duration(milliseconds: 45 * (i % 6)),
+                  child: _addressCard(list[i]),
+                ),
               );
             }
             return const SizedBox();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 class MenuTileWidget extends StatelessWidget {
   final Widget icon;
@@ -23,7 +24,7 @@ class MenuTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressableScale(
       onTap: onTap,
       child: Container(
         margin: margin ?? const EdgeInsets.fromLTRB(16, 0, 16, 10),

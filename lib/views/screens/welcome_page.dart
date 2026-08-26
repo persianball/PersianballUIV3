@@ -6,6 +6,7 @@ import 'package:marketky/bloc/login/login_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/widgets/page_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 class WelcomePage extends StatefulWidget {
   @override
@@ -48,15 +49,21 @@ class _WelcomePageState extends State<WelcomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // Section 1 - Illustration
-                            Container(
-                              margin: EdgeInsets.only(top: 32),
-                              width: double.infinity,
-                              constraints: BoxConstraints(maxWidth: 480),
-                              child: SvgPicture.asset(
-                                  'assets/icons/welcome_page.svg'),
+                            FadeSlideIn(
+                              duration: const Duration(milliseconds: 550),
+                              child: Container(
+                                margin: EdgeInsets.only(top: 32),
+                                width: double.infinity,
+                                constraints: BoxConstraints(maxWidth: 480),
+                                child: SvgPicture.asset(
+                                    'assets/icons/welcome_page.svg'),
+                              ),
                             ),
                             // Section 2 - Marketky with Caption
-                            Column(
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 150),
+                              duration: const Duration(milliseconds: 550),
+                              child: Column(
                               children: [
                                 Container(
                                   margin: EdgeInsets.only(bottom: 12),
@@ -79,6 +86,7 @@ class _WelcomePageState extends State<WelcomePage> {
                                   textAlign: TextAlign.center,
                                 ),
                               ],
+                            ),
                             ),
                             // Section 3 - Get Started Button
                             Container(

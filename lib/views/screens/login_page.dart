@@ -10,6 +10,7 @@ import 'package:marketky/views/screens/register_page.dart';
 import 'package:marketky/views/widgets/page_container.dart';
 
 import '../../bloc/login/login_bloc.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 class LoginPage extends StatefulWidget {
   final bool popOnSuccess; // if true, pop with result after successful login
@@ -108,7 +109,8 @@ class _LoginPageState extends State<LoginPage> {
         physics: BouncingScrollPhysics(),
         children: [
           // Header
-          Container(
+          FadeSlideIn(
+          child: Container(
             margin: EdgeInsets.only(top: 20, bottom: 12),
             child: Text(
               'خوش آمدید',
@@ -121,7 +123,10 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          Container(
+          ),
+          FadeSlideIn(
+          delay: const Duration(milliseconds: 90),
+          child: Container(
             margin: EdgeInsets.only(bottom: 32),
             child: Text(
               ' به کمک نام کاربری خود وارد شوید.',
@@ -134,9 +139,12 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
+          ),
 
           // Form
-          Form(
+          FadeSlideIn(
+          delay: const Duration(milliseconds: 160),
+          child: Form(
             key: _formKey,
             child: Column(
               children: [
@@ -311,6 +319,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
+          ),
           ),
         ],
       ),
