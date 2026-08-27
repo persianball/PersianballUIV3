@@ -1,6 +1,7 @@
 // lib/views/screens/addresses_page.dart
 // Standalone addresses manager page based on address_selection_page
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
@@ -59,6 +60,10 @@ class _AddressesPageState extends State<AddressesPage> {
               if (list.isEmpty) {
                 return _EmptyAddresses(onCreate: _openCreateDialog);
               }
+              // دسکتاپ: گرید دو ستونه‌ی وسط‌چین؛ موبایل/تبلت: لیست قبلی
+              if (AppBreakpoints.isDesktop(context)) {
+                return _desktopGrid(context, list);
+              }
               return ListView.separated(
                 padding: const EdgeInsets.only(top: 12, bottom: 96),
                 itemCount: list.length,
@@ -76,9 +81,55 @@ class _AddressesPageState extends State<AddressesPage> {
     );
   }
 
-  Widget _addressCard(AddressModel a) {
+  /// گرید دو ستونه‌ی دسکتاپ؛ کارت‌ها از بالا هم‌تراز می‌شوند و
+  /// انیمیشن FadeSlideIn هر کارت حفظ شده است.
+  Widget _desktopGrid(BuildContext context, List<AddressModel> list) {
+    final rows = <Widget>[];
+    for (int i = 0; i < list.length; i += 2) {
+      rows.add(Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: FadeSlideIn(
+                delay: Duration(milliseconds: 45 * (i % 6)),
+                child: _addressCard(list[i], desktop: true),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: (i + 1 < list.length)
+                  ? FadeSlideIn(
+                      delay: Duration(milliseconds: 45 * ((i + 1) % 6)),
+                      child: _addressCard(list[i + 1], desktop: true),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      ));
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 16, bottom: 96),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: AppBreakpoints.gutter(context)),
+            child: Column(children: rows),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _addressCard(AddressModel a, {bool desktop = false}) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: desktop
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: ShapeDecoration(
             color: AppColor.surfaceContainer,
             shape: AppShapes.border(AppShapes.rLg),
@@ -173,6 +224,10 @@ class _AddressesPageState extends State<AddressesPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      // در دسکتاپ فرم تمام‌عرض صفحه نشود
+      constraints: AppBreakpoints.isDesktop(context)
+          ? const BoxConstraints(maxWidth: 560)
+          : null,
       backgroundColor: AppColor.surfaceContainerOpaque,
       shape: AppShapes.borderTop(AppShapes.rXl),
       builder: (ctx) {

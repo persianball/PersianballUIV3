@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -138,7 +139,12 @@ class _ProfilePageState extends State<ProfilePage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Center(
-        child: Padding(
+        // در دسکتاپ کارت مهمان تمام‌عرض نشود؛ در موبایل بی‌اثر است
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+              maxWidth:
+                  AppBreakpoints.isDesktop(context) ? 420 : double.infinity),
+          child: Padding(
           padding: EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -216,70 +222,23 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildProfile(BuildContext context) {
+    // دسکتاپ: چیدمان دوستونه؛ موبایل/تبلت: دقیقاً همان چیدمان قبلی
+    if (AppBreakpoints.isDesktop(context)) {
+      return _buildProfileDesktop(context);
+    }
     return ListView(
           shrinkWrap: true,
           physics: BouncingScrollPhysics(),
           children: [
             // Section 1 - Profile Picture - Username - Name
-            Container(
-              width: MediaQuery.of(context).size.width,
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              decoration: ShapeDecoration(
-                color: AppColor.card,
-                shape: AppShapes.border(AppShapes.rLg),
-                shadows: AppColor.cardShadow,
-              ),
-              child: Column(
-                children: [
-                  // Profile Picture
-                  Container(
-                    width: 96,
-                    height: 96,
-                    decoration: ShapeDecoration(
-                      shape: CircleBorder(
-                        side: BorderSide(color: AppColor.line),
-                      ),
-                      shadows: AppColor.cardShadow,
-                      image: DecorationImage(
-                        image:
-                            AssetImage('assets/images/avatar_for_comments.png'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  // بعد از خروج، همین صفحه به حالت مهمان می‌رود
-                  // (listener بالای صفحه _loggedIn را false می‌کند)
-                  Builder(
-                    builder: (context) => ElevatedButton(
-                      onPressed: () {
-                        context.read<LoginBloc>().add(LogoutRequested());
-                      },
-                      child: Text(
-                        'خروج از حساب',
-                        style: TextStyle(
-                            fontFamily: 'Estedad',
-                            color: Colors.white,
-                            fontSize: 16),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding:
-                            EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                        shape: AppShapes.pill,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _profileHeaderCard(context),
 
             // ==== فرم تکمیل اطلاعات کاربری ====
             Directionality(
@@ -299,98 +258,226 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(right: 16),
-                      child: Text(
-                        'حساب کاربری',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          color: AppColor.onSurfaceVariant,
-                          letterSpacing: 6 / 100,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    MenuTileWidget(
-                      onTap: () {
-                        Navigator.of(context).pushNamed('/orders');
-                      },
-                      icon: SvgPicture.asset(
-                        'assets/icons/Bag.svg',
-                        color: AppColor.goldEnd,
-                      ),
-                      title: 'سفارشات',
-                      subtitle: 'سفارش‌های ثبت‌شده شما',
-                    ),
-                    MenuTileWidget(
-                      onTap: () {
-                        Navigator.of(context).pushNamed('/addresses');
-                      },
-                      icon: SvgPicture.asset(
-                        'assets/icons/Location.svg',
-                        color: AppColor.goldEnd,
-                      ),
-                      title: 'آدرس‌ها',
-                      subtitle: 'آدرس‌های ثبت‌شده شما',
-                    ),
-                    MenuTileWidget(
-                      onTap: () {
-                        Navigator.of(context).pushNamed('/account-security');
-                      },
-                      icon: Icon(Icons.lock_outline,
-                          color: AppColor.goldEnd),
-                      title: 'امنیت حساب',
-                      subtitle: 'تغییر رمز عبور و حذف حساب',
-                    ),
-
-                    // ==== پشتیبانی و قوانین ====
-                    Container(
-                      margin: EdgeInsets.only(right: 16, top: 16),
-                      child: Text(
-                        'پشتیبانی و قوانین',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          color: AppColor.onSurfaceVariant,
-                          letterSpacing: 6 / 100,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    MenuTileWidget(
-                      onTap: () => Navigator.of(context).pushNamed('/support'),
-                      icon: Icon(Icons.headset_mic_outlined,
-                          color: AppColor.goldEnd),
-                      title: 'تماس با پشتیبانی',
-                      subtitle: 'تلفن، ایمیل و پیام‌رسان',
-                    ),
-                    MenuTileWidget(
-                      onTap: () => Navigator.of(context).pushNamed('/terms'),
-                      icon: Icon(Icons.description_outlined,
-                          color: AppColor.goldEnd),
-                      title: 'قوانین و مقررات',
-                      subtitle: 'شرایط خرید و مرجوعی',
-                    ),
-                    MenuTileWidget(
-                      onTap: () => Navigator.of(context).pushNamed('/privacy'),
-                      icon: Icon(Icons.privacy_tip_outlined,
-                          color: AppColor.goldEnd),
-                      title: 'حریم خصوصی',
-                      subtitle: 'نحوه استفاده از اطلاعات شما',
-                    ),
-                    MenuTileWidget(
-                      onTap: () => Navigator.of(context).pushNamed('/about'),
-                      icon: Icon(Icons.info_outline,
-                          color: AppColor.goldEnd),
-                      title: 'درباره ما',
-                      subtitle: 'معرفی فروشگاه',
-                    ),
-                  ],
+                  children: _menuSections(context),
                 ),
               ),
             ),
           ],
         );
+  }
+
+  /// دسکتاپ: محتوای پروفایل در قابی وسط‌چین (~۱۰۰۰px) با دو ستون؛
+  /// ستون کناری (~۳۴۰px): کارت آواتار + فرم تکمیل اطلاعات،
+  /// ستون اصلی: منوی حساب و پشتیبانی.
+  Widget _buildProfileDesktop(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: AppBreakpoints.gutter(context)),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ستون کناری: هویت کاربر و فرم ویرایش اطلاعات
+                  SizedBox(
+                    width: 340,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _profileHeaderCard(context, desktop: true),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: ShapeDecoration(
+                            color: AppColor.card,
+                            shape: AppShapes.border(AppShapes.rLg),
+                            shadows: AppColor.cardShadow,
+                          ),
+                          child: _ProfileCompletionForm(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  // ستون اصلی: منوها
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _menuSections(context, desktop: true),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// کارت بالای پروفایل (آواتار + خروج). در موبایل با همان حاشیه‌های
+  /// قبلی، در دسکتاپ بدون حاشیه (داخل ستون کناری قرار می‌گیرد).
+  Widget _profileHeaderCard(BuildContext context, {bool desktop = false}) {
+    return Container(
+      width: desktop ? null : MediaQuery.of(context).size.width,
+      margin: desktop
+          ? EdgeInsets.zero
+          : const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      decoration: ShapeDecoration(
+        color: AppColor.card,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Column(
+        children: [
+          // Profile Picture
+          Container(
+            width: 96,
+            height: 96,
+            decoration: ShapeDecoration(
+              shape: CircleBorder(
+                side: BorderSide(color: AppColor.line),
+              ),
+              shadows: AppColor.cardShadow,
+              image: DecorationImage(
+                image: AssetImage('assets/images/avatar_for_comments.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          SizedBox(height: 16),
+          // بعد از خروج، همین صفحه به حالت مهمان می‌رود
+          // (listener بالای صفحه _loggedIn را false می‌کند)
+          Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                context.read<LoginBloc>().add(LogoutRequested());
+              },
+              child: Text(
+                'خروج از حساب',
+                style: TextStyle(
+                    fontFamily: 'Estedad',
+                    color: Colors.white,
+                    fontSize: 16),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding:
+                    EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                shape: AppShapes.pill,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// آیتم‌های منوی حساب. در موبایل (desktop=false) دقیقاً همان ویجت‌های
+  /// قبلی ساخته می‌شود (margin: null یعنی حاشیه‌ی پیش‌فرض تایل)؛ در
+  /// دسکتاپ حاشیه‌ی افقی حذف و نشانگر ماوس کلیک اضافه می‌شود.
+  List<Widget> _menuSections(BuildContext context, {bool desktop = false}) {
+    final EdgeInsetsGeometry? tileMargin =
+        desktop ? const EdgeInsets.only(bottom: 10) : null;
+    Widget hover(Widget tile) => desktop
+        ? MouseRegion(cursor: SystemMouseCursors.click, child: tile)
+        : tile;
+    final headerStyle = TextStyle(
+      fontFamily: 'Estedad',
+      color: AppColor.onSurfaceVariant,
+      letterSpacing: 6 / 100,
+      fontWeight: FontWeight.w600,
+    );
+    return [
+      Container(
+        margin: desktop
+            ? const EdgeInsets.only(bottom: 10)
+            : EdgeInsets.only(right: 16),
+        child: Text('حساب کاربری', style: headerStyle),
+      ),
+      hover(MenuTileWidget(
+        margin: tileMargin,
+        onTap: () {
+          Navigator.of(context).pushNamed('/orders');
+        },
+        icon: SvgPicture.asset(
+          'assets/icons/Bag.svg',
+          color: AppColor.goldEnd,
+        ),
+        title: 'سفارشات',
+        subtitle: 'سفارش‌های ثبت‌شده شما',
+      )),
+      hover(MenuTileWidget(
+        margin: tileMargin,
+        onTap: () {
+          Navigator.of(context).pushNamed('/addresses');
+        },
+        icon: SvgPicture.asset(
+          'assets/icons/Location.svg',
+          color: AppColor.goldEnd,
+        ),
+        title: 'آدرس‌ها',
+        subtitle: 'آدرس‌های ثبت‌شده شما',
+      )),
+      hover(MenuTileWidget(
+        margin: tileMargin,
+        onTap: () {
+          Navigator.of(context).pushNamed('/account-security');
+        },
+        icon: Icon(Icons.lock_outline,
+            color: AppColor.goldEnd),
+        title: 'امنیت حساب',
+        subtitle: 'تغییر رمز عبور و حذف حساب',
+      )),
+
+      // ==== پشتیبانی و قوانین ====
+      Container(
+        margin: desktop
+            ? const EdgeInsets.only(top: 16, bottom: 10)
+            : EdgeInsets.only(right: 16, top: 16),
+        child: Text('پشتیبانی و قوانین', style: headerStyle),
+      ),
+      hover(MenuTileWidget(
+        margin: tileMargin,
+        onTap: () => Navigator.of(context).pushNamed('/support'),
+        icon: Icon(Icons.headset_mic_outlined,
+            color: AppColor.goldEnd),
+        title: 'تماس با پشتیبانی',
+        subtitle: 'تلفن، ایمیل و پیام‌رسان',
+      )),
+      hover(MenuTileWidget(
+        margin: tileMargin,
+        onTap: () => Navigator.of(context).pushNamed('/terms'),
+        icon: Icon(Icons.description_outlined,
+            color: AppColor.goldEnd),
+        title: 'قوانین و مقررات',
+        subtitle: 'شرایط خرید و مرجوعی',
+      )),
+      hover(MenuTileWidget(
+        margin: tileMargin,
+        onTap: () => Navigator.of(context).pushNamed('/privacy'),
+        icon: Icon(Icons.privacy_tip_outlined,
+            color: AppColor.goldEnd),
+        title: 'حریم خصوصی',
+        subtitle: 'نحوه استفاده از اطلاعات شما',
+      )),
+      hover(MenuTileWidget(
+        margin: tileMargin,
+        onTap: () => Navigator.of(context).pushNamed('/about'),
+        icon: Icon(Icons.info_outline,
+            color: AppColor.goldEnd),
+        title: 'درباره ما',
+        subtitle: 'معرفی فروشگاه',
+      )),
+    ];
   }
 }
 

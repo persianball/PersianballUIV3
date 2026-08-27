@@ -1,5 +1,6 @@
 // lib/views/screens/notification_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/notification_service.dart';
@@ -84,7 +85,7 @@ class _NotificationPageState extends State<NotificationPage> {
             : RefreshIndicator(
                 color: AppColor.goldEnd,
                 onRefresh: _load,
-                child: ListView(
+                child: _centerOnDesktop(ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   children: [
@@ -98,8 +99,19 @@ class _NotificationPageState extends State<NotificationPage> {
                           child: _tile(_items[i]),
                         ),
                   ],
-                ),
+                )),
               ),
+      ),
+    );
+  }
+
+  /// دسکتاپ: لیست اعلان‌ها وسط‌چین با حداکثر عرض ۸۰۰؛ موبایل بی‌اثر.
+  Widget _centerOnDesktop(Widget child) {
+    if (!AppBreakpoints.isDesktop(context)) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: child,
       ),
     );
   }

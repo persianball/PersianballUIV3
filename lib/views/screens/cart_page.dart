@@ -14,6 +14,7 @@ import 'package:marketky/views/screens/login_page.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import 'package:marketky/views/widgets/page_container.dart';
 import 'package:marketky/views/widgets/motion.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 
 class CartPage extends StatefulWidget {
   @override
@@ -25,6 +26,9 @@ class _CartPageState extends State<CartPage> {
   bool _productsExpanded = true;
   bool _coursesExpanded = true;
 
+  /// روش ارسال انتخاب‌شده در ستون کناری دسکتاپ ('post' | 'peyk' | 'free')
+  String? _desktopShippingMethod;
+
   @override
   void initState() {
     super.initState();
@@ -33,17 +37,21 @@ class _CartPageState extends State<CartPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop = AppBreakpoints.isDesktop(context);
     return Scaffold(
       backgroundColor: AppColor.milk,
       appBar: _buildAppBar(),
-      bottomNavigationBar: _buildCheckoutButton(),
+      // در دسکتاپ دکمه تسویه داخل ستون کناری خلاصه سفارش قرار می‌گیرد.
+      bottomNavigationBar: isDesktop ? null : _buildCheckoutButton(),
       body: BlocBuilder<CartBloc, CartState>(
         buildWhen: (previous, current) => (current is CartLoaded ||
             current is CartError ||
             current is CartInitial),
         builder: (context, state) {
           if (state is CartLoaded) {
-            return _buildCartContent(state.cart);
+            return isDesktop
+                ? _buildDesktopCartContent(state.cart)
+                : _buildCartContent(state.cart);
           } else if (state is CartError) {
             return _buildErrorOrLoginPrompt(context, state.message);
           }
@@ -246,7 +254,67 @@ class _CartPageState extends State<CartPage> {
           // Step 1 timeline
           const CheckoutTimeline(currentStep: 0),
           const SizedBox(height: 12),
+          ..._buildItemSections(cart, products, courses),
+        ],
+      ),
+    );
+  }
 
+  /// چیدمان دسکتاپ (>=1024): دو ستون در پوسته‌ی مرکزی ۱۲۰۰ پیکسلی —
+  /// بخش‌های آیتم‌ها در ستون اصلی و خلاصه سفارش + دکمه تسویه در ستون کناری.
+  Widget _buildDesktopCartContent(AllCartFromBackend cart) {
+    if (cart.count == 0 ||
+        cart.results.isEmpty ||
+        cart.results[0].items.isEmpty) {
+      return _buildEmptyCart();
+    }
+
+    final items = cart.results[0].items;
+    final products = items.where((item) => item.product != null).toList();
+    final courses = items.where((item) => item.course != null).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: CenteredContent(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const CheckoutTimeline(currentStep: 0),
+            const SizedBox(height: 20),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ستون اصلی: بخش محصولات و دوره‌ها
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: _buildItemSections(cart, products, courses),
+                  ),
+                ),
+                const SizedBox(width: 24),
+                // ستون کناری: خلاصه سفارش (بالا-چین، شبیه sticky)
+                SizedBox(
+                  width: AppBreakpoints.sidebarWidth,
+                  child: FadeSlideIn(
+                    delay: const Duration(milliseconds: 90),
+                    child: _buildDesktopSummaryCard(cart),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// بخش‌های آیتم سبد (محصولات / دوره‌ها) — مشترک بین موبایل و دسکتاپ.
+  List<Widget> _buildItemSections(
+    AllCartFromBackend cart,
+    List<CartItemFromBackend> products,
+    List<CartItemFromBackend> courses,
+  ) {
+    return [
           // Products Section
           if (products.isNotEmpty) ...[
             _buildSectionHeader(
@@ -321,6 +389,180 @@ class _CartPageState extends State<CartPage> {
               secondChild: const SizedBox(width: double.infinity),
             ),
           ],
+    ];
+  }
+
+  /// کارت خلاصه سفارش در ستون کناری دسکتاپ: همان محتوای شیت پایینی موبایل
+  /// (جمع مبالغ + روش ارسال + دکمه انتخاب آدرس) به‌صورت اینلاین.
+  Widget _buildDesktopSummaryCard(AllCartFromBackend cart) {
+    final price =
+        cart.results.isNotEmpty ? cart.results[0].price : TotalPriceFromBack();
+    final int base = price.price ?? 0;
+    final int discounted = price.discountedPrice ?? base;
+    final int tax = price.nat ?? 0;
+    final bool isFree = price.isFreeShipping ?? false;
+    final int postPrice = price.postShippingPrice ?? 0;
+    final int peykPrice = price.peykShippingPrice ?? 0;
+
+    _desktopShippingMethod ??= isFree ? 'free' : 'post';
+    final String method = _desktopShippingMethod!;
+    final int shippingCost =
+        method == 'free' ? 0 : (method == 'peyk' ? peykPrice : postPrice);
+    final int payable = base - discounted + tax + shippingCost;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: ShapeDecoration(
+        color: AppColor.card,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'جزئیات سفارش',
+            style: TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColor.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _summaryPriceRow('قیمت کل', '${thousandSeparator(base)} تومان'),
+          _summaryPriceRow('تخفیف', '${thousandSeparator(discounted)} تومان',
+              valueColor: AppColor.errorDark),
+          _summaryPriceRow('مالیات', '${thousandSeparator(tax)} تومان'),
+          _summaryPriceRow(
+            'هزینه ارسال',
+            isFree ? 'رایگان' : '${thousandSeparator(shippingCost)} تومان',
+            valueColor: isFree ? AppColor.successDark : null,
+          ),
+          const Divider(height: 24, color: AppColor.outlineVariantDark),
+          _summaryPriceRow(
+            'مبلغ قابل پرداخت',
+            '${thousandSeparator(payable)} تومان',
+            valueColor: AppColor.goldEnd,
+            emphasize: true,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'روش ارسال',
+            style: TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 14,
+              color: AppColor.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (isFree)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColor.successDark.withOpacity(0.1),
+                border:
+                    Border.all(color: AppColor.successDark.withOpacity(0.4)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.local_shipping, color: AppColor.successDark),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'ارسال رایگان برای سفارش شما فعال است',
+                      style: TextStyle(
+                          fontFamily: 'Estedad', color: AppColor.onSurface),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            RadioListTile<String>(
+              value: 'post',
+              groupValue: method,
+              activeColor: AppColor.goldEnd,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              onChanged: (v) => setState(() => _desktopShippingMethod = v),
+              title: const Text('ارسال توسط پست',
+                  style: TextStyle(
+                      fontFamily: 'Estedad', color: AppColor.onSurface)),
+              secondary: Text('${thousandSeparator(postPrice)} تومان',
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.onSurface)),
+            ),
+            RadioListTile<String>(
+              value: 'peyk',
+              groupValue: method,
+              activeColor: AppColor.goldEnd,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              onChanged: (v) => setState(() => _desktopShippingMethod = v),
+              title: const Text('ارسال توسط پیک',
+                  style: TextStyle(
+                      fontFamily: 'Estedad', color: AppColor.onSurface)),
+              secondary: Text('${thousandSeparator(peykPrice)} تومان',
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.onSurface)),
+            ),
+          ],
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AddressSelectionPage(),
+                  settings: RouteSettings(arguments: {
+                    'cart': cart,
+                    'delivery_method': _desktopShippingMethod,
+                  }),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColor.goldEnd,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: AppShapes.pill,
+            ),
+            child: const Text(
+              'تسویه و انتخاب آدرس',
+              style: TextStyle(
+                  fontFamily: 'Estedad',
+                  color: AppColor.onGold,
+                  fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ردیف قیمت در کارت خلاصه دسکتاپ.
+  Widget _summaryPriceRow(String label, String value,
+      {Color? valueColor, bool emphasize = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 14,
+                  color: AppColor.onSurfaceVariant)),
+          Text(value,
+              style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: emphasize ? 15 : 14,
+                  fontWeight: emphasize ? FontWeight.w800 : FontWeight.w600,
+                  color: valueColor ?? AppColor.onSurface)),
         ],
       ),
     );

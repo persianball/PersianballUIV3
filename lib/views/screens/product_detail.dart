@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_text_styles.dart';
@@ -112,98 +113,32 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
           final product = state.product;
           return BlocBuilder<ProductDetailVariantBloc, ProductDetailState>(
             builder: (context, variantState) {
+              // در دسکتاپ نوار پایین حذف می‌شود و همین دکمه‌ها داخل پنل
+              // اطلاعات رندر می‌شوند؛ اما BlocListener باید زنده بماند تا
+              // دیالوگ موفقیت و ناوبری «خرید فوری» در هر دو حالت کار کند.
               return BlocListener<CartBloc, CartState>(
-                listener: (context, cartState) {
-                  if (cartState is CartItemAdded) {
-                    // «خرید فوری»: به‌جای دیالوگ، مستقیم به سبد می‌رود
-                    if (_buyNowPending) {
-                      _buyNowPending = false;
-                      Navigator.of(context).pushNamed('/cart');
-                      return;
-                    }
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        backgroundColor: AppColor.card,
-                        shape: AppShapes.border(AppShapes.rLg),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.check_circle_rounded,
-                                color: AppColor.success, size: 60),
-                            const SizedBox(height: 16),
-                            Text(
-                              cartState.message,
-                              style: const TextStyle(
-                                fontFamily: 'Estedad',
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: AppColor.ink,
-                              ),
-                              textAlign: TextAlign.center,
+                listener: _onCartState,
+                child: AppBreakpoints.isDesktop(context)
+                    ? const SizedBox.shrink()
+                    : Container(
+                        decoration: ShapeDecoration(
+                          color: AppColor.card,
+                          shape: AppShapes.borderTop(AppShapes.rXl),
+                          shadows: AppColor.floatingShadow,
+                        ),
+                        child: SafeArea(
+                          top: false,
+                          child: Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                              child: _actionButtons(
+                                  context, product, variantState),
                             ),
-                            const SizedBox(height: 18),
-                            GradientButton(
-                              label: 'باشه',
-                              height: 44,
-                              fontSize: 14,
-                              onPressed: () => Navigator.of(ctx).pop(),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    );
-                  }
-                  if (cartState is CartError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(cartState.message,
-                            style: const TextStyle(fontFamily: 'Estedad')),
-                        backgroundColor: AppColor.danger,
-                      ),
-                    );
-                  }
-                },
-                child: Container(
-                  decoration: ShapeDecoration(
-                    color: AppColor.card,
-                    shape: AppShapes.borderTop(AppShapes.rXl),
-                    shadows: AppColor.floatingShadow,
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: SoftButton(
-                                label: 'افزودن به سبد',
-                                height: 50,
-                                icon: const Icon(
-                                    Icons.add_shopping_cart_rounded),
-                                onPressed: () => _openAddToCart(
-                                    context, product, variantState),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: GradientButton(
-                                label: 'خرید فوری',
-                                height: 50,
-                                icon: const Icon(Icons.bolt_rounded),
-                                onPressed: () =>
-                                    _buyNow(context, product, variantState),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               );
             },
           );
@@ -375,6 +310,87 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     context.read<CartBloc>().add(AddToCart(context, item.id, 1));
   }
 
+  /// واکنش به نتیجه‌ی افزودن به سبد؛ بین نوار پایین (موبایل) و دکمه‌های
+  /// داخل پنل اطلاعات (دسکتاپ) مشترک است — منطق قبلی بدون تغییر.
+  void _onCartState(BuildContext context, CartState cartState) {
+    if (cartState is CartItemAdded) {
+      // «خرید فوری»: به‌جای دیالوگ، مستقیم به سبد می‌رود
+      if (_buyNowPending) {
+        _buyNowPending = false;
+        Navigator.of(context).pushNamed('/cart');
+        return;
+      }
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColor.card,
+          shape: AppShapes.border(AppShapes.rLg),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle_rounded,
+                  color: AppColor.success, size: 60),
+              const SizedBox(height: 16),
+              Text(
+                cartState.message,
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.ink,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              GradientButton(
+                label: 'باشه',
+                height: 44,
+                fontSize: 14,
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (cartState is CartError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(cartState.message,
+              style: const TextStyle(fontFamily: 'Estedad')),
+          backgroundColor: AppColor.danger,
+        ),
+      );
+    }
+  }
+
+  /// دو دکمه‌ی «افزودن به سبد» و «خرید فوری» — در موبایل داخل نوار پایین
+  /// و در دسکتاپ داخل پنل اطلاعات؛ onPressedها دقیقاً همان منطق قبلی است.
+  Widget _actionButtons(BuildContext context, ProductDetail product,
+      ProductDetailState variantState) {
+    return Row(
+      children: [
+        Expanded(
+          child: SoftButton(
+            label: 'افزودن به سبد',
+            height: 50,
+            icon: const Icon(Icons.add_shopping_cart_rounded),
+            onPressed: () => _openAddToCart(context, product, variantState),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GradientButton(
+            label: 'خرید فوری',
+            height: 50,
+            icon: const Icon(Icons.bolt_rounded),
+            onPressed: () => _buyNow(context, product, variantState),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ==================== بدنه‌ی صفحه ====================
 
   Widget _buildProductContent(ProductDetail product, BuildContext context) {
@@ -400,6 +416,46 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
           // محصولی که هیچ سایزی ندارد هرگز رویداد انتخاب سایز نمی‌گیرد؛
           // پیش از این صفحه‌اش برای همیشه روی لودینگ می‌ماند.
           variant = product.variants.isEmpty ? null : product.variants.first;
+        }
+        // دسکتاپ: چیدمان کلاسیک فروشگاهی — گالری و پنل اطلاعات کنار هم
+        // داخل پوسته‌ی ۱۲۰۰ پیکسلی، آکاردئون‌ها زیرشان به عرض کامل پوسته.
+        if (AppBreakpoints.isDesktop(context)) {
+          return ListView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.zero,
+            children: [
+              const SizedBox(height: 24),
+              CenteredContent(
+                child: Directionality(
+                  // در RTL فرزند اول سمت راست می‌نشیند: گالری راست، اطلاعات چپ
+                  textDirection: TextDirection.rtl,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 11, // ~۵۵٪ عرض
+                        child: _buildGalleryPanel(product, variant,
+                            desktop: true),
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        flex: 9, // ~۴۵٪ عرض
+                        child: _buildInfoPanel(
+                          product,
+                          variant,
+                          size,
+                          desktopActions:
+                              _actionButtons(context, product, variantState),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              _buildAccordions(product, desktop: true),
+              const SizedBox(height: 40),
+            ],
+          );
         }
         return ListView(
           physics: const BouncingScrollPhysics(),
@@ -464,7 +520,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
   /// بخش بالا: کارت گوشه‌گرد با تینت رنگ واریانت، تصویر بزرگ و ریل عمودی
   /// تامبنیل چسبیده به لبه‌ی راست
-  Widget _buildGalleryPanel(ProductDetail product, ProductVariant? variant) {
+  Widget _buildGalleryPanel(ProductDetail product, ProductVariant? variant,
+      {bool desktop = false}) {
     // محصولاتی که واریانت ندارند هم باید گالری داشته باشند؛ شناسه‌ی خود
     // محصول برای کلید انیمیشن استفاده می‌شود.
     final int variantKey = variant?.id ?? product.id;
@@ -487,12 +544,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     );
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.of(context).padding.top + 10, 16, 0),
+      // در دسکتاپ پوسته‌ی مرکزی خودش گاتر دارد؛ پدینگ اضافی لازم نیست.
+      padding: desktop
+          ? EdgeInsets.zero
+          : EdgeInsets.fromLTRB(
+              16, MediaQuery.of(context).padding.top + 10, 16, 0),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 420),
         curve: Curves.easeOutCubic,
-        height: 400,
+        height: desktop ? 520 : 400,
         decoration: ShapeDecoration(
           color: panelTint,
           shape: AppShapes.border(AppShapes.rXl),
@@ -521,21 +581,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                             key: ValueKey('video-$variantKey'),
                             videoUrl: video,
                           )
-                        : GestureDetector(
+                        : MouseRegion(
                             key: ValueKey('img-$variantKey-$index'),
-                            onTap: images.isEmpty
-                                ? null
-                                : () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            ImageViewer(imageUrl: images),
+                            cursor: images.isEmpty
+                                ? MouseCursor.defer
+                                : SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: images.isEmpty
+                                  ? null
+                                  : () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              ImageViewer(imageUrl: images),
+                                        ),
                                       ),
-                                    ),
-                            child: AppNetworkImage(
-                              url: images.isEmpty ? null : images[index],
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
+                              child: AppNetworkImage(
+                                url: images.isEmpty ? null : images[index],
+                                fit: BoxFit.contain,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
                             ),
                           ),
                   ),
@@ -638,32 +703,39 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutCubic,
-          height: 72,
-          decoration: ShapeDecoration(
-            color: AppColor.card,
-            shape: AppShapes.border(
-              AppShapes.rMd,
-              side: BorderSide(
-                color: selected ? AppColor.pitchGreen : Colors.transparent,
-                width: 2,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            height: 72,
+            decoration: ShapeDecoration(
+              color: AppColor.card,
+              shape: AppShapes.border(
+                AppShapes.rMd,
+                side: BorderSide(
+                  color: selected ? AppColor.pitchGreen : Colors.transparent,
+                  width: 2,
+                ),
               ),
+              shadows: selected ? AppColor.greenShadow : AppColor.cardShadow,
             ),
-            shadows: selected ? AppColor.greenShadow : AppColor.cardShadow,
+            child: SquircleClip(radius: AppShapes.rMd, child: child),
           ),
-          child: SquircleClip(radius: AppShapes.rMd, child: child),
         ),
       ),
     );
   }
 
   /// بخش پایین: کارت سفید گوشه‌گرد با نام، تعداد، قیمت، رنگ، سایز و توضیح
+  ///
+  /// [desktopActions] فقط در دسکتاپ پاس داده می‌شود: همان دو دکمه‌ی خرید
+  /// نوار پایین که این‌جا داخل خود کارت رندر می‌شوند.
   Widget _buildInfoPanel(
-      ProductDetail product, ProductVariant? variant, SizeVariant? size) {
+      ProductDetail product, ProductVariant? variant, SizeVariant? size,
+      {Widget? desktopActions}) {
     // اگر سایزی وجود ندارد، قیمت از خود محصول خوانده می‌شود؛ اگر آن هم
     // نباشد (بک‌اند price را null داده) به‌جای عدد، «تماس بگیرید» می‌آید.
     final int original = size?.price ?? product.price ?? 0;
@@ -686,14 +758,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 : 'موجود در انبار'));
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      // در دسکتاپ ستون‌بندی و گاتر با پوسته‌ی مرکزی است؛ این پدینگ فقط
+      // برای حالت پشته‌ای موبایل لازم است.
+      padding: desktopActions != null
+          ? EdgeInsets.zero
+          : const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: Container(
         decoration: ShapeDecoration(
           color: AppColor.card,
           shape: AppShapes.border(AppShapes.rXl),
           shadows: AppColor.cardShadow,
         ),
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+        padding: desktopActions != null
+            ? const EdgeInsets.fromLTRB(22, 22, 22, 24)
+            : const EdgeInsets.fromLTRB(18, 18, 18, 20),
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: Column(
@@ -838,6 +916,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 color: stockColor,
               ),
 
+              // دسکتاپ: دکمه‌های خرید همین‌جا (نوار پایین پنهان است)
+              if (desktopActions != null) ...[
+                const SizedBox(height: 22),
+                desktopActions,
+              ],
+
               if ((product.description ?? '').trim().isNotEmpty) ...[
                 const SizedBox(height: 18),
                 const Text(
@@ -869,9 +953,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   }
 
   /// آکاردئون جزئیات: توضیحات کامل، مشابه، نظرات، سوالات متداول
-  Widget _buildAccordions(ProductDetail product) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+  ///
+  /// در دسکتاپ زیر دو ستون گالری/اطلاعات، به عرض کامل پوسته‌ی مرکزی
+  /// رندر می‌شود.
+  Widget _buildAccordions(ProductDetail product, {bool desktop = false}) {
+    final content = Padding(
+      padding: desktop
+          ? const EdgeInsets.only(top: 24)
+          : const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
@@ -1006,6 +1095,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
         ),
       ),
     );
+    return desktop ? CenteredContent(child: content) : content;
   }
 
 }

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_text_styles.dart';
@@ -139,6 +140,10 @@ class _HomePageState extends State<HomePage> {
     String hours =
         flashsaleCountdownDuration.inHours.remainder(24).toString().padLeft(2, '0');
 
+    // دسکتاپ (>=1024): پوسته‌ی بالای صفحه (page_switcher) هدر را نمایش
+    // می‌دهد؛ اینجا فقط محتوای مرکزی با عرض حداکثر ۱۲۰۰ چیده می‌شود.
+    final bool isDesktop = AppBreakpoints.isDesktop(context);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -165,24 +170,31 @@ class _HomePageState extends State<HomePage> {
                     physics: const BouncingScrollPhysics(
                         parent: AlwaysScrollableScrollPhysics()),
                     slivers: [
-                      SliverToBoxAdapter(child: _buildHeader()),
-                      SliverToBoxAdapter(child: _buildGreeting()),
-                      SliverToBoxAdapter(child: _buildSearchRow()),
+                      // هدر موبایل (آواتار/عنوان/زنگ/سبد) در دسکتاپ حذف
+                      // می‌شود؛ نوار بالای پوسته همان‌ها را دارد.
+                      if (!isDesktop)
+                        SliverToBoxAdapter(child: _buildHeader()),
+                      SliverToBoxAdapter(child: _buildGreeting(isDesktop)),
+                      SliverToBoxAdapter(child: _buildSearchRow(isDesktop)),
                       if (categories.isNotEmpty)
                         SliverToBoxAdapter(
-                            child: _buildCategoryChips(all, categories)),
-                      _buildProductSliver(results),
-                      SliverToBoxAdapter(child: _buildHero()),
+                            child: _buildCategoryChips(
+                                all, categories, isDesktop)),
+                      _buildProductSliver(results, isDesktop),
+                      SliverToBoxAdapter(child: _buildHero(isDesktop)),
                       if (_featuredCourse != null)
                         SliverToBoxAdapter(
-                            child: _buildFeaturedCourse(_featuredCourse!)),
+                            child: _buildFeaturedCourse(
+                                _featuredCourse!, isDesktop)),
                       if (flashProducts.isNotEmpty)
                         SliverToBoxAdapter(
                           child: _buildFlashSaleSection(
-                              flashProducts, hours, minutes, seconds),
+                              flashProducts, hours, minutes, seconds, isDesktop),
                         ),
-                      // فضای خالی زیر لیست تا نوار ناوبری شناور روی محتوا نیفتد
-                      const SliverToBoxAdapter(child: SizedBox(height: 110)),
+                      // فضای خالی زیر لیست تا نوار ناوبری شناور روی محتوا
+                      // نیفتد؛ در دسکتاپ نوار پایینی وجود ندارد.
+                      SliverToBoxAdapter(
+                          child: SizedBox(height: isDesktop ? 40 : 110)),
                     ],
                   ),
                 );
@@ -193,6 +205,14 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  /// پوسته‌ی مشترک بخش‌های دسکتاپ: وسط‌چین با حداکثر عرض ۱۲۰۰.
+  /// پدینگ افقی ۲۰ خودِ بخش‌ها نقش لبه (gutter) را بازی می‌کند، پس
+  /// gutter اضافه لازم نیست. در موبایل/تبلت همان چیدمان قبلی برمی‌گردد.
+  Widget _desktopSection(bool isDesktop, Widget child) {
+    if (!isDesktop) return child;
+    return CenteredContent(withGutter: false, child: child);
   }
 
   // ==== هدر: آواتار | عنوان | زنگ + سبد ====
@@ -266,37 +286,40 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildGreeting() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _userName == null ? 'سلام، خوش آمدید' : 'سلام $_userName',
-            style: AppTextStyles.headlineLg.copyWith(
-              fontSize: 26,
-              color: AppColor.ink,
-              fontWeight: FontWeight.w700,
+  Widget _buildGreeting(bool isDesktop) {
+    // در دسکتاپ خوش‌آمدگویی نقش «قهرمان» صفحه را می‌گیرد: تایپوگرافی
+    // بزرگ‌تر و فاصله‌ی بیشتر از بالا (هدر موبایل حذف شده است).
+    return _desktopSection(
+      isDesktop,
+      Padding(
+        padding: EdgeInsets.fromLTRB(20, isDesktop ? 40 : 22, 20, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _userName == null ? 'سلام، خوش آمدید' : 'سلام $_userName',
+              style: AppTextStyles.headlineLg.copyWith(
+                fontSize: isDesktop ? 34 : 26,
+                color: AppColor.ink,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'بهترین‌ها را برای خود پیدا کنید.',
-            style: AppTextStyles.bodyMd
-                .copyWith(fontSize: 13, color: AppColor.inkMuted),
-          ),
-        ],
+            SizedBox(height: isDesktop ? 8 : 4),
+            Text(
+              'بهترین‌ها را برای خود پیدا کنید.',
+              style: AppTextStyles.bodyMd.copyWith(
+                  fontSize: isDesktop ? 15 : 13, color: AppColor.inkMuted),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // ==== جست‌وجو + دکمه‌ی فیلتر ====
 
-  Widget _buildSearchRow() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
+  Widget _buildSearchRow(bool isDesktop) {
+    final Widget row = Row(
         children: [
           Expanded(
             child: Container(
@@ -346,19 +369,36 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+      );
+
+    // دسکتاپ: فیلد جست‌وجو در عرض کامل ۱۲۰۰ کشیده نمی‌شود؛ به عرض
+    // خوش‌خوان (~۵۶۰) محدود و از سمت شروع (راست در RTL) تراز می‌شود.
+    return _desktopSection(
+      isDesktop,
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+        child: isDesktop
+            ? Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: row,
+                ),
+              )
+            : row,
       ),
     );
   }
 
   // ==== چیپ دسته‌بندی ====
 
-  Widget _buildCategoryChips(List<Product> all, List<Category> categories) {
-    return Container(
-      height: 44,
-      margin: const EdgeInsets.only(top: 20),
-      child: ListView(
+  Widget _buildCategoryChips(
+      List<Product> all, List<Category> categories, bool isDesktop) {
+    final Widget list = ListView(
         scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none,
+        // در دسکتاپ لیست داخل ستون مرکزی ۱۲۰۰ است؛ برش لازم است تا
+        // چیپ‌های اسکرول‌شده روی حاشیه‌ی سفید دو طرف نیفتند.
+        clipBehavior: isDesktop ? Clip.hardEdge : Clip.none,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
           _CategoryPill(
@@ -379,125 +419,176 @@ class _HomePageState extends State<HomePage> {
             );
           }),
         ],
+      );
+
+    return _desktopSection(
+      isDesktop,
+      Container(
+        height: 44,
+        margin: const EdgeInsets.only(top: 20),
+        child: list,
       ),
     );
   }
 
   // ==== گرید محصولات ====
 
-  Widget _buildProductSliver(List<Product> results) {
+  Widget _buildProductSliver(List<Product> results, bool isDesktop) {
     if (results.isEmpty) {
       return SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 48, 20, 0),
-          child: Column(
-            children: [
-              const Icon(Icons.search_off_rounded,
-                  size: 44, color: AppColor.lineStrong),
-              const SizedBox(height: 12),
-              Text('محصولی با این مشخصات پیدا نشد',
-                  style: AppTextStyles.bodyMd.copyWith(fontSize: 13)),
-            ],
+        child: _desktopSection(
+          isDesktop,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 48, 20, 0),
+            child: Column(
+              children: [
+                const Icon(Icons.search_off_rounded,
+                    size: 44, color: AppColor.lineStrong),
+                const SizedBox(height: 12),
+                Text('محصولی با این مشخصات پیدا نشد',
+                    style: AppTextStyles.bodyMd.copyWith(fontSize: 13)),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      sliver: SliverLayoutBuilder(
-        builder: (context, constraints) {
-          // چیدمان واکنش‌گرا: روی عرض‌های ۳۲۰ تا ۴۳۰ دو ستون، بالاتر بیشتر
-          final width = constraints.crossAxisExtent;
+    // ورود پلکانی کارت‌ها؛ تأخیر سقف دارد تا اسکرول به پایین
+    // لیست بلند، منتظر انیمیشن نماند. (مشترک بین موبایل و دسکتاپ)
+    final delegate = SliverChildBuilderDelegate(
+      (context, i) => FadeSlideIn(
+        delay: Duration(milliseconds: 40 * (i % 8)),
+        child: ProductGridCard(product: results[i]),
+      ),
+      childCount: results.length,
+    );
+
+    return SliverLayoutBuilder(
+      builder: (context, constraints) {
+        final viewport = constraints.crossAxisExtent;
+        const double spacing = 16;
+
+        if (!isDesktop) {
+          // موبایل/تبلت: دقیقاً همان چیدمان قبلی (۲ ستون، از ۶۲۰ به بالا ۳)
+          final width = viewport - 40;
           final columns = width >= 620 ? 3 : 2;
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.68,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              // ورود پلکانی کارت‌ها؛ تأخیر سقف دارد تا اسکرول به پایین
-              // لیست بلند، منتظر انیمیشن نماند.
-              (context, i) => FadeSlideIn(
-                delay: Duration(milliseconds: 40 * (i % 8)),
-                child: ProductGridCard(product: results[i]),
+          return SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                mainAxisSpacing: spacing,
+                crossAxisSpacing: spacing,
+                childAspectRatio: 0.68,
               ),
-              childCount: results.length,
+              delegate: delegate,
             ),
           );
-        },
-      ),
+        }
+
+        // دسکتاپ: گرید هم‌عرض با بقیه‌ی بخش‌ها (۱۲۰۰ منهای لبه‌ی ۲۰) و
+        // وسط‌چین از طریق پدینگ محاسبه‌شده‌ی دو طرف.
+        const double targetWidth = AppBreakpoints.contentMaxWidth - 40;
+        final double sidePad =
+            ((viewport - targetWidth) / 2).clamp(20.0, double.infinity).toDouble();
+        final double gridWidth = viewport - sidePad * 2;
+        final int columns = AppBreakpoints.gridColumns(gridWidth);
+        // پاورقی متن کارت ارتفاع تقریباً ثابتی دارد؛ نسبت ابعاد بر اساس
+        // عرض واقعی کارت محاسبه می‌شود تا در ۴ ستون فضای خالی نماند.
+        final double cardWidth =
+            (gridWidth - (columns - 1) * spacing) / columns;
+        final double ratio = cardWidth / (cardWidth + 80);
+
+        return SliverPadding(
+          padding: EdgeInsets.fromLTRB(sidePad, 24, sidePad, 0),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisSpacing: spacing,
+              crossAxisSpacing: spacing,
+              childAspectRatio: ratio,
+            ),
+            delegate: delegate,
+          ),
+        );
+      },
     );
   }
 
   // ==== بنرها (داده‌ی موجود NotificationService.banners) ====
 
-  Widget _buildHero() {
+  Widget _buildHero(bool isDesktop) {
     final banners = NotificationService.banners();
     if (banners.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-      child: Container(
-        decoration: ShapeDecoration(
-          shape: AppShapes.border(AppShapes.rXl),
-          shadows: AppColor.floatingShadow,
-        ),
-        child: SquircleClip(
-          radius: AppShapes.rXl,
-          child: SizedBox(
-            height: 190,
-            child: CarouselSlider(
-              options: CarouselOptions(
-                height: 190,
-                autoPlay: true,
-                autoPlayInterval: const Duration(seconds: 5),
-                viewportFraction: 1.0,
+    // دسکتاپ: بنر بلندتر و تایپوگرافی درشت‌تر، مثل هیروی سایت‌های فروشگاهی
+    final double bannerHeight = isDesktop ? 320 : 190;
+    return _desktopSection(
+      isDesktop,
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+        child: Container(
+          decoration: ShapeDecoration(
+            shape: AppShapes.border(AppShapes.rXl),
+            shadows: AppColor.floatingShadow,
+          ),
+          child: SquircleClip(
+            radius: AppShapes.rXl,
+            child: SizedBox(
+              height: bannerHeight,
+              child: CarouselSlider(
+                options: CarouselOptions(
+                  height: bannerHeight,
+                  autoPlay: true,
+                  autoPlayInterval: const Duration(seconds: 5),
+                  viewportFraction: 1.0,
+                ),
+                items: banners
+                    .map((b) => Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(b.assetImage, fit: BoxFit.cover),
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [Color(0xE6101A12), Color(0x22101A12)],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(isDesktop ? 32 : 18),
+                              child: Align(
+                                alignment: AlignmentDirectional.bottomStart,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const PillTag(
+                                      label: 'پیشنهاد ویژه',
+                                      icon: Icons.sports_soccer,
+                                      color: Colors.white,
+                                      gradient: AppColor.greenGradient,
+                                    ),
+                                    SizedBox(height: isDesktop ? 14 : 10),
+                                    Text(b.title,
+                                        style: AppTextStyles.headlineMd.copyWith(
+                                            color: Colors.white,
+                                            fontSize: isDesktop ? 28 : 19)),
+                                    SizedBox(height: isDesktop ? 8 : 4),
+                                    Text(b.subtitle,
+                                        style: AppTextStyles.bodyMd.copyWith(
+                                            color: Colors.white70,
+                                            fontSize: isDesktop ? 15 : 12)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ))
+                    .toList(),
               ),
-              items: banners
-                  .map((b) => Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.asset(b.assetImage, fit: BoxFit.cover),
-                          const DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                                colors: [Color(0xE6101A12), Color(0x22101A12)],
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(18),
-                            child: Align(
-                              alignment: AlignmentDirectional.bottomStart,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const PillTag(
-                                    label: 'پیشنهاد ویژه',
-                                    icon: Icons.sports_soccer,
-                                    color: Colors.white,
-                                    gradient: AppColor.greenGradient,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(b.title,
-                                      style: AppTextStyles.headlineMd.copyWith(
-                                          color: Colors.white, fontSize: 19)),
-                                  const SizedBox(height: 4),
-                                  Text(b.subtitle,
-                                      style: AppTextStyles.bodyMd.copyWith(
-                                          color: Colors.white70, fontSize: 12)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ))
-                  .toList(),
             ),
           ),
         ),
@@ -532,160 +623,198 @@ class _HomePageState extends State<HomePage> {
 
   // ==== دوره‌ی ویژه (CourseService موجود) ====
 
-  Widget _buildFeaturedCourse(Course course) {
+  Widget _buildFeaturedCourse(Course course, bool isDesktop) {
     final price = course.discountPercentage > 0
         ? (course.coursePrice * (1 - course.discountPercentage / 100)).toInt()
         : course.coursePrice;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+    final Widget info = Padding(
+      padding: EdgeInsets.all(isDesktop ? 24 : 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _sectionTitle('دوره‌های ویژه'),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CourseDetailPage(id: course.id)),
-            ),
-            child: Container(
-              decoration: ShapeDecoration(
-                color: AppColor.card,
-                shape: AppShapes.border(AppShapes.rLg),
-                shadows: AppColor.cardShadow,
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              PillTag(
+                  label: course.difficulty,
+                  icon: Icons.sports_soccer,
+                  dense: true),
+              if (course.discountPercentage > 0)
+                PillTag(
+                  label: '٪${course.discountPercentage} تخفیف',
+                  icon: Icons.local_offer_outlined,
+                  color: AppColor.danger,
+                  dense: true,
+                ),
+            ],
+          ),
+          SizedBox(height: isDesktop ? 12 : 8),
+          Text(course.nameFarsi,
+              style: AppTextStyles.headlineMd.copyWith(
+                  fontSize: isDesktop ? 20 : 16, color: AppColor.ink)),
+          SizedBox(height: isDesktop ? 8 : 4),
+          Text(
+            course.description,
+            maxLines: isDesktop ? 3 : 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.bodyMd
+                .copyWith(fontSize: isDesktop ? 13 : 12),
+          ),
+          SizedBox(height: isDesktop ? 18 : 12),
+          Row(
+            children: [
+              Text('${thousandSeparator(price)} تومان',
+                  style: AppTextStyles.bodyMd.copyWith(
+                      fontSize: isDesktop ? 16 : 14,
+                      color: AppColor.ink,
+                      fontWeight: FontWeight.w800)),
+              const Spacer(),
+              GradientButton(
+                label: 'مشاهده دوره',
+                expand: false,
+                height: isDesktop ? 44 : 38,
+                fontSize: isDesktop ? 13 : 12,
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => CourseDetailPage(id: course.id)),
+                ),
               ),
-              child: SquircleClip(
-                radius: AppShapes.rLg,
-                child: Column(
-                  children: [
-                    AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: AppNetworkImage(url: _abs(course.image)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: [
-                              PillTag(
-                                  label: course.difficulty,
-                                  icon: Icons.sports_soccer,
-                                  dense: true),
-                              if (course.discountPercentage > 0)
-                                PillTag(
-                                  label: '٪${course.discountPercentage} تخفیف',
-                                  icon: Icons.local_offer_outlined,
-                                  color: AppColor.danger,
-                                  dense: true,
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(course.nameFarsi,
-                              style: AppTextStyles.headlineMd
-                                  .copyWith(fontSize: 16, color: AppColor.ink)),
-                          const SizedBox(height: 4),
-                          Text(
-                            course.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.bodyMd.copyWith(fontSize: 12),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Text('${thousandSeparator(price)} تومان',
-                                  style: AppTextStyles.bodyMd.copyWith(
-                                      fontSize: 14,
-                                      color: AppColor.ink,
-                                      fontWeight: FontWeight.w800)),
-                              const Spacer(),
-                              GradientButton(
-                                label: 'مشاهده دوره',
-                                expand: false,
-                                height: 38,
-                                fontSize: 12,
-                                icon: const Icon(Icons.arrow_back_rounded),
-                                onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          CourseDetailPage(id: course.id)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+            ],
+          ),
+        ],
+      ),
+    );
+
+    // دسکتاپ: کارت افقی (تصویر یک سمت، توضیحات سمت دیگر) تا تصویر ۱۶:۹
+    // در عرض ۱۲۰۰ بیش از حد بزرگ نشود؛ موبایل همان کارت عمودی قبلی.
+    final Widget cardBody = isDesktop
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 5,
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: AppNetworkImage(url: _abs(course.image)),
+                ),
+              ),
+              Expanded(flex: 7, child: info),
+            ],
+          )
+        : Column(
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: AppNetworkImage(url: _abs(course.image)),
+              ),
+              info,
+            ],
+          );
+
+    return _desktopSection(
+      isDesktop,
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionTitle('دوره‌های ویژه'),
+            const SizedBox(height: 12),
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => CourseDetailPage(id: course.id)),
+                ),
+                child: Container(
+                  decoration: ShapeDecoration(
+                    color: AppColor.card,
+                    shape: AppShapes.border(AppShapes.rLg),
+                    shadows: AppColor.cardShadow,
+                  ),
+                  child: SquircleClip(
+                    radius: AppShapes.rLg,
+                    child: cardBody,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // ==== فروش ویژه ====
 
-  Widget _buildFlashSaleSection(
-      List<Product> products, String hours, String minutes, String seconds) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-      decoration: ShapeDecoration(
-        color: AppColor.card,
-        shape: AppShapes.border(AppShapes.rLg),
-        shadows: AppColor.cardShadow,
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const PillTag(
-                  label: 'فروش ویژه',
-                  icon: Icons.flash_on_rounded,
-                  color: Colors.white,
-                  gradient: AppColor.greenGradient,
-                ),
-                Row(
-                  textDirection: TextDirection.ltr,
-                  children: [
-                    FlashsaleCountdownTile(digit: hours[0]),
-                    FlashsaleCountdownTile(digit: hours[1]),
-                    Text(':', style: AppTextStyles.bodyLg),
-                    FlashsaleCountdownTile(digit: minutes[0]),
-                    FlashsaleCountdownTile(digit: minutes[1]),
-                    Text(':', style: AppTextStyles.bodyLg),
-                    FlashsaleCountdownTile(digit: seconds[0]),
-                    FlashsaleCountdownTile(digit: seconds[1]),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 268,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              padding: const EdgeInsets.fromLTRB(14, 6, 14, 16),
-              itemCount: products.length,
-              separatorBuilder: (_, i) => const SizedBox(width: 12),
-              itemBuilder: (_, index) => SizedBox(
-                width: 165,
-                child: ProductGridCard(product: products[index]),
+  Widget _buildFlashSaleSection(List<Product> products, String hours,
+      String minutes, String seconds, bool isDesktop) {
+    // دسکتاپ: کارت‌های عریض‌تر و فاصله‌ی داخلی بیشتر؛ همان لیست افقی.
+    final double itemWidth = isDesktop ? 200 : 165;
+    final double listHeight = isDesktop ? 306 : 268;
+    final double innerPad = isDesktop ? 18 : 14;
+
+    return _desktopSection(
+      isDesktop,
+      Container(
+        margin: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rLg),
+          shadows: AppColor.cardShadow,
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(innerPad, innerPad, innerPad, 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const PillTag(
+                    label: 'فروش ویژه',
+                    icon: Icons.flash_on_rounded,
+                    color: Colors.white,
+                    gradient: AppColor.greenGradient,
+                  ),
+                  Row(
+                    textDirection: TextDirection.ltr,
+                    children: [
+                      FlashsaleCountdownTile(digit: hours[0]),
+                      FlashsaleCountdownTile(digit: hours[1]),
+                      Text(':', style: AppTextStyles.bodyLg),
+                      FlashsaleCountdownTile(digit: minutes[0]),
+                      FlashsaleCountdownTile(digit: minutes[1]),
+                      Text(':', style: AppTextStyles.bodyLg),
+                      FlashsaleCountdownTile(digit: seconds[0]),
+                      FlashsaleCountdownTile(digit: seconds[1]),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            SizedBox(
+              height: listHeight,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                // در دسکتاپ کارت‌های اسکرول‌شده نباید بیرون کارتِ بخش،
+                // روی حاشیه‌ی صفحه کشیده شوند.
+                clipBehavior: isDesktop ? Clip.hardEdge : Clip.none,
+                padding: EdgeInsets.fromLTRB(innerPad, 6, innerPad, 16),
+                itemCount: products.length,
+                separatorBuilder: (_, i) => const SizedBox(width: 12),
+                itemBuilder: (_, index) => SizedBox(
+                  width: itemWidth,
+                  child: ProductGridCard(product: products[index]),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

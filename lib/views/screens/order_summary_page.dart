@@ -9,6 +9,7 @@ import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/address_model.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -229,6 +230,8 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     // مبلغی که کاربر باید بپردازد
     final payable = base - discountBase;
 
+    final bool isDesktop = AppBreakpoints.isDesktop(context);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -241,18 +244,119 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
         ),
         body: SafeArea(
-          child: Column(
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: CheckoutTimeline(currentStep: 2),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
+          child: isDesktop
+              ? _buildDesktopBody(
+                  items: items,
+                  base: base,
+                  displayedDiscount: displayedDiscount,
+                  tax: tax,
+                  isFree: isFree,
+                  shippingCost: shippingCost,
+                  payable: payable,
+                )
+              : Column(
                   children: [
-                    // Items summary
-                    Container(
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: CheckoutTimeline(currentStep: 2),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          _buildItemsCard(items),
+                          const SizedBox(height: 12),
+                          _buildAddressCard(),
+                          const SizedBox(height: 12),
+                          _buildDiscountCard(),
+                          const SizedBox(height: 12),
+                          _buildTotalsCard(
+                            base: base,
+                            displayedDiscount: displayedDiscount,
+                            tax: tax,
+                            isFree: isFree,
+                            shippingCost: shippingCost,
+                            payable: payable,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildPayButton(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  /// چیدمان دسکتاپ (>=1024): محتوای مرکزی حداکثر ~۹۰۰ پیکسل با دو ستون —
+  /// آیتم‌ها/آدرس/کد تخفیف در ستون اصلی و جمع مبالغ + دکمه پرداخت در ستون کناری.
+  Widget _buildDesktopBody({
+    required List<CartItemFromBackend> items,
+    required int base,
+    required num displayedDiscount,
+    required int tax,
+    required bool isFree,
+    required int shippingCost,
+    required num payable,
+  }) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: CenteredContent(
+        maxWidth: 900,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const CheckoutTimeline(currentStep: 2),
+            const SizedBox(height: 20),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ستون اصلی
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildItemsCard(items),
+                      const SizedBox(height: 12),
+                      _buildAddressCard(),
+                      const SizedBox(height: 12),
+                      _buildDiscountCard(),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                // ستون کناری: جمع مبالغ + پرداخت (بالا-چین)
+                SizedBox(
+                  width: 300,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildTotalsCard(
+                        base: base,
+                        displayedDiscount: displayedDiscount,
+                        tax: tax,
+                        isFree: isFree,
+                        shippingCost: shippingCost,
+                        payable: payable,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildPayButton(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// کارت فهرست آیتم‌های سفارش.
+  Widget _buildItemsCard(List<CartItemFromBackend> items) {
+    return Container(
                       decoration: ShapeDecoration(
             color: AppColor.surfaceContainer,
             shape: AppShapes.border(AppShapes.rLg),
@@ -297,12 +401,12 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                           ],
                         ),
                       ),
-                    ),
+                    );
+  }
 
-                    const SizedBox(height: 12),
-
-                    // Address and shipping summary
-                    Container(
+  /// کارت آدرس و روش ارسال.
+  Widget _buildAddressCard() {
+    return Container(
                       decoration: ShapeDecoration(
             color: AppColor.surfaceContainer,
             shape: AppShapes.border(AppShapes.rLg),
@@ -339,12 +443,12 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                           ],
                         ),
                       ),
-                    ),
+                    );
+  }
 
-                    const SizedBox(height: 12),
-
-                    // Discount code input
-                    Container(
+  /// کارت کد تخفیف و کیف پول.
+  Widget _buildDiscountCard() {
+    return Container(
                       decoration: ShapeDecoration(
             color: AppColor.surfaceContainer,
             shape: AppShapes.border(AppShapes.rLg),
@@ -457,12 +561,19 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                           ],
                         ),
                       ),
-                    ),
+                    );
+  }
 
-                    const SizedBox(height: 12),
-
-                    // Totals
-                    Container(
+  /// کارت جمع مبالغ سفارش.
+  Widget _buildTotalsCard({
+    required int base,
+    required num displayedDiscount,
+    required int tax,
+    required bool isFree,
+    required int shippingCost,
+    required num payable,
+  }) {
+    return Container(
                       decoration: ShapeDecoration(
             color: AppColor.surfaceContainer,
             shape: AppShapes.border(AppShapes.rLg),
@@ -492,13 +603,14 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                           ],
                         ),
                       ),
-                    ),
+                    );
+  }
 
-                    const SizedBox(height: 20),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
+  /// دکمه رفتن به درگاه پرداخت.
+  Widget _buildPayButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
                         onPressed: _posting ? null : _submitOrder,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.goldEnd,
@@ -514,14 +626,6 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                             : const Text('رفتن به درگاه پرداخت',
                                 style: TextStyle(
                                     fontFamily: 'Estedad', color: AppColor.onGold)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:marketky/constant/app_shapes.dart';
 
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/models/ProductModel.dart';
@@ -161,9 +162,7 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Container(
+    final Widget field = Container(
         decoration: ShapeDecoration(
           color: AppColor.card,
           shape: AppShapes.pill,
@@ -197,16 +196,39 @@ class _CatalogPageState extends State<CatalogPage> {
           focusedBorder: InputBorder.none,
         ),
         ),
+    );
+
+    if (!AppBreakpoints.isDesktop(context)) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: field,
+      );
+    }
+
+    // دسکتاپ: فیلد جست‌وجو داخل پوسته‌ی ۱۲۰۰ پیکسلی و با عرض محدود (~۵۶۰)
+    // تا مثل فروشگاه‌های دسکتاپ خوانا و جمع‌وجور بماند.
+    return CenteredContent(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: field,
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildCategoryChips() {
-    return SizedBox(
+    final bool isDesktop = AppBreakpoints.isDesktop(context);
+    final Widget list = SizedBox(
       height: 42,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        // در دسکتاپ لبه‌ی چیپ‌ها با لبه‌ی گرید محصولات هم‌راستا می‌شود
+        // (خود چیپ ۴ پیکسل حاشیه‌ی داخلی دارد).
+        padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 12),
         children: [
           _categoryChip(
               label: 'همه',
@@ -224,6 +246,7 @@ class _CatalogPageState extends State<CatalogPage> {
         ],
       ),
     );
+    return isDesktop ? CenteredContent(child: list) : list;
   }
 
   Widget _categoryChip({
@@ -264,8 +287,10 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   Widget _buildToolbar(int total) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    final bool isDesktop = AppBreakpoints.isDesktop(context);
+    final Widget row = Padding(
+      padding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 0 : 16, vertical: 6),
       child: Row(
         children: [
           Text('$total محصول', style: AppTextStyles.labelSm),
@@ -297,11 +322,25 @@ class _CatalogPageState extends State<CatalogPage> {
         ],
       ),
     );
+    return isDesktop ? CenteredContent(child: row) : row;
   }
 
   Widget _buildBody(List<Product> results, List<Product> visible) {
     // اسکلتون به‌جای اسپینر: پرش لِی‌اوت کمتر و حس سرعت بیشتر
     if (_loading) {
+      if (AppBreakpoints.isDesktop(context)) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: CenteredContent(
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children:
+                  List.generate(8, (_) => const ProductCardSkeleton()),
+            ),
+          ),
+        );
+      }
       return SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Wrap(
@@ -361,6 +400,39 @@ class _CatalogPageState extends State<CatalogPage> {
       );
     }
 
+    if (AppBreakpoints.isDesktop(context)) {
+      // دسکتاپ: گرید داخل پوسته‌ی مرکزی ۱۲۰۰ پیکسلی؛ عرض کارت از عرض واقعی
+      // پوسته و تعداد ستون محاسبه می‌شود تا دقیقاً ۴ ستون با فاصله‌ی ۱۶
+      // پیکسلی جا شود.
+      return RefreshIndicator(
+        color: AppColor.pitchGreen,
+        backgroundColor: AppColor.card,
+        onRefresh: _fetch,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(top: 16),
+          child: CenteredContent(
+            child: LayoutBuilder(
+              builder: (ctx, constraints) => Column(
+                children: [
+                  _productWrap(visible, shellWidth: constraints.maxWidth),
+                  if (visible.length < results.length)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child:
+                          CircularProgressIndicator(color: AppColor.pitchGreen),
+                    ),
+                  // در دسکتاپ نوار پایینی شناور نداریم؛ فاصله‌ی کوتاه کافی است
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return RefreshIndicator(
       color: AppColor.pitchGreen,
       backgroundColor: AppColor.card,
@@ -371,22 +443,7 @@ class _CatalogPageState extends State<CatalogPage> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         child: Column(
           children: [
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                for (int i = 0; i < visible.length; i++)
-                  SizedBox(
-                    width: (MediaQuery.of(context).size.width / 2 - 16 - 8)
-                        .clamp(130.0, 200.0),
-                    child: FadeSlideIn(
-                      delay: Duration(milliseconds: 40 * (i % 8)),
-                      child: ProductGridCard(
-                          product: visible[i], showAddToCartButton: true),
-                    ),
-                  ),
-              ],
-            ),
+            _productWrap(visible),
             if (visible.length < results.length)
               const Padding(
                 padding: EdgeInsets.all(16),
@@ -397,6 +454,44 @@ class _CatalogPageState extends State<CatalogPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// چینش کارت‌های محصول. در موبایل/تبلت همان محاسبه‌ی قبلی عرض کارت حفظ
+  /// شده؛ در دسکتاپ ([shellWidth] داده شده) عرض کارت از تقسیم عرض پوسته بر
+  /// تعداد ستون (۴ ستون در دسکتاپ عریض) با فاصله‌ی ۱۶ پیکسلی به‌دست می‌آید.
+  Widget _productWrap(List<Product> visible, {double? shellWidth}) {
+    final double cardWidth;
+    if (shellWidth == null) {
+      cardWidth = (MediaQuery.of(context).size.width / 2 - 16 - 8)
+          .clamp(130.0, 200.0)
+          .toDouble();
+    } else {
+      final int columns = AppBreakpoints.gridColumns(shellWidth);
+      // گرد کردن به پایین تا خطای اعشاری باعث شکستن ردیف نشود
+      cardWidth = ((shellWidth - 16 * (columns - 1)) / columns).floorToDouble();
+    }
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: [
+        for (int i = 0; i < visible.length; i++)
+          SizedBox(
+            width: cardWidth,
+            child: FadeSlideIn(
+              delay: Duration(milliseconds: 40 * (i % 8)),
+              child: shellWidth == null
+                  ? ProductGridCard(
+                      product: visible[i], showAddToCartButton: true)
+                  : MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: ProductGridCard(
+                          product: visible[i], showAddToCartButton: true),
+                    ),
+            ),
+          ),
+      ],
     );
   }
 

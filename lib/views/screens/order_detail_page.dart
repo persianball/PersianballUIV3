@@ -1,5 +1,6 @@
 // lib/views/screens/order_detail_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/payment_models.dart';
@@ -59,6 +60,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildContent(OrderDetail d) {
+    // دسکتاپ: دو ستون (اقلام/پیگیری/آدرس + صورتحساب/اقدامات)؛
+    // موبایل/تبلت: همان لیست عمودی قبلی
+    if (AppBreakpoints.isDesktop(context)) {
+      return _buildDesktopContent(d);
+    }
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
@@ -79,6 +85,67 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 'درخواست مرجوعی', () => _confirmAction(d, isCancel: false)),
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+
+  /// دسکتاپ: محتوا وسط‌چین (~۱۰۰۰px)؛ ستون اصلی اقلام و پیگیری و آدرس،
+  /// ستون کناری (~۳۴۰px) صورتحساب و اقدامات — مثل سایت‌های فروشگاهی.
+  Widget _buildDesktopContent(OrderDetail d) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: AppBreakpoints.gutter(context)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (d.isMock) _mockBanner(),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ستون اصلی
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _itemsCard(d),
+                            const SizedBox(height: 12),
+                            _trackingCard(d),
+                            const SizedBox(height: 12),
+                            _addressCard(d),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      // ستون کناری: صورتحساب و اقدامات
+                      SizedBox(
+                        width: 340,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _invoiceCard(d),
+                            const SizedBox(height: 16),
+                            if (d.canCancel)
+                              _dangerButton('لغو سفارش',
+                                  () => _confirmAction(d, isCancel: true)),
+                            if (d.canReturn)
+                              _dangerButton('درخواست مرجوعی',
+                                  () => _confirmAction(d, isCancel: false)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

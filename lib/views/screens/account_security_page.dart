@@ -1,5 +1,6 @@
 // lib/views/screens/account_security_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/account_service.dart';
@@ -116,9 +117,41 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
         body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
+          // دسکتاپ: فرم در کارتی وسط‌چین با حداکثر عرض ۵۶۰؛
+          // موبایل/تبلت: همان لیست تمام‌عرض قبلی
+          child: AppBreakpoints.isDesktop(context)
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 32, horizontal: 24),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: ShapeDecoration(
+                          color: AppColor.surfaceContainer,
+                          shape: AppShapes.border(AppShapes.rLg),
+                          shadows: AppColor.cardShadow,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: _formChildren(),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: _formChildren(),
+                ),
+        ),
+      ),
+    );
+  }
+
+  /// محتوای مشترک فرم (تغییر رمز + حذف حساب) برای هر دو چیدمان
+  List<Widget> _formChildren() => [
               const Text('تغییر رمز عبور',
                   style: TextStyle(
                       fontFamily: 'Estedad',
@@ -183,12 +216,7 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
                       style: TextStyle(fontFamily: 'Estedad')),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+            ];
 
   Widget _field(
     TextEditingController c,

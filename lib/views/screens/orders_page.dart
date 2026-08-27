@@ -1,5 +1,6 @@
 // lib/views/screens/orders_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/order_detail_page.dart';
@@ -138,7 +139,9 @@ class _OrdersPageState extends State<OrdersPage>
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              // دسکتاپ: کارت کمی جادارتر
+              padding: EdgeInsets.all(
+                  AppBreakpoints.isDesktop(context) ? 18 : 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -286,7 +289,7 @@ class _OrdersPageState extends State<OrdersPage>
                     child: FadeTransition(
                       // فقط لود اول کل لیست fade-in می‌شود (توضیح در _fetch)
                       opacity: _fadeCtrl,
-                      child: ListView.builder(
+                      child: _centerOnDesktop(ListView.builder(
                         controller: _scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
                         // +۱ برای هدر «مجموع سفارش‌ها» و در صورت لود صفحه‌ی
@@ -318,9 +321,21 @@ class _OrdersPageState extends State<OrdersPage>
                             child: _buildItem(item),
                           );
                         },
-                      ),
+                      )),
                     ),
                   ),
+      ),
+    );
+  }
+
+  /// دسکتاپ: لیست سفارش‌ها وسط‌چین با حداکثر عرض ۹۰۰؛ موبایل بی‌اثر.
+  /// کنترلر اسکرول و لود بی‌نهایت دست‌نخورده می‌مانند.
+  Widget _centerOnDesktop(Widget child) {
+    if (!AppBreakpoints.isDesktop(context)) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: child,
       ),
     );
   }
