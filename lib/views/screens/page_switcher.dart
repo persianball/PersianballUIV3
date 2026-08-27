@@ -6,6 +6,9 @@ import 'package:marketky/views/screens/home_page.dart';
 import 'package:marketky/views/screens/profile_page.dart';
 import 'package:marketky/views/screens/courses_page.dart';
 import 'package:marketky/views/screens/catalog_page.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marketky/bloc/cart/cart_bloc.dart';
 
 class PageSwitcher extends StatefulWidget {
   @override
@@ -47,21 +50,33 @@ class _PageSwitcherState extends State<PageSwitcher> {
     super.dispose();
   }
 
-  void _onBarTapped(int barIndex) {
-    final pageIndex = _pageIndex(barIndex);
+  void _onBarTapped(int barIndex) => _selectPage(_pageIndex(barIndex));
+
+  void _selectPage(int pageIndex) {
     if (pageIndex == _selectedIndex) return;
-    setState(() {
-      _selectedIndex = pageIndex;
-    });
+    setState(() => _selectedIndex = pageIndex);
+    // نوار پایین موبایل هم باید هم‌گام بماند تا با تغییر اندازه‌ی پنجره
+    // (دسکتاپ → موبایل) تب فعال درست نمایش داده شود.
+    _barController.index = _barIndex(pageIndex);
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool desktop = AppBreakpoints.isDesktop(context);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.milk,
-        extendBody: true,
+        extendBody: !desktop,
+        // دسکتاپ: نوار ناوبری بالایی مثل سایت‌های فروشگاهی؛
+        // موبایل/تبلت: همان نوار پایین ناچ‌دار.
+        appBar: desktop
+            ? _DesktopNavBar(
+                tabs: _tabs,
+                selectedIndex: _selectedIndex,
+                onSelect: _selectPage,
+              )
+            : null,
         body: FadeIndexedStack(
           index: _selectedIndex,
           children: [
@@ -71,7 +86,9 @@ class _PageSwitcherState extends State<PageSwitcher> {
             ProfilePage(),
           ],
         ),
-        bottomNavigationBar: AnimatedNotchBottomBar(
+        bottomNavigationBar: desktop
+            ? null
+            : AnimatedNotchBottomBar(
           notchBottomBarController: _barController,
           onTap: _onBarTapped,
           color: AppColor.card,
@@ -113,4 +130,247 @@ class _NavTab {
 
   const _NavTab(
       {required this.icon, required this.activeIcon, required this.label});
+}
+
+/// نوار ناوبری بالایی دسکتاپ: لوگو، لینک تب‌ها با نشانگر فعال، جست‌وجو،
+/// سبد (با نشان تعداد) — الگوی استاندارد فروشگاه‌های دسکتاپ.
+class _DesktopNavBar extends StatelessWidget implements PreferredSizeWidget {
+  const _DesktopNavBar({
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onSelect,
+  });
+
+  final List<_NavTab> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColor.card,
+        border: Border(bottom: BorderSide(color: AppColor.line)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0F000000),
+            blurRadius: 12,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: CenteredContent(
+          child: Row(
+            children: [
+              // لوگو / نام فروشگاه
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => onSelect(0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: const ShapeDecoration(
+                          gradient: AppColor.greenGradient,
+                          shape: CircleBorder(),
+                        ),
+                        child: const Icon(Icons.sports_soccer,
+                            color: AppColor.onPitchGreen, size: 22),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'پرشین شاپ',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColor.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 36),
+
+              // لینک‌های اصلی
+              for (int i = 0; i < tabs.length; i++) ...[
+                _NavLink(
+                  label: tabs[i].label,
+                  icon: tabs[i].icon,
+                  active: i == selectedIndex,
+                  onTap: () => onSelect(i),
+                ),
+                const SizedBox(width: 6),
+              ],
+              const Spacer(),
+
+              // جست‌وجو (فیلد جست‌وجو داخل تب فروشگاه است)
+              _NavIconButton(
+                icon: Icons.search_rounded,
+                tooltip: 'جست‌وجو در فروشگاه',
+                onTap: () => onSelect(2),
+              ),
+              const SizedBox(width: 8),
+
+              // سبد خرید با نشان تعداد
+              BlocBuilder<CartBloc, CartState>(
+                builder: (context, state) {
+                  final int count = state is CartLoaded &&
+                          state.cart.results.isNotEmpty
+                      ? state.cart.results[0].items.length
+                      : 0;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      _NavIconButton(
+                        icon: Icons.shopping_bag_outlined,
+                        tooltip: 'سبد خرید',
+                        onTap: () => Navigator.of(context).pushNamed('/cart'),
+                      ),
+                      if (count > 0)
+                        Positioned(
+                          top: -4,
+                          left: -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: const ShapeDecoration(
+                              color: AppColor.danger,
+                              shape: StadiumBorder(),
+                            ),
+                            child: Text(
+                              '$count',
+                              style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavLink extends StatefulWidget {
+  const _NavLink({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  State<_NavLink> createState() => _NavLinkState();
+}
+
+class _NavLinkState extends State<_NavLink> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color fg = widget.active
+        ? AppColor.pitchGreen
+        : (_hover ? AppColor.ink : AppColor.inkMuted);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: ShapeDecoration(
+            color: widget.active
+                ? AppColor.pitchGreenSoft
+                : (_hover ? AppColor.cardMuted : Colors.transparent),
+            shape: const StadiumBorder(),
+          ),
+          child: Row(
+            children: [
+              Icon(widget.icon, size: 17, color: fg),
+              const SizedBox(width: 6),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 13.5,
+                  fontWeight:
+                      widget.active ? FontWeight.w800 : FontWeight.w600,
+                  color: fg,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavIconButton extends StatefulWidget {
+  const _NavIconButton({
+    required this.icon,
+    required this.onTap,
+    this.tooltip,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final String? tooltip;
+
+  @override
+  State<_NavIconButton> createState() => _NavIconButtonState();
+}
+
+class _NavIconButtonState extends State<_NavIconButton> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final button = MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 42,
+          height: 42,
+          decoration: ShapeDecoration(
+            color: _hover ? AppColor.cardMuted : Colors.transparent,
+            shape: const CircleBorder(),
+          ),
+          child: Icon(widget.icon, size: 21, color: AppColor.ink),
+        ),
+      ),
+    );
+    return widget.tooltip == null
+        ? button
+        : Tooltip(message: widget.tooltip!, child: button);
+  }
 }
