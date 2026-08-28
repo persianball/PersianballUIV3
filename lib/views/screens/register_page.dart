@@ -1,5 +1,6 @@
 // views/screens/register_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -105,11 +106,52 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildBody(BuildContext context) {
+    // دسکتاپ: فرم به شکل کارت برجسته‌ی وسط‌چین
+    if (AppBreakpoints.isDesktop(context)) {
+      return _buildDesktopCard(context);
+    }
     return PageContainer(
       child: ListView(
         padding: EdgeInsets.symmetric(horizontal: 24),
         physics: BouncingScrollPhysics(),
-        children: [
+        children: _formChildren(context),
+      ),
+    );
+  }
+
+  /// کارت فرم در دسکتاپ: عرض حداکثر ۴۸۰، فاصله‌ی بالای حدود ۹٪ ارتفاع نما
+  Widget _buildDesktopCard(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final topSpace = constraints.maxHeight * 0.09;
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(24, topSpace, 24, 48),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                decoration: ShapeDecoration(
+                  color: AppColor.card,
+                  shape: AppShapes.border(AppShapes.rXl),
+                  shadows: AppColor.cardShadow,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: _formChildren(context),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> _formChildren(BuildContext context) {
+    return [
           // Header
           Directionality(
             textDirection: TextDirection.rtl,
@@ -654,9 +696,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ],
             ),
           ),
-        ],
-      ),
-    );
+    ];
   }
 
   @override
