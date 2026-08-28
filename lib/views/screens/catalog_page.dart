@@ -127,7 +127,11 @@ class _CatalogPageState extends State<CatalogPage> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.milk,
-        appBar: AppBar(
+        // دسکتاپ: عنوان صفحه و دکمه‌ی مقایسه در نوار بالای اپ/نوار ابزار
+        // تکرار می‌شوند، پس اپ‌بار مخصوص این تب حذف می‌شود.
+        appBar: AppBreakpoints.isDesktop(context)
+            ? null
+            : AppBar(
           backgroundColor: AppColor.milk,
           elevation: 0,
           centerTitle: true,
@@ -295,6 +299,13 @@ class _CatalogPageState extends State<CatalogPage> {
         children: [
           Text('$total محصول', style: AppTextStyles.labelSm),
           const Spacer(),
+          if (isDesktop)
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).pushNamed('/compare'),
+              icon: const Icon(Icons.compare_arrows_rounded,
+                  size: 18, color: AppColor.onSurfaceVariant),
+              label: Text('مقایسه', style: AppTextStyles.labelSm),
+            ),
           TextButton.icon(
             onPressed: _openSortSheet,
             icon: const Icon(Icons.swap_vert,

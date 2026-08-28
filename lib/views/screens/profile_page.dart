@@ -113,11 +113,15 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.obsidianBg,
-      appBar: MainAppBar(
-        cartValue: 2,
-        chatValue: 2,
-        dark: true,
-      ),
+      // دسکتاپ: سبد و پیام‌ها در نوار ناوبری بالای اپ هستند و این اپ‌بار
+      // فقط ردیف تکراری می‌سازد.
+      appBar: AppBreakpoints.isDesktop(context)
+          ? null
+          : MainAppBar(
+              cartValue: 2,
+              chatValue: 2,
+              dark: true,
+            ),
       // تا وقتی وضعیت ورود مشخص نشده چیزی از پروفایل نمایش داده نمی‌شود
       body: BlocListener<LoginBloc, LoginState>(
         listener: (context, state) {

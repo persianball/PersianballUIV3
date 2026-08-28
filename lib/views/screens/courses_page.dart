@@ -175,11 +175,18 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
       child: Scaffold(
         backgroundColor: AppColor.milk,
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(kToolbarHeight + kTextTabBarHeight),
+          preferredSize: Size.fromHeight(
+              (AppBreakpoints.isDesktop(context) ? 8.0 : kToolbarHeight) +
+                  kTextTabBarHeight),
           child: AppBar(
             automaticallyImplyLeading: false,
             centerTitle: true,
-            title: const Text('دوره‌ها',
+            // دسکتاپ: عنوان «دوره‌ها» در نوار ناوبری بالای اپ هست، پس اینجا
+            // تکرار نمی‌شود و فقط تب‌ها می‌مانند.
+            toolbarHeight: AppBreakpoints.isDesktop(context) ? 8 : kToolbarHeight,
+            title: AppBreakpoints.isDesktop(context)
+                ? null
+                : const Text('دوره‌ها',
                 style: TextStyle(
                     fontFamily: 'Estedad',
                     fontWeight: FontWeight.w800,
