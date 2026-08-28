@@ -580,14 +580,28 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       child: AspectRatio(
         aspectRatio: 16 / 10,
         child: data.image.isEmpty
-            ? Container(color: AppColor.surfaceContainer)
+            ? _heroPlaceholder()
             : Image.network(
                 _abs(data.image),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Image.asset(
-                    'assets/images/placeholder.jpg',
-                    fit: BoxFit.cover),
+                errorBuilder: (_, __, ___) => _heroPlaceholder(),
               ),
+      ),
+    );
+  }
+
+  /// جای‌گزین تصویر برای دوره‌هایی که بک‌اند تصویری برایشان ندارد.
+  /// یک مستطیل خالی هم‌رنگ پس‌زمینه، ستون راست را تهی نشان می‌داد؛ این
+  /// نسخه با گرادیان سبز و آیکن، قاب را پر و برند را حفظ می‌کند.
+  Widget _heroPlaceholder() {
+    return Container(
+      decoration: const BoxDecoration(gradient: AppColor.greenGradient),
+      child: Center(
+        child: Icon(
+          Icons.school_rounded,
+          size: 72,
+          color: AppColor.onPitchGreen.withValues(alpha: 0.55),
+        ),
       ),
     );
   }
