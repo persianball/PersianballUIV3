@@ -9,6 +9,7 @@ import 'package:marketky/models/course_models.dart';
 import 'package:marketky/services/course_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/motion.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -108,6 +109,65 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
     return '${URLs.baseUrl}$rel';
   }
 
+  TabBar _buildTabBar() {
+    return TabBar(
+      controller: _tabController,
+      indicatorColor: AppColor.goldEnd,
+      labelColor: AppColor.goldEnd,
+      unselectedLabelColor: AppColor.onSurfaceVariant,
+      labelStyle: const TextStyle(fontFamily: 'Estedad'),
+      unselectedLabelStyle: const TextStyle(fontFamily: 'Estedad'),
+      tabs: [
+        Tab(text: 'همه دوره‌ها'),
+        Tab(text: 'دوره‌های من'),
+      ],
+    );
+  }
+
+  /// دسکتاپ: کارت‌های دوره در گرید ۲-۳ ستونه داخل پوسته‌ی مرکزی ۱۲۰۰ پیکسلی؛
+  /// همان دیتا و همان اسکرول بی‌نهایت لیست موبایل.
+  Widget _desktopCoursesGrid() {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints:
+            const BoxConstraints(maxWidth: AppBreakpoints.contentMaxWidth),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final double gutter = AppBreakpoints.gutter(context);
+            final int columns = constraints.maxWidth >= 980 ? 3 : 2;
+            return GridView.builder(
+              controller: _controller,
+              padding: EdgeInsets.fromLTRB(gutter, 24, gutter, 110),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+                mainAxisExtent: 364,
+              ),
+              itemCount: _data!.results.length,
+              itemBuilder: (_, i) {
+                final c = _data!.results[i];
+                return FadeSlideIn(
+                  delay: Duration(milliseconds: 50 * (i % 6)),
+                  child: _HoverLift(
+                    child: _CourseCard(
+                      course: c,
+                      imageUrl: _abs(c.image),
+                      inGrid: true,
+                      onTap: () => Navigator.of(context)
+                          .pushNamed('/course/${c.id}', arguments: c),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -127,18 +187,15 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
             backgroundColor: AppColor.milk,
             foregroundColor: AppColor.ink,
             elevation: 0,
-            bottom: TabBar(
-              controller: _tabController,
-              indicatorColor: AppColor.goldEnd,
-              labelColor: AppColor.goldEnd,
-              unselectedLabelColor: AppColor.onSurfaceVariant,
-              labelStyle: const TextStyle(fontFamily: 'Estedad'),
-              unselectedLabelStyle: const TextStyle(fontFamily: 'Estedad'),
-              tabs: [
-                Tab(text: 'همه دوره‌ها'),
-                Tab(text: 'دوره‌های من'),
-              ],
-            ),
+            // دسکتاپ: تب‌ها وسط‌چین با عرض محدود تا روی صفحه‌ی پهن کش نیایند
+            bottom: AppBreakpoints.isDesktop(context)
+                ? PreferredSize(
+                    preferredSize: const Size.fromHeight(kTextTabBarHeight),
+                    child: Center(
+                      child: SizedBox(width: 480, child: _buildTabBar()),
+                    ),
+                  )
+                : _buildTabBar(),
           ),
         ),
         // جهت TabBarView باید با TabBar راست‌به‌چپ یکی باشد وگرنه جهت اسلاید
@@ -160,22 +217,24 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                           _nextUrl = null;
                           await _fetch();
                         },
-                        child: ListView.builder(
-                          controller: _controller,
-                          padding: const EdgeInsets.only(bottom: 110),
-                          itemCount: _data!.results.length,
-                          itemBuilder: (_, i) {
-                            final c = _data!.results[i];
-                            return FadeSlideIn(
-                              delay: Duration(milliseconds: 50 * (i % 6)),
-                              child: _CourseCard(
-                                course: c,
-                                imageUrl: _abs(c.image),
-                                onTap: () => Navigator.of(context).pushNamed('/course/${c.id}', arguments: c),
+                        child: AppBreakpoints.isDesktop(context)
+                            ? _desktopCoursesGrid()
+                            : ListView.builder(
+                                controller: _controller,
+                                padding: const EdgeInsets.only(bottom: 110),
+                                itemCount: _data!.results.length,
+                                itemBuilder: (_, i) {
+                                  final c = _data!.results[i];
+                                  return FadeSlideIn(
+                                    delay: Duration(milliseconds: 50 * (i % 6)),
+                                    child: _CourseCard(
+                                      course: c,
+                                      imageUrl: _abs(c.image),
+                                      onTap: () => Navigator.of(context).pushNamed('/course/${c.id}', arguments: c),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                       ),
             // Tab 2: User Courses
             _userLoading
@@ -201,13 +260,124 @@ class _CourseCard extends StatelessWidget {
   final Course course;
   final String imageUrl;
   final VoidCallback onTap;
-  const _CourseCard({required this.course, required this.imageUrl, required this.onTap});
+
+  /// دسکتاپ: کارت داخل سلول گرید است؛ بدون پدینگ بیرونی و با قیمت چسبیده
+  /// به پایین کارت. در موبایل (پیش‌فرض) ظاهر قبلی دقیقاً حفظ می‌شود.
+  final bool inGrid;
+
+  const _CourseCard(
+      {required this.course,
+      required this.imageUrl,
+      required this.onTap,
+      this.inGrid = false});
 
   @override
   Widget build(BuildContext context) {
     final price = course.discountPercentage > 0
         ? (course.coursePrice * (1 - course.discountPercentage / 100)).toInt()
         : course.coursePrice;
+
+    final Widget info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          course.nameFarsi,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColor.ink),
+        ),
+        const SizedBox(height: 10),
+        // بج‌های رنگی زیر تصویر: دسته‌بندی، سطح و تخفیف
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            PillTag(
+              label: course.category.nameFarsi,
+              icon: Icons.local_library_rounded,
+              color: AppColor.categoryBadge,
+              dense: true,
+            ),
+            PillTag(
+              label: course.difficulty,
+              icon: _difficultyIcon(course.difficulty),
+              color: _difficultyColor(course.difficulty),
+              dense: true,
+            ),
+            if (course.discountPercentage > 0)
+              PillTag(
+                label: '٪${course.discountPercentage} تخفیف',
+                icon: Icons.local_offer_rounded,
+                color: Colors.white,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFEF4444), AppColor.danger],
+                ),
+                dense: true,
+              ),
+          ],
+        ),
+        if (inGrid) const Spacer() else const SizedBox(height: 12),
+        Row(
+          children: [
+            Text(
+              '${thousandSeparator(price)} تومان',
+              style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppColor.ink),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColor.lineStrong),
+          ],
+        ),
+      ],
+    );
+
+    final Widget card = Hero(
+      tag: 'course_${course.id}',
+      child: Container(
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rLg),
+          shadows: AppColor.cardShadow,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top image: ارتفاع محدود تا کارت روی صفحه بزرگ غول‌پیکر نشود
+                SizedBox(
+                  height: 180,
+                  width: double.infinity,
+                  child: imageUrl.isEmpty
+                      ? Image.asset('assets/images/course_not_found.jpg',
+                          fit: BoxFit.cover)
+                      : Image.network(imageUrl, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Image.asset('assets/images/course_not_found.jpg',fit: BoxFit.cover,),),
+                ),
+                inGrid
+                    ? Expanded(
+                        child: Padding(
+                            padding: const EdgeInsets.all(12.0), child: info))
+                    : Padding(padding: const EdgeInsets.all(12.0), child: info),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (inGrid) return card;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
@@ -216,103 +386,36 @@ class _CourseCard extends StatelessWidget {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
-          child: Hero(
-            tag: 'course_${course.id}',
-            child: Container(
-              decoration: ShapeDecoration(
-                color: AppColor.card,
-                shape: AppShapes.border(AppShapes.rLg),
-                shadows: AppColor.cardShadow,
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onTap,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Top image: ارتفاع محدود تا کارت روی صفحه بزرگ غول‌پیکر نشود
-                      SizedBox(
-                        height: 180,
-                        width: double.infinity,
-                        child: imageUrl.isEmpty
-                            ? Image.asset('assets/images/course_not_found.jpg',
-                                fit: BoxFit.cover)
-                            : Image.network(imageUrl, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Image.asset('assets/images/course_not_found.jpg',fit: BoxFit.cover,),),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              course.nameFarsi,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontFamily: 'Estedad',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColor.ink),
-                            ),
-                            const SizedBox(height: 10),
-                            // بج‌های رنگی زیر تصویر: دسته‌بندی، سطح و تخفیف
-                            Wrap(
-                              spacing: 6,
-                              runSpacing: 6,
-                              children: [
-                                PillTag(
-                                  label: course.category.nameFarsi,
-                                  icon: Icons.local_library_rounded,
-                                  color: AppColor.categoryBadge,
-                                  dense: true,
-                                ),
-                                PillTag(
-                                  label: course.difficulty,
-                                  icon: _difficultyIcon(course.difficulty),
-                                  color: _difficultyColor(course.difficulty),
-                                  dense: true,
-                                ),
-                                if (course.discountPercentage > 0)
-                                  PillTag(
-                                    label: '٪${course.discountPercentage} تخفیف',
-                                    icon: Icons.local_offer_rounded,
-                                    color: Colors.white,
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFEF4444), AppColor.danger],
-                                    ),
-                                    dense: true,
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Text(
-                                  '${thousandSeparator(price)} تومان',
-                                  style: const TextStyle(
-                                      fontFamily: 'Estedad',
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColor.ink),
-                                ),
-                                const Spacer(),
-                                const Icon(Icons.chevron_right_rounded,
-                                    color: AppColor.lineStrong),
-                              ],
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          child: card,
         ),
+      ),
+    );
+  }
+}
+
+/// دسکتاپ: بالا آمدن نرم کارت هنگام هاور ماوس + نشانگر کلیک.
+class _HoverLift extends StatefulWidget {
+  final Widget child;
+  const _HoverLift({required this.child});
+
+  @override
+  State<_HoverLift> createState() => _HoverLiftState();
+}
+
+class _HoverLiftState extends State<_HoverLift> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
+        child: widget.child,
       ),
     );
   }
@@ -405,10 +508,13 @@ class _UserCoursesListState extends State<_UserCoursesList> {
 
   @override
   Widget build(BuildContext context) {
+    // دسکتاپ: فهرست «دوره‌های من» وسط‌چین با حداکثر عرض ~۹۰۰ پیکسل
+    final bool desktop = AppBreakpoints.isDesktop(context);
+    final double itemMaxWidth = desktop ? 900 : 520;
+
     List<Widget> children = [];
     if (_continueCourse != null && _continueVideo != null) {
-      children.add(
-        Container(
+      Widget continueCard = Container(
           decoration: ShapeDecoration(
             color: AppColor.pitchGreenSoft,
             shape: AppShapes.border(AppShapes.rLg),
@@ -447,8 +553,16 @@ class _UserCoursesListState extends State<_UserCoursesList> {
                   style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
             ),
           ),
-        ),
-      );
+        );
+      if (desktop) {
+        continueCard = Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: itemMaxWidth),
+            child: continueCard,
+          ),
+        );
+      }
+      children.add(continueCard);
     }
     if (widget.courses.isEmpty) {
       children.add(Center(
@@ -459,7 +573,9 @@ class _UserCoursesListState extends State<_UserCoursesList> {
         ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 110),
+          padding: desktop
+              ? const EdgeInsets.only(top: 12, bottom: 110)
+              : const EdgeInsets.only(bottom: 110),
           itemCount: widget.courses.length,
           itemBuilder: (context, i) {
             final course = widget.courses[i];
@@ -467,7 +583,7 @@ class _UserCoursesListState extends State<_UserCoursesList> {
               delay: Duration(milliseconds: 50 * (i % 6)),
               child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
+                constraints: BoxConstraints(maxWidth: itemMaxWidth),
                 child: Container(
                   margin: EdgeInsets.fromLTRB(16, 12, 16, 6),
                   decoration: ShapeDecoration(
