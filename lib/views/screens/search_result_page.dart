@@ -5,6 +5,7 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/core/model/Product.dart';
 import 'package:marketky/core/services/ProductService.dart';
 import 'package:marketky/views/widgets/page_container.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 
 class SearchResultPage extends StatefulWidget {
   final String searchKeyword;
@@ -104,7 +105,11 @@ class _SearchResultPageState extends State<SearchResultPage> with TickerProvider
           ),
         ), systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
+      // دسکتاپ: نتایج تا عرض استاندارد فروشگاه (۱۲۰۰) باز می‌شوند.
       body: PageContainer(
+        maxWidth: AppBreakpoints.isDesktop(context)
+            ? AppBreakpoints.contentMaxWidth
+            : null,
         child: TabBarView(
           controller: tabController,
           children: [

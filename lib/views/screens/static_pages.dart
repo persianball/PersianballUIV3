@@ -6,9 +6,13 @@
 // پیشنهاد: GET /v1/content/pages/<slug>/ → {title, body_html, updated_at}
 // تا متن‌ها بدون آپدیت اپ قابل تغییر باشند. فعلاً متن نمونه داخل اپ است.
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+/// حداکثر عرض ستون متن در دسکتاپ؛ حدود ۷۶۰ پیکسل خوانا‌ترین طول سطر است.
+const double _kArticleMaxWidth = 760;
 
 class StaticContent {
   final String title;
@@ -67,20 +71,46 @@ class StaticContentPage extends StatelessWidget {
               style: const TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
         body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: content.paragraphs
-                .map((p) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
+          child: Builder(builder: (context) {
+            // در دسکتاپ ستون متن باریک و وسط‌چین می‌شود و ریتم عمودی و اندازه‌ی
+            // قلم کمی بزرگ‌تر است؛ در موبایل/تبلت دقیقاً مثل قبل رندر می‌شود.
+            final bool isDesktop = AppBreakpoints.isDesktop(context);
+            final article = ListView(
+              padding: isDesktop
+                  ? const EdgeInsets.symmetric(vertical: 40)
+                  : const EdgeInsets.all(16),
+              children: [
+                if (isDesktop) ...[
+                  Text(
+                    content.title,
+                    style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      height: 1.6,
+                      color: AppColor.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                ...content.paragraphs.map((p) => Padding(
+                      padding: EdgeInsets.only(bottom: isDesktop ? 22 : 14),
                       child: Text(
                         p,
                         textAlign: TextAlign.justify,
-                        style: const TextStyle(
-                            fontFamily: 'Estedad', fontSize: 13, height: 2, color: AppColor.onSurfaceVariant),
+                        style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: isDesktop ? 15 : 13,
+                            height: isDesktop ? 2.2 : 2,
+                            color: AppColor.onSurfaceVariant),
                       ),
-                    ))
-                .toList(),
-          ),
+                    )),
+              ],
+            );
+            return isDesktop
+                ? CenteredContent(maxWidth: _kArticleMaxWidth, child: article)
+                : article;
+          }),
         ),
       ),
     );
@@ -121,17 +151,22 @@ class SupportPage extends StatelessWidget {
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
         body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
+          child: Builder(builder: (context) {
+            // دسکتاپ: همان ستون خوانای ۷۶۰ پیکسلی صفحات ثابت
+            final bool isDesktop = AppBreakpoints.isDesktop(context);
+            final list = ListView(
+              padding: isDesktop
+                  ? const EdgeInsets.symmetric(vertical: 40)
+                  : const EdgeInsets.all(16),
             children: [
               Text(
                 'ساعات پاسخگویی: شنبه تا چهارشنبه، ۹ تا ۱۷',
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: 'Estedad',
-                    fontSize: 12,
+                    fontSize: isDesktop ? 14 : 12,
                     color: AppColor.onSurfaceVariant),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: isDesktop ? 24 : 16),
               _tile(
                 icon: Icons.call_outlined,
                 title: 'تماس تلفنی',
@@ -152,7 +187,11 @@ class SupportPage extends StatelessWidget {
                     context, Uri.parse('https://wa.me/98$phone')),
               ),
             ],
-          ),
+            );
+            return isDesktop
+                ? CenteredContent(maxWidth: _kArticleMaxWidth, child: list)
+                : list;
+          }),
         ),
       ),
     );

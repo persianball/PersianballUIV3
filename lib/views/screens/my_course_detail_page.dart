@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/models/course_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -188,6 +189,98 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     return idx;
   }
 
+
+  /// معرفی دوره (آکاردئون) — از بدنه‌ی build جدا شد تا در هر دو چیدمان
+  /// موبایل و دسکتاپ یکسان استفاده شود.
+  Widget _introSection() {
+    return Theme(
+      data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          unselectedWidgetColor: AppColor.onSurfaceVariant),
+      child: ExpansionTile(
+        iconColor: AppColor.goldEnd,
+        collapsedIconColor: AppColor.onSurfaceVariant,
+        initiallyExpanded: _introExpanded,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 0),
+        onExpansionChanged: (v) => setState(() => _introExpanded = v),
+        title: const Text('معرفی دوره',
+            style: TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColor.onSurface)),
+        children: [
+          const SizedBox(height: 6),
+          Text(widget.myCourse.courseDescription,
+              style: const TextStyle(
+                  fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  /// انتخاب هفته‌ی دوره
+  Widget _weekDropdown(List<dynamic> weeks) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: ShapeDecoration(
+        color: AppColor.surfaceContainer,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _selectedWeekIndex,
+          isExpanded: true,
+          dropdownColor: AppColor.surfaceContainer,
+          // آیتم‌های منو راست‌به‌چپ چیده شوند
+          alignment: AlignmentDirectional.centerEnd,
+          icon: const Icon(Icons.keyboard_arrow_down,
+              color: AppColor.onSurfaceVariant),
+          items: weeks.asMap().entries.map((entry) {
+            final week = entry.value;
+            return DropdownMenuItem<int>(
+              value: entry.key,
+              alignment: AlignmentDirectional.centerEnd,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    week.weekName ?? 'هفته ${week.weekNumber}',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                        fontFamily: 'Estedad', color: AppColor.onSurface),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _selectedWeekIndex = value;
+                _selectedSectionIndex = 0;
+              });
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  /// دسکتاپ: محتوای زیر هیرو در ستون مرکزی ۱۰۰۰ پیکسلی می‌نشیند تا روی
+  /// نمایشگر پهن کش نیاید؛ موبایل دقیقاً همان تمام‌عرض قبلی می‌ماند.
+  Widget _centered(Widget child) => AppBreakpoints.isDesktop(context)
+      ? Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: child,
+          ),
+        )
+      : child;
+
   @override
   Widget build(BuildContext context) {
     final detail = widget.myCourse.courseDetail;
@@ -303,35 +396,12 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
             ),
 
             SliverToBoxAdapter(
-              child: Padding(
+              child: _centered(Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Theme(
-                      data: Theme.of(context).copyWith(
-                          dividerColor: Colors.transparent,
-                          unselectedWidgetColor: AppColor.onSurfaceVariant),
-                      child: ExpansionTile(
-                        iconColor: AppColor.goldEnd,
-                        collapsedIconColor: AppColor.onSurfaceVariant,
-                        initiallyExpanded: _introExpanded,
-                        tilePadding: const EdgeInsets.symmetric(horizontal: 0),
-                        onExpansionChanged: (v) => setState(() => _introExpanded = v),
-                        title: const Text('معرفی دوره',
-                            style: TextStyle(
-                                fontFamily: 'Estedad',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColor.onSurface)),
-                        children: [
-                          const SizedBox(height: 6),
-                          Text(widget.myCourse.courseDescription,
-                              style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
-                          const SizedBox(height: 8),
-                        ],
-                      ),
-                    ),
+                    _introSection(),
                     const SizedBox(height: 16),
                     const Text('ویدیوها',
                         style: TextStyle(
@@ -341,59 +411,16 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                             color: AppColor.onSurface)),
                     const SizedBox(height: 12),
                     // Week dropdown
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: ShapeDecoration(
-            color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: _selectedWeekIndex,
-                          isExpanded: true,
-                          dropdownColor: AppColor.surfaceContainer,
-                          // آیتم‌های منو راست‌به‌چپ چیده شوند
-                          alignment: AlignmentDirectional.centerEnd,
-                          icon: const Icon(Icons.keyboard_arrow_down, color: AppColor.onSurfaceVariant),
-                          items: weeks.asMap().entries.map((entry) {
-                            final week = entry.value;
-                            return DropdownMenuItem<int>(
-                              value: entry.key,
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: Directionality(
-                                textDirection: TextDirection.rtl,
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: Text(
-                                    week.weekName ?? 'هفته ${week.weekNumber}',
-                                    textAlign: TextAlign.right,
-                                    style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() {
-                                _selectedWeekIndex = value;
-                                _selectedSectionIndex = 0;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ),
+                    _weekDropdown(weeks),
                     const SizedBox(height: 16),
                   ],
                 ),
-              ),
+              )),
             ),
 
             // Horizontal carousel for sections of selected week
             SliverToBoxAdapter(
-              child: Container(
+              child: _centered(Container(
                 height: 200,
                 child: CarouselSlider.builder(
                   itemCount: weeks[_selectedWeekIndex].sections.length,
@@ -520,7 +547,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                     },
                   ),
                 ),
-              ),
+              )),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
           ],

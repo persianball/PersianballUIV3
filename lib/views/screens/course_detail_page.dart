@@ -4,6 +4,7 @@ import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/course_detail_model.dart';
@@ -356,6 +357,300 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                         );
   }
 
+  /// عنوان دوره (در دسکتاپ کمی درشت‌تر)
+  Widget _courseTitle(CourseDetailResponse data, {double fontSize = 20}) {
+    return Text(
+      data.courseTitle,
+      style: TextStyle(
+        fontFamily: 'Estedad',
+        fontSize: fontSize,
+        fontWeight: FontWeight.w800,
+        color: AppColor.onSurface,
+      ),
+    );
+  }
+
+  /// ردیف بج‌های رنگی دوره (در هر دو چیدمان یکسان)
+  Widget _badgesRow(CourseDetailResponse data) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _infoChip('سطح: ${data.courseDifficulty}',
+            icon: Icons.military_tech_rounded, color: AppColor.levelExpert),
+        _infoChip('تعداد هفته: ${data.weekCount}',
+            icon: Icons.calendar_month_rounded, color: AppColor.categoryBadge),
+        _infoChip('تعداد سکشن: ${data.sectionCount}',
+            icon: Icons.view_list_rounded, color: AppColor.pitchGreen),
+        _infoChip('مدت دوره: ${_formatDuration(data.courseDuration)}',
+            icon: Icons.schedule_rounded, color: AppColor.warning),
+        _infoChip('تعداد ویدیو: ${data.detail.videoCount}',
+            icon: Icons.play_circle_fill_rounded, color: AppColor.danger),
+      ],
+    );
+  }
+
+  /// توضیحات دوره و پیش‌نیاز
+  Widget _descriptionBlock(CourseDetailResponse data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Text(
+            data.courseDescription,
+            key: ValueKey(data.id),
+            textAlign: TextAlign.justify,
+            style: const TextStyle(
+                fontFamily: 'Estedad', color: AppColor.onSurfaceVariant),
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text('پیش‌نیاز',
+            style: TextStyle(
+                fontFamily: 'Estedad',
+                fontWeight: FontWeight.w700,
+                color: AppColor.onSurface)),
+        const SizedBox(height: 6),
+        Text(data.detail.preRequirement,
+            style: const TextStyle(
+                fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+      ],
+    );
+  }
+
+  /// تب‌های برنامه‌ی هفتگی و زمان و مکان برگزاری
+  Widget _detailTabs(CourseDetailResponse data) {
+    return DetailTabs(
+      tabs: [
+        DetailTab(
+          title: 'برنامه هفتگی',
+          icon: Icons.calendar_month_rounded,
+          builder: (context) => Column(
+            children: List.generate(
+              data.detail.weeks.length,
+              (index) => _weekCard(data, index),
+            ),
+          ),
+        ),
+        DetailTab(
+          title: 'زمان و مکان برگزاری',
+          icon: Icons.place_rounded,
+          builder: (context) => Column(
+            children: List.generate(
+              data.detail.timeAndLocation.length,
+              (index) => _timeLocationCard(data, index),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// ردیف دکمه‌های اقدام: میان‌بر سبد + افزودن به سبد
+  /// (منطق شیت افزودن به سبد دست‌نخورده است؛ فقط جای رندر عوض می‌شود)
+  Widget _actionRow() {
+    return Row(
+      children: [
+        // Cart Button
+        Container(
+          width: 54,
+          height: 54,
+          margin: const EdgeInsets.only(right: 12),
+          decoration: ShapeDecoration(
+            color: AppColor.cardMuted,
+            shape: AppShapes.pill,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            shape: AppShapes.pill,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => Navigator.of(context).pushNamed('/cart'),
+              child: Padding(
+                padding: const EdgeInsets.all(15),
+                child: SvgPicture.asset(
+                  'assets/icons/Bag.svg',
+                  fit: BoxFit.contain,
+                  colorFilter: const ColorFilter.mode(
+                      AppColor.pitchGreen, BlendMode.srcIn),
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Add to Cart Button
+        Expanded(
+          child: FutureBuilder<CourseDetailResponse>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.hasData &&
+                  snapshot.data!.detail.timeAndLocation.isNotEmpty) {
+                final firstCourse =
+                    snapshot.data!.detail.timeAndLocation.first;
+                return ElevatedButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (context) =>
+                          AddCourseToCartModal(courseItem: firstCourse),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColor.goldEnd,
+                    shape: AppShapes.pill,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'افزودن به سبد',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.onGold,
+                      fontSize: 16,
+                    ),
+                  ),
+                );
+              }
+              return ElevatedButton(
+                onPressed: null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.outlineVariantDark,
+                  shape: AppShapes.pill,
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'دوره در دسترس نیست',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.onSurfaceVariant,
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------- چیدمان دسکتاپ ----------
+
+  /// سربرگ دسکتاپ: دکمه‌ی بازگشت + عنوان صفحه
+  Widget _desktopHeader() {
+    return Row(
+      children: [
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Material(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.pill,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => Navigator.of(context).maybePop(),
+              child: const Padding(
+                padding: EdgeInsets.all(10),
+                child: Icon(Icons.arrow_forward_rounded,
+                    size: 20, color: AppColor.onSurface),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        const Text('جزییات دوره',
+            style: TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColor.onSurface)),
+      ],
+    );
+  }
+
+  /// تصویر بزرگ دوره در ستون راست دسکتاپ
+  Widget _desktopHero(CourseDetailResponse data) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppShapes.rLg),
+      child: AspectRatio(
+        aspectRatio: 16 / 10,
+        child: data.image.isEmpty
+            ? Container(color: AppColor.surfaceContainer)
+            : Image.network(
+                _abs(data.image),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Image.asset(
+                    'assets/images/placeholder.jpg',
+                    fit: BoxFit.cover),
+              ),
+      ),
+    );
+  }
+
+  /// پنل اطلاعات کلیدی دسکتاپ: عنوان، بج‌ها، قیمت و دکمه‌ی افزودن به سبد
+  Widget _desktopInfo(CourseDetailResponse data) {
+    final items = data.detail.timeAndLocation;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: ShapeDecoration(
+        color: AppColor.surfaceContainer,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _courseTitle(data, fontSize: 24),
+          const SizedBox(height: 14),
+          _badgesRow(data),
+          if (items.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            _timeLocationPrice(items.first),
+          ],
+          const SizedBox(height: 20),
+          _actionRow(),
+        ],
+      ),
+    );
+  }
+
+  /// بدنه‌ی دسکتاپ: تصویر و اطلاعات کنار هم، سپس توضیحات و تب‌ها تمام‌عرض
+  Widget _desktopBody(CourseDetailResponse data) {
+    const double maxWidth = 1000;
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.zero,
+      children: [
+        const SizedBox(height: 20),
+        CenteredContent(maxWidth: maxWidth, child: _desktopHeader()),
+        const SizedBox(height: 20),
+        CenteredContent(
+          maxWidth: maxWidth,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // در RTL فرزند اول سمت راست می‌نشیند: تصویر راست، اطلاعات چپ
+              Expanded(flex: 11, child: _desktopHero(data)), // ~۵۵٪ عرض
+              const SizedBox(width: 24),
+              Expanded(flex: 9, child: _desktopInfo(data)), // ~۴۵٪ عرض
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+        CenteredContent(maxWidth: maxWidth, child: _descriptionBlock(data)),
+        const SizedBox(height: 20),
+        CenteredContent(maxWidth: maxWidth, child: _detailTabs(data)),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -399,6 +694,10 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               }
       
               final data = snapshot.data!;
+              // دسکتاپ: تصویر و اطلاعات کلیدی کنار هم، بقیه‌ی بخش‌ها زیرشان
+              if (AppBreakpoints.isDesktop(context)) {
+                return _desktopBody(data);
+              }
               return CustomScrollView(
                 slivers: [
                   SliverAppBar(
@@ -442,84 +741,21 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(data.courseTitle,
-                              style: const TextStyle(
-                                  fontFamily: 'Estedad',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColor.onSurface)),
+                          _courseTitle(data),
                           const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _infoChip('سطح: ${data.courseDifficulty}',
-                                  icon: Icons.military_tech_rounded,
-                                  color: AppColor.levelExpert),
-                              _infoChip('تعداد هفته: ${data.weekCount}',
-                                  icon: Icons.calendar_month_rounded,
-                                  color: AppColor.categoryBadge),
-                              _infoChip('تعداد سکشن: ${data.sectionCount}',
-                                  icon: Icons.view_list_rounded,
-                                  color: AppColor.pitchGreen),
-                              _infoChip('مدت دوره: ${_formatDuration(data.courseDuration)}',
-                                  icon: Icons.schedule_rounded,
-                                  color: AppColor.warning),
-                              _infoChip('تعداد ویدیو: ${data.detail.videoCount}',
-                                  icon: Icons.play_circle_fill_rounded,
-                                  color: AppColor.danger),
-                            ],
-                          ),
+                          _badgesRow(data),
                           const SizedBox(height: 12),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: Text(
-                              data.courseDescription,
-                              key: ValueKey(data.id),
-                              textAlign: TextAlign.justify,
-                              style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text('پیش‌نیاز',
-                              style: TextStyle(
-                                  fontFamily: 'Estedad', fontWeight: FontWeight.w700, color: AppColor.onSurface)),
-                          const SizedBox(height: 6),
-                          Text(data.detail.preRequirement,
-                              style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+                          _descriptionBlock(data),
                         ],
                       ),
                     ),
                   ),
-      
+
                   // تب‌های جزئیات دوره با ترنزیشن نرم
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: DetailTabs(
-                        tabs: [
-                          DetailTab(
-                            title: 'برنامه هفتگی',
-                            icon: Icons.calendar_month_rounded,
-                            builder: (context) => Column(
-                              children: List.generate(
-                                data.detail.weeks.length,
-                                (index) => _weekCard(data, index),
-                              ),
-                            ),
-                          ),
-                          DetailTab(
-                            title: 'زمان و مکان برگزاری',
-                            icon: Icons.place_rounded,
-                            builder: (context) => Column(
-                              children: List.generate(
-                                data.detail.timeAndLocation.length,
-                                (index) => _timeLocationCard(data, index),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      child: _detailTabs(data),
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -530,6 +766,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         ),
         bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
           builder: (context, cartState) {
+            // دسکتاپ: نوار پایین حذف می‌شود و همین دکمه‌ها داخل پنل اطلاعات
+            // رندر می‌شوند؛ منطق شیت افزودن به سبد دست‌نخورده باقی می‌ماند.
+            if (AppBreakpoints.isDesktop(context)) {
+              return const SizedBox.shrink();
+            }
             return Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               decoration: ShapeDecoration(
@@ -537,91 +778,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                 shape: AppShapes.borderTop(AppShapes.rXl),
                 shadows: AppColor.floatingShadow,
               ),
-              child: Row(
-                children: [
-                  // Cart Button
-                  Container(
-                    width: 54,
-                    height: 54,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: ShapeDecoration(
-                      color: AppColor.cardMuted,
-                      shape: AppShapes.pill,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      shape: AppShapes.pill,
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: () => Navigator.of(context).pushNamed('/cart'),
-                        child: Padding(
-                          padding: const EdgeInsets.all(15),
-                          child: SvgPicture.asset(
-                            'assets/icons/Bag.svg',
-                            fit: BoxFit.contain,
-                            colorFilter: const ColorFilter.mode(
-                                AppColor.pitchGreen, BlendMode.srcIn),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Add to Cart Button
-                  Expanded(
-                    child: FutureBuilder<CourseDetailResponse>(
-                      future: _future,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData && snapshot.data!.detail.timeAndLocation.isNotEmpty) {
-                          final firstCourse = snapshot.data!.detail.timeAndLocation.first;
-                          return ElevatedButton(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                backgroundColor: Colors.transparent,
-                                isScrollControlled: true,
-                                builder: (context) => AddCourseToCartModal(courseItem: firstCourse),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColor.goldEnd,
-                              shape: AppShapes.pill,
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              'افزودن به سبد',
-                              style: TextStyle(
-                                fontFamily: 'Estedad',
-                                fontWeight: FontWeight.w600,
-                                color: AppColor.onGold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          );
-                        }
-                        return ElevatedButton(
-                          onPressed: null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColor.outlineVariantDark,
-                            shape: AppShapes.pill,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            'دوره در دسترس نیست',
-                            style: TextStyle(
-                              fontFamily: 'Estedad',
-                              fontWeight: FontWeight.w600,
-                              color: AppColor.onSurfaceVariant,
-                              fontSize: 16,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+              child: _actionRow(),
             );
           },
         ),

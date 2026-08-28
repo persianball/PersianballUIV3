@@ -8,6 +8,7 @@ import 'package:marketky/views/screens/search_result_page.dart';
 import 'package:marketky/views/widgets/popular_search_card.dart';
 import 'package:marketky/views/widgets/search_history_tile.dart';
 import 'package:marketky/views/widgets/page_container.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -60,7 +61,9 @@ class _SearchPageState extends State<SearchPage> {
         ),
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
+      // دسکتاپ: ستون جست‌وجو باریک‌تر می‌ماند تا چیپ‌ها و تاریخچه کش نیایند.
       body: PageContainer(
+        maxWidth: AppBreakpoints.isDesktop(context) ? 900 : null,
         child: ListView(
           shrinkWrap: true,
           physics: BouncingScrollPhysics(),

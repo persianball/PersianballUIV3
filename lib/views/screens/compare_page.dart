@@ -1,5 +1,6 @@
 // lib/views/screens/compare_page.dart
 import 'package:flutter/material.dart';
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
@@ -106,21 +107,25 @@ class _ComparePageState extends State<ComparePage> {
   }
 
   Widget _picker() {
-    return SizedBox(
-      height: 96,
+    // در دسکتاپ نوار انتخاب کالا بزرگ‌تر و درون پوسته‌ی مرکزی ۱۲۰۰ پیکسلی است
+    final bool isDesktop = AppBreakpoints.isDesktop(context);
+    final double cardWidth = isDesktop ? 120 : 80;
+
+    final list = SizedBox(
+      height: isDesktop ? 140 : 96,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(isDesktop ? 16 : 12),
         itemCount: _all.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => SizedBox(width: isDesktop ? 12 : 8),
         itemBuilder: (_, i) {
           final p = _all[i];
           final selected = _selected.any((e) => e.id == p.id);
-          return GestureDetector(
+          final card = GestureDetector(
             onTap: () => _toggle(p),
             child: Container(
-              width: 80,
-              padding: const EdgeInsets.all(4),
+              width: cardWidth,
+              padding: EdgeInsets.all(isDesktop ? 8 : 4),
               decoration: BoxDecoration(
                 color: AppColor.surfaceContainer,
                 border: Border.all(
@@ -132,28 +137,36 @@ class _ComparePageState extends State<ComparePage> {
                 children: [
                   AppNetworkImage(
                     url: '${URLs.baseUrl}${p.image ?? ''}',
-                    width: 48,
-                    height: 40,
+                    width: isDesktop ? 80 : 48,
+                    height: isDesktop ? 64 : 40,
                     borderRadius: AppShapes.radius(AppShapes.rMd),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: isDesktop ? 6 : 4),
                   Expanded(
                     child: Text(
                       p.nameFarsi,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontFamily: 'Estedad', fontSize: 9, height: 1.3, color: AppColor.onSurface),
+                      style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: isDesktop ? 11 : 9,
+                          height: 1.3,
+                          color: AppColor.onSurface),
                     ),
                   ),
                 ],
               ),
             ),
           );
+          return isDesktop
+              ? MouseRegion(cursor: SystemMouseCursors.click, child: card)
+              : card;
         },
       ),
     );
+
+    return isDesktop ? CenteredContent(child: list) : list;
   }
 
   Widget _table() {
@@ -192,13 +205,12 @@ class _ComparePageState extends State<ComparePage> {
       'وضعیت انتشار': (p) => p.published ? 'منتشرشده' : 'پیش‌نویس',
     };
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
+    final bool isDesktop = AppBreakpoints.isDesktop(context);
+    final Widget table = Column(
         children: [
           Row(
             children: [
-              const SizedBox(width: 90),
+              SizedBox(width: isDesktop ? 140 : 90),
               ..._selected.map((p) => Expanded(
                     child: Column(
                       children: [
@@ -235,7 +247,7 @@ class _ComparePageState extends State<ComparePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 90,
+                      width: isDesktop ? 140 : 90,
                       child: Text(entry.key,
                           style: const TextStyle(
                               fontFamily: 'Estedad',
@@ -259,7 +271,7 @@ class _ComparePageState extends State<ComparePage> {
           const SizedBox(height: 20),
           Row(
             children: [
-              const SizedBox(width: 90),
+              SizedBox(width: isDesktop ? 140 : 90),
               ..._selected.map((p) => Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -282,7 +294,14 @@ class _ComparePageState extends State<ComparePage> {
             ],
           ),
         ],
-      ),
+    );
+
+    // دسکتاپ: جدول در پوسته‌ی مرکزی و با فضای بیشتر نفس می‌کشد؛
+    // موبایل دقیقاً همان اسکرول با پدینگ ۱۶ می‌ماند.
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 0 : 16, vertical: isDesktop ? 28 : 16),
+      child: isDesktop ? CenteredContent(child: table) : table,
     );
   }
 }
