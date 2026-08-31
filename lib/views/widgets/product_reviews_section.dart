@@ -6,6 +6,7 @@ import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/services/rating_service.dart';
 import 'package:marketky/services/review_service.dart';
+import 'package:marketky/views/widgets/app_buttons.dart';
 
 /// بخش نظرات و پرسش‌وپاسخ محصول در صفحه جزئیات کالا
 class ProductReviewsSection extends StatefulWidget {
@@ -61,7 +62,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
             _ratingSummary(),
             const SizedBox(height: 12),
             if (widget.comments.isEmpty)
-              Text('هنوز نظر تأییدشده‌ای برای این کالا ثبت نشده است',
+              Text('هنوز نظری برای این کالا ثبت نشده است',
                   style: AppTextStyles.labelSm),
             ...widget.comments.take(3).map(_commentTile),
             if (widget.comments.length > 3)
@@ -78,12 +79,22 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
 
   Widget _sectionHeader(String title, String action, VoidCallback onTap) => Row(
         children: [
-          Text(title, style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
+          Flexible(
+            child: Text(title,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
+          ),
+          const SizedBox(width: 8),
           const Spacer(),
-          TextButton(
+          // TextButton ساده از متنِ کنارش قابل تشخیص نبود و کاربر نمی‌فهمید
+          // قابلِ زدن است؛ حالا دکمه‌ی قرصیِ گرادیانی با آیکن است.
+          GradientButton(
+            label: action,
+            icon: const Icon(Icons.rate_review_outlined),
             onPressed: onTap,
-            child: Text(action,
-                style: AppTextStyles.labelSm.copyWith(color: AppColor.goldEnd)),
+            expand: false,
+            height: 38,
+            fontSize: 12.5,
           ),
         ],
       );
@@ -172,19 +183,9 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.verified, size: 14, color: AppColor.success),
-                const SizedBox(width: 6),
-                const Text('نظر تأییدشده',
-                    style: TextStyle(
-                        fontFamily: 'Estedad',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColor.ink)),
-                const Spacer(),
-                Text(_shortDate(c.createAt), style: AppTextStyles.labelSm),
-              ],
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Text(_shortDate(c.createAt), style: AppTextStyles.labelSm),
             ),
             const SizedBox(height: 6),
             Text(c.text,
@@ -358,25 +359,16 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.goldEnd,
-                      shape: AppShapes.pill,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    onPressed: _submitting
-                        ? null
-                        : () async {
-                            final text = bodyCtrl.text.trim();
-                            if (text.isEmpty) return;
-                            Navigator.of(ctx).pop();
-                            await _submitReview(rating: rating, text: text);
-                          },
-                    child: const Text('ثبت نظر',
-                        style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
-                  ),
+                GradientButton(
+                  label: 'ثبت نظر',
+                  icon: const Icon(Icons.send_rounded),
+                  loading: _submitting,
+                  onPressed: () async {
+                    final text = bodyCtrl.text.trim();
+                    if (text.isEmpty) return;
+                    Navigator.of(ctx).pop();
+                    await _submitReview(rating: rating, text: text);
+                  },
                 ),
               ],
             ),
@@ -434,14 +426,20 @@ class _ProductQuestionsSectionState extends State<ProductQuestionsSection> {
           children: [
             Row(
               children: [
-                Text('پرسش و پاسخ',
-                    style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
+                Flexible(
+                  child: Text('پرسش و پاسخ',
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
+                ),
+                const SizedBox(width: 8),
                 const Spacer(),
-                TextButton(
+                GradientButton(
+                  label: 'پرسیدن سؤال',
+                  icon: const Icon(Icons.help_outline_rounded),
                   onPressed: _openQuestionSheet,
-                  child: Text('پرسیدن سؤال',
-                      style: AppTextStyles.labelSm
-                          .copyWith(color: AppColor.goldEnd)),
+                  expand: false,
+                  height: 38,
+                  fontSize: 12.5,
                 ),
               ],
             ),
@@ -591,15 +589,10 @@ class _ProductQuestionsSectionState extends State<ProductQuestionsSection> {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColor.goldEnd,
-                    shape: AppShapes.pill,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  onPressed: () async {
+              GradientButton(
+                label: 'ثبت سؤال',
+                icon: const Icon(Icons.send_rounded),
+                onPressed: () async {
                     final text = bodyCtrl.text.trim();
                     if (text.isEmpty) return;
                     Navigator.of(ctx).pop();
@@ -612,10 +605,7 @@ class _ProductQuestionsSectionState extends State<ProductQuestionsSection> {
                             style: TextStyle(fontFamily: 'Estedad')),
                       ),
                     );
-                  },
-                  child: const Text('ثبت سؤال',
-                      style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
-                ),
+                },
               ),
             ],
           ),
