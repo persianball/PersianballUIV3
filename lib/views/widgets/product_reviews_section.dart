@@ -99,61 +99,50 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
         ],
       );
 
+  /// خلاصه‌ی امتیاز و نظرها.
+  ///
+  /// امتیاز و نظر در بک‌اند دو چیز جدا هستند: `avg_rate` میانگین امتیازهاست
+  /// و `comments` نظرهای متنی که *فیلد امتیاز ندارند*. پس نه می‌توان نظرها
+  /// را به ستاره نسبت داد و نه تفکیک ستاره‌ای ساخت؛ قبلاً نمودار میله‌ای
+  /// همه‌ی نظرها را زیر ستاره‌ی گردشده‌ی میانگین می‌ریخت که داده‌ی ساختگی بود.
   Widget _ratingSummary() {
     final count = widget.comments.length;
-    if (widget.avgRate <= 0 && count == 0) {
+    final bool hasRate = widget.avgRate > 0;
+    if (!hasRate && count == 0) {
       return Text('هنوز نظری ثبت نشده است', style: AppTextStyles.labelSm);
     }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        if (hasRate) ...[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.avgRate.toStringAsFixed(1),
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: AppColor.goldEnd)),
+              _stars(widget.avgRate.round(), size: 14),
+              Text('میانگین امتیاز', style: AppTextStyles.labelSm),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Container(width: 1, height: 46, color: AppColor.line),
+          const SizedBox(width: 16),
+        ],
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.avgRate.toStringAsFixed(1),
-                style: TextStyle(
+            Text('$count',
+                style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
-                    color: AppColor.goldEnd)),
-            _stars(widget.avgRate.round(), size: 14),
-            Text('$count نظر', style: AppTextStyles.labelSm),
+                    color: AppColor.ink)),
+            Text('نظر ثبت‌شده', style: AppTextStyles.labelSm),
           ],
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: Column(
-            children: _breakdown().entries.map((e) {
-              final ratio = count == 0 ? 0.0 : e.value / count;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  children: [
-                    Text('${e.key}',
-                        style: const TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 11,
-                            color: AppColor.onSurfaceVariant)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.star, size: 11, color: Colors.amber),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: LinearProgressIndicator(
-                        value: ratio,
-                        minHeight: 6,
-                        color: AppColor.goldEnd,
-                        backgroundColor: AppColor.outlineVariantDark,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    SizedBox(
-                      width: 18,
-                      child: Text('${e.value}', style: AppTextStyles.labelSm),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
         ),
       ],
     );
@@ -219,15 +208,6 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
   String _shortDate(String raw) =>
       raw.length >= 10 ? raw.substring(0, 10) : raw;
 
-  /// بک‌اند تفکیک ستاره‌ای نمی‌دهد؛ تا وقتی چنین فیلدی اضافه نشود، همه‌ی
-  /// نظرها زیر میانگین امتیاز شمرده می‌شوند.
-  Map<int, int> _breakdown() {
-    final map = {for (int i = 5; i >= 1; i--) i: 0};
-    final bucket = widget.avgRate.round().clamp(1, 5);
-    map[bucket] = widget.comments.length;
-    return map;
-  }
-
   void _openAllReviews() {
     showModalBottomSheet(
       context: context,
@@ -260,37 +240,55 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
   ///
   /// این دو، دو اندپوینت جدا هستند: اگر ثبت امتیاز شکست بخورد، متن نظر
   /// همچنان ارسال می‌شود و برعکس؛ نتیجه‌ی هرکدام جدا به کاربر گفته می‌شود.
-  Future<void> _submitReview({required int rating, required String text}) async {
+  /// ثبت نظر و امتیاز. هر دو اختیاری‌اند: کاربر می‌تواند فقط متن بنویسد
+  /// (بدون امتیاز)، فقط ستاره بدهد، یا هر دو را با هم بفرستد.
+  Future<void> _submitReview({int? rating, String? text}) async {
+    final body = (text ?? '').trim();
+    final bool hasText = body.isNotEmpty;
+    final bool hasRating = rating != null && rating > 0;
+    if (!hasText && !hasRating) return;
+
     setState(() => _submitting = true);
 
-    final commentResult = await RatingService.commentOnProduct(
-      productId: widget.productId,
-      text: text,
-    );
-    final rateResult = await RatingService.rateProduct(
-      productId: widget.productId,
-      rating: rating,
-    );
+    RatingResult? commentResult;
+    RatingResult? rateResult;
+
+    if (hasText) {
+      commentResult = await RatingService.commentOnProduct(
+        productId: widget.productId,
+        text: body,
+      );
+    }
+    // فقط وقتی کاربر واقعاً ستاره‌ای انتخاب کرده باشد امتیاز فرستاده می‌شود؛
+    // پیش‌تر امتیاز پیش‌فرض ۵ بود و نظرِ بدون امتیاز هم بی‌اطلاعِ کاربر
+    // ۵ ستاره ثبت می‌کرد.
+    if (hasRating) {
+      rateResult = await RatingService.rateProduct(
+        productId: widget.productId,
+        rating: rating,
+      );
+    }
 
     if (!mounted) return;
     setState(() => _submitting = false);
 
-    if (commentResult.success) {
-      _snack(commentResult.message);
-    } else {
-      _snack(commentResult.message, error: true);
+    if (commentResult != null) {
+      _snack(commentResult.message, error: !commentResult.success);
     }
-    if (!rateResult.success) {
+    if (rateResult != null && !rateResult.success) {
       _snack('ثبت امتیاز: ${rateResult.message}', error: true);
+    } else if (commentResult == null && rateResult != null) {
+      _snack(rateResult.message);
     }
 
-    if (commentResult.success || rateResult.success) {
+    if ((commentResult?.success ?? false) || (rateResult?.success ?? false)) {
       widget.onSubmitted?.call();
     }
   }
 
   void _openReviewSheet() {
-    int rating = 5;
+    // ۰ یعنی «امتیازی انتخاب نشده»
+    int rating = 0;
     final bodyCtrl = TextEditingController();
 
     showModalBottomSheet(
@@ -318,14 +316,35 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                 Text('ثبت نظر', style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
                 const SizedBox(height: 12),
                 Row(
+                  children: [
+                    Text('امتیاز (اختیاری)', style: AppTextStyles.labelSm),
+                    const Spacer(),
+                    if (rating > 0)
+                      TextButton(
+                        onPressed: () => setSheet(() => rating = 0),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: const Size(0, 32),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text('حذف امتیاز',
+                            style: AppTextStyles.labelSm
+                                .copyWith(color: AppColor.danger)),
+                      ),
+                  ],
+                ),
+                Row(
                   children: List.generate(
                     5,
                     (i) => IconButton(
                       padding: EdgeInsets.zero,
-                      onPressed: () => setSheet(() => rating = i + 1),
+                      tooltip: '${i + 1} ستاره',
+                      // زدنِ دوباره‌ی همان ستاره، امتیاز را برمی‌دارد
+                      onPressed: () => setSheet(
+                          () => rating = (rating == i + 1) ? 0 : i + 1),
                       icon: Icon(
                         i < rating ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
+                        color: i < rating ? Colors.amber : AppColor.lineStrong,
                         size: 30,
                       ),
                     ),
@@ -334,6 +353,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                 TextField(
                   controller: bodyCtrl,
                   maxLines: 4,
+                  onChanged: (_) => setSheet(() {}),
                   style: const TextStyle(
                       fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurface),
                   decoration: InputDecoration(
@@ -363,9 +383,11 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                   label: 'ثبت نظر',
                   icon: const Icon(Icons.send_rounded),
                   loading: _submitting,
+                  // نوشتنِ متن یا دادنِ امتیاز، هرکدام به‌تنهایی کافی است
+                  enabled: bodyCtrl.text.trim().isNotEmpty || rating > 0,
                   onPressed: () async {
                     final text = bodyCtrl.text.trim();
-                    if (text.isEmpty) return;
+                    if (text.isEmpty && rating == 0) return;
                     Navigator.of(ctx).pop();
                     await _submitReview(rating: rating, text: text);
                   },
