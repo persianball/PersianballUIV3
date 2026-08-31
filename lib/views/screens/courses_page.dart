@@ -173,7 +173,7 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColor.milk,
+        backgroundColor: Colors.transparent,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
               (AppBreakpoints.isDesktop(context) ? 8.0 : kToolbarHeight) +

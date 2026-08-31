@@ -171,7 +171,7 @@ class _HomePageState extends State<HomePage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColor.milk,
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           bottom: false,
           child: LayoutBuilder(builder: (context, viewport) {

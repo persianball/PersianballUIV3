@@ -11,6 +11,7 @@ import 'package:marketky/core/fade_page_transitions.dart';
 import 'package:marketky/bloc/address/address_bloc.dart';
 import 'package:app_links/app_links.dart';
 import 'package:marketky/core/deep_link_resolver.dart';
+import 'package:marketky/views/widgets/animated_gradient_background.dart';
 
 import 'bloc/product/product_bloc.dart';
 import 'dart:async';
@@ -114,7 +115,9 @@ class _MyAppState extends State<MyApp> {
         // (انحنای پیوسته به سبک اپل) هستند، نه کمان دایره‌ای.
         theme: ThemeData(
           useMaterial3: true,
-          scaffoldBackgroundColor: AppColor.milk,
+          // پس‌زمینه‌ی صفحه‌ها شفاف است تا گرادیانِ متحرکِ سراسری
+          // (AnimatedGradientBackground در builder) از پشت دیده شود.
+          scaffoldBackgroundColor: Colors.transparent,
           fontFamily: 'Estedad',
           splashFactory: InkSparkle.splashFactory,
           colorScheme: ColorScheme.fromSeed(
@@ -313,7 +316,12 @@ class _MyAppState extends State<MyApp> {
         // صفحات خودشان دارند بی‌ضرر و اضافی می‌ماند.
         builder: (context, child) => Directionality(
           textDirection: TextDirection.rtl,
-          child: child ?? const SizedBox.shrink(),
+          child: Stack(
+            children: [
+              const Positioned.fill(child: AnimatedGradientBackground()),
+              child ?? const SizedBox.shrink(),
+            ],
+          ),
         ),
         // initialRoute عمداً ست نشده: اگر مقداردهی شود، فلاتر وب همیشه
         // مسیر '/' را در بارگذاری اول باز می‌کند و آدرس واقعی مرورگر

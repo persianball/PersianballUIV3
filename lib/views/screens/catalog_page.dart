@@ -126,7 +126,7 @@ class _CatalogPageState extends State<CatalogPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColor.milk,
+        backgroundColor: Colors.transparent,
         // دسکتاپ: عنوان صفحه و دکمه‌ی مقایسه در نوار بالای اپ/نوار ابزار
         // تکرار می‌شوند، پس اپ‌بار مخصوص این تب حذف می‌شود.
         appBar: AppBreakpoints.isDesktop(context)

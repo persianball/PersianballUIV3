@@ -66,7 +66,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColor.milk,
+        backgroundColor: Colors.transparent,
         extendBody: !desktop,
         // دسکتاپ: نوار ناوبری بالایی مثل سایت‌های فروشگاهی؛
         // موبایل/تبلت: همان نوار پایین ناچ‌دار.

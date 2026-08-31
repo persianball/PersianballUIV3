@@ -39,7 +39,7 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     final bool isDesktop = AppBreakpoints.isDesktop(context);
     return Scaffold(
-      backgroundColor: AppColor.milk,
+      backgroundColor: Colors.transparent,
       appBar: _buildAppBar(),
       // در دسکتاپ دکمه تسویه داخل ستون کناری خلاصه سفارش قرار می‌گیرد.
       bottomNavigationBar: isDesktop ? null : _buildCheckoutButton(),
@@ -647,7 +647,7 @@ class _CartPageState extends State<CartPage> {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    backgroundColor: AppColor.milk,
+                    backgroundColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
                       side: BorderSide(color: AppColor.outlineVariantDark),
                       borderRadius: AppShapes.radius(AppShapes.rMd),

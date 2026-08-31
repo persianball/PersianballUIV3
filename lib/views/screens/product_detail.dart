@@ -104,7 +104,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.milk,
+      backgroundColor: Colors.transparent,
       // بدنه نباید زیر نوار پایین برود، وگرنه انتهای توضیحات پشت دکمه‌ها
       // پنهان می‌ماند.
       extendBody: false,
