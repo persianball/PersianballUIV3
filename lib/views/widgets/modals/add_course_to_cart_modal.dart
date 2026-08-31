@@ -6,6 +6,7 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/models/course_detail_model.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/utils/login_prompt.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/views/widgets/page_container.dart';
 
@@ -255,6 +256,11 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                   label: 'افزودن به سبد',
                   icon: const Icon(Icons.add_shopping_cart_rounded),
                   onPressed: () {
+                    if (!isLoggedIn(context)) {
+                      Navigator.of(context).pop();
+                      promptLoginIfNeeded(context);
+                      return;
+                    }
                     context.read<CartBloc>().add(
                         AddCourseToCart(context, widget.courseItem.id, _quantity));
                     Navigator.of(context).pop();

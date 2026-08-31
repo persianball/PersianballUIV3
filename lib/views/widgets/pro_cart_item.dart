@@ -120,17 +120,17 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                 ),
                 const SizedBox(width: 10),
 
-                // عنوان و رنگ، وسط
+                // عنوان و رنگ، چسبیده به تصویر در سمت راست
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         farsiName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
+                        textAlign: TextAlign.start,
                         style: const TextStyle(
                           fontFamily: 'Estedad',
                           fontSize: 13,
@@ -144,7 +144,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                           colorName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.right,
+                          textAlign: TextAlign.start,
                           style: const TextStyle(
                             fontFamily: 'Estedad',
                             fontSize: 11,

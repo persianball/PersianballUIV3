@@ -52,6 +52,26 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
+  /// اسکرول صفحه — برای «قفل‌شدن» اسلایدر قهرمانِ تمام‌صفحه در دسکتاپ/تبلت
+  final ScrollController _scrollController = ScrollController();
+  bool _snappingHero = false;
+
+  /// با هر پایانِ اسکرول، اگر کاربر نیمه‌کاره داخل هیرو مانده باشد، صفحه
+  /// را کاملاً به هیرو یا کاملاً به بخش بعدی می‌بَرد (اسکرول تمام‌صفحه).
+  void _snapHero(double heroHeight) {
+    if (_snappingHero || !_scrollController.hasClients || heroHeight <= 0) return;
+    final double offset = _scrollController.offset;
+    if (offset <= 0 || offset >= heroHeight) return;
+    final double target = offset < heroHeight * 0.2 ? 0.0 : heroHeight;
+    if ((target - offset).abs() < 1) return;
+    _snappingHero = true;
+    _scrollController
+        .animateTo(target,
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic)
+        .whenComplete(() => _snappingHero = false);
+  }
+
   reloadHomePage() {
     context.read<ProductBloc>().add(FetchProducts());
     context.read<CartBloc>().add(LoadCart(context));
@@ -128,6 +148,7 @@ class _HomePageState extends State<HomePage> {
     flashsaleCountdownTimer?.cancel();
     _debounce?.cancel();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -143,6 +164,9 @@ class _HomePageState extends State<HomePage> {
     // دسکتاپ (>=1024): پوسته‌ی بالای صفحه (page_switcher) هدر را نمایش
     // می‌دهد؛ اینجا فقط محتوای مرکزی با عرض حداکثر ۱۲۰۰ چیده می‌شود.
     final bool isDesktop = AppBreakpoints.isDesktop(context);
+    // اسلایدر قهرمانِ تمام‌صفحه برای تبلت/لپ‌تاپ/دسکتاپ (>=۷۶۸)
+    final bool isBigScreen =
+        MediaQuery.of(context).size.width >= AppBreakpoints.tablet;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -150,7 +174,9 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: AppColor.milk,
         body: SafeArea(
           bottom: false,
-          child: BlocConsumer<ProductBloc, ProductState>(
+          child: LayoutBuilder(builder: (context, viewport) {
+            final double heroHeight = viewport.maxHeight;
+            return BlocConsumer<ProductBloc, ProductState>(
             listener: (context, state) {},
             builder: (context, state) {
               if (state is ProductLoading) return _buildLoading();
@@ -166,10 +192,20 @@ class _HomePageState extends State<HomePage> {
                   color: AppColor.pitchGreen,
                   backgroundColor: AppColor.card,
                   onRefresh: () async => reloadHomePage(),
+                  child: NotificationListener<ScrollEndNotification>(
+                  onNotification: (n) {
+                    if (isBigScreen && n.depth == 0) _snapHero(heroHeight);
+                    return false;
+                  },
                   child: CustomScrollView(
+                    controller: _scrollController,
                     physics: const BouncingScrollPhysics(
                         parent: AlwaysScrollableScrollPhysics()),
                     slivers: [
+                      // اسلایدر قهرمانِ تمام‌صفحه در بالای صفحه (تبلت/لپ‌تاپ/دسکتاپ)
+                      if (isBigScreen)
+                        SliverToBoxAdapter(
+                            child: _buildFullscreenHero(heroHeight)),
                       // هدر موبایل (آواتار/عنوان/زنگ/سبد) در دسکتاپ حذف
                       // می‌شود؛ نوار بالای پوسته همان‌ها را دارد.
                       if (!isDesktop)
@@ -188,8 +224,8 @@ class _HomePageState extends State<HomePage> {
                                 _featuredCourse!, isDesktop)),
                       if (flashProducts.isNotEmpty)
                         SliverToBoxAdapter(
-                          child: _buildFlashSaleSection(
-                              flashProducts, hours, minutes, seconds, isDesktop),
+                          child: _buildFlashSaleSection(flashProducts, hours,
+                              minutes, seconds, isDesktop),
                         ),
                       // فضای خالی زیر لیست تا نوار ناوبری شناور روی محتوا
                       // نیفتد؛ در دسکتاپ نوار پایینی وجود ندارد.
@@ -197,12 +233,100 @@ class _HomePageState extends State<HomePage> {
                           child: SizedBox(height: isDesktop ? 40 : 110)),
                     ],
                   ),
+                  ),
                 );
               }
               return _buildLoading();
             },
-          ),
+          );
+          }),
         ),
+      ),
+    );
+  }
+
+  // ==== اسلایدر قهرمانِ تمام‌صفحه (تبلت/لپ‌تاپ/دسکتاپ) ====
+
+  Widget _buildFullscreenHero(double height) {
+    final banners = NotificationService.banners();
+    if (banners.isEmpty || height <= 0) return const SizedBox.shrink();
+    return SizedBox(
+      height: height,
+      width: double.infinity,
+      child: CarouselSlider(
+        options: CarouselOptions(
+          height: height,
+          autoPlay: true,
+          autoPlayInterval: const Duration(seconds: 6),
+          viewportFraction: 1.0,
+        ),
+        items: banners
+            .map((b) => Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(b.assetImage, fit: BoxFit.cover),
+                    const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [Color(0xE6101A12), Color(0x33101A12)],
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                            maxWidth: AppBreakpoints.contentMaxWidth),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const PillTag(
+                                label: 'پیشنهاد ویژه',
+                                icon: Icons.sports_soccer,
+                                color: Colors.white,
+                                gradient: AppColor.greenGradient,
+                              ),
+                              const SizedBox(height: 18),
+                              Text(b.title,
+                                  style: AppTextStyles.headlineLg.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 44,
+                                      fontWeight: FontWeight.w800)),
+                              const SizedBox(height: 12),
+                              Text(b.subtitle,
+                                  style: AppTextStyles.bodyLg.copyWith(
+                                      color: Colors.white70, fontSize: 18)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: IconButton(
+                          onPressed: () {
+                            if (_scrollController.hasClients) {
+                              _scrollController.animateTo(
+                                height,
+                                duration: const Duration(milliseconds: 320),
+                                curve: Curves.easeOutCubic,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                              color: Colors.white70, size: 40),
+                        ),
+                      ),
+                    ),
+                  ],
+                ))
+            .toList(),
       ),
     );
   }

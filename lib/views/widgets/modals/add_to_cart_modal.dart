@@ -8,6 +8,7 @@ import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/utils/login_prompt.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
 import 'package:marketky/views/widgets/page_container.dart';
@@ -276,6 +277,11 @@ class _AddToCartModalState extends State<AddToCartModal> {
                   label: 'افزودن به سبد',
                   icon: const Icon(Icons.add_shopping_cart_rounded),
                   onPressed: () {
+                    if (!isLoggedIn(context)) {
+                      Navigator.of(context).pop();
+                      promptLoginIfNeeded(context);
+                      return;
+                    }
                     AnalyticsService.addToCart(
                       productId: widget.cartItem.productId,
                       quantity: _quantity,

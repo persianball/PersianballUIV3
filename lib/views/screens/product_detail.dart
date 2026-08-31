@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
+import 'package:marketky/utils/login_prompt.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_text_styles.dart';
@@ -288,6 +289,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
   void _openAddToCart(
       BuildContext context, ProductDetail product, ProductDetailState s) {
+    if (!isLoggedIn(context)) {
+      promptLoginIfNeeded(context);
+      return;
+    }
     if (!_guardStock(context, s)) return;
     showModalBottomSheet(
       context: context,
@@ -299,6 +304,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
   void _buyNow(
       BuildContext context, ProductDetail product, ProductDetailState s) {
+    if (!isLoggedIn(context)) {
+      promptLoginIfNeeded(context);
+      return;
+    }
     if (!_guardStock(context, s)) return;
     final item = _cartItemFor(product, s);
     AnalyticsService.addToCart(
