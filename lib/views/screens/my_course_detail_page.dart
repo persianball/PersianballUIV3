@@ -8,7 +8,7 @@ import 'package:marketky/models/course_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:marketky/views/widgets/app_buttons.dart';
 
 class MyCourseDetailPage extends StatefulWidget {
   final MyCourse myCourse;
@@ -170,16 +170,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     });
   }
 
-  void _scrollToIndex(int flatIndex) {
-    // Each tile approx 92-100 height; use 94 as heuristic
-    final double pos = flatIndex * 94.0;
-    _listController.animateTo(
-      pos,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.ease,
-    );
-  }
-
   int _flatIndexFrom(int weekIdx, int sectionIdx) {
     int idx = 0;
     for (int i = 0; i < weekIdx; i++) {
@@ -220,66 +210,318 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     );
   }
 
-  /// انتخاب هفته‌ی دوره
-  Widget _weekDropdown(List<dynamic> weeks) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: ShapeDecoration(
-        color: AppColor.surfaceContainer,
-        shape: AppShapes.border(AppShapes.rLg),
-        shadows: AppColor.cardShadow,
+  // ==================== چیدمانِ پخش‌کننده‌ی دوره ====================
+
+  /// پخش‌کننده با نسبتِ ثابت ۱۶:۹.
+  ///
+  /// قبلاً ویدیو داخل یک SliverAppBarِ جمع‌شونده بود؛ با اسکرول کوچک و
+  /// بریده می‌شد و عنوان/نوار پیشرفت هم روی کنترل‌های پخش می‌افتاد.
+  Widget _player(MyCourseDetail detail) {
+    final ready = _chewieController != null &&
+        _videoController != null &&
+        _videoController!.value.isInitialized;
+
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        color: Colors.black,
+        child: ready
+            ? Chewie(controller: _chewieController!)
+            : Stack(
+                fit: StackFit.expand,
+                children: [
+                  if ((detail.videoThumbnail ?? '').isNotEmpty)
+                    Image.network(detail.videoThumbnail!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            Container(color: AppColor.obsidianBg))
+                  else if (detail.images.isNotEmpty)
+                    Image.network(detail.images.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            Container(color: AppColor.obsidianBg))
+                  else
+                    Container(color: AppColor.obsidianBg),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(color: Color(0x66000000)),
+                  ),
+                  const Center(
+                    child: Icon(Icons.play_circle_fill_rounded,
+                        size: 64, color: Colors.white70),
+                  ),
+                ],
+              ),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: _selectedWeekIndex,
-          isExpanded: true,
-          dropdownColor: AppColor.surfaceContainer,
-          // آیتم‌های منو راست‌به‌چپ چیده شوند
-          alignment: AlignmentDirectional.centerEnd,
-          icon: const Icon(Icons.keyboard_arrow_down,
-              color: AppColor.onSurfaceVariant),
-          items: weeks.asMap().entries.map((entry) {
-            final week = entry.value;
-            return DropdownMenuItem<int>(
-              value: entry.key,
-              alignment: AlignmentDirectional.centerEnd,
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    week.weekName ?? 'هفته ${week.weekNumber}',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontFamily: 'Estedad', color: AppColor.onSurface),
+    );
+  }
+
+  /// عنوان دوره، نوار پیشرفت و دکمه‌ی «ادامه تماشا»
+  Widget _courseHeader(
+    MyCourseDetail detail,
+    double progress,
+    int watchedCount,
+    int totalSections,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            detail.courseTitle,
+            style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColor.onSurface),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    backgroundColor: AppColor.cardMuted,
+                    color: AppColor.pitchGreen,
                   ),
                 ),
               ),
-            );
-          }).toList(),
-          onChanged: (value) {
-            if (value != null) {
-              setState(() {
-                _selectedWeekIndex = value;
-                _selectedSectionIndex = 0;
-              });
-            }
-          },
+              const SizedBox(width: 12),
+              Text('$watchedCount از $totalSections',
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColor.onSurfaceVariant)),
+            ],
+          ),
+          if (_continueIndex != null) ...[
+            const SizedBox(height: 12),
+            GradientButton(
+              label: _continueLabel == null
+                  ? 'ادامه تماشا'
+                  : 'ادامه: ${_continueLabel!}',
+              icon: const Icon(Icons.play_arrow_rounded),
+              height: 44,
+              fontSize: 13,
+              onPressed: () => _playFlatIndex(_continueIndex!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// از ایندکسِ پیوسته، هفته و سکشن را پیدا و پخش می‌کند.
+  void _playFlatIndex(int flatIndex) {
+    final weeks = widget.myCourse.courseDetail.detail.weeks;
+    int idx = 0;
+    for (int wi = 0; wi < weeks.length; wi++) {
+      for (int si = 0; si < weeks[wi].sections.length; si++, idx++) {
+        if (idx == flatIndex) {
+          setState(() => _selectedWeekIndex = wi);
+          _onSectionTap(wi, si);
+          return;
+        }
+      }
+    }
+  }
+
+  /// یک ردیفِ درس در لیست
+  Widget _lessonTile({
+    required MyCourseWeekSectionItem section,
+    required int weekIndex,
+    required int sectionIndex,
+    required bool seen,
+    required bool isCurrent,
+  }) {
+    final thumb = (section.videoThumbnail ?? '').trim();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: isCurrent ? AppColor.pitchGreenSoft : AppColor.surfaceContainer,
+        shape: AppShapes.border(
+          AppShapes.rMd,
+          side: BorderSide(
+            color: isCurrent ? AppColor.pitchGreen : AppColor.line,
+            width: isCurrent ? 1.5 : 1,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: section.isLocked
+              ? null
+              : () => _onSectionTap(weekIndex, sectionIndex),
+          child: Padding(
+            // ارتفاعِ ردیف بالای ۴۴ می‌ماند تا هدفِ لمس استاندارد باشد
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: AppShapes.radius(AppShapes.rSm),
+                  child: SizedBox(
+                    width: 76,
+                    height: 46,
+                    child: thumb.isEmpty
+                        ? Container(
+                            color: AppColor.cardMuted,
+                            child: const Icon(Icons.play_circle_outline,
+                                size: 22, color: AppColor.inkMuted),
+                          )
+                        : Image.network(
+                            thumb,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: AppColor.cardMuted,
+                              child: const Icon(Icons.play_circle_outline,
+                                  size: 22, color: AppColor.inkMuted),
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        section.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 13,
+                          fontWeight:
+                              isCurrent ? FontWeight.w800 : FontWeight.w600,
+                          color: section.isLocked
+                              ? AppColor.inkMuted
+                              : AppColor.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Icon(
+                            section.isLocked
+                                ? Icons.lock_outline_rounded
+                                : (seen
+                                    ? Icons.check_circle_rounded
+                                    : Icons.play_circle_outline_rounded),
+                            size: 13,
+                            color: section.isLocked
+                                ? AppColor.danger
+                                : (seen
+                                    ? AppColor.success
+                                    : AppColor.onSurfaceVariant),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            section.isLocked
+                                ? 'قفل'
+                                : (seen ? 'دیده شد' : 'تماشا نشده'),
+                            style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 11,
+                              color: section.isLocked
+                                  ? AppColor.danger
+                                  : (seen
+                                      ? AppColor.success
+                                      : AppColor.onSurfaceVariant),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  /// دسکتاپ: محتوای زیر هیرو در ستون مرکزی ۱۰۰۰ پیکسلی می‌نشیند تا روی
-  /// نمایشگر پهن کش نیاید؛ موبایل دقیقاً همان تمام‌عرض قبلی می‌ماند.
-  Widget _centered(Widget child) => AppBreakpoints.isDesktop(context)
-      ? Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
-            child: child,
+  /// فهرستِ کاملِ درس‌ها: همه‌ی هفته‌ها، هر هفته یک آکاردئون.
+  ///
+  /// قبلاً فقط سکشن‌های هفته‌ی انتخاب‌شده در یک کروسل افقی با
+  /// viewportFraction 0.7 و کارتِ ۲۸۰ پیکسلیِ ثابت نمایش داده می‌شدند؛ روی
+  /// نمایشگر بزرگ عملاً یک ویدیو با فاصله‌های خالیِ زیاد دیده می‌شد.
+  Widget _lessonList(Set<int> watched, {required bool scrollable}) {
+    final weeks = widget.myCourse.courseDetail.detail.weeks;
+    return ListView.builder(
+      controller: scrollable ? _listController : null,
+      shrinkWrap: !scrollable,
+      physics: scrollable
+          ? const BouncingScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      itemCount: weeks.length,
+      itemBuilder: (context, wi) {
+        final week = weeks[wi];
+        final done = week.sections
+            .asMap()
+            .entries
+            .where((e) => watched.contains(_flatIndexFrom(wi, e.key)))
+            .length;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Material(
+            color: AppColor.card,
+            shape: AppShapes.border(AppShapes.rLg,
+                side: const BorderSide(color: AppColor.line)),
+            clipBehavior: Clip.antiAlias,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                  unselectedWidgetColor: AppColor.onSurfaceVariant),
+              child: ExpansionTile(
+                initiallyExpanded: wi == _selectedWeekIndex,
+                onExpansionChanged: (open) {
+                  if (open) setState(() => _selectedWeekIndex = wi);
+                },
+                iconColor: AppColor.pitchGreen,
+                collapsedIconColor: AppColor.onSurfaceVariant,
+                title: Text(
+                  week.weekName?.trim().isNotEmpty == true
+                      ? week.weekName!.trim()
+                      : 'هفته ${week.weekNumber}',
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColor.onSurface),
+                ),
+                subtitle: Text(
+                  '$done از ${week.sections.length} ویدیو',
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 11,
+                      color: AppColor.onSurfaceVariant),
+                ),
+                childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                children: [
+                  for (int si = 0; si < week.sections.length; si++)
+                    _lessonTile(
+                      section: week.sections[si],
+                      weekIndex: wi,
+                      sectionIndex: si,
+                      seen: watched.contains(_flatIndexFrom(wi, si)),
+                      isCurrent: _selectedWeekIndex == wi &&
+                          _selectedSectionIndex == si,
+                    ),
+                ],
+              ),
+            ),
           ),
-        )
-      : child;
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -289,273 +531,109 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     final totalSections = weeks.fold<int>(0, (a, b) => a + b.sections.length);
     final watchedCount = watched.length.clamp(0, totalSections);
     final progress = totalSections == 0 ? 0.0 : watchedCount / totalSections;
+    final bool desktop = AppBreakpoints.isDesktop(context);
 
     return Scaffold(
-      backgroundColor: AppColor.obsidianBg,
-      // top: false تا SliverAppBar تمام‌عرض بالای صفحه بماند و فقط پایین
-      // صفحه از نوار ناوبری سیستم فاصله بگیرد
+      backgroundColor: AppColor.milk,
+      appBar: AppBar(
+        backgroundColor: AppColor.card,
+        foregroundColor: AppColor.ink,
+        elevation: 0,
+        title: const Text('دوره‌ی من',
+            style: TextStyle(
+                fontFamily: 'Estedad',
+                fontWeight: FontWeight.w800,
+                color: AppColor.ink)),
+        centerTitle: true,
+      ),
       body: SafeArea(
         top: false,
         child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            SliverAppBar(
-              elevation: 0,
-              pinned: true,
-              expandedHeight: 450,
-              backgroundColor: AppColor.obsidianBg,
-              foregroundColor: AppColor.onSurface,
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-
-                    // Gradient overlay
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.transparent, Colors.black.withOpacity(0.45)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_chewieController != null && _videoController!.value.isInitialized)
-                      Center(
-                        child: AspectRatio(
-                          aspectRatio: _videoController!.value.aspectRatio == 0
-                              ? 16 / 9
-                              : _videoController!.value.aspectRatio,
-                          child: Chewie(controller: _chewieController!),
-                        ),
-                      )
-                    else ...[
-                      if (detail.videoThumbnail != null && detail.videoThumbnail!.isNotEmpty)
-                        Image.network(detail.videoThumbnail!, fit: BoxFit.cover)
-                      else if (detail.images.isNotEmpty)
-                        Image.network(detail.images.first, fit: BoxFit.cover)
-                      else
-                        Container(color: AppColor.surfaceContainer),
-                    ],
-
-                    // Title and quick actions
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                      child: Column(
+          textDirection: TextDirection.rtl,
+          child: desktop
+              // دسکتاپ: پخش‌کننده در ستون اصلی، فهرست درس‌ها در ستون کناری
+              // — الگوی استانداردِ صفحه‌ی تماشای دوره.
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1280),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            detail.courseTitle,
-                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(6),
-                                  child: LinearProgressIndicator(
-                                    value: progress,
-                                    minHeight: 8,
-                                    backgroundColor: Colors.white24,
-                                    color: AppColor.goldEnd,
-                                  ),
+                          Expanded(
+                            child: ListView(
+                              controller: _scrollController,
+                              physics: const BouncingScrollPhysics(),
+                              children: [
+                                ClipRRect(
+                                  borderRadius:
+                                      AppShapes.radius(AppShapes.rLg),
+                                  child: _player(detail),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text('${((progress) * 100).round()}%',
-                                  style: const TextStyle(fontFamily: 'Estedad', color: Colors.white)),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          if (_continueIndex != null)
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColor.goldEnd,
-                                foregroundColor: AppColor.onGold,
-                                shape: AppShapes.pill,
-                              ),
-                              onPressed: () => _scrollToIndex(_continueIndex!),
-                              child: Text(_continueLabel ?? 'ادامه تماشا',
-                                  style: const TextStyle(fontFamily: 'Estedad')),
+                                _courseHeader(detail, progress, watchedCount,
+                                    totalSections),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      16, 8, 16, 24),
+                                  child: _introSection(),
+                                ),
+                              ],
                             ),
+                          ),
+                          const SizedBox(width: 20),
+                          SizedBox(
+                            width: 380,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
+                                  child: Text('فهرست درس‌ها',
+                                      style: TextStyle(
+                                          fontFamily: 'Estedad',
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColor.ink)),
+                                ),
+                                Expanded(
+                                    child: _lessonList(watched,
+                                        scrollable: true)),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            SliverToBoxAdapter(
-              child: _centered(Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _introSection(),
-                    const SizedBox(height: 16),
-                    const Text('ویدیوها',
-                        style: TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColor.onSurface)),
-                    const SizedBox(height: 12),
-                    // Week dropdown
-                    _weekDropdown(weeks),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              )),
-            ),
-
-            // Horizontal carousel for sections of selected week
-            SliverToBoxAdapter(
-              child: _centered(Container(
-                height: 200,
-                child: CarouselSlider.builder(
-                  itemCount: weeks[_selectedWeekIndex].sections.length,
-                  itemBuilder: (context, sectionIdx, realIndex) {
-                    final section = weeks[_selectedWeekIndex].sections[sectionIdx];
-                    final flatIndex = _flatIndexFrom(_selectedWeekIndex, sectionIdx);
-                    final seen = watched.contains(flatIndex);
-                    final isSelected = _selectedWeekIndex == _selectedWeekIndex && _selectedSectionIndex == sectionIdx;
-                    
-                    return Container(
-                      width: 280,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      child: InkWell(
-                        onTap: () => _onSectionTap(_selectedWeekIndex, sectionIdx),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColor.goldEnd.withOpacity(0.1)
-                                : AppColor.surfaceContainer,
-                            border: Border.all(
-                              color: isSelected ? AppColor.goldEnd : AppColor.outlineVariantDark,
-                              width: isSelected ? 2 : 1,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Video thumbnail
-                              Expanded(
-                                flex: 3,
-                                child: Container(
-                                  width: double.infinity,
-                                  color: AppColor.obsidianBg,
-                                  child: section.videoThumbnail != null && section.videoThumbnail!.isNotEmpty
-                                      ? Image.network(
-                                          section.videoThumbnail!,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) => Container(
-                                            color: AppColor.obsidianBg,
-                                            child: const Icon(Icons.play_circle_fill,
-                                                size: 40, color: AppColor.onSurfaceVariant),
-                                          ),
-                                        )
-                                      : Container(
-                                          color: AppColor.obsidianBg,
-                                          child: const Icon(Icons.play_circle_fill,
-                                              size: 40, color: AppColor.onSurfaceVariant),
-                                        ),
-                                ),
-                              ),
-                              // Section info
-                              Expanded(
-                                flex: 2,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            seen ? Icons.check_circle : Icons.play_circle_fill,
-                                            color: seen ? AppColor.goldEnd : AppColor.onSurfaceVariant,
-                                            size: 16,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: Text(
-                                              section.title,
-                                              style: const TextStyle(
-                                                fontFamily: 'Estedad',
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                                color: AppColor.onSurface,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      if (section.isLocked)
-                                        const Text(
-                                          'قفل',
-                                          style: TextStyle(
-                                            fontFamily: 'Estedad',
-                                            color: Colors.redAccent,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        )
-                                      else if (seen)
-                                        const Text(
-                                          'دیده شد',
-                                          style: TextStyle(
-                                            fontFamily: 'Estedad',
-                                            color: AppColor.successDark,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  options: CarouselOptions(
-                    height: 200,
-                    viewportFraction: 0.7,
-                    enableInfiniteScroll: false,
-                    enlargeCenterPage: true,
-                    enlargeFactor: 0.1,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        _selectedSectionIndex = index;
-                      });
-                    },
                   ),
+                )
+              // موبایل: پخش‌کننده‌ی ثابت بالا، بعد عنوان/پیشرفت، بعد فهرست کامل
+              : ListView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _player(detail),
+                    _courseHeader(
+                        detail, progress, watchedCount, totalSections),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: _introSection(),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+                      child: Text('فهرست درس‌ها',
+                          style: TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppColor.ink)),
+                    ),
+                    _lessonList(watched, scrollable: false),
+                  ],
                 ),
-              )),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-          ],
-        ),
         ),
       ),
     );
   }
 }
-
-
