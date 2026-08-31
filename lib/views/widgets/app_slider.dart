@@ -92,7 +92,7 @@ const double _kCoverflowBlockHeight = _kCoverflowCardHeight + 40; // + نقاط
 
 // ===================== هیروی نمایشگرِ بزرگ =====================
 
-class _DesktopHero extends StatelessWidget {
+class _DesktopHero extends StatefulWidget {
   const _DesktopHero({
     required this.items,
     required this.height,
@@ -106,30 +106,57 @@ class _DesktopHero extends StatelessWidget {
   final VoidCallback? onScrollHint;
 
   @override
+  State<_DesktopHero> createState() => _DesktopHeroState();
+}
+
+class _DesktopHeroState extends State<_DesktopHero> {
+  int _index = 0;
+
+  @override
   Widget build(BuildContext context) {
+    final items = widget.items;
     final bool reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final bool multi = items.length > 1;
 
     return SizedBox(
-      height: height,
+      height: widget.height,
       width: double.infinity,
-      child: CarouselSlider(
-        options: CarouselOptions(
-          height: height,
-          viewportFraction: 1.0,
-          autoPlay: !reduceMotion && items.length > 1,
-          autoPlayInterval: const Duration(seconds: 6),
-          autoPlayAnimationDuration: const Duration(milliseconds: 900),
-          autoPlayCurve: Curves.easeOutCubic,
-          pauseAutoPlayOnTouch: true,
-        ),
-        items: [
-          for (final item in items)
-            _HeroSlide(
-              item: item,
-              showScrollHint: showScrollHint,
-              onScrollHint: onScrollHint,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: CarouselSlider(
+              options: CarouselOptions(
+                height: widget.height,
+                viewportFraction: 1.0,
+                autoPlay: !reduceMotion && multi,
+                autoPlayInterval: const Duration(seconds: 6),
+                autoPlayAnimationDuration: const Duration(milliseconds: 900),
+                autoPlayCurve: Curves.easeOutCubic,
+                pauseAutoPlayOnTouch: true,
+                onPageChanged: (i, _) => setState(() => _index = i),
+              ),
+              items: [
+                for (final item in items) _HeroSlide(item: item),
+              ],
             ),
+          ),
+          // نقاط + فلشِ اسکرول، پایینِ هیرو و بیرون از خودِ کروسل تا جابه‌جا نشوند
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (multi) _Dots(count: items.length, index: _index, light: true),
+                if (widget.showScrollHint) ...[
+                  if (multi) const SizedBox(height: 4),
+                  _BouncingChevron(onTap: widget.onScrollHint),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -137,15 +164,9 @@ class _DesktopHero extends StatelessWidget {
 }
 
 class _HeroSlide extends StatelessWidget {
-  const _HeroSlide({
-    required this.item,
-    required this.showScrollHint,
-    this.onScrollHint,
-  });
+  const _HeroSlide({required this.item});
 
   final SliderItem item;
-  final bool showScrollHint;
-  final VoidCallback? onScrollHint;
 
   @override
   Widget build(BuildContext context) {
@@ -205,14 +226,6 @@ class _HeroSlide extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ),
-        if (showScrollHint)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _BouncingChevron(onTap: onScrollHint),
             ),
           ),
       ],
@@ -414,13 +427,19 @@ class _CtaPill extends StatelessWidget {
 }
 
 class _Dots extends StatelessWidget {
-  const _Dots({required this.count, required this.index});
+  const _Dots({required this.count, required this.index, this.light = false});
 
   final int count;
   final int index;
 
+  /// روی هیروی تیره: نقاطِ روشن.
+  final bool light;
+
   @override
   Widget build(BuildContext context) {
+    final Color active = light ? Colors.white : AppColor.pitchGreen;
+    final Color idle =
+        light ? Colors.white.withOpacity(0.45) : AppColor.lineStrong;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -432,7 +451,7 @@ class _Dots extends StatelessWidget {
             width: i == index ? 20 : 6,
             height: 6,
             decoration: BoxDecoration(
-              color: i == index ? AppColor.pitchGreen : AppColor.lineStrong,
+              color: i == index ? active : idle,
               borderRadius: BorderRadius.circular(3),
             ),
           ),
