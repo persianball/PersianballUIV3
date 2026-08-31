@@ -711,10 +711,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           child: FutureBuilder<CourseDetailResponse>(
             future: _future,
             builder: (context, snapshot) {
-              if (snapshot.hasData &&
-                  snapshot.data!.detail.timeAndLocation.isNotEmpty) {
-                final firstCourse =
-                    snapshot.data!.detail.timeAndLocation.first;
+              // نه اولین واریانت، بلکه اولین واریانتِ *فعال*: واریانت اول
+              // بعضی دوره‌ها is_active=false است و نباید قابل خرید باشد.
+              final variants =
+                  snapshot.data?.detail.timeAndLocation ?? const [];
+              final active = variants.where((v) => v.isActive);
+              if (snapshot.hasData && active.isNotEmpty) {
+                final firstCourse = active.first;
                 return ElevatedButton(
                   onPressed: () {
                     showModalBottomSheet(
@@ -1012,7 +1015,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             },
           ),
         ),
-        bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
+        // این صفحه هیچ شنونده‌ای برای CartBloc نداشت: بعد از «افزودن به سبد»
+        // نه پیام موفقیت می‌آمد و نه خطا، و کاربر فکر می‌کرد دکمه کار نمی‌کند.
+        bottomNavigationBar: BlocListener<CartBloc, CartState>(
+          listener: _onCartState,
+          child: BlocBuilder<CartBloc, CartState>(
           builder: (context, cartState) {
             // دسکتاپ: نوار پایین حذف می‌شود و همین دکمه‌ها داخل پنل اطلاعات
             // رندر می‌شوند؛ منطق شیت افزودن به سبد دست‌نخورده باقی می‌ماند.
@@ -1029,9 +1036,77 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               child: _actionRow(),
             );
           },
+          ),
         ),
       ),
     );
+  }
+
+  /// بازخوردِ افزودن دوره به سبد — همان الگوی صفحه‌ی محصول
+  void _onCartState(BuildContext context, CartState cartState) {
+    if (cartState is CartItemAdded) {
+      showDialog(
+        context: context,
+        builder: (ctx) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            backgroundColor: AppColor.card,
+            shape: AppShapes.border(AppShapes.rLg),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle_rounded,
+                    color: AppColor.success, size: 60),
+                const SizedBox(height: 16),
+                Text(
+                  cartState.message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.ink,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SoftButton(
+                        label: 'ادامه',
+                        height: 44,
+                        onPressed: () => Navigator.of(ctx).pop(),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: GradientButton(
+                        label: 'رفتن به سبد',
+                        height: 44,
+                        fontSize: 13,
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          Navigator.of(context).pushNamed('/cart');
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    if (cartState is CartError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(cartState.message,
+              style: const TextStyle(fontFamily: 'Estedad')),
+          backgroundColor: AppColor.danger,
+        ),
+      );
+    }
   }
 }
 
