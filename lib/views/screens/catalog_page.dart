@@ -13,7 +13,6 @@ import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
 import 'package:marketky/views/widgets/app_slider.dart';
 import 'package:marketky/models/slider_item.dart';
-import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/views/widgets/product_grid_card.dart';
 import 'package:marketky/views/widgets/motion.dart';
 
@@ -129,8 +128,8 @@ class _CatalogPageState extends State<CatalogPage> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        // دسکتاپ: عنوان صفحه و دکمه‌ی مقایسه در نوار بالای اپ/نوار ابزار
-        // تکرار می‌شوند، پس اپ‌بار مخصوص این تب حذف می‌شود.
+        // دسکتاپ: عنوان صفحه در نوار بالای اپ تکرار می‌شود، پس اپ‌بار مخصوص
+        // این تب حذف می‌شود.
         appBar: AppBreakpoints.isDesktop(context)
             ? null
             : AppBar(
@@ -143,16 +142,6 @@ class _CatalogPageState extends State<CatalogPage> {
           title: Text('فروشگاه',
               style: AppTextStyles.headlineMd
                   .copyWith(fontSize: 17, color: AppColor.ink)),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: CircleIconButton(
-                icon: Icons.compare_arrows_rounded,
-                tooltip: 'مقایسه محصولات',
-                onTap: () => Navigator.of(context).pushNamed('/compare'),
-              ),
-            ),
-          ],
         ),
         body: Column(
           children: [
@@ -301,13 +290,6 @@ class _CatalogPageState extends State<CatalogPage> {
         children: [
           Text('$total محصول', style: AppTextStyles.labelSm),
           const Spacer(),
-          if (isDesktop)
-            TextButton.icon(
-              onPressed: () => Navigator.of(context).pushNamed('/compare'),
-              icon: const Icon(Icons.compare_arrows_rounded,
-                  size: 18, color: AppColor.onSurfaceVariant),
-              label: Text('مقایسه', style: AppTextStyles.labelSm),
-            ),
           TextButton.icon(
             onPressed: _openSortSheet,
             icon: const Icon(Icons.swap_vert,

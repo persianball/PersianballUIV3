@@ -22,7 +22,6 @@ class DeepLinkResolver {
     '/addresses',
     '/notifications',
     '/catalog',
-    '/compare',
     '/account-security',
     '/terms',
     '/privacy',

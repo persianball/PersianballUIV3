@@ -50,9 +50,9 @@ class RatingResult {
 }
 
 class RatingService {
-  static const String _rateEndpoint = '/v2/rating/rate/';
-  static const String _commentEndpoint = '/v2/rating/comment/';
-  static const String _userEndpoint = '/v1/user/';
+  static const String _rateEndpoint = 'v2/rating/rate/';
+  static const String _commentEndpoint = 'v2/rating/comment/';
+  static const String _userEndpoint = 'v1/user/';
 
   /// شناسه‌ی کاربر لاگین‌شده؛ سریالایزر نظر آن را لازم دارد.
   /// یک‌بار گرفته و تا پایان اجرای اپ نگه داشته می‌شود.
