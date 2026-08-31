@@ -22,12 +22,12 @@ class AddCourseToCartModal extends StatefulWidget {
 }
 
 class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
-  late int _quantity;
+  /// هر کاربر از هر دوره فقط یک نسخه می‌تواند داشته باشد، پس تعداد ثابت است.
+  static const int _quantity = 1;
 
   @override
   void initState() {
     super.initState();
-    _quantity = 1;
   }
 
   @override
@@ -173,7 +173,7 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
 
                 const SizedBox(height: 10),
 
-                // تعداد + جمع‌بندی مبلغ
+                // جمع‌بندی مبلغ (تعداد ندارد: هر دوره برای هر کاربر یکی است)
                 Container(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                   decoration: ShapeDecoration(
@@ -183,47 +183,6 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          const Text(
-                            'تعداد',
-                            style: TextStyle(
-                              fontFamily: 'Estedad',
-                              fontSize: 13,
-                              color: AppColor.inkMuted,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const Spacer(),
-                          _StepperButton(
-                            icon: Icons.remove_rounded,
-                            onTap: _quantity > 1
-                                ? () => setState(() => _quantity--)
-                                : null,
-                          ),
-                          Container(
-                            width: 40,
-                            alignment: Alignment.center,
-                            child: Text(
-                              '$_quantity',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'Estedad',
-                                color: AppColor.ink,
-                              ),
-                            ),
-                          ),
-                          _StepperButton(
-                            icon: Icons.add_rounded,
-                            filled: true,
-                            onTap: () => setState(() => _quantity++),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Divider(height: 1, color: AppColor.line),
-                      const SizedBox(height: 12),
                       _SummaryRow(
                         label: 'قیمت',
                         value: '${thousandSeparator(totalPrice)} تومان',
@@ -268,47 +227,6 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StepperButton extends StatelessWidget {
-  const _StepperButton({
-    required this.icon,
-    required this.onTap,
-    this.filled = false,
-  });
-
-  final IconData icon;
-  final VoidCallback? onTap;
-  final bool filled;
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = onTap != null;
-    return Opacity(
-      opacity: enabled ? 1 : 0.4,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: ShapeDecoration(
-          color: filled ? null : AppColor.cardMuted,
-          gradient: filled ? AppColor.greenGradient : null,
-          shape: const CircleBorder(),
-          shadows: filled && enabled ? AppColor.greenShadow : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Icon(icon,
-                size: 18,
-                color: filled ? AppColor.onPitchGreen : AppColor.ink),
           ),
         ),
       ),

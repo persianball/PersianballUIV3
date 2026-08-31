@@ -287,12 +287,32 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                             ),
                                             const SizedBox(width: 8),
                                             Expanded(
-                                              child: Text(
-                                                item.location,
-                                                style: const TextStyle(
-                                                    fontFamily: 'Estedad',
-                                                    fontWeight: FontWeight.w700,
-                                                    color: AppColor.onSurface),
+                                              child: Row(
+                                                children: [
+                                                  const Icon(
+                                                      Icons
+                                                          .location_on_outlined,
+                                                      size: 15,
+                                                      color: AppColor
+                                                          .pitchGreen),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(
+                                                    child: Text(
+                                                      item.location.trim().isEmpty
+                                                          ? 'مکان اعلام نشده'
+                                                          : 'مکان: ${item.location}',
+                                                      maxLines: 2,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                          fontFamily: 'Estedad',
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          color: AppColor
+                                                              .onSurface),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                             const SizedBox(width: 8),
@@ -309,9 +329,54 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                           ],
                                         ),
                                         const SizedBox(height: 6),
-                                        Text(item.time,
-                                            style: const TextStyle(
-                                                fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Padding(
+                                              padding:
+                                                  EdgeInsets.only(top: 2),
+                                              child: Icon(
+                                                  Icons.schedule_rounded,
+                                                  size: 15,
+                                                  color: AppColor.pitchGreen),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                item.time.trim().isEmpty
+                                                    ? 'زمان برگزاری اعلام نشده'
+                                                    : 'زمان برگزاری: ${item.time}',
+                                                style: const TextStyle(
+                                                    fontFamily: 'Estedad',
+                                                    height: 1.6,
+                                                    color: AppColor
+                                                        .onSurfaceVariant),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        if ((item.coach ?? '').trim().isNotEmpty) ...[
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                  Icons.person_outline_rounded,
+                                                  size: 15,
+                                                  color: AppColor.pitchGreen),
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  'مربی: ${item.coach}',
+                                                  style: const TextStyle(
+                                                      fontFamily: 'Estedad',
+                                                      color: AppColor
+                                                          .onSurfaceVariant),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                         const SizedBox(height: 6),
                                         _timeLocationPrice(item),
                                         const SizedBox(height: 12),
@@ -392,9 +457,27 @@ class _CourseDetailPageState extends State<CourseDetailPage>
 
   /// توضیحات دوره و پیش‌نیاز
   Widget _descriptionBlock(CourseDetailResponse data) {
-    return Column(
+    // این بلوک قبلاً بدون پس‌زمینه روی milk رها بود و کنار بقیه‌ی کارت‌ها
+    // یتیم دیده می‌شد؛ حالا مثل بقیه‌ی بخش‌ها داخل کارت برجسته می‌نشیند.
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+      decoration: ShapeDecoration(
+        color: AppColor.surfaceContainer,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text('درباره‌ی دوره',
+            style: TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppColor.onSurface)),
+        const SizedBox(height: 8),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: Text(
@@ -416,6 +499,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             style: const TextStyle(
                 fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
       ],
+      ),
     );
   }
 
