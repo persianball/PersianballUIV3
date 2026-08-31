@@ -34,26 +34,7 @@ class ProductReviewsSection extends StatefulWidget {
 }
 
 class _ProductReviewsSectionState extends State<ProductReviewsSection> {
-  List<ProductQuestion> _questions = [];
-  bool _loading = true;
   bool _submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    // نظرها و امتیاز از پاسخ خود محصول می‌آیند؛ فقط پرسش‌وپاسخ هنوز
-    // endpoint ندارد و نمایشی است.
-    final questions = await ReviewService.fetchQuestions(widget.productId);
-    if (!mounted) return;
-    setState(() {
-      _questions = questions;
-      _loading = false;
-    });
-  }
 
   void _snack(String message, {bool error = false}) {
     if (!mounted) return;
@@ -68,13 +49,6 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Padding(
-        padding: EdgeInsets.all(24),
-        child: Center(child: CircularProgressIndicator(color: AppColor.goldEnd)),
-      );
-    }
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Padding(
@@ -96,14 +70,6 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                 child: Text('مشاهده همه ${widget.comments.length} نظر',
                     style: const TextStyle(fontFamily: 'Estedad', fontSize: 12)),
               ),
-            const SizedBox(height: 20),
-            _sectionHeader('پرسش و پاسخ', 'پرسیدن سؤال', _openQuestionSheet),
-            const SizedBox(height: 8),
-            if (_questions.isEmpty)
-              Text('هنوز سؤالی ثبت نشده است', style: AppTextStyles.labelSm)
-            else
-              ..._questions.take(3).map(_questionTile),
-            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -260,58 +226,6 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
     map[bucket] = widget.comments.length;
     return map;
   }
-
-  Widget _questionTile(ProductQuestion q) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: ShapeDecoration(
-            color: AppColor.goldEnd.withOpacity(0.06),
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.help_outline, size: 15, color: AppColor.goldEnd),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(q.body,
-                      style: const TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColor.onSurface)),
-                ),
-              ],
-            ),
-            if (q.answer != null) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(8),
-                color: AppColor.surfaceContainer,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(q.answer!,
-                        style: const TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 12,
-                            height: 1.6,
-                            color: AppColor.onSurfaceVariant)),
-                    const SizedBox(height: 4),
-                    Text(q.answeredBy ?? '', style: AppTextStyles.labelSm),
-                  ],
-                ),
-              ),
-            ] else ...[
-              const SizedBox(height: 6),
-              Text('در انتظار پاسخ فروشنده', style: AppTextStyles.labelSm),
-            ],
-          ],
-        ),
-      );
 
   void _openAllReviews() {
     showModalBottomSheet(
@@ -472,6 +386,156 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
     );
   }
 
+}
+
+/// بخشِ «پرسش و پاسخ» محصول — بخشِ مستقل و همیشه‌قابل‌دیدن در صفحه‌ی جزئیات.
+class ProductQuestionsSection extends StatefulWidget {
+  const ProductQuestionsSection({super.key, required this.productId});
+
+  final int productId;
+
+  @override
+  State<ProductQuestionsSection> createState() =>
+      _ProductQuestionsSectionState();
+}
+
+class _ProductQuestionsSectionState extends State<ProductQuestionsSection> {
+  List<ProductQuestion> _questions = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final questions = await ReviewService.fetchQuestions(widget.productId);
+      if (!mounted) return;
+      setState(() {
+        _questions = questions;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('پرسش و پاسخ',
+                    style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
+                const Spacer(),
+                TextButton(
+                  onPressed: _openQuestionSheet,
+                  child: Text('پرسیدن سؤال',
+                      style: AppTextStyles.labelSm
+                          .copyWith(color: AppColor.goldEnd)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColor.goldEnd),
+                  ),
+                ),
+              )
+            else if (_questions.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text('هنوز سؤالی ثبت نشده است — اولین نفر باشید!',
+                    style: AppTextStyles.labelSm),
+              )
+            else
+              ..._questions.take(5).map(_questionTile),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _questionTile(ProductQuestion q) => Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rLg),
+          shadows: AppColor.cardShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.help_outline_rounded,
+                    size: 16, color: AppColor.goldEnd),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(q.body,
+                      style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          height: 1.6,
+                          color: AppColor.ink)),
+                ),
+              ],
+            ),
+            if (q.answer != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: ShapeDecoration(
+                  color: AppColor.pitchGreenSoft,
+                  shape: AppShapes.border(AppShapes.rMd),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(q.answer!,
+                        style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 12,
+                            height: 1.7,
+                            color: AppColor.ink)),
+                    const SizedBox(height: 4),
+                    Text(q.answeredBy ?? 'پشتیبانی فروشگاه',
+                        style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 10,
+                            color: AppColor.pitchGreen,
+                            fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 6),
+              Text('در انتظار پاسخ فروشنده', style: AppTextStyles.labelSm),
+            ],
+          ],
+        ),
+      );
+
   void _openQuestionSheet() {
     final bodyCtrl = TextEditingController();
 
@@ -496,7 +560,8 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('پرسیدن سؤال', style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
+              Text('پرسیدن سؤال',
+                  style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
               const SizedBox(height: 12),
               TextField(
                 controller: bodyCtrl,
@@ -538,8 +603,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
                     final text = bodyCtrl.text.trim();
                     if (text.isEmpty) return;
                     Navigator.of(ctx).pop();
-                    await ReviewService.addQuestion(widget.productId,
-                        body: text);
+                    await ReviewService.addQuestion(widget.productId, body: text);
                     await _load();
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(

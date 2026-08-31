@@ -1053,6 +1053,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 ],
               ),
             ),
+            AccordionSection(
+              title: 'پرسش و پاسخ',
+              icon: Icons.forum_outlined,
+              child: ProductQuestionsSection(productId: product.id),
+            ),
             if (product.faqs != null && product.faqs!.isNotEmpty)
               AccordionSection(
                 title: 'سوالات متداول',
