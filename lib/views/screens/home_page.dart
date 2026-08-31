@@ -27,6 +27,7 @@ import 'course_detail_page.dart';
 import 'profile_page.dart' show UserService;
 import 'package:marketky/views/widgets/motion.dart';
 import 'package:marketky/views/widgets/app_slider.dart';
+import 'package:marketky/views/widgets/shimmer.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -180,7 +181,13 @@ class _HomePageState extends State<HomePage> {
             return BlocConsumer<ProductBloc, ProductState>(
             listener: (context, state) {},
             builder: (context, state) {
-              if (state is ProductLoading) return _buildLoading();
+              if (state is ProductLoading) {
+                return _HomeSkeleton(
+                  isDesktop: isDesktop,
+                  isBigScreen: isBigScreen,
+                  heroHeight: heroHeight,
+                );
+              }
               if (state is ProductError) return _buildError(state.message);
               if (state is ProductLoaded) {
                 final all = state.products;
@@ -257,7 +264,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
               }
-              return _buildLoading();
+              return _HomeSkeleton(
+                isDesktop: isDesktop,
+                isBigScreen: isBigScreen,
+                heroHeight: heroHeight,
+              );
             },
           );
           }),
@@ -878,11 +889,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildLoading() {
-    return const Center(
-        child: CircularProgressIndicator(color: AppColor.pitchGreen));
-  }
-
   Widget _buildError(String message) {
     return Center(
       child: Column(
@@ -951,6 +957,186 @@ class _CategoryPill extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// اسکلتونِ شیمرِ صفحه‌ی خانه — دقیقاً هم‌ساختارِ صفحه‌ی بارگذاری‌شده.
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton({
+    required this.isDesktop,
+    required this.isBigScreen,
+    required this.heroHeight,
+  });
+
+  final bool isDesktop;
+  final bool isBigScreen;
+  final double heroHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: isBigScreen ? _desktop(context) : _mobile(context),
+      ),
+    );
+  }
+
+  // ---- موبایل: هدر، خوش‌آمد، جست‌وجو، اسلایدر، چیپ‌ها، گریدِ ۲ ستونه ----
+  Widget _mobile(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          child: Row(
+            children: const [
+              Bone.circle(size: 42),
+              SizedBox(width: 12),
+              Expanded(child: Center(child: Bone(width: 110, height: 16))),
+              SizedBox(width: 12),
+              Bone.circle(size: 42),
+              SizedBox(width: 10),
+              Bone.circle(size: 42),
+            ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 22, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Bone(width: 170, height: 28),
+              SizedBox(height: 10),
+              Bone(width: 230, height: 13),
+            ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Row(
+            children: [
+              Expanded(child: Bone(height: 50, radius: 25)),
+              SizedBox(width: 10),
+              Bone(width: 92, height: 50, radius: 25),
+            ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(32, 18, 32, 0),
+          child: Bone(height: 200, radius: 24),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: SizedBox(
+            height: 44,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              children: const [
+                Bone(width: 56, height: 44, radius: 22),
+                SizedBox(width: 8),
+                Bone(width: 88, height: 44, radius: 22),
+                SizedBox(width: 8),
+                Bone(width: 70, height: 44, radius: 22),
+                SizedBox(width: 8),
+                Bone(width: 64, height: 44, radius: 22),
+                SizedBox(width: 8),
+                Bone(width: 92, height: 44, radius: 22),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.68,
+            children: List.generate(6, (_) => const _ProductBone()),
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  // ---- دسکتاپ: هیروی تمام‌عرض، خوش‌آمدِ درشت، جست‌وجو، گریدِ ۴ ستونه ----
+  Widget _desktop(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Bone(height: heroHeight, radius: 0),
+        CenteredContent(
+          withGutter: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 40, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Bone(width: 240, height: 36),
+                    SizedBox(height: 12),
+                    Bone(width: 300, height: 15),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Bone(width: 520, height: 50, radius: 25),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.72,
+                  children: List.generate(8, (_) => const _ProductBone()),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// اسکلتونِ یک کارتِ محصول، هم‌ساختارِ ProductGridCard.
+class _ProductBone extends StatelessWidget {
+  const _ProductBone();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColor.card,
+        borderRadius: AppShapes.radius(AppShapes.rLg),
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: const [
+          AspectRatio(aspectRatio: 1, child: Bone(radius: 12)),
+          SizedBox(height: 10),
+          Bone(width: 90, height: 12),
+          SizedBox(height: 6),
+          Bone(width: 54, height: 12),
+          SizedBox(height: 10),
+          Bone(width: 70, height: 14),
+        ],
       ),
     );
   }

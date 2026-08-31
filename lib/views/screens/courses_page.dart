@@ -11,6 +11,7 @@ import 'package:marketky/services/auth_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/motion.dart';
 import 'package:marketky/views/widgets/app_slider.dart';
+import 'package:marketky/views/widgets/shimmer.dart';
 import 'package:marketky/models/slider_item.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
 
@@ -309,7 +310,8 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
           children: [
             // Tab 1: All Courses
             _loading
-                ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
+                ? _CoursesSkeleton(
+                    isDesktop: AppBreakpoints.isDesktop(context))
                 : _error != null
                     ? Center(
                         child: Text(_error!,
@@ -767,6 +769,125 @@ class _CourseThumbnail extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// اسکلتونِ شیمرِ تبِ «همه‌ی دوره‌ها» — هم‌ساختارِ صفحه‌ی بارگذاری‌شده.
+class _CoursesSkeleton extends StatelessWidget {
+  const _CoursesSkeleton({required this.isDesktop});
+
+  final bool isDesktop;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isDesktop) {
+      final double screenW = MediaQuery.of(context).size.width;
+      final double gutter = AppBreakpoints.gutter(context);
+      final double side = ((screenW - AppBreakpoints.contentMaxWidth) / 2)
+          .clamp(gutter, double.infinity);
+      final double gridW = screenW - side * 2;
+      final int columns = gridW >= 980 ? 3 : 2;
+      final double heroH =
+          (MediaQuery.of(context).size.height * 0.5).clamp(320.0, 460.0);
+
+      return Shimmer(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(side, 20, side, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Bone(height: heroH, radius: 16),
+              const SizedBox(height: 24),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: columns,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.86,
+                children: List.generate(6, (_) => const _CourseCardBone()),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Shimmer(
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 24),
+        children: const [
+          Padding(
+            padding: EdgeInsets.fromLTRB(32, 12, 32, 8),
+            child: Bone(height: 200, radius: 24),
+          ),
+          _CourseCardBone(),
+          _CourseCardBone(),
+          _CourseCardBone(),
+        ],
+      ),
+    );
+  }
+}
+
+/// اسکلتونِ یک کارتِ دوره، هم‌ساختارِ _CourseCard.
+class _CourseCardBone extends StatelessWidget {
+  const _CourseCardBone();
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget card = Container(
+      decoration: BoxDecoration(
+        color: AppColor.card,
+        borderRadius: AppShapes.radius(AppShapes.rLg),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: const [
+          Bone(height: 180, radius: 0),
+          Padding(
+            padding: EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Bone(width: double.infinity, height: 16),
+                SizedBox(height: 8),
+                Bone(width: 160, height: 16),
+                SizedBox(height: 14),
+                Row(
+                  children: [
+                    Bone(width: 64, height: 22, radius: 11),
+                    SizedBox(width: 6),
+                    Bone(width: 54, height: 22, radius: 11),
+                  ],
+                ),
+                SizedBox(height: 14),
+                Row(
+                  children: [
+                    Bone(width: 120, height: 15),
+                    Spacer(),
+                    Bone(width: 22, height: 22, radius: 6),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: card,
+        ),
+      ),
     );
   }
 }
