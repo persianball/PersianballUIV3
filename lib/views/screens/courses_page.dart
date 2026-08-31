@@ -9,6 +9,8 @@ import 'package:marketky/models/course_models.dart';
 import 'package:marketky/services/course_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/motion.dart';
+import 'package:marketky/views/widgets/app_slider.dart';
+import 'package:marketky/models/slider_item.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
 
 class CoursesPage extends StatefulWidget {
@@ -127,26 +129,35 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
   /// دسکتاپ: کارت‌های دوره در گرید ۲-۳ ستونه داخل پوسته‌ی مرکزی ۱۲۰۰ پیکسلی؛
   /// همان دیتا و همان اسکرول بی‌نهایت لیست موبایل.
   Widget _desktopCoursesGrid() {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints:
-            const BoxConstraints(maxWidth: AppBreakpoints.contentMaxWidth),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final double gutter = AppBreakpoints.gutter(context);
-            final int columns = constraints.maxWidth >= 980 ? 3 : 2;
-            return GridView.builder(
-              controller: _controller,
-              padding: EdgeInsets.fromLTRB(gutter, 24, gutter, 110),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                mainAxisExtent: 364,
-              ),
-              itemCount: _data!.results.length,
-              itemBuilder: (_, i) {
+    final double screenW = MediaQuery.of(context).size.width;
+    final double gutter = AppBreakpoints.gutter(context);
+    final double side = ((screenW - AppBreakpoints.contentMaxWidth) / 2)
+        .clamp(gutter, double.infinity);
+    final double gridW = screenW - side * 2;
+    final int columns = gridW >= 980 ? 3 : 2;
+    final double heroH =
+        (MediaQuery.of(context).size.height * 0.5).clamp(320.0, 460.0);
+
+    return CustomScrollView(
+      controller: _controller,
+      slivers: [
+        SliverToBoxAdapter(
+          child: AppSlider(
+            kind: SliderKind.course,
+            desktopHeight: heroH,
+          ),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(side, 24, side, 110),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+              mainAxisExtent: 364,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (_, i) {
                 final c = _data!.results[i];
                 return FadeSlideIn(
                   delay: Duration(milliseconds: 50 * (i % 6)),
@@ -161,10 +172,11 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                   ),
                 );
               },
-            );
-          },
+              childCount: _data!.results.length,
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -229,11 +241,18 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                             : ListView.builder(
                                 controller: _controller,
                                 padding: const EdgeInsets.only(bottom: 110),
-                                itemCount: _data!.results.length,
+                                itemCount: _data!.results.length + 1,
                                 itemBuilder: (_, i) {
-                                  final c = _data!.results[i];
+                                  if (i == 0) {
+                                    return const Padding(
+                                      padding: EdgeInsets.fromLTRB(0, 8, 0, 4),
+                                      child: AppSlider(kind: SliderKind.course),
+                                    );
+                                  }
+                                  final c = _data!.results[i - 1];
                                   return FadeSlideIn(
-                                    delay: Duration(milliseconds: 50 * (i % 6)),
+                                    delay: Duration(
+                                        milliseconds: 50 * ((i - 1) % 6)),
                                     child: _CourseCard(
                                       course: c,
                                       imageUrl: _abs(c.image),

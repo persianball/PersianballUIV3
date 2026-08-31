@@ -11,6 +11,8 @@ import 'package:marketky/services/catalog_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:marketky/views/widgets/app_slider.dart';
+import 'package:marketky/models/slider_item.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/views/widgets/product_grid_card.dart';
 import 'package:marketky/views/widgets/motion.dart';
@@ -427,6 +429,13 @@ class _CatalogPageState extends State<CatalogPage> {
             child: LayoutBuilder(
               builder: (ctx, constraints) => Column(
                 children: [
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 20),
+                    child: AppSlider(
+                      kind: SliderKind.product,
+                      desktopHeight: 400,
+                    ),
+                  ),
                   _productWrap(visible, shellWidth: constraints.maxWidth),
                   if (visible.length < results.length)
                     const Padding(
@@ -454,6 +463,10 @@ class _CatalogPageState extends State<CatalogPage> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         child: Column(
           children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: AppSlider(kind: SliderKind.product),
+            ),
             _productWrap(visible),
             if (visible.length < results.length)
               const Padding(

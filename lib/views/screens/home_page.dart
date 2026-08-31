@@ -26,6 +26,7 @@ import 'catalog_page.dart';
 import 'course_detail_page.dart';
 import 'profile_page.dart' show UserService;
 import 'package:marketky/views/widgets/motion.dart';
+import 'package:marketky/views/widgets/app_slider.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -205,13 +206,33 @@ class _HomePageState extends State<HomePage> {
                       // اسلایدر قهرمانِ تمام‌صفحه در بالای صفحه (تبلت/لپ‌تاپ/دسکتاپ)
                       if (isBigScreen)
                         SliverToBoxAdapter(
-                            child: _buildFullscreenHero(heroHeight)),
+                          child: AppSlider(
+                            desktopHeight: heroHeight,
+                            showScrollHint: true,
+                            onScrollHint: () {
+                              if (_scrollController.hasClients) {
+                                _scrollController.animateTo(
+                                  heroHeight,
+                                  duration: const Duration(milliseconds: 320),
+                                  curve: Curves.easeOutCubic,
+                                );
+                              }
+                            },
+                          ),
+                        ),
                       // هدر موبایل (آواتار/عنوان/زنگ/سبد) در دسکتاپ حذف
                       // می‌شود؛ نوار بالای پوسته همان‌ها را دارد.
                       if (!isDesktop)
                         SliverToBoxAdapter(child: _buildHeader()),
                       SliverToBoxAdapter(child: _buildGreeting(isDesktop)),
                       SliverToBoxAdapter(child: _buildSearchRow(isDesktop)),
+                      if (!isBigScreen)
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 18),
+                            child: AppSlider(),
+                          ),
+                        ),
                       if (categories.isNotEmpty)
                         SliverToBoxAdapter(
                             child: _buildCategoryChips(
@@ -241,92 +262,6 @@ class _HomePageState extends State<HomePage> {
           );
           }),
         ),
-      ),
-    );
-  }
-
-  // ==== اسلایدر قهرمانِ تمام‌صفحه (تبلت/لپ‌تاپ/دسکتاپ) ====
-
-  Widget _buildFullscreenHero(double height) {
-    final banners = NotificationService.banners();
-    if (banners.isEmpty || height <= 0) return const SizedBox.shrink();
-    return SizedBox(
-      height: height,
-      width: double.infinity,
-      child: CarouselSlider(
-        options: CarouselOptions(
-          height: height,
-          autoPlay: true,
-          autoPlayInterval: const Duration(seconds: 6),
-          viewportFraction: 1.0,
-        ),
-        items: banners
-            .map((b) => Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(b.assetImage, fit: BoxFit.cover),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [Color(0xE6101A12), Color(0x33101A12)],
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                            maxWidth: AppBreakpoints.contentMaxWidth),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const PillTag(
-                                label: 'پیشنهاد ویژه',
-                                icon: Icons.sports_soccer,
-                                color: Colors.white,
-                                gradient: AppColor.greenGradient,
-                              ),
-                              const SizedBox(height: 18),
-                              Text(b.title,
-                                  style: AppTextStyles.headlineLg.copyWith(
-                                      color: Colors.white,
-                                      fontSize: 44,
-                                      fontWeight: FontWeight.w800)),
-                              const SizedBox(height: 12),
-                              Text(b.subtitle,
-                                  style: AppTextStyles.bodyLg.copyWith(
-                                      color: Colors.white70, fontSize: 18)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: IconButton(
-                          onPressed: () {
-                            if (_scrollController.hasClients) {
-                              _scrollController.animateTo(
-                                height,
-                                duration: const Duration(milliseconds: 320),
-                                curve: Curves.easeOutCubic,
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                              color: Colors.white70, size: 40),
-                        ),
-                      ),
-                    ),
-                  ],
-                ))
-            .toList(),
       ),
     );
   }
