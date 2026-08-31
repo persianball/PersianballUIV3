@@ -145,6 +145,9 @@ class _DesktopNavBar extends StatelessWidget implements PreferredSizeWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
 
+  /// پروفایل آخرین تب است و به‌جای لینک، آیکن کنارِ سبد می‌شود.
+  int get profileIndex => tabs.length - 1;
+
   @override
   Size get preferredSize => const Size.fromHeight(72);
 
@@ -200,16 +203,18 @@ class _DesktopNavBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               const SizedBox(width: 36),
 
-              // لینک‌های اصلی
-              for (int i = 0; i < tabs.length; i++) ...[
-                _NavLink(
-                  label: tabs[i].label,
-                  icon: tabs[i].icon,
-                  active: i == selectedIndex,
-                  onTap: () => onSelect(i),
-                ),
-                const SizedBox(width: 6),
-              ],
+              // لینک‌های اصلی — پروفایل اینجا نمی‌آید و به‌شکل آیکن
+              // کنارِ سبد در سمت دیگر نوار می‌نشیند (الگوی فروشگاه‌های وب).
+              for (int i = 0; i < tabs.length; i++)
+                if (i != profileIndex) ...[
+                  _NavLink(
+                    label: tabs[i].label,
+                    icon: tabs[i].icon,
+                    active: i == selectedIndex,
+                    onTap: () => onSelect(i),
+                  ),
+                  const SizedBox(width: 6),
+                ],
               const Spacer(),
 
               // جست‌وجو (فیلد جست‌وجو داخل تب فروشگاه است)
@@ -260,6 +265,17 @@ class _DesktopNavBar extends StatelessWidget implements PreferredSizeWidget {
                     ],
                   );
                 },
+              ),
+              const SizedBox(width: 8),
+
+              // پروفایل
+              _NavIconButton(
+                icon: selectedIndex == profileIndex
+                    ? Icons.person
+                    : Icons.person_outline,
+                tooltip: tabs[profileIndex].label,
+                active: selectedIndex == profileIndex,
+                onTap: () => onSelect(profileIndex),
               ),
             ],
           ),
@@ -336,11 +352,13 @@ class _NavIconButton extends StatefulWidget {
     required this.icon,
     required this.onTap,
     this.tooltip,
+    this.active = false,
   });
 
   final IconData icon;
   final VoidCallback onTap;
   final String? tooltip;
+  final bool active;
 
   @override
   State<_NavIconButton> createState() => _NavIconButtonState();
@@ -362,10 +380,16 @@ class _NavIconButtonState extends State<_NavIconButton> {
           width: 42,
           height: 42,
           decoration: ShapeDecoration(
-            color: _hover ? AppColor.cardMuted : Colors.transparent,
+            color: widget.active
+                ? AppColor.pitchGreenSoft
+                : (_hover ? AppColor.cardMuted : Colors.transparent),
             shape: const CircleBorder(),
           ),
-          child: Icon(widget.icon, size: 21, color: AppColor.ink),
+          child: Icon(
+            widget.icon,
+            size: 21,
+            color: widget.active ? AppColor.pitchGreen : AppColor.ink,
+          ),
         ),
       ),
     );

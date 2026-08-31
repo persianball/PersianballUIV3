@@ -5,9 +5,13 @@
 //   • موبایل: کروسل «کاورفلو» — تصویرِ وسط بزرگ‌تر، دو طرف گوشه‌ای از
 //     تصاویرِ مجاور دیده می‌شود.
 //
-// نوعِ اسلاید (`kind`) تعیین می‌کند کدام اسلایدها نمایش داده شوند:
-//   null → همه، SliderKind.course → صفحه‌ی دوره‌ها، SliderKind.product →
-//   فروشگاه.
+// `page` تعیین می‌کند اسلایدهای کدام صفحه گرفته شوند؛ دسته‌ی بک‌اند از روی
+// همین و اندازه‌ی نمایشگر ساخته می‌شود (site_… برای بزرگ، app_… برای موبایل)
+// و فیلتر سمتِ سرور با `?category=` انجام می‌شود.
+//
+// نوعِ هر اسلاید (`slider_type`) رفتارش را تعیین می‌کند: video پخش می‌شود،
+// picture فقط تصویر است، و product/course با ضربه به صفحه‌ی همان آیتم
+// می‌روند.
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
@@ -18,19 +22,21 @@ import 'package:marketky/core/slider_link.dart';
 import 'package:marketky/models/slider_item.dart';
 import 'package:marketky/services/slider_service.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:marketky/views/widgets/inline_video_player.dart';
 import 'package:marketky/views/widgets/motion.dart';
 
 class AppSlider extends StatefulWidget {
   const AppSlider({
     super.key,
-    this.kind,
+    required this.page,
     this.desktopHeight,
     this.showScrollHint = false,
     this.onScrollHint,
   });
 
-  /// null یعنی همه‌ی اسلایدها (صفحه‌ی خانه).
-  final SliderKind? kind;
+  /// صفحه‌ای که اسلایدر در آن است؛ دسته‌ی بک‌اند از روی این و اندازه‌ی
+  /// نمایشگر انتخاب می‌شود.
+  final SliderPage page;
 
   /// ارتفاعِ هیرو در نمایشگر بزرگ. null → تمام‌ارتفاعِ ناحیه‌ی موجود.
   final double? desktopHeight;
@@ -44,12 +50,21 @@ class AppSlider extends StatefulWidget {
 }
 
 class _AppSliderState extends State<AppSlider> {
-  late Future<List<SliderItem>> _future;
+  Future<List<SliderItem>>? _future;
+  int? _category;
 
   @override
-  void initState() {
-    super.initState();
-    _future = SliderService.byKind(widget.kind);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // با تغییرِ اندازه‌ی پنجره در وب، دسته از app_… به site_… (و برعکس)
+    // عوض می‌شود و باید دوباره واکشی شود.
+    final bool desktop =
+        MediaQuery.of(context).size.width >= AppBreakpoints.tablet;
+    final int category = SliderCategory.of(widget.page, desktop: desktop);
+    if (category != _category) {
+      _category = category;
+      _future = SliderService.fetchCategory(category);
+    }
   }
 
   double _heroHeight(BuildContext context) =>
@@ -163,6 +178,21 @@ class _DesktopHeroState extends State<_DesktopHero> {
   }
 }
 
+/// رسانه‌ی یک اسلاید: اگر نوعش video باشد ویدیو پخش می‌شود، وگرنه تصویر.
+class _SlideMedia extends StatelessWidget {
+  const _SlideMedia({required this.item});
+
+  final SliderItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    if (item.isVideo) {
+      return InlineVideoPlayer(videoUrl: item.videoUrl!, autoPlay: false);
+    }
+    return AppNetworkImage(url: item.imageUrl, fit: BoxFit.cover);
+  }
+}
+
 class _HeroSlide extends StatelessWidget {
   const _HeroSlide({required this.item});
 
@@ -170,12 +200,16 @@ class _HeroSlide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool tappable = SliderLink.hasTarget(item.clickUrl);
+    // روی اسلاید ویدیویی نباید لایه‌ی شفاف و ضربه بنشیند، وگرنه کنترل‌های
+    // پخش کار نمی‌کنند.
+    final bool tappable =
+        !item.isVideo && SliderLink.hasTarget(item.clickUrl);
 
     final Widget slide = Stack(
       fit: StackFit.expand,
       children: [
-        AppNetworkImage(url: item.imageUrl, fit: BoxFit.cover),
+        _SlideMedia(item: item),
+        if (!item.isVideo)
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -185,7 +219,7 @@ class _HeroSlide extends StatelessWidget {
             ),
           ),
         ),
-        if (item.hasCaption)
+        if (item.hasCaption && !item.isVideo)
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
@@ -303,7 +337,8 @@ class _CoverflowCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PressableScale(
-      onTap: SliderLink.hasTarget(item.clickUrl)
+      // اسلاید ویدیویی ضربه‌ی ناوبری نمی‌گیرد تا کنترل‌های پخش آزاد بمانند.
+      onTap: !item.isVideo && SliderLink.hasTarget(item.clickUrl)
           ? () => SliderLink.open(context, item.clickUrl)
           : null,
       child: Container(
@@ -317,8 +352,8 @@ class _CoverflowCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              AppNetworkImage(url: item.imageUrl, fit: BoxFit.cover),
-              if (item.hasCaption)
+              _SlideMedia(item: item),
+              if (item.hasCaption && !item.isVideo)
                 const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -328,7 +363,7 @@ class _CoverflowCard extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (item.hasCaption)
+              if (item.hasCaption && !item.isVideo)
                 Align(
                   alignment: AlignmentDirectional.bottomStart,
                   child: Padding(

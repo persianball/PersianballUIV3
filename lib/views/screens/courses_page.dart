@@ -227,7 +227,7 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
             child: ClipRRect(
               borderRadius: AppShapes.radius(AppShapes.rLg),
               child: AppSlider(
-                kind: SliderKind.course,
+                page: SliderPage.academy,
                 desktopHeight: heroH,
               ),
             ),
@@ -333,7 +333,8 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                                   if (i == 0) {
                                     return const Padding(
                                       padding: EdgeInsets.fromLTRB(0, 8, 0, 4),
-                                      child: AppSlider(kind: SliderKind.course),
+                                      child: AppSlider(
+                                          page: SliderPage.academy),
                                     );
                                   }
                                   final c = _data!.results[i - 1];

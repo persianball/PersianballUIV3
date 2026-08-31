@@ -28,6 +28,7 @@ import 'profile_page.dart' show UserService;
 import 'package:marketky/views/widgets/motion.dart';
 import 'package:marketky/views/widgets/app_slider.dart';
 import 'package:marketky/views/widgets/shimmer.dart';
+import 'package:marketky/models/slider_item.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -214,6 +215,7 @@ class _HomePageState extends State<HomePage> {
                       if (isBigScreen)
                         SliverToBoxAdapter(
                           child: AppSlider(
+                            page: SliderPage.home,
                             desktopHeight: heroHeight,
                             showScrollHint: true,
                             onScrollHint: () {
@@ -237,7 +239,7 @@ class _HomePageState extends State<HomePage> {
                         const SliverToBoxAdapter(
                           child: Padding(
                             padding: EdgeInsets.only(top: 18),
-                            child: AppSlider(),
+                            child: AppSlider(page: SliderPage.home),
                           ),
                         ),
                       if (categories.isNotEmpty)

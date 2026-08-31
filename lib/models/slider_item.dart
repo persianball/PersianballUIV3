@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// نوعِ اسلاید — تعیین می‌کند در کدام صفحه نمایش داده شود.
-enum SliderKind { product, course, other }
+/// نوعِ اسلاید (`slider_type`) — تعیین می‌کند اسلاید چطور رندر شود و ضربه
+/// روی آن کجا برود:
+///   • video   → ویدیوی فیلدِ `video` پخش می‌شود
+///   • picture → فقط تصویر
+///   • product / course → تصویر، و ضربه به صفحه‌ی همان آیتم می‌رود
+///     (شناسه از `click_url` خوانده می‌شود؛ مثل .../course/21)
+enum SliderKind { product, course, video, picture, other }
 
 SliderKind _kindFrom(String? raw) {
   switch ((raw ?? '').toLowerCase()) {
@@ -9,8 +14,38 @@ SliderKind _kindFrom(String? raw) {
       return SliderKind.product;
     case 'course':
       return SliderKind.course;
+    case 'video':
+      return SliderKind.video;
+    case 'picture':
+    case 'image':
+      return SliderKind.picture;
     default:
       return SliderKind.other;
+  }
+}
+
+/// صفحه‌ای که اسلایدر در آن دیده می‌شود. بک‌اند برای هر صفحه یک «دسته»
+/// جدا دارد و نسخه‌ی موبایل (`app_…`) و دسکتاپ (`site_…`) از هم جدا هستند.
+enum SliderPage { home, academy }
+
+/// نگاشتِ صفحه + اندازه‌ی نمایشگر به شماره‌ی دسته‌ی بک‌اند.
+/// این عدد به‌صورت `?category=<num>` به اندپوینت اسلایدر داده می‌شود.
+class SliderCategory {
+  SliderCategory._();
+
+  static const int appHomePage = 1; // app_home_page      — موبایل، خانه
+  static const int appAcademyPage = 2; // app_academy_page   — موبایل، دوره‌ها
+  static const int siteAcademyPage = 4; // site_academy_page  — دسکتاپ، دوره‌ها
+  static const int siteMainHomePage = 5; // site_main_home_page — دسکتاپ، خانه
+
+  /// [desktop] یعنی نمایشگر بزرگ (تبلت به بالا) که نسخه‌ی `site_…` می‌گیرد.
+  static int of(SliderPage page, {required bool desktop}) {
+    switch (page) {
+      case SliderPage.home:
+        return desktop ? siteMainHomePage : appHomePage;
+      case SliderPage.academy:
+        return desktop ? siteAcademyPage : appAcademyPage;
+    }
   }
 }
 
@@ -42,6 +77,9 @@ class SliderItem {
   final String? headerText;
   final String? buttonText;
   final SliderKind kind;
+
+  /// دسته‌ی بک‌اند (`category`) — همان عددی که در کوئری فیلتر می‌شود.
+  final int? category;
   final int sortingOrder;
   final Color? headerColor;
   final Color? buttonColor;
@@ -51,6 +89,7 @@ class SliderItem {
     required this.imageUrl,
     required this.kind,
     required this.sortingOrder,
+    this.category,
     this.videoUrl,
     this.clickUrl,
     this.text,
@@ -60,6 +99,10 @@ class SliderItem {
     this.buttonColor,
     this.textColor,
   });
+
+  /// اسلاید ویدیویی: نوعش video است و لینک ویدیو هم دارد.
+  bool get isVideo =>
+      kind == SliderKind.video && (videoUrl?.isNotEmpty ?? false);
 
   bool get hasCaption =>
       (headerText != null && headerText!.trim().isNotEmpty) ||
@@ -91,6 +134,7 @@ class SliderItem {
           ? null
           : (j['button_text'] as String).trim(),
       kind: _kindFrom(j['slider_type'] as String?),
+      category: (j['category'] as num?)?.toInt(),
       sortingOrder: (j['sorting_order'] as num?)?.toInt() ?? 0,
       headerColor: parseRgb(j['header_rgb']),
       buttonColor: parseRgb(j['button_rgb']),

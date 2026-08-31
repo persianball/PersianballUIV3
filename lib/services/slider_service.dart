@@ -4,6 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:marketky/models/slider_item.dart';
 
 /// دریافت اسلایدهای گالری از بک‌اند، با پیمایشِ کاملِ صفحه‌بندی و کشِ کوتاه‌مدت.
+///
+/// بک‌اند برای هر صفحه یک «دسته» جدا دارد و فیلتر سمتِ سرور با
+/// `?category=<num>` انجام می‌شود (نه سمتِ کلاینت):
+///   ۱ app_home_page  ۲ app_academy_page  ۴ site_academy_page
+///   ۵ site_main_home_page
+/// نگاشتِ صفحه/اندازه‌ی نمایشگر به این اعداد در [SliderCategory] است.
 class SliderService {
   SliderService._();
 
@@ -11,25 +17,44 @@ class SliderService {
   static const String host = 'http://2.144.27.195:8000';
   static const String _endpoint = '$host/v1/gallery/slider/';
 
-  static List<SliderItem>? _cache;
-  static DateTime? _cacheAt;
   static const Duration _ttl = Duration(minutes: 5);
-  static Future<List<SliderItem>>? _inFlight;
 
-  static bool get _fresh =>
-      _cache != null &&
-      _cacheAt != null &&
-      DateTime.now().difference(_cacheAt!) < _ttl;
+  /// کش و درخواستِ در جریان، به تفکیکِ دسته.
+  static final Map<int, List<SliderItem>> _cache = {};
+  static final Map<int, DateTime> _cacheAt = {};
+  static final Map<int, Future<List<SliderItem>>> _inFlight = {};
 
-  /// همه‌ی اسلایدها (همه‌ی صفحات)، مرتب‌شده بر اساس `sorting_order`.
-  static Future<List<SliderItem>> fetchAll({bool forceRefresh = false}) {
-    if (!forceRefresh && _fresh) return Future.value(_cache!);
-    return _inFlight ??= _load().whenComplete(() => _inFlight = null);
+  static bool _fresh(int category) {
+    final at = _cacheAt[category];
+    return _cache.containsKey(category) &&
+        at != null &&
+        DateTime.now().difference(at) < _ttl;
   }
 
-  static Future<List<SliderItem>> _load() async {
+  /// اسلایدهای یک دسته، مرتب‌شده بر اساس `sorting_order`.
+  static Future<List<SliderItem>> fetchCategory(
+    int category, {
+    bool forceRefresh = false,
+  }) {
+    if (!forceRefresh && _fresh(category)) {
+      return Future.value(_cache[category]!);
+    }
+    return _inFlight[category] ??= _load(category)
+        .whenComplete(() => _inFlight.remove(category));
+  }
+
+  /// اسلایدهای یک صفحه؛ نسخه‌ی `site_…` یا `app_…` بر اساس اندازه‌ی نمایشگر.
+  static Future<List<SliderItem>> forPage(
+    SliderPage page, {
+    required bool desktop,
+    bool forceRefresh = false,
+  }) =>
+      fetchCategory(SliderCategory.of(page, desktop: desktop),
+          forceRefresh: forceRefresh);
+
+  static Future<List<SliderItem>> _load(int category) async {
     final items = <SliderItem>[];
-    String? url = _endpoint;
+    String? url = '$_endpoint?category=$category';
     var guard = 0;
     try {
       while (url != null && url.isNotEmpty && guard++ < 25) {
@@ -42,26 +67,19 @@ class SliderService {
         for (final r in (data['results'] as List? ?? const [])) {
           if (r is Map<String, dynamic>) {
             final item = SliderItem.fromJson(r, host);
-            if (item.imageUrl.isNotEmpty) items.add(item);
+            // اسلاید ویدیویی تصویر لازم ندارد؛ بقیه بدون تصویر بی‌معنی‌اند.
+            if (item.imageUrl.isNotEmpty || item.isVideo) items.add(item);
           }
         }
         url = data['next'] as String?;
       }
     } catch (_) {
       // شبکه/سرور در دسترس نیست: اگر کشِ قدیمی داریم همان را بده، وگرنه خالی.
-      if (_cache != null) return _cache!;
-      return const [];
+      return _cache[category] ?? const [];
     }
     items.sort((a, b) => a.sortingOrder.compareTo(b.sortingOrder));
-    _cache = items;
-    _cacheAt = DateTime.now();
+    _cache[category] = items;
+    _cacheAt[category] = DateTime.now();
     return items;
-  }
-
-  /// فقط اسلایدهای یک نوع (product / course)؛ null یعنی همه.
-  static Future<List<SliderItem>> byKind(SliderKind? kind) async {
-    final all = await fetchAll();
-    if (kind == null) return all;
-    return all.where((s) => s.kind == kind).toList();
   }
 }
