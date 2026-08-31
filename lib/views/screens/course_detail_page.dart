@@ -720,6 +720,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                     expandedHeight: 240,
                     backgroundColor: AppColor.obsidianBg,
                     foregroundColor: AppColor.onSurface,
+                    automaticallyImplyLeading: false,
+                    // در RTL دکمه‌ی بازگشت باید سمت راست و با فلشِ راست باشد،
+                    // هم‌راستا با بقیه‌ی صفحات اپ.
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    ),
                     title: const Text('جزییات دوره',
                         style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
                     flexibleSpace: FlexibleSpaceBar(

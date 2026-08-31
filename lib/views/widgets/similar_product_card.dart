@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/views/widgets/motion.dart';
 
 import '../../constant/app_color.dart';
 import '../../constant/app_shapes.dart';
@@ -87,7 +88,7 @@ class SimilarProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return PressableScale(
       onTap: () {
         Navigator.of(context).pop();
         Navigator.of(context).pushNamed('/product/${product.id}');

@@ -24,12 +24,13 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
-  // پالتِ تینت‌های ملایم حول رنگ شیری تم.
+  // پالتِ گرادیان — رنگی و قابل‌دیدن، اما نرم و هم‌خانواده با تمِ برند
+  // (سبز چمن + کِرِمِ شیری + آبیِ ملایم).
   static const List<List<Color>> _palette = [
-    [Color(0xFFF2F3E8), Color(0xFFE8F1EA), Color(0xFFF3EEE4)],
-    [Color(0xFFEAF0F2), Color(0xFFF2F3E8), Color(0xFFE6F1E9)],
-    [Color(0xFFF4EFE6), Color(0xFFEBF2ED), Color(0xFFF2F3E8)],
-    [Color(0xFFE9F1EC), Color(0xFFF3F1E7), Color(0xFFEDF1F3)],
+    [Color(0xFFCDE8D5), Color(0xFFEDE6CF), Color(0xFFF3EAD8)],
+    [Color(0xFFD7E6EF), Color(0xFFDFEBD9), Color(0xFFCFE6D6)],
+    [Color(0xFFEFE6D2), Color(0xFFD9EAD9), Color(0xFFCEE4EC)],
+    [Color(0xFFCEE7DD), Color(0xFFE9E7D0), Color(0xFFDDE8F0)],
   ];
 
   @override

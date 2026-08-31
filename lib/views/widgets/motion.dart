@@ -12,11 +12,15 @@ class PressableScale extends StatefulWidget {
     required this.child,
     this.onTap,
     this.pressedScale = 0.965,
+    this.hoverScale = 1.02,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final double pressedScale;
+
+  /// بزرگ‌نماییِ ملایم هنگام hover با ماوس (وب/دسکتاپ). ۱ یعنی بدون افکت.
+  final double hoverScale;
 
   @override
   State<PressableScale> createState() => _PressableScaleState();
@@ -24,26 +28,46 @@ class PressableScale extends StatefulWidget {
 
 class _PressableScaleState extends State<PressableScale> {
   bool _pressed = false;
+  bool _hovered = false;
 
   void _set(bool value) {
     if (_pressed != value) setState(() => _pressed = value);
   }
 
+  void _setHover(bool value) {
+    if (_hovered != value) setState(() => _hovered = value);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final bool interactive = widget.onTap != null;
+    final double scale = _pressed
+        ? widget.pressedScale
+        : (_hovered ? widget.hoverScale : 1.0);
+
+    Widget result = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
       onTapDown: (_) => _set(true),
       onTapUp: (_) => _set(false),
       onTapCancel: () => _set(false),
       child: AnimatedScale(
-        scale: _pressed ? widget.pressedScale : 1,
-        duration: Duration(milliseconds: _pressed ? 90 : 220),
-        curve: _pressed ? Curves.easeOut : Curves.easeOutBack,
+        scale: scale,
+        duration: Duration(milliseconds: _pressed ? 90 : 200),
+        curve: _pressed ? Curves.easeOut : Curves.easeOutCubic,
         child: widget.child,
       ),
     );
+
+    if (interactive) {
+      result = MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => _setHover(true),
+        onExit: (_) => _setHover(false),
+        child: result,
+      );
+    }
+    return result;
   }
 }
 
