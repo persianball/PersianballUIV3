@@ -7,6 +7,7 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/urls.dart';
 import 'package:marketky/models/course_models.dart';
 import 'package:marketky/services/course_service.dart';
+import 'package:marketky/services/auth_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/motion.dart';
 import 'package:marketky/views/widgets/app_slider.dart';
@@ -29,6 +30,9 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
   MyCoursesResponse? _userCourses;
   bool _userLoading = false;
   String? _userError;
+
+  /// کاربر برای دیدن «دوره‌های من» باید وارد شده باشد.
+  bool _needLogin = false;
 
   late TabController _tabController;
 
@@ -77,8 +81,83 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
     }
   }
 
+  Widget _loginRequiredView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColor.greenGradient,
+              ),
+              child: const Icon(Icons.lock_outline_rounded,
+                  color: Colors.white, size: 30),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'برای دیدن دوره‌های خود وارد شوید',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColor.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'دوره‌های خریداری‌شده پس از ورود اینجا نمایش داده می‌شوند.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 12,
+                  color: AppColor.onSurfaceVariant),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final ok = await Navigator.of(context).pushNamed<bool>(
+                  '/login',
+                  arguments: {'popOnSuccess': true},
+                );
+                if (!mounted) return;
+                if (ok == true) _fetchUserCourses();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColor.goldEnd,
+                foregroundColor: AppColor.onGold,
+                shape: AppShapes.pill,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              icon: const Icon(Icons.login_rounded, size: 18),
+              label: const Text('ورود به حساب',
+                  style: TextStyle(fontFamily: 'Estedad', fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _fetchUserCourses() async {
+    final token = await AuthService.getToken();
+    if (!mounted) return;
+    if (token == null || token.isEmpty) {
+      setState(() {
+        _needLogin = true;
+        _userLoading = false;
+        _userError = null;
+      });
+      return;
+    }
     setState(() {
+      _needLogin = false;
       _userLoading = true;
       _userError = null;
     });
@@ -269,7 +348,9 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                               ),
                       ),
             // Tab 2: User Courses
-            _userLoading
+            _needLogin
+                ? _loginRequiredView()
+                : _userLoading
                 ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
                 : _userError != null
                     ? Center(
