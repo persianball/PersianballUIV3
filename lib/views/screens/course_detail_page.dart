@@ -137,7 +137,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   }
 
   Widget _weekCard(CourseDetailResponse data, int index) {
-                        final week = data.detail.weeks[index];
+                        final week = data.detail.weekGroups[index];
                         return _AnimatedSlideFade(
                           delayMs: 50 * index,
                           child: Container(
@@ -154,10 +154,21 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                               child: ExpansionTile(
                               iconColor: AppColor.goldEnd,
                               collapsedIconColor: AppColor.onSurfaceVariant,
-                              title: Text('هفته ${week.weekNumber}${week.weekName == null || week.weekName!.isEmpty ? '' : ' - ${week.weekName}'}',
-                                  style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
-                              // ویدیوهای هر هفته داخل یک کانتینر مجزا
+                              title: Text('هفته ${week.weekNumber}',
+                                  style: const TextStyle(
+                                      fontFamily: 'Estedad',
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColor.onSurface)),
+                              subtitle: Text(
+                                  '${week.allSections.length} ویدیو',
+                                  style: const TextStyle(
+                                      fontFamily: 'Estedad',
+                                      fontSize: 11,
+                                      color: AppColor.onSurfaceVariant)),
+                              // هر هفته یک یا چند «گروه» دارد و ویدیوها زیر
+                              // هر گروه می‌نشینند.
                               children: [
+                                for (final group in week.groups)
                                 Container(
                                   margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                                   padding: const EdgeInsets.all(8),
@@ -167,7 +178,44 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             shadows: AppColor.cardShadow,
           ),
                                   child: Column(
-                                    children: week.sections
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                    if ((group.weekName ?? '').trim().isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            4, 2, 4, 10),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                                Icons.folder_open_rounded,
+                                                size: 15,
+                                                color: AppColor.pitchGreen),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                group.weekName!.trim(),
+                                                style: const TextStyle(
+                                                  fontFamily: 'Estedad',
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: AppColor.onSurface,
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              '${group.sections.length}',
+                                              style: const TextStyle(
+                                                fontFamily: 'Estedad',
+                                                fontSize: 11,
+                                                color:
+                                                    AppColor.onSurfaceVariant,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ...group.sections
                                         .asMap()
                                         .entries
                                         .map((entry) {
@@ -178,7 +226,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                         child: Container(
                                           margin: EdgeInsets.only(
                                               bottom: i ==
-                                                      week.sections.length - 1
+                                                      group.sections.length - 1
                                                   ? 0
                                                   : 8),
                                           decoration: BoxDecoration(
@@ -229,7 +277,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                           ),
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -237,6 +286,96 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                             ),
                           ),
                         );
+  }
+
+  /// آواتار کوچک پشتیبان/مربی
+  Widget _coachAvatar(CourseCoach coach) {
+    final url = (coach.avatar ?? '').trim();
+    return Container(
+      width: 22,
+      height: 22,
+      clipBehavior: Clip.antiAlias,
+      decoration: const ShapeDecoration(
+        color: AppColor.pitchGreenSoft,
+        shape: CircleBorder(),
+      ),
+      child: url.isEmpty
+          ? const Icon(Icons.person_rounded,
+              size: 14, color: AppColor.pitchGreen)
+          : Image.network(
+              _abs(url),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded,
+                  size: 14, color: AppColor.pitchGreen),
+            ),
+    );
+  }
+
+  /// بنر هدیه‌ی همراهِ خرید — با رنگ گرم و آیکن، تا مزیتِ خرید فوراً دیده شود.
+  Widget _giftBanner(CourseGiftProduct gift) {
+    final img = (gift.icon ?? gift.image ?? '').trim();
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 6, 10, 6),
+      decoration: ShapeDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.centerRight,
+          end: Alignment.centerLeft,
+          colors: [Color(0x33D97706), Color(0x11D97706)],
+        ),
+        shape: AppShapes.border(AppShapes.rMd,
+            side: const BorderSide(color: Color(0x55D97706))),
+      ),
+      child: Row(
+        children: [
+          if (img.isEmpty)
+            const Icon(Icons.card_giftcard_rounded,
+                size: 18, color: AppColor.warning)
+          else
+            Container(
+              width: 30,
+              height: 30,
+              clipBehavior: Clip.antiAlias,
+              decoration: ShapeDecoration(
+                color: AppColor.card,
+                shape: AppShapes.border(AppShapes.rSm),
+              ),
+              child: Image.network(
+                _abs(img),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(
+                    Icons.card_giftcard_rounded,
+                    size: 16,
+                    color: AppColor.warning),
+              ),
+            ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('هدیه‌ی همراه این خرید',
+                    style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.warning)),
+                Text(
+                  gift.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColor.onSurface),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _timeLocationCard(CourseDetailResponse data, int index) {
@@ -298,8 +437,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                                   const SizedBox(width: 4),
                                                   Expanded(
                                                     child: Text(
-                                                      item.location.trim().isEmpty
-                                                          ? 'مکان اعلام نشده'
+                                                      item.location == null
+                                                          ? 'دوره‌ی آنلاین'
                                                           : 'مکان: ${item.location}',
                                                       maxLines: 2,
                                                       overflow:
@@ -328,54 +467,58 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                               ),
                                           ],
                                         ),
-                                        const SizedBox(height: 6),
-                                        Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Padding(
-                                              padding:
-                                                  EdgeInsets.only(top: 2),
-                                              child: Icon(
-                                                  Icons.schedule_rounded,
-                                                  size: 15,
-                                                  color: AppColor.pitchGreen),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Expanded(
-                                              child: Text(
-                                                item.time.trim().isEmpty
-                                                    ? 'زمان برگزاری اعلام نشده'
-                                                    : 'زمان برگزاری: ${item.time}',
-                                                style: const TextStyle(
-                                                    fontFamily: 'Estedad',
-                                                    height: 1.6,
-                                                    color: AppColor
-                                                        .onSurfaceVariant),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        if ((item.coach ?? '').trim().isNotEmpty) ...[
+                                        if (item.time != null) ...[
                                           const SizedBox(height: 6),
                                           Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              const Icon(
-                                                  Icons.person_outline_rounded,
-                                                  size: 15,
-                                                  color: AppColor.pitchGreen),
+                                              const Padding(
+                                                padding:
+                                                    EdgeInsets.only(top: 2),
+                                                child: Icon(
+                                                    Icons.schedule_rounded,
+                                                    size: 15,
+                                                    color:
+                                                        AppColor.pitchGreen),
+                                              ),
                                               const SizedBox(width: 4),
                                               Expanded(
                                                 child: Text(
-                                                  'مربی: ${item.coach}',
+                                                  'زمان برگزاری: ${item.time}',
                                                   style: const TextStyle(
                                                       fontFamily: 'Estedad',
+                                                      height: 1.6,
                                                       color: AppColor
                                                           .onSurfaceVariant),
                                                 ),
                                               ),
                                             ],
                                           ),
+                                        ],
+                                        if (item.coach != null) ...[
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              _coachAvatar(item.coach!),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  'پشتیبان: ${item.coach!.fullName}',
+                                                  style: const TextStyle(
+                                                      fontFamily: 'Estedad',
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: AppColor
+                                                          .onSurfaceVariant),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                        if (item.giftProduct != null) ...[
+                                          const SizedBox(height: 8),
+                                          _giftBanner(item.giftProduct!),
                                         ],
                                         const SizedBox(height: 6),
                                         _timeLocationPrice(item),
@@ -512,7 +655,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           icon: Icons.calendar_month_rounded,
           builder: (context) => Column(
             children: List.generate(
-              data.detail.weeks.length,
+              data.detail.weekGroups.length,
               (index) => _weekCard(data, index),
             ),
           ),

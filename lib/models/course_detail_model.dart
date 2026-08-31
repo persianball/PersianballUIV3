@@ -46,15 +46,108 @@ class CourseWeek {
   }
 }
 
+/// یک هفته‌ی دوره: چند «گروه» دارد و ویدیوها زیر هر گروه می‌نشینند.
+///
+/// بک‌اند لیستِ تختی از ورودی‌ها می‌دهد که هرکدام `week_number` دارند؛ چند
+/// ورودی می‌توانند یک `week_number` مشترک داشته باشند و هر ورودی یک گروهِ
+/// جدا داخل همان هفته است (نامش `week_name`). این کلاس آن‌ها را جمع می‌کند.
+class CourseWeekGroup {
+  final String weekNumber;
+  final List<CourseWeek> groups;
+
+  const CourseWeekGroup({required this.weekNumber, required this.groups});
+
+  /// همه‌ی ویدیوهای هفته، بدون توجه به گروه (برای شمارش و ایندکسِ پیوسته).
+  List<CourseWeekSectionItem> get allSections =>
+      [for (final g in groups) ...g.sections];
+
+  /// وقتی هفته فقط یک گروه دارد، لایه‌ی گروه چیزی به کاربر اضافه نمی‌کند.
+  bool get hasNamedGroups =>
+      groups.length > 1 ||
+      (groups.length == 1 && (groups.first.weekName ?? '').trim().isNotEmpty);
+
+  /// گروه‌بندیِ لیستِ تختِ بک‌اند بر اساس `week_number`، با حفظ ترتیب.
+  static List<CourseWeekGroup> groupByWeek(List<CourseWeek> weeks) {
+    final order = <String>[];
+    final byNumber = <String, List<CourseWeek>>{};
+    for (final w in weeks) {
+      if (!byNumber.containsKey(w.weekNumber)) {
+        order.add(w.weekNumber);
+        byNumber[w.weekNumber] = [];
+      }
+      byNumber[w.weekNumber]!.add(w);
+    }
+    return [
+      for (final n in order)
+        CourseWeekGroup(weekNumber: n, groups: byNumber[n]!),
+    ];
+  }
+}
+
+/// مربی/پشتیبانِ یک واریانت دوره. بک‌اند این را به‌صورت آبجکت می‌دهد
+/// (`{id, full_name, avatar}`)، نه رشته.
+class CourseCoach {
+  final int id;
+  final String fullName;
+  final String? avatar;
+
+  const CourseCoach({required this.id, required this.fullName, this.avatar});
+
+  static CourseCoach? fromJson(dynamic raw) {
+    if (raw is Map<String, dynamic>) {
+      final name = (raw['full_name'] ?? '').toString().trim();
+      if (name.isEmpty) return null;
+      return CourseCoach(
+        id: raw['id'] is int ? raw['id'] : int.tryParse('${raw['id']}') ?? 0,
+        fullName: name,
+        avatar: raw['avatar'] as String?,
+      );
+    }
+    // سازگاری با پاسخ‌های قدیمی که مربی را رشته می‌دادند
+    final s = raw?.toString().trim() ?? '';
+    if (s.isEmpty || s == 'null') return null;
+    return CourseCoach(id: 0, fullName: s);
+  }
+}
+
+/// هدیه‌ی همراهِ خرید یک واریانت دوره (`gift_product`).
+class CourseGiftProduct {
+  final int id;
+  final String name;
+  final String? image;
+  final String? icon;
+
+  const CourseGiftProduct({
+    required this.id,
+    required this.name,
+    this.image,
+    this.icon,
+  });
+
+  static CourseGiftProduct? fromJson(dynamic raw) {
+    if (raw is! Map<String, dynamic>) return null;
+    final name = (raw['product_name'] ?? '').toString().trim();
+    if (name.isEmpty) return null;
+    return CourseGiftProduct(
+      id: raw['id'] is int ? raw['id'] : int.tryParse('${raw['id']}') ?? 0,
+      name: name,
+      image: raw['image'] as String?,
+      icon: raw['icon'] as String?,
+    );
+  }
+}
+
 class CourseTimeAndLocationItem {
   final bool isActive;
   final String? image; // relative
   final int price;
-  final String location;
-  final String time;
-  final String? coach;
+
+  /// برای دوره‌های غیرحضوری null است.
+  final String? location;
+  final String? time;
+  final CourseCoach? coach;
   final String courseName;
-  final String? giftProduct;
+  final CourseGiftProduct? giftProduct;
   final int id;
   final bool shipmentRequired;
   final int discountPercentage;
@@ -75,16 +168,23 @@ class CourseTimeAndLocationItem {
     required this.capacity,
   });
 
+  /// دوره‌ی حضوری زمان یا مکان دارد؛ دوره‌های آنلاین هیچ‌کدام را ندارند.
+  bool get hasSchedule => location != null || time != null;
+
   factory CourseTimeAndLocationItem.fromJson(Map<String, dynamic> json) {
     return CourseTimeAndLocationItem(
       isActive: json['is_active'] == true,
       image: json['image'] as String?,
       price: json['price'] is int ? json['price'] : int.tryParse('${json['price']}') ?? 0,
-      location: (json['location'] ?? '').toString(),
-      time: (json['time'] ?? '').toString(),
-      coach: json['coach']?.toString(),
+      location: (json['location'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['location'] as String).trim(),
+      time: (json['time'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['time'] as String).trim(),
+      coach: CourseCoach.fromJson(json['coach']),
       courseName: (json['course_name'] ?? '').toString(),
-      giftProduct: json['gift_product']?.toString(),
+      giftProduct: CourseGiftProduct.fromJson(json['gift_product']),
       id: json['id'] is int ? json['id'] : int.tryParse('${json['id']}') ?? 0,
       shipmentRequired: json['shipment_required'] == true,
       discountPercentage: json['discount_percentage'] is int
@@ -101,6 +201,9 @@ class CourseDetailInner {
   final int length;
   final List<CourseWeek> weeks;
   final List<CourseTimeAndLocationItem> timeAndLocation;
+
+  /// هفته‌ها پس از گروه‌بندی بر اساس `week_number`.
+  List<CourseWeekGroup> get weekGroups => CourseWeekGroup.groupByWeek(weeks);
 
   CourseDetailInner({
     required this.preRequirement,

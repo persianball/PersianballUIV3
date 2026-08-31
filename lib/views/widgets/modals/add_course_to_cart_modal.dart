@@ -142,18 +142,37 @@ class _AddCourseToCartModalState extends State<AddCourseToCartModal> {
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          PillTag(
-                            label: widget.courseItem.location,
-                            icon: Icons.place_rounded,
-                            color: AppColor.categoryBadge,
-                            dense: true,
-                          ),
-                          PillTag(
-                            label: widget.courseItem.time,
-                            icon: Icons.schedule_rounded,
-                            color: AppColor.levelExpert,
-                            dense: true,
-                          ),
+                          // دوره‌های آنلاین زمان/مکان ندارند
+                          if (widget.courseItem.location != null)
+                            PillTag(
+                              label: widget.courseItem.location!,
+                              icon: Icons.place_rounded,
+                              color: AppColor.categoryBadge,
+                              dense: true,
+                            ),
+                          if (widget.courseItem.time != null)
+                            PillTag(
+                              label: widget.courseItem.time!,
+                              icon: Icons.schedule_rounded,
+                              color: AppColor.levelExpert,
+                              dense: true,
+                            ),
+                          if (widget.courseItem.coach != null)
+                            PillTag(
+                              label:
+                                  'پشتیبان: ${widget.courseItem.coach!.fullName}',
+                              icon: Icons.support_agent_rounded,
+                              color: AppColor.pitchGreen,
+                              dense: true,
+                            ),
+                          if (widget.courseItem.giftProduct != null)
+                            PillTag(
+                              label:
+                                  'هدیه: ${widget.courseItem.giftProduct!.name}',
+                              icon: Icons.card_giftcard_rounded,
+                              color: AppColor.warning,
+                              dense: true,
+                            ),
                           if (widget.courseItem.discountPercentage > 0)
                             PillTag(
                               label:
