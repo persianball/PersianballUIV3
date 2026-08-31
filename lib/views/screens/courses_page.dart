@@ -141,10 +141,16 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
     return CustomScrollView(
       controller: _controller,
       slivers: [
-        SliverToBoxAdapter(
-          child: AppSlider(
-            kind: SliderKind.course,
-            desktopHeight: heroH,
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(side, 20, side, 0),
+          sliver: SliverToBoxAdapter(
+            child: ClipRRect(
+              borderRadius: AppShapes.radius(AppShapes.rLg),
+              child: AppSlider(
+                kind: SliderKind.course,
+                desktopHeight: heroH,
+              ),
+            ),
           ),
         ),
         SliverPadding(
