@@ -12,10 +12,17 @@ class InlineVideoPlayer extends StatefulWidget {
     super.key,
     required this.videoUrl,
     this.autoPlay = true,
+    this.muted = false,
+    this.showControls = true,
   });
 
   final String videoUrl;
   final bool autoPlay;
+
+  /// پخشِ خودکار در مرورگرها فقط وقتی مجاز است که صدا قطع باشد
+  final bool muted;
+
+  final bool showControls;
 
   @override
   State<InlineVideoPlayer> createState() => _InlineVideoPlayerState();
@@ -49,11 +56,15 @@ class _InlineVideoPlayerState extends State<InlineVideoPlayer> {
         vc.dispose();
         return;
       }
+      if (widget.muted) await vc.setVolume(0);
       final cc = ChewieController(
         videoPlayerController: vc,
         autoPlay: widget.autoPlay,
         looping: true,
+        showControls: widget.showControls,
         aspectRatio: vc.value.aspectRatio,
+        // BoxFit.contain یعنی کل فریم دیده شود و چیزی از ویدیو بریده نشود
+        zoomAndPan: false,
         // تمام‌صفحه هم پورتریت می‌ماند
         deviceOrientationsOnEnterFullScreen: const [
           DeviceOrientation.portraitUp,
@@ -113,6 +124,8 @@ class _InlineVideoPlayerState extends State<InlineVideoPlayer> {
     }
     // نکته: روی وب، ویدیو یک PlatformView است و اگر داخل ClipPath اضافه‌ای
     // قرار بگیرد ممکن است نامرئی شود؛ پس اینجا برش اضافه نمی‌گذاریم.
+    // Center + AspectRatio یعنی رفتارِ contain: کل فریم دیده می‌شود و
+    // چیزی از ویدیو بریده نمی‌شود.
     return Container(
       color: Colors.black,
       child: Center(

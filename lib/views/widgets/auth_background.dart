@@ -33,6 +33,12 @@ class AppBackground extends StatelessWidget {
     ),
   };
 
+  static double _scrimAlpha(AppBackdrop backdrop, bool desktop) {
+    if (backdrop == AppBackdrop.main) return 0.12;
+    // ورود در دسکتاپ فرم را داخل کارت سفید دارد، پس پرده لازم نیست
+    return desktop ? 0.0 : 0.18;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool desktop = AppBreakpoints.isDesktop(context);
@@ -50,16 +56,15 @@ class AppBackground extends StatelessWidget {
           // خطای بارگذاری نباید صفحه را از کار بیندازد
           errorBuilder: (_, __, ___) => const ColoredBox(color: AppColor.milk),
         ),
-        // پرده‌ی بسیار ملایم شیری: تضمین می‌کند متن تیره و کارت‌ها روی هر
-        // نقطه‌ی تصویر خوانا بمانند. پس‌زمینه‌ی اصلی چون محتوای زیادی رویش
-        // اسکرول می‌شود پرده‌ی پررنگ‌تری می‌گیرد.
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColor.milk.withValues(
-              alpha: backdrop == AppBackdrop.main ? 0.55 : (desktop ? 0.0 : 0.25),
+        // پرده‌ی شیریِ خیلی رقیق. خودِ تصویرها عمداً مرکزِ آرام دارند، پس
+        // پرده فقط برای اطمینان است؛ پررنگ‌تر از این، تصویر را محو می‌کند.
+        if (_scrimAlpha(backdrop, desktop) > 0)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColor.milk
+                  .withValues(alpha: _scrimAlpha(backdrop, desktop)),
             ),
           ),
-        ),
         child,
       ],
     );

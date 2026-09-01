@@ -187,7 +187,13 @@ class _SlideMedia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (item.isVideo) {
-      return InlineVideoPlayer(videoUrl: item.videoUrl!, autoPlay: false);
+      // پخش خودکار: مرورگرها فقط ویدیوی بی‌صدا را اجازه می‌دهند، پس
+      // muted لازمه‌ی کار کردنِ autoPlay روی وب است.
+      return InlineVideoPlayer(
+        videoUrl: item.videoUrl!,
+        autoPlay: true,
+        muted: true,
+      );
     }
     return AppNetworkImage(url: item.imageUrl, fit: BoxFit.cover);
   }

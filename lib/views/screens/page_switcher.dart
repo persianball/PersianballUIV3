@@ -66,7 +66,10 @@ class _PageSwitcherState extends State<PageSwitcher> {
     final bool desktop = AppBreakpoints.isDesktop(context);
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
+      // پس‌زمینه‌ی تصویری پشت کلِ پوسته می‌نشیند، پس اسکافولد شفاف است
+      child: AppBackground(
+        backdrop: AppBackdrop.main,
+        child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBody: !desktop,
         // دسکتاپ: نوار ناوبری بالایی مثل سایت‌های فروشگاهی؛
@@ -119,6 +122,7 @@ class _PageSwitcherState extends State<PageSwitcher> {
               ),
           ],
         ),
+      ),
       ),
     );
   }
