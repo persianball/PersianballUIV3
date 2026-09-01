@@ -1,3 +1,5 @@
+import 'package:characters/characters.dart';
+
 // core/model/Product.dart
 class Product {
   final int id;
@@ -62,6 +64,10 @@ class ProductDetail {
   final Category category;
   final List<SimilarProduct> similarProducts;
   final double avgRate;
+
+  /// تفکیک ستاره‌ای امتیازها (فیلد rating_distribution): ستاره → تعداد.
+  /// پیش‌تر بک‌اند این را نمی‌داد و نمودار سمتِ کلاینت ساختگی بود.
+  final Map<int, int> ratingDistribution;
   final List<ProductComment> comments;
   final String? editor;
   final List<FaqItem>? faqs;
@@ -81,6 +87,7 @@ class ProductDetail {
     required this.category,
     required this.similarProducts,
     required this.avgRate,
+    this.ratingDistribution = const {},
     required this.comments,
     this.editor,
     this.faqs
@@ -102,6 +109,7 @@ class ProductDetail {
       category: Category.fromJson(json['category']),
       similarProducts: (json['simillar_products'] as List).map((v) => SimilarProduct.fromJson(v)).toList(),
       avgRate: (json['avg_rate'] ?? 0.0).toDouble(),
+      ratingDistribution: _ratingDistributionFrom(json['rating_distribution']),
       comments: (json['comments'] as List).map((v) => ProductComment.fromJson(v)).toList(),
       editor: json['editor'] ?? "",
       faqs: (json['faqs'] as List).map((v) => FaqItem.fromJson(v)).toList(),
@@ -123,18 +131,60 @@ class FaqItem {
   }
 }
 
+/// `{"1": 3, "2": 0, …}` را به `{1: 3, 2: 0, …}` تبدیل می‌کند.
+/// کلیدها ممکن است رشته یا عدد باشند؛ هر دو پشتیبانی می‌شوند.
+Map<int, int> _ratingDistributionFrom(dynamic raw) {
+  if (raw is! Map) return const {};
+  final out = <int, int>{};
+  raw.forEach((k, v) {
+    final star = k is int ? k : int.tryParse('$k');
+    if (star == null || star < 1 || star > 5) return;
+    out[star] = v is int ? v : (int.tryParse('$v') ?? 0);
+  });
+  return out;
+}
+
 class ProductComment {
   final String text;
   final String adminResponse;
   final String createAt;
 
-  ProductComment({required this.text,required this.adminResponse,required this.createAt});
+  /// نام کاربریِ نویسنده‌ی نظر (فیلد username در پاسخ محصول).
+  /// ممکن است خالی باشد.
+  final String username;
+
+  ProductComment({
+    required this.text,
+    required this.adminResponse,
+    required this.createAt,
+    this.username = '',
+  });
+
+  /// بعضی نام‌های کاربری شماره‌ی موبایل‌اند (مثل 09034024306) و نمایشِ کاملشان
+  /// زیر یک نظرِ عمومی، افشای اطلاعات شخصی است. این‌ها ماسک می‌شوند و بقیه
+  /// دست‌نخورده نمایش داده می‌شوند.
+  String get displayName {
+    final u = username.trim();
+    if (u.isEmpty) return 'کاربر پرشین شاپ';
+    final digitsOnly = RegExp(r'^0?\d{10,11}$');
+    if (digitsOnly.hasMatch(u) && u.length >= 7) {
+      return '${u.substring(0, 4)}***${u.substring(u.length - 3)}';
+    }
+    return u;
+  }
+
+  /// حرفِ اولِ نام برای آواتار
+  String get initial {
+    final n = displayName.trim();
+    return n.isEmpty ? '؟' : n.characters.first;
+  }
 
   factory ProductComment.fromJson(Map<String, dynamic> json) {
     return ProductComment(
-      text: json['text'],
-      adminResponse: json['admin_response'],
-      createAt: json['created_at']
+      text: (json['text'] ?? '').toString(),
+      adminResponse: (json['admin_response'] ?? '').toString(),
+      createAt: (json['created_at'] ?? '').toString(),
+      username: (json['username'] ?? '').toString(),
     );
   }
 }

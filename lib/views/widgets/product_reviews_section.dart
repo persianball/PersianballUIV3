@@ -5,7 +5,6 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/services/rating_service.dart';
-import 'package:marketky/services/review_service.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 
 /// بخش نظرات و پرسش‌وپاسخ محصول در صفحه جزئیات کالا
@@ -14,6 +13,9 @@ class ProductReviewsSection extends StatefulWidget {
 
   /// میانگین امتیاز واقعی محصول (فیلد avg_rate در پاسخ محصول)
   final double avgRate;
+
+  /// تفکیک ستاره‌ای واقعی (فیلد rating_distribution): ستاره → تعداد
+  final Map<int, int> ratingDistribution;
 
   /// نظرهای *تأییدشده*ی محصول (فیلد comments در پاسخ محصول).
   /// بک‌اند endpoint جداگانه‌ای برای خواندن نظرها ندارد.
@@ -26,6 +28,7 @@ class ProductReviewsSection extends StatefulWidget {
     super.key,
     required this.productId,
     this.avgRate = 0,
+    this.ratingDistribution = const {},
     this.comments = const [],
     this.onSubmitted,
   });
@@ -58,7 +61,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader('نظرات کاربران', 'ثبت نظر', _openReviewSheet),
-            _ratingLine(),
+            _ratingSummary(),
             const SizedBox(height: 4),
             if (widget.comments.isEmpty)
               Padding(
@@ -97,105 +100,272 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
         ],
       );
 
-  /// خلاصه‌ی امتیاز در یک خطِ جمع‌وجور.
+  /// خلاصه‌ی امتیاز: میانگین، تعداد رأی و تفکیک ستاره‌ای.
   ///
-  /// امتیاز و نظر در بک‌اند دو چیز جدا هستند: `avg_rate` میانگین امتیازهاست
-  /// و `comments` نظرهای متنی که *فیلد امتیاز ندارند*. پس نه می‌توان به هر
-  /// نظر ستاره نسبت داد و نه تفکیک ستاره‌ای ساخت.
-  Widget _ratingLine() {
-    final count = widget.comments.length;
-    final bool hasRate = widget.avgRate > 0;
-    if (!hasRate && count == 0) return const SizedBox.shrink();
+  /// داده‌ی نمودار از `rating_distribution` بک‌اند می‌آید. پیش‌تر چنین فیلدی
+  /// نبود و نمودار همه‌ی نظرها را زیر ستاره‌ی گردشده‌ی میانگین می‌ریخت که
+  /// ساختگی بود؛ حالا واقعی است. امتیاز و نظر همچنان دو چیز جدا هستند —
+  /// یک نظر می‌تواند امتیاز نداشته باشد و برعکس.
+  Widget _ratingSummary() {
+    final dist = widget.ratingDistribution;
+    final totalVotes = dist.values.fold<int>(0, (a, b) => a + b);
+    final commentCount = widget.comments.length;
+    final bool hasRate = widget.avgRate > 0 || totalVotes > 0;
+    if (!hasRate && commentCount == 0) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        children: [
-          if (hasRate) ...[
-            const Icon(Icons.star_rounded, size: 16, color: Colors.amber),
-            const SizedBox(width: 4),
-            Text(
-              widget.avgRate.toStringAsFixed(1),
-              style: const TextStyle(
-                fontFamily: 'Estedad',
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: AppColor.ink,
+      padding: const EdgeInsets.only(top: 10, bottom: 4),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(
+            AppShapes.rLg,
+            side: const BorderSide(color: AppColor.line),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.avgRate.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                    color: AppColor.ink,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                _stars(widget.avgRate.round(), size: 13),
+                const SizedBox(height: 4),
+                Text(
+                  totalVotes > 0 ? '$totalVotes امتیاز' : 'بدون امتیاز',
+                  style: AppTextStyles.labelSm,
+                ),
+              ],
+            ),
+            const SizedBox(width: 14),
+            Container(width: 1, height: 64, color: AppColor.line),
+            const SizedBox(width: 14),
+            // نمودار تفکیک: از ۵ ستاره به ۱
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (int star = 5; star >= 1; star--)
+                    _distributionRow(star, dist[star] ?? 0, totalVotes),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            Text('·', style: AppTextStyles.labelSm),
-            const SizedBox(width: 8),
           ],
-          Text('$count نظر', style: AppTextStyles.labelSm),
+        ),
+      ),
+    );
+  }
+
+  Widget _distributionRow(int star, int count, int total) {
+    final ratio = total == 0 ? 0.0 : count / total;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.5),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 10,
+            child: Text('$star',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.inkMuted)),
+          ),
+          const SizedBox(width: 3),
+          const Icon(Icons.star_rounded, size: 12, color: Colors.amber),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: ratio),
+                duration: const Duration(milliseconds: 520),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => LinearProgressIndicator(
+                  value: value,
+                  minHeight: 6,
+                  color: AppColor.pitchGreen,
+                  backgroundColor: AppColor.cardMuted,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 20,
+            child: Text('$count',
+                textAlign: TextAlign.left,
+                style: AppTextStyles.labelSm),
+          ),
         ],
       ),
     );
   }
 
-  /// نظر واقعی محصول (مدل ProductComment از پاسخ بک‌اند).
-  ///
-  /// طرحِ مینیمال: نه کارت، نه سایه، نه آواتار — فقط متن و تاریخ، با یک خط
-  /// موباریک به‌عنوان جداکننده. نامِ کاربر و امتیازِ هر نظر عمداً نیامده‌اند
-  /// چون بک‌اند هیچ‌کدام را همراه نظر نمی‌دهد.
-  Widget _commentTile(ProductComment c) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColor.line)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  c.text,
-                  style: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 13,
-                      height: 1.8,
-                      color: AppColor.ink),
-                ),
-                const SizedBox(height: 6),
-                Text(_shortDate(c.createAt), style: AppTextStyles.labelSm),
-                if (c.adminResponse.trim().isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 2,
-                        height: 34,
-                        color: AppColor.pitchGreen,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('پاسخ فروشگاه',
-                                style: AppTextStyles.labelSm.copyWith(
-                                    color: AppColor.pitchGreen,
-                                    fontWeight: FontWeight.w700)),
-                            const SizedBox(height: 2),
-                            Text(c.adminResponse,
-                                style: const TextStyle(
-                                    fontFamily: 'Estedad',
-                                    fontSize: 12,
-                                    height: 1.7,
-                                    color: AppColor.inkMuted)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
+  Widget _stars(int rating, {double size = 16}) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(
+          5,
+          (i) => Icon(
+            i < rating ? Icons.star_rounded : Icons.star_border_rounded,
+            size: size,
+            color: i < rating ? Colors.amber : AppColor.lineStrong,
           ),
         ),
       );
+
+  /// رنگِ آواتار از روی نام ساخته می‌شود تا هر کاربر همیشه یک رنگ ثابت
+  /// داشته باشد (بدون نیاز به فیلدِ رنگ از بک‌اند).
+  static const List<List<Color>> _avatarPalette = [
+    [Color(0xFF2FA45C), Color(0xFF1B7A3E)],
+    [Color(0xFF4C8DF6), Color(0xFF2563EB)],
+    [Color(0xFF9B6BE0), Color(0xFF7C3AED)],
+    [Color(0xFFF0A03C), Color(0xFFD97706)],
+    [Color(0xFF20B7B0), Color(0xFF0E8F8A)],
+    [Color(0xFFEF6A6A), Color(0xFFDC2626)],
+  ];
+
+  List<Color> _avatarColors(String seed) {
+    var hash = 0;
+    for (final code in seed.codeUnits) {
+      hash = (hash * 31 + code) & 0x7fffffff;
+    }
+    return _avatarPalette[hash % _avatarPalette.length];
+  }
+
+  /// نظر واقعی محصول (مدل ProductComment از پاسخ بک‌اند).
+  ///
+  /// نامِ کاربر با آواتارِ حرف‌اول و رنگِ اختصاصی نمایش داده می‌شود؛
+  /// امتیازِ هر نظر عمداً نیامده چون بک‌اند آن را همراه نظر نمی‌دهد.
+  Widget _commentTile(ProductComment c) {
+    final colors = _avatarColors(c.username.isEmpty ? c.text : c.username);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(
+            AppShapes.rLg,
+            side: const BorderSide(color: AppColor.line),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: ShapeDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: colors,
+                    ),
+                    shape: const CircleBorder(),
+                  ),
+                  child: Text(
+                    c.initial,
+                    style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        c.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColor.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(_shortDate(c.createAt), style: AppTextStyles.labelSm),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              c.text,
+              style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 13,
+                height: 1.85,
+                color: AppColor.ink,
+              ),
+            ),
+            if (c.adminResponse.trim().isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                decoration: ShapeDecoration(
+                  color: AppColor.pitchGreenSoft,
+                  shape: AppShapes.border(AppShapes.rMd),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.storefront_rounded,
+                            size: 14, color: AppColor.pitchGreen),
+                        const SizedBox(width: 5),
+                        Text('پاسخ فروشگاه',
+                            style: AppTextStyles.labelSm.copyWith(
+                                color: AppColor.pitchGreen,
+                                fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      c.adminResponse,
+                      style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 12,
+                        height: 1.8,
+                        color: AppColor.ink,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
   /// تاریخ ISO بک‌اند فقط تا روز نمایش داده می‌شود
   String _shortDate(String raw) =>
@@ -366,239 +536,4 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
     );
   }
 
-}
-
-/// بخشِ «پرسش و پاسخ» محصول — بخشِ مستقل و همیشه‌قابل‌دیدن در صفحه‌ی جزئیات.
-class ProductQuestionsSection extends StatefulWidget {
-  const ProductQuestionsSection({super.key, required this.productId});
-
-  final int productId;
-
-  @override
-  State<ProductQuestionsSection> createState() =>
-      _ProductQuestionsSectionState();
-}
-
-class _ProductQuestionsSectionState extends State<ProductQuestionsSection> {
-  List<ProductQuestion> _questions = [];
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final questions = await ReviewService.fetchQuestions(widget.productId);
-      if (!mounted) return;
-      setState(() {
-        _questions = questions;
-        _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Flexible(
-                  child: Text('پرسش و پاسخ',
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
-                ),
-                const SizedBox(width: 8),
-                const Spacer(),
-                GradientButton(
-                  label: 'پرسیدن سؤال',
-                  icon: const Icon(Icons.help_outline_rounded),
-                  onPressed: _openQuestionSheet,
-                  expand: false,
-                  height: 38,
-                  fontSize: 12.5,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                  child: SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColor.goldEnd),
-                  ),
-                ),
-              )
-            else if (_questions.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text('هنوز سؤالی ثبت نشده است — اولین نفر باشید!',
-                    style: AppTextStyles.labelSm),
-              )
-            else
-              ..._questions.take(5).map(_questionTile),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _questionTile(ProductQuestion q) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: ShapeDecoration(
-          color: AppColor.card,
-          shape: AppShapes.border(AppShapes.rLg),
-          shadows: AppColor.cardShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.help_outline_rounded,
-                    size: 16, color: AppColor.goldEnd),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(q.body,
-                      style: const TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          height: 1.6,
-                          color: AppColor.ink)),
-                ),
-              ],
-            ),
-            if (q.answer != null) ...[
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: ShapeDecoration(
-                  color: AppColor.pitchGreenSoft,
-                  shape: AppShapes.border(AppShapes.rMd),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(q.answer!,
-                        style: const TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 12,
-                            height: 1.7,
-                            color: AppColor.ink)),
-                    const SizedBox(height: 4),
-                    Text(q.answeredBy ?? 'پشتیبانی فروشگاه',
-                        style: const TextStyle(
-                            fontFamily: 'Estedad',
-                            fontSize: 10,
-                            color: AppColor.pitchGreen,
-                            fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
-            ] else ...[
-              const SizedBox(height: 6),
-              Text('در انتظار پاسخ فروشنده', style: AppTextStyles.labelSm),
-            ],
-          ],
-        ),
-      );
-
-  void _openQuestionSheet() {
-    final bodyCtrl = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColor.obsidianBg,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: AppShapes.radius(AppShapes.rMd),
-      ),
-      builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('پرسیدن سؤال',
-                  style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
-              const SizedBox(height: 12),
-              TextField(
-                controller: bodyCtrl,
-                maxLines: 3,
-                style: const TextStyle(
-                    fontFamily: 'Estedad', fontSize: 13, color: AppColor.onSurface),
-                decoration: InputDecoration(
-                  hintText: 'سؤال خود درباره این کالا را بنویسید…',
-                  hintStyle: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 12,
-                      color: AppColor.onSurfaceVariant),
-                  filled: true,
-                  fillColor: AppColor.surfaceContainer,
-                  border: OutlineInputBorder(
-                    borderRadius: AppShapes.radius(AppShapes.rMd),
-                    borderSide: BorderSide(color: AppColor.outlineVariantDark),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: AppShapes.radius(AppShapes.rMd),
-                    borderSide: BorderSide(color: AppColor.outlineVariantDark),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: AppShapes.radius(AppShapes.rMd),
-                    borderSide: BorderSide(color: AppColor.goldEnd, width: 2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              GradientButton(
-                label: 'ثبت سؤال',
-                icon: const Icon(Icons.send_rounded),
-                onPressed: () async {
-                    final text = bodyCtrl.text.trim();
-                    if (text.isEmpty) return;
-                    Navigator.of(ctx).pop();
-                    await ReviewService.addQuestion(widget.productId, body: text);
-                    await _load();
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('سؤال شما ثبت شد',
-                            style: TextStyle(fontFamily: 'Estedad')),
-                      ),
-                    );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

@@ -52,8 +52,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   /// اول برمی‌گرداند و تغییر رنگ عملاً کار نمی‌کرد.
   int? _variantInitializedFor;
 
-  /// وقتی «خرید فوری» زده شود، بعد از افزودن موفق به‌جای دیالوگ به سبد می‌رود
-  bool _buyNowPending = false;
 
   /// اشتراک‌گذاری لینک محصول (دیپ‌لینک همین اپ)
   Future<void> _shareProduct(String productName) async {
@@ -113,7 +111,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
             builder: (context, variantState) {
               // در دسکتاپ نوار پایین حذف می‌شود و همین دکمه‌ها داخل پنل
               // اطلاعات رندر می‌شوند؛ اما BlocListener باید زنده بماند تا
-              // دیالوگ موفقیت و ناوبری «خرید فوری» در هر دو حالت کار کند.
+              // دیالوگ موفقیت در هر دو حالت کار کند.
               return BlocListener<CartBloc, CartState>(
                 listener: _onCartState,
                 child: AppBreakpoints.isDesktop(context)
@@ -299,33 +297,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     );
   }
 
-  void _buyNow(
-      BuildContext context, ProductDetail product, ProductDetailState s) {
-    if (!isLoggedIn(context)) {
-      promptLoginIfNeeded(context);
-      return;
-    }
-    if (!_guardStock(context, s)) return;
-    final item = _cartItemFor(product, s);
-    AnalyticsService.addToCart(
-      productId: item.productId,
-      quantity: 1,
-      price: item.price,
-    );
-    _buyNowPending = true;
-    context.read<CartBloc>().add(AddToCart(context, item.id, 1));
-  }
-
   /// واکنش به نتیجه‌ی افزودن به سبد؛ بین نوار پایین (موبایل) و دکمه‌های
   /// داخل پنل اطلاعات (دسکتاپ) مشترک است — منطق قبلی بدون تغییر.
   void _onCartState(BuildContext context, CartState cartState) {
     if (cartState is CartItemAdded) {
-      // «خرید فوری»: به‌جای دیالوگ، مستقیم به سبد می‌رود
-      if (_buyNowPending) {
-        _buyNowPending = false;
-        Navigator.of(context).pushNamed('/cart');
-        return;
-      }
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -370,30 +345,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     }
   }
 
-  /// دو دکمه‌ی «افزودن به سبد» و «خرید فوری» — در موبایل داخل نوار پایین
-  /// و در دسکتاپ داخل پنل اطلاعات؛ onPressedها دقیقاً همان منطق قبلی است.
+  /// دکمه‌ی «افزودن به سبد» — در موبایل داخل نوار پایین و در دسکتاپ داخل
+  /// پنل اطلاعات؛ onPressed دقیقاً همان منطق قبلی است.
   Widget _actionButtons(BuildContext context, ProductDetail product,
       ProductDetailState variantState) {
-    return Row(
-      children: [
-        Expanded(
-          child: SoftButton(
-            label: 'افزودن به سبد',
-            height: 50,
-            icon: const Icon(Icons.add_shopping_cart_rounded),
-            onPressed: () => _openAddToCart(context, product, variantState),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: GradientButton(
-            label: 'خرید فوری',
-            height: 50,
-            icon: const Icon(Icons.bolt_rounded),
-            onPressed: () => _buyNow(context, product, variantState),
-          ),
-        ),
-      ],
+    return GradientButton(
+      label: 'افزودن به سبد',
+      height: 50,
+      icon: const Icon(Icons.add_shopping_cart_rounded),
+      onPressed: () => _openAddToCart(context, product, variantState),
     );
   }
 
@@ -1018,6 +978,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               child: ProductReviewsSection(
                 productId: product.id,
                 avgRate: product.avgRate,
+                ratingDistribution: product.ratingDistribution,
                 comments: product.comments,
                 // بعد از ثبت نظر/امتیاز، محصول دوباره از سرور خوانده
                 // می‌شود تا میانگین امتیاز به‌روز شود
@@ -1025,11 +986,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                     .read<ProductDetailBloc>()
                     .add(FetchProductDetail(widget.productId)),
               ),
-            ),
-            AccordionSection(
-              title: 'پرسش و پاسخ',
-              icon: Icons.forum_outlined,
-              child: ProductQuestionsSection(productId: product.id),
             ),
             if (product.faqs != null && product.faqs!.isNotEmpty)
               AccordionSection(
