@@ -8,6 +8,7 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/otp_verification_page.dart';
 import 'package:marketky/views/widgets/page_container.dart';
 import '../../bloc/register/register_bloc.dart';
+import 'package:marketky/views/widgets/auth_background.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -41,12 +42,13 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-      backgroundColor: AppColor.obsidianBg,
+      child: AuthBackground(
+        child: Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
-        backgroundColor: AppColor.obsidianBg,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text('ثبت نام',
             style: TextStyle(
@@ -100,6 +102,7 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocProvider(
         create: (context) => RegisterBloc(),
         child: _buildBody(context),
+      ),
       ),
       ),
     );

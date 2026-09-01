@@ -289,7 +289,7 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                     fontFamily: 'Estedad',
                     fontWeight: FontWeight.w800,
                     color: AppColor.ink)),
-            backgroundColor: AppColor.milk,
+            backgroundColor: Colors.transparent,
             foregroundColor: AppColor.ink,
             elevation: 0,
             // دسکتاپ: تب‌ها وسط‌چین با عرض محدود تا روی صفحه‌ی پهن کش نیایند

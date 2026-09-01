@@ -9,6 +9,7 @@ import 'package:marketky/views/screens/catalog_page.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:marketky/views/widgets/auth_background.dart';
 
 class PageSwitcher extends StatefulWidget {
   @override

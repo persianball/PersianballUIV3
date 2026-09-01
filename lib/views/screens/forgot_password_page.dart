@@ -5,6 +5,7 @@ import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/services/account_service.dart';
 import 'package:marketky/views/widgets/page_container.dart';
+import 'package:marketky/views/widgets/auth_background.dart';
 
 /// بازیابی رمز عبور در دو مرحله: ارسال کد و ثبت رمز جدید
 class ForgotPasswordPage extends StatefulWidget {
@@ -63,16 +64,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: AppColor.obsidianBg,
+      child: AuthBackground(
+        child: Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: AppColor.obsidianBg,
+          backgroundColor: Colors.transparent,
           foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: const Text('بازیابی رمز عبور',
               style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
         ),
         body: _buildBody(context),
+      ),
       ),
     );
   }

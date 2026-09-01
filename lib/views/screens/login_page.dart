@@ -12,6 +12,7 @@ import 'package:marketky/views/widgets/page_container.dart';
 
 import '../../bloc/login/login_bloc.dart';
 import 'package:marketky/views/widgets/motion.dart';
+import 'package:marketky/views/widgets/auth_background.dart';
 
 class LoginPage extends StatefulWidget {
   final bool popOnSuccess; // if true, pop with result after successful login
@@ -34,12 +35,13 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-      backgroundColor: AppColor.obsidianBg,
+      child: AuthBackground(
+        child: Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
-        backgroundColor: AppColor.obsidianBg,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text('ورود',
             style: TextStyle(
@@ -99,6 +101,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Builder(builder: (context) {
         return _buildBody(context);
       }),
+      ),
       ),
     );
   }

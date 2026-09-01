@@ -131,7 +131,7 @@ class _CatalogPageState extends State<CatalogPage> {
         appBar: AppBreakpoints.isDesktop(context)
             ? null
             : AppBar(
-          backgroundColor: AppColor.milk,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
           // این صفحه یکی از تب‌های نوار پایین است؛ دکمه‌ی بازگشت خودکار

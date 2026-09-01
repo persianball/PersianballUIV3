@@ -10,6 +10,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:marketky/views/widgets/page_container.dart';
 
 import '../../bloc/otp/verify_otp_bloc.dart';
+import 'package:marketky/views/widgets/auth_background.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String destination;
@@ -57,12 +58,13 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-      backgroundColor: AppColor.obsidianBg,
+      child: AuthBackground(
+        child: Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
-        backgroundColor: AppColor.obsidianBg,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text('اعتبارسنجی',
             style: TextStyle(
@@ -80,6 +82,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       body: BlocProvider(
         create: (context) => VerifyOtpBloc(),
         child: _buildBody(context),
+      ),
       ),
       ),
     );

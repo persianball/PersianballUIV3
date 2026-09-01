@@ -112,7 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.obsidianBg,
+      backgroundColor: Colors.transparent,
       // دسکتاپ: سبد و پیام‌ها در نوار ناوبری بالای اپ هستند و این اپ‌بار
       // فقط ردیف تکراری می‌سازد.
       appBar: AppBreakpoints.isDesktop(context)
