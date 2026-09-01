@@ -58,19 +58,17 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader('نظرات کاربران', 'ثبت نظر', _openReviewSheet),
-            const SizedBox(height: 8),
-            _ratingSummary(),
-            const SizedBox(height: 12),
+            _ratingLine(),
+            const SizedBox(height: 4),
             if (widget.comments.isEmpty)
-              Text('هنوز نظری برای این کالا ثبت نشده است',
-                  style: AppTextStyles.labelSm),
-            ...widget.comments.take(3).map(_commentTile),
-            if (widget.comments.length > 3)
-              TextButton(
-                onPressed: _openAllReviews,
-                child: Text('مشاهده همه ${widget.comments.length} نظر',
-                    style: const TextStyle(fontFamily: 'Estedad', fontSize: 12)),
-              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text('هنوز نظری برای این کالا ثبت نشده است',
+                    style: AppTextStyles.labelSm),
+              )
+            else
+              // همه‌ی نظرها همین‌جا می‌آیند؛ «مشاهده همه» و لیست تکراری حذف شد
+              ...widget.comments.map(_commentTile),
           ],
         ),
       ),
@@ -99,108 +97,103 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
         ],
       );
 
-  /// خلاصه‌ی امتیاز و نظرها.
+  /// خلاصه‌ی امتیاز در یک خطِ جمع‌وجور.
   ///
   /// امتیاز و نظر در بک‌اند دو چیز جدا هستند: `avg_rate` میانگین امتیازهاست
-  /// و `comments` نظرهای متنی که *فیلد امتیاز ندارند*. پس نه می‌توان نظرها
-  /// را به ستاره نسبت داد و نه تفکیک ستاره‌ای ساخت؛ قبلاً نمودار میله‌ای
-  /// همه‌ی نظرها را زیر ستاره‌ی گردشده‌ی میانگین می‌ریخت که داده‌ی ساختگی بود.
-  Widget _ratingSummary() {
+  /// و `comments` نظرهای متنی که *فیلد امتیاز ندارند*. پس نه می‌توان به هر
+  /// نظر ستاره نسبت داد و نه تفکیک ستاره‌ای ساخت.
+  Widget _ratingLine() {
     final count = widget.comments.length;
     final bool hasRate = widget.avgRate > 0;
-    if (!hasRate && count == 0) {
-      return Text('هنوز نظری ثبت نشده است', style: AppTextStyles.labelSm);
-    }
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (hasRate) ...[
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.avgRate.toStringAsFixed(1),
-                  style: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: AppColor.goldEnd)),
-              _stars(widget.avgRate.round(), size: 14),
-              Text('میانگین امتیاز', style: AppTextStyles.labelSm),
-            ],
-          ),
-          const SizedBox(width: 16),
-          Container(width: 1, height: 46, color: AppColor.line),
-          const SizedBox(width: 16),
-        ],
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('$count',
-                style: const TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppColor.ink)),
-            Text('نظر ثبت‌شده', style: AppTextStyles.labelSm),
+    if (!hasRate && count == 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          if (hasRate) ...[
+            const Icon(Icons.star_rounded, size: 16, color: Colors.amber),
+            const SizedBox(width: 4),
+            Text(
+              widget.avgRate.toStringAsFixed(1),
+              style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColor.ink,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text('·', style: AppTextStyles.labelSm),
+            const SizedBox(width: 8),
           ],
-        ),
-      ],
+          Text('$count نظر', style: AppTextStyles.labelSm),
+        ],
+      ),
     );
   }
 
-  Widget _stars(int rating, {double size = 16}) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(
-          5,
-          (i) => Icon(
-            i < rating ? Icons.star : Icons.star_border,
-            size: size,
-            color: Colors.amber,
+  /// نظر واقعی محصول (مدل ProductComment از پاسخ بک‌اند).
+  ///
+  /// طرحِ مینیمال: نه کارت، نه سایه، نه آواتار — فقط متن و تاریخ، با یک خط
+  /// موباریک به‌عنوان جداکننده. نامِ کاربر و امتیازِ هر نظر عمداً نیامده‌اند
+  /// چون بک‌اند هیچ‌کدام را همراه نظر نمی‌دهد.
+  Widget _commentTile(ProductComment c) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColor.line)),
           ),
-        ),
-      );
-
-  /// نظر واقعی محصول (مدل ProductComment از پاسخ بک‌اند)
-  Widget _commentTile(ProductComment c) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: ShapeDecoration(
-          color: AppColor.card,
-          shape: AppShapes.border(AppShapes.rLg),
-          shadows: AppColor.cardShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: Text(_shortDate(c.createAt), style: AppTextStyles.labelSm),
-            ),
-            const SizedBox(height: 6),
-            Text(c.text,
-                style: const TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 12,
-                    height: 1.7,
-                    color: AppColor.inkMuted)),
-            if (c.adminResponse.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: ShapeDecoration(
-                  color: AppColor.pitchGreenSoft,
-                  shape: AppShapes.border(AppShapes.rMd),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  c.text,
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 13,
+                      height: 1.8,
+                      color: AppColor.ink),
                 ),
-                child: Text('پاسخ فروشگاه: ${c.adminResponse}',
-                    style: const TextStyle(
-                        fontFamily: 'Estedad',
-                        fontSize: 11,
-                        height: 1.7,
-                        color: AppColor.ink)),
-              ),
-            ],
-          ],
+                const SizedBox(height: 6),
+                Text(_shortDate(c.createAt), style: AppTextStyles.labelSm),
+                if (c.adminResponse.trim().isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 2,
+                        height: 34,
+                        color: AppColor.pitchGreen,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('پاسخ فروشگاه',
+                                style: AppTextStyles.labelSm.copyWith(
+                                    color: AppColor.pitchGreen,
+                                    fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 2),
+                            Text(c.adminResponse,
+                                style: const TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 12,
+                                    height: 1.7,
+                                    color: AppColor.inkMuted)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       );
 
@@ -208,33 +201,6 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
   String _shortDate(String raw) =>
       raw.length >= 10 ? raw.substring(0, 10) : raw;
 
-  void _openAllReviews() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColor.obsidianBg,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: AppShapes.radius(AppShapes.rMd),
-      ),
-      builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.75,
-          builder: (ctx, controller) => ListView(
-            controller: controller,
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text('همه نظرات', style: AppTextStyles.headlineMd.copyWith(fontSize: 16)),
-              const SizedBox(height: 12),
-              ...widget.comments.map(_commentTile),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   /// امتیاز و متن نظر را به APIهای واقعی v2/rating می‌فرستد.
   ///

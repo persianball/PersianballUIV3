@@ -14,17 +14,14 @@ import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/services/recently_viewed_service.dart';
 import 'package:marketky/services/analytics_service.dart';
 import 'package:marketky/constant/urls.dart';
-import 'package:marketky/core/model/Review.dart';
 import 'package:marketky/models/CartModel.dart';
 import 'package:marketky/models/ColorWay.dart';
 import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
-import 'package:marketky/views/screens/reviews_page.dart';
 import 'package:marketky/views/widgets/html_description_image.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
-import 'package:marketky/views/widgets/review_tile.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
 import 'package:marketky/views/widgets/selectable_circle_size.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1013,44 +1010,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               trailingBadge: product.comments.isEmpty
                   ? null
                   : '${product.comments.length}',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ProductReviewsSection(
-                    productId: product.id,
-                    avgRate: product.avgRate,
-                    comments: product.comments,
-                    // بعد از ثبت نظر/امتیاز، محصول دوباره از سرور خوانده
-                    // می‌شود تا میانگین امتیاز به‌روز شود
-                    onSubmitted: () => context
-                        .read<ProductDetailBloc>()
-                        .add(FetchProductDetail(widget.productId)),
-                  ),
-                  if (product.comments.isNotEmpty)
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: product.comments.length,
-                      itemBuilder: (ctx, i) => ReviewTile(
-                        review: Review(
-                          photoUrl: "assets/images/avatar_for_comments.png",
-                          name: " $i : ",
-                          review: product.comments[i].text,
-                          rating: 5,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  SoftButton(
-                    label: 'مشاهده همه نظرات',
-                    icon: const Icon(Icons.reviews_outlined),
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ReviewsPage(productId: product.id),
-                      ),
-                    ),
-                  ),
-                ],
+              // نظرها فقط یک‌جا رندر می‌شوند. پیش‌تر ProductReviewsSection
+              // سه نظر اول را نشان می‌داد و بلافاصله یک ListView دوم همه را
+              // دوباره تکرار می‌کرد — با ایندکسِ حلقه به‌جای نامِ کاربر
+              // (« ۰ : ») و امتیازِ ثابتِ ۵ ستاره برای هر نظر، که هیچ‌کدام
+              // داده‌ی واقعی نبودند.
+              child: ProductReviewsSection(
+                productId: product.id,
+                avgRate: product.avgRate,
+                comments: product.comments,
+                // بعد از ثبت نظر/امتیاز، محصول دوباره از سرور خوانده
+                // می‌شود تا میانگین امتیاز به‌روز شود
+                onSubmitted: () => context
+                    .read<ProductDetailBloc>()
+                    .add(FetchProductDetail(widget.productId)),
               ),
             ),
             AccordionSection(
