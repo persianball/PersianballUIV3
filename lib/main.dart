@@ -15,11 +15,19 @@ import 'package:marketky/views/widgets/animated_gradient_background.dart';
 
 import 'bloc/product/product_bloc.dart';
 import 'dart:async';
+import 'package:marketky/services/slider_service.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // سرور گالری کند است (TTFB حدود ۲ تا ۶ ثانیه). کشِ دیسک را قبل از اولین
+  // فریم می‌خوانیم تا اسلایدرها فوراً چیزی نشان دهند، و واکشیِ تازه را در
+  // پس‌زمینه شروع می‌کنیم تا هزینه‌اش با اسپلش/خوش‌آمد همپوشانی کند.
+  await SliderService.warmUp();
+  SliderService.prefetchAll();
+
   runApp(MyApp());
 
 

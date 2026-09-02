@@ -115,7 +115,12 @@ class SliderItem {
       final r = (rel ?? '').trim();
       if (r.isEmpty) return '';
       if (r.startsWith('http')) return r;
-      return '$mediaBase${r.startsWith('/') ? '' : '/'}$r';
+      // baseUrl ته‌اسلش دارد و مسیرها هم با / شروع می‌شوند؛ بدون این، آدرس
+      // اسلش دوتایی می‌گیرد.
+      final base = mediaBase.endsWith('/')
+          ? mediaBase.substring(0, mediaBase.length - 1)
+          : mediaBase;
+      return '$base${r.startsWith('/') ? '' : '/'}$r';
     }
 
     final rawText = (j['text'] as String?)?.trim();

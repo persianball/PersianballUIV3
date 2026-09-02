@@ -1,3 +1,4 @@
+import 'dart:async';
 // lib/views/widgets/app_slider.dart
 //
 // اسلایدرِ گالریِ بک‌اند (`/v1/gallery/slider/`) با دو حالت:
@@ -50,8 +51,29 @@ class AppSlider extends StatefulWidget {
 }
 
 class _AppSliderState extends State<AppSlider> {
-  Future<List<SliderItem>>? _future;
   int? _category;
+  List<SliderItem>? _items;
+  bool _waiting = false;
+  StreamSubscription<int>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    // وقتی واکشیِ پس‌زمینه تمام شد، اسلایدرِ همین‌جا هم تازه می‌شود.
+    _sub = SliderService.updates.listen((category) {
+      if (!mounted || category != _category) return;
+      setState(() {
+        _items = SliderService.cached(category);
+        _waiting = false;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -61,10 +83,24 @@ class _AppSliderState extends State<AppSlider> {
     final bool desktop =
         MediaQuery.of(context).size.width >= AppBreakpoints.tablet;
     final int category = SliderCategory.of(widget.page, desktop: desktop);
-    if (category != _category) {
-      _category = category;
-      _future = SliderService.fetchCategory(category);
-    }
+    if (category == _category) return;
+    _category = category;
+
+    // اگر از کشِ حافظه/دیسک چیزی داریم فوراً نشان بده؛ سرورِ گالری کند است
+    // و انتظار برایش یعنی چند ثانیه اسپینر.
+    final cached = SliderService.cached(category);
+    _items = cached;
+    _waiting = cached == null;
+
+    SliderService.fetchCategory(category).then((fresh) {
+      if (!mounted || category != _category) return;
+      setState(() {
+        _items = fresh;
+        _waiting = false;
+      });
+    }).catchError((_) {
+      if (mounted) setState(() => _waiting = false);
+    });
   }
 
   double _heroHeight(BuildContext context) =>
@@ -75,21 +111,17 @@ class _AppSliderState extends State<AppSlider> {
     final double width = MediaQuery.of(context).size.width;
     final bool hero = width >= AppBreakpoints.tablet;
 
-    return FutureBuilder<List<SliderItem>>(
-      future: _future,
-      builder: (context, snap) {
-        final bool loading = snap.connectionState != ConnectionState.done;
-        final items = snap.data ?? const <SliderItem>[];
+    final items = _items ?? const <SliderItem>[];
 
-        if (loading) {
-          return _LoadingPlaceholder(
-            height: hero ? _heroHeight(context) : _kCoverflowBlockHeight,
-            hero: hero,
-          );
-        }
-        if (items.isEmpty) return const SizedBox.shrink();
+    if (_waiting) {
+      return _LoadingPlaceholder(
+        height: hero ? _heroHeight(context) : _kCoverflowBlockHeight,
+        hero: hero,
+      );
+    }
+    if (items.isEmpty) return const SizedBox.shrink();
 
-        return hero
+    return hero
             ? _DesktopHero(
                 items: items,
                 height: _heroHeight(context),
@@ -97,8 +129,6 @@ class _AppSliderState extends State<AppSlider> {
                 onScrollHint: widget.onScrollHint,
               )
             : _PhoneCoverflow(items: items);
-      },
-    );
   }
 }
 
