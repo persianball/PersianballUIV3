@@ -9,7 +9,7 @@
 // همه‌چیز روی Overlay ریشه اجرا می‌شود، پس مستقل از صفحه‌ی جاری است و با
 // بسته‌شدن شیت از بین نمی‌رود.
 import 'dart:math' as math;
-import 'dart:ui' show lerpDouble, ImageFilter;
+import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -98,8 +98,14 @@ class _CartFlightLayerState extends State<_CartFlightLayer>
   void initState() {
     super.initState();
     final rnd = math.Random(7);
-    _particles = List.generate(14, (i) {
-      final a = -math.pi / 2 + (rnd.nextDouble() - 0.5) * 2.5;
+    const count = 14;
+    _particles = List.generate(count, (i) {
+      // زاویه‌ها به‌صورت بادبزنی و متقارن پخش می‌شوند (با کمی لرزش تصادفی)
+      // تا انفجار ذرات یک‌طرفه به نظر نرسد.
+      final spread = -math.pi / 2 +
+          (i / (count - 1) - 0.5) * 2.6 +
+          (rnd.nextDouble() - 0.5) * 0.16;
+      final a = spread;
       return _Particle(
         angle: a,
         distance: 42 + rnd.nextDouble() * 62,
@@ -222,13 +228,26 @@ class _CartFlightLayerState extends State<_CartFlightLayer>
 
           return Stack(
             children: [
-              // ۱) پرده‌ی تیره + بلور ملایم
+              // ۱) پرده‌ی تیره با نورِ نرم پشت صحنه
+              //
+              // عمداً از BackdropFilter استفاده نمی‌کنیم: بلورِ تمام‌صفحه در
+              // هر فریم گران است و روی گوشی‌های میان‌رده انیمیشن را کند
+              // می‌کند. گرادیان شعاعی همان حسِ عمق را با هزینه‌ی ناچیز
+              // می‌دهد.
               Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                      sigmaX: 5 * scrim, sigmaY: 5 * scrim),
-                  child: Container(
-                    color: AppColor.ink.withOpacity(0.34 * scrim),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(
+                        (stage.dx / screen.width) * 2 - 1,
+                        (stage.dy / screen.height) * 2 - 1,
+                      ),
+                      radius: 0.95,
+                      colors: [
+                        AppColor.pitchGreenDark.withOpacity(0.30 * scrim),
+                        AppColor.ink.withOpacity(0.55 * scrim),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -263,7 +282,8 @@ class _CartFlightLayerState extends State<_CartFlightLayer>
                     child: _ProductBubble(
                       imageUrl: widget.imageUrl,
                       radius: radius,
-                      ringProgress: pRing * (1 - _seg(t, 0.62, 0.78)),
+                      ringProgress: pRing,
+                      ringOpacity: 1 - _seg(t, 0.62, 0.78, Curves.easeIn),
                       glow: (1 - pDropRaw).clamp(0.0, 1.0),
                     ),
                   ),
@@ -297,7 +317,7 @@ class _CartFlightLayerState extends State<_CartFlightLayer>
               if (pBadge > 0)
                 Positioned(
                   left: basketTopCenter.dx - 34,
-                  top: basketTopCenter.dy - 30 - 16 * pBadge.clamp(0.0, 1.0),
+                  top: basketTopCenter.dy - 44 - 18 * pBadge.clamp(0.0, 1.0),
                   width: 68,
                   child: Opacity(
                     opacity: (1 - pOut).clamp(0.0, 1.0),
@@ -443,12 +463,14 @@ class _ProductBubble extends StatelessWidget {
     required this.imageUrl,
     required this.radius,
     required this.ringProgress,
+    required this.ringOpacity,
     required this.glow,
   });
 
   final String imageUrl;
   final double radius;
   final double ringProgress;
+  final double ringOpacity;
   final double glow;
 
   @override
@@ -480,8 +502,11 @@ class _ProductBubble extends StatelessWidget {
             child: AppNetworkImage(url: imageUrl, fit: BoxFit.contain),
           ),
         ),
-        if (ringProgress > 0)
-          CustomPaint(painter: _RingPainter(progress: ringProgress)),
+        if (ringProgress > 0 && ringOpacity > 0.01)
+          Opacity(
+            opacity: ringOpacity.clamp(0.0, 1.0),
+            child: CustomPaint(painter: _RingPainter(progress: ringProgress)),
+          ),
       ],
     );
   }

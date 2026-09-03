@@ -1,4 +1,5 @@
 import 'package:characters/characters.dart';
+import 'package:marketky/utils/json_parse.dart';
 
 // core/model/Product.dart
 class Product {
@@ -230,9 +231,11 @@ class ProductVariant {
       color: json['color'],
       colorRgb: json['color_rgb'],
       productName: json['product_name'],
-      id: json['id'],
-      isActive: json['is_active'],
-      sizeVariants: (json['size_variants'] as List).map((v) => SizeVariant.fromJson(v)).toList(),
+      id: requireInt(json['id'], 'product_variant.id'),
+      isActive: json['is_active'] ?? true,
+      sizeVariants: (json['size_variants'] as List? ?? const [])
+          .map((v) => SizeVariant.fromJson(v))
+          .toList(),
       icon: json['icon'],
       video: json['video'],
       images: List<String>.from(json['images'] ?? []),
@@ -264,11 +267,11 @@ class SizeVariant {
 
   factory SizeVariant.fromJson(Map<String, dynamic> json) {
     return SizeVariant(
-      id:json['id'],
+      id: requireInt(json['id'], 'size_variant.id'),
       size: json['size'],
-      discountPercentage: json['discount_percentage'],
-      price: json['price'],
-      count: json['count'] is int ? json['count'] : int.tryParse('${json['count']}') ?? 0,
+      discountPercentage: asInt(json['discount_percentage']),
+      price: asInt(json['price']) ?? 0,
+      count: asInt(json['count']) ?? 0,
     );
   }
 }

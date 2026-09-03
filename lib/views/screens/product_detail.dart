@@ -25,6 +25,7 @@ import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
 import 'package:marketky/views/widgets/selectable_circle_size.dart';
+import 'package:marketky/views/widgets/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/product_detail/product_detail_bloc.dart';
@@ -206,11 +207,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   }
 
   Widget _buildLoading() {
-    return Container(
-      color: AppColor.milk,
-      child: const Center(
-          child: CircularProgressIndicator(color: AppColor.pitchGreen)),
-    );
+    return _ProductDetailSkeleton(
+        desktop: AppBreakpoints.isDesktop(context));
   }
 
   Widget _buildError(String message, BuildContext context) {
@@ -368,7 +366,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     // بارگذاریِ پس‌زمینه‌ی سبد برای کاربر مهمان خطا نیست؛ پیش‌تر همین
     // حالت روی هر صفحه‌ی محصول/دوره یک اسنک‌بار قرمز «نیاز به ورود دارید»
     // می‌انداخت، بی‌آنکه کاربر کاری کرده باشد.
-    if (cartState is CartError && cartState is! CartRequiresLogin) {
+    if (cartState is CartError &&
+        cartState is! CartRequiresLogin &&
+        cartState is! CartRefreshFailed) {
       // خطا یعنی چیزی به سبد اضافه نشد؛ انیمیشن باید فوراً قطع شود.
       CartFlightOverlay.dismiss();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -408,12 +408,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
           size = variantState.productSize;
         } else if (_hasAnySize(product)) {
           // محصول سایز دارد ولی هنوز انتخاب اولیه نرسیده است
-          return Container(
-            color: AppColor.milk,
-            child: const Center(
-              child: CircularProgressIndicator(color: AppColor.pitchGreen),
-            ),
-          );
+          return _ProductDetailSkeleton(
+              desktop: AppBreakpoints.isDesktop(context));
         } else {
           // محصولی که هیچ سایزی ندارد هرگز رویداد انتخاب سایز نمی‌گیرد؛
           // پیش از این صفحه‌اش برای همیشه روی لودینگ می‌ماند.
@@ -1079,4 +1075,238 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     return desktop ? CenteredContent(child: content) : content;
   }
 
+}
+
+
+/// اسکلتونِ صفحه‌ی جزئیات محصول: دقیقاً همان چیدمانِ صفحه‌ی بارگذاری‌شده
+/// (قابِ گالری + ریلِ تامبنیل، کارتِ اطلاعات، آکاردئون‌ها) با شیمر، تا هنگام
+/// آمدنِ داده هیچ پرشِ چیدمانی حس نشود.
+///
+/// نکته: ShaderMaskِ [Shimmer] روی هر پیکسلِ مات کشیده می‌شود، پس اگر
+/// کارت‌ها پس‌زمینه‌ی سفید داشته باشند با استخوان‌ها یکی می‌شوند و ساختار
+/// دیده نمی‌شود؛ این‌جا فقط استخوان روی پس‌زمینه‌ی صفحه چیده شده است.
+class _ProductDetailSkeleton extends StatelessWidget {
+  const _ProductDetailSkeleton({required this.desktop});
+
+  final bool desktop;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColor.milk,
+      child: Shimmer(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          child: desktop ? _desktop(context) : _mobile(context),
+        ),
+      ),
+    );
+  }
+
+  // ---- موبایل: گالری، کارت اطلاعات و آکاردئون‌ها روی هم ----
+  Widget _mobile(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+              16, MediaQuery.of(context).padding.top + 10, 16, 0),
+          child: _gallery(height: 400),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(34, 32, 34, 0),
+          child: _InfoBones(),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 30, 16, 0),
+          child: _AccordionBones(),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  // ---- دسکتاپ: گالری راست، اطلاعات چپ، آکاردئون‌ها تمام‌عرض زیرشان ----
+  Widget _desktop(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 24),
+        CenteredContent(
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 11, child: _gallery(height: 520)), // ~۵۵٪ عرض
+                const SizedBox(width: 24),
+                const Expanded(
+                  flex: 9,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 22),
+                    child: _InfoBones(withActions: true),
+                  ),
+                ), // ~۴۵٪ عرض
+              ],
+            ),
+          ),
+        ),
+        const CenteredContent(
+          child: Padding(
+            padding: EdgeInsets.only(top: 32),
+            child: _AccordionBones(),
+          ),
+        ),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  /// قابِ گالری: هدرِ شناور، رسانه‌ی اصلی و ریلِ عمودیِ تامبنیل
+  Widget _gallery({required double height}) {
+    return SizedBox(
+      height: height,
+      child: Stack(
+        children: [
+          // رسانه‌ی اصلی — فضای سمت راست برای ریل تامبنیل خالی می‌ماند
+          const Positioned.fill(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20, 76, 108, 20),
+              child: Bone(radius: AppShapes.rLg),
+            ),
+          ),
+          // هدر شناور: بازگشت (راست)، عنوان و اشتراک‌گذاری (چپ)
+          const Positioned(
+            top: 12,
+            left: 12,
+            right: 12,
+            child: Row(
+              children: [
+                Bone.circle(size: 40),
+                Expanded(child: Center(child: Bone(width: 64, height: 16))),
+                Bone.circle(size: 40),
+              ],
+            ),
+          ),
+          // ریل عمودی تامبنیل، چسبیده به لبه‌ی راست
+          const Positioned(
+            right: 14,
+            top: 76,
+            width: 76,
+            child: Column(
+              children: [
+                Bone(height: 72, radius: AppShapes.rMd),
+                SizedBox(height: 10),
+                Bone(height: 72, radius: AppShapes.rMd),
+                SizedBox(height: 10),
+                Bone(height: 72, radius: AppShapes.rMd),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// کارتِ اطلاعات: نام، قیمت، نمونه‌های رنگ، سایزها، بجِ موجودی و توضیحات
+class _InfoBones extends StatelessWidget {
+  const _InfoBones({this.withActions = false});
+
+  /// دسکتاپ دکمه‌های خرید را داخل همین کارت دارد
+  final bool withActions;
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // نام محصول (دو خط)
+          const Bone(height: 19, radius: 6),
+          const SizedBox(height: 10),
+          const Bone(width: 180, height: 19, radius: 6),
+          const SizedBox(height: 18),
+          // قیمت + نمونه‌های رنگ
+          const Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Bone(width: 150, height: 17, radius: 6),
+                    SizedBox(height: 8),
+                    Bone(width: 108, height: 12, radius: 6),
+                  ],
+                ),
+              ),
+              Bone.circle(size: 22),
+              SizedBox(width: 8),
+              Bone.circle(size: 22),
+              SizedBox(width: 8),
+              Bone.circle(size: 22),
+            ],
+          ),
+          // انتخاب سایز
+          const SizedBox(height: 22),
+          const Bone(width: 72, height: 14, radius: 6),
+          const SizedBox(height: 12),
+          const Row(
+            children: [
+              Bone.circle(size: 40),
+              SizedBox(width: 10),
+              Bone.circle(size: 40),
+              SizedBox(width: 10),
+              Bone.circle(size: 40),
+              SizedBox(width: 10),
+              Bone.circle(size: 40),
+            ],
+          ),
+          // بجِ موجودی
+          const SizedBox(height: 18),
+          const Bone(width: 140, height: 30, radius: 15),
+          if (withActions) ...[
+            const SizedBox(height: 24),
+            const Row(
+              children: [
+                Expanded(child: Bone(height: 52, radius: 26)),
+                SizedBox(width: 10),
+                Expanded(child: Bone(height: 52, radius: 26)),
+              ],
+            ),
+          ],
+          // توضیحات
+          const SizedBox(height: 22),
+          const Bone(width: 64, height: 14, radius: 6),
+          const SizedBox(height: 12),
+          const Bone(height: 13, radius: 6),
+          const SizedBox(height: 9),
+          const Bone(height: 13, radius: 6),
+          const SizedBox(height: 9),
+          const Bone(width: 220, height: 13, radius: 6),
+        ],
+      ),
+    );
+  }
+}
+
+/// آکاردئون‌های بسته: فقط سرصفحه‌ها دیده می‌شوند (ارتفاع ۵۸ = ۳۰ آیکن + ۲۸ پدینگ)
+class _AccordionBones extends StatelessWidget {
+  const _AccordionBones();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        Bone(height: 58, radius: AppShapes.rLg),
+        SizedBox(height: 12),
+        Bone(height: 58, radius: AppShapes.rLg),
+        SizedBox(height: 12),
+        Bone(height: 58, radius: AppShapes.rLg),
+        SizedBox(height: 12),
+        Bone(height: 58, radius: AppShapes.rLg),
+      ],
+    );
+  }
 }

@@ -11,6 +11,8 @@ Future<void> showVideoPlayerDialog(
   BuildContext context, {
   required String videoUrl,
   String? title,
+  Duration startAt = Duration.zero,
+  ValueChanged<VideoWatchProgress>? onProgress,
 }) {
   return showGeneralDialog(
     context: context,
@@ -18,8 +20,12 @@ Future<void> showVideoPlayerDialog(
     barrierLabel: 'بستن ویدیو',
     barrierColor: Colors.black87,
     transitionDuration: const Duration(milliseconds: 260),
-    pageBuilder: (_, __, ___) =>
-        VideoPlayerDialog(videoUrl: videoUrl, title: title),
+    pageBuilder: (_, __, ___) => VideoPlayerDialog(
+      videoUrl: videoUrl,
+      title: title,
+      startAt: startAt,
+      onProgress: onProgress,
+    ),
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final curved = CurvedAnimation(
         parent: animation,
@@ -37,11 +43,38 @@ Future<void> showVideoPlayerDialog(
   );
 }
 
+/// یک گزارشِ «تا کجا دیده شد» که دیالوگ هر چند ثانیه و موقعِ بسته‌شدن می‌دهد.
+class VideoWatchProgress {
+  const VideoWatchProgress({
+    required this.position,
+    required this.duration,
+    required this.finished,
+  });
+
+  final Duration position;
+  final Duration duration;
+
+  /// پخش به انتهای ویدیو رسید.
+  final bool finished;
+}
+
 class VideoPlayerDialog extends StatefulWidget {
   final String videoUrl;
   final String? title;
 
-  const VideoPlayerDialog({super.key, required this.videoUrl, this.title});
+  /// ادامه از محلِ توقفِ دفعه‌ی قبل.
+  final Duration startAt;
+
+  /// هر ۵ ثانیه، در پایانِ ویدیو، و هنگامِ بستنِ دیالوگ صدا زده می‌شود.
+  final ValueChanged<VideoWatchProgress>? onProgress;
+
+  const VideoPlayerDialog({
+    super.key,
+    required this.videoUrl,
+    this.title,
+    this.startAt = Duration.zero,
+    this.onProgress,
+  });
 
   @override
   State<VideoPlayerDialog> createState() => _VideoPlayerDialogState();
@@ -51,6 +84,8 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
   VideoPlayerController? _videoController;
   ChewieController? _chewieController;
   String? _error;
+  Duration _lastReported = Duration.zero;
+  bool _finished = false;
 
   @override
   void initState() {
@@ -66,6 +101,14 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
         vc.dispose();
         return;
       }
+      // ادامه از محلِ توقف؛ اگر آن محل عملاً پایانِ ویدیو بود از اول.
+      final total = vc.value.duration;
+      if (widget.startAt > Duration.zero &&
+          total > Duration.zero &&
+          widget.startAt < total - const Duration(seconds: 3)) {
+        await vc.seekTo(widget.startAt);
+      }
+      vc.addListener(_onTick);
       final cc = ChewieController(
         videoPlayerController: vc,
         autoPlay: true,
@@ -93,8 +136,34 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
     }
   }
 
+  /// گزارشِ پیشرفت: هر ۵ ثانیه یک‌بار تا نوشتنِ حافظه‌ی محلی زیاد نشود.
+  void _onTick() {
+    final v = _videoController?.value;
+    if (v == null || !v.isInitialized || v.duration <= Duration.zero) return;
+    final atEnd = v.position >= v.duration - const Duration(milliseconds: 800);
+    if (atEnd && !_finished) {
+      _finished = true;
+      _report(v.position, v.duration, finished: true);
+      return;
+    }
+    if ((v.position - _lastReported).abs() < const Duration(seconds: 5)) return;
+    _report(v.position, v.duration, finished: false);
+  }
+
+  void _report(Duration pos, Duration dur, {required bool finished}) {
+    _lastReported = pos;
+    widget.onProgress
+        ?.call(VideoWatchProgress(position: pos, duration: dur, finished: finished));
+  }
+
   @override
   void dispose() {
+    // آخرین محلِ توقف موقعِ بستن هم ثبت می‌شود، وگرنه تا ۵ ثانیه از دست می‌رود.
+    final v = _videoController?.value;
+    if (v != null && v.isInitialized && v.duration > Duration.zero) {
+      _report(v.position, v.duration, finished: _finished);
+    }
+    _videoController?.removeListener(_onTick);
     _chewieController?.dispose();
     _videoController?.dispose();
     super.dispose();

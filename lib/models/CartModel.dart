@@ -1,5 +1,6 @@
 // core/model/Cart.dart
 import 'package:marketky/models/ProductModel.dart';
+import 'package:marketky/utils/json_parse.dart';
 
 class CartItem {
   final int id;
@@ -22,13 +23,13 @@ class CartItem {
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
-      id: json['id'],
-      productId: json['product_id'],
+      id: requireInt(json['id'], 'id'),
+      productId: requireInt(json['product_id'], 'product_id'),
       name: json['name'],
       image: json['image'],
-      price: json['price'],
-      quantity: json['quantity'],
-      discountPrice: json['discount_price']
+      price: asInt(json['price']) ?? 0,
+      quantity: asInt(json['quantity']) ?? 1,
+      discountPrice: asInt(json['discount_price'])
     );
   }
 
@@ -52,8 +53,8 @@ class Cart {
     final items = itemsJson.map((item) => CartItem.fromJson(item)).toList();
     return Cart(
       items: items,
-      totalPrice: json['total_price'],
-      itemCount: json['item_count'],
+      totalPrice: asInt(json['total_price']) ?? 0,
+      itemCount: asInt(json['item_count']) ?? items.length,
     );
   }
 }
@@ -76,12 +77,12 @@ class CartItemFromBackend{
   factory CartItemFromBackend.fromJson(Map<String, dynamic> json) {
 
     return CartItemFromBackend(
-        id: json['id'],
-        quantity: json['quantity'],
+        id: requireInt(json['id'], 'items[].id'),
+        quantity: asInt(json['quantity']) ?? 1,
         product: json['product']==null? null:ProductInCart.fromJson(json['product']),
       course: json['course']==null?null:CourseInCart.fromJson(json['course']),
-        classes: json['classes'],
-        support_coach: json['support_coach'],
+        classes: asInt(json['classes']),
+        support_coach: asInt(json['support_coach']),
 
     );
   }
@@ -112,14 +113,14 @@ class TotalPriceFromBack{
   factory TotalPriceFromBack.fromJson(Map<String, dynamic> json) {
 
     return TotalPriceFromBack(
-        price: json['price'],
-        nat: json['nat']!=null ? json['nat'].toInt() : 0,
-        discountedPrice: json['discounted_price']!=null?json['discounted_price'].toInt(): 0,
+        price: asInt(json['price']),
+        nat: asInt(json['nat']) ?? 0,
+        discountedPrice: asInt(json['discounted_price']) ?? 0,
         isFreeShipping: json['is_free_shipping'],
-        freeShippingThreshold: json['free_shipping_threshold'],
-        postShippingPrice: json['post_shipping_price'],
-        peykShippingPrice: json['peyk_shipping_price'],
-        orderShippingPrice: json['order_shipping_price']
+        freeShippingThreshold: asInt(json['free_shipping_threshold']),
+        postShippingPrice: asInt(json['post_shipping_price']),
+        peykShippingPrice: asInt(json['peyk_shipping_price']),
+        orderShippingPrice: asInt(json['order_shipping_price'])
     );
   }
 }
@@ -138,7 +139,17 @@ class ProductInCart{
     required this.isActive,required this.price,required this.id
   });
   factory ProductInCart.fromJson(Map<String, dynamic> json){
-    return ProductInCart(id:json['id'],productVariant:ProductVariant.fromJson(json['product_variant']),size:json['size'],count:json['count'],disountPercentage:json['discount_percentage'],isActive:json['is_active'],price:json['price']);
+    return ProductInCart(
+      id: requireInt(json['id'], 'product.id'),
+      productVariant: json['product_variant'] == null
+          ? null
+          : ProductVariant.fromJson(json['product_variant']),
+      size: json['size'],
+      count: asInt(json['count']),
+      disountPercentage: asInt(json['discount_percentage']),
+      isActive: json['is_active'],
+      price: asInt(json['price']),
+    );
   }
 }
 
@@ -165,15 +176,15 @@ class CourseInCart{
     return CourseInCart(
         isActive: json['is_active'],
         image: json['image'],
-        price: json['price'],
+        price: asInt(json['price']),
         location: json['location'],
-        coach: json['coach'],
+        coach: asInt(json['coach']),
         courseName: json['course_name'],
         giftProduct:json['gift_product'] != null ? ProductVariant.fromJson(json['gift_product']) : null,
-        id:json['id'],
+        id:requireInt(json['id'], 'course.id'),
         shipmentRequired:json['shipment_required'],
-        discountPercentage:json['discount_percentage'],
-        capacity:json['capacity']
+        discountPercentage:asInt(json['discount_percentage']),
+        capacity:asInt(json['capacity'])
     );
   }
 }
@@ -191,7 +202,7 @@ class CartFromBackend{
     final itemsJson = json['items'] as List;
     final items = itemsJson.map((item) => CartItemFromBackend.fromJson(item)).toList();
     return CartFromBackend(
-        user: json['user'],
+        user: asInt(json['user']),
         price:TotalPriceFromBack.fromJson(json['price']) ,
         items: items
     );
@@ -215,7 +226,7 @@ class AllCartFromBackend{
     final items = itemsJson.map((item) => CartFromBackend.fromJson(item)).toList();
     return AllCartFromBackend(
       results: items,
-      count: json['count']
+      count: asInt(json['count']) ?? items.length
     );
   }
 }

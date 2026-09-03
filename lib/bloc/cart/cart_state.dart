@@ -57,3 +57,13 @@ class CartError extends CartState {
 class CartRequiresLogin extends CartError {
   const CartRequiresLogin() : super('نیاز به ورود دارید');
 }
+
+/// کالا واقعاً به سبد اضافه (یا حذف/ویرایش) شد، ولی خواندنِ دوباره‌ی سبد از
+/// سرور شکست خورد.
+///
+/// این را از [CartError] جدا نگه می‌داریم چون پیام «افزودن ناموفق بود» در
+/// این حالت دروغ است: عملیات انجام شده و فقط نمای سبد به‌روز نشده. صفحه‌ی
+/// محصول هم نباید انیمیشن افزودن را نصفه قطع کند.
+class CartRefreshFailed extends CartError {
+  const CartRefreshFailed(super.message);
+}

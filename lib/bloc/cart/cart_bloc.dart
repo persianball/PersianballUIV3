@@ -43,11 +43,20 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       try {
         await CartService.addToCart(
             event.context, event.productId, event.quantity);
-        emit(CartItemAdded('این کالا به سبد خرید اضافه شد')); // ← نمایش دیالوگ
+      } catch (e) {
+        emit(CartError('افزودن کالا ناموفق بود: ${e.toString()}'));
+        return;
+      }
+
+      emit(CartItemAdded('این کالا به سبد خرید اضافه شد')); // ← نمایش دیالوگ
+
+      // تازه‌سازی سبد مرحله‌ی جداگانه‌ای است: اگر اینجا خطا بدهد کالا از قبل
+      // اضافه شده، پس نباید پیام «افزودن ناموفق بود» نشان داده شود.
+      try {
         final cart = await CartService.fetchCart(event.context);
         emit(CartLoaded(cart));
       } catch (e) {
-        emit(CartError('افزودن کالا ناموفق بود: ${e.toString()}'));
+        emit(CartRefreshFailed('سبد به‌روز نشد: ${e.toString()}'));
       }
     });
 
