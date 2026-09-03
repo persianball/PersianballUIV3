@@ -59,7 +59,12 @@ class AppRouter {
         if (args is Map) {
           popOnSuccess = (args['popOnSuccess'] == true);
         }
-        return MaterialPageRoute(
+        // نوعِ صریح <bool> لازم است: صفحه‌ی ورود با pop(true) نتیجه برمی‌گرداند
+        // و فراخوان‌ها با pushNamed<bool> صدایش می‌زنند. بدون این، Navigator
+        // موقعِ push یک MaterialPageRoute<dynamic> را به Route<bool?> کست
+        // می‌کند و TypeError می‌دهد؛ یعنی دکمه‌ی «ورود به حساب» بی‌صدا از کار
+        // می‌افتاد.
+        return MaterialPageRoute<bool>(
           builder: (_) => LoginPage(popOnSuccess: popOnSuccess),
           settings: settings,
         );

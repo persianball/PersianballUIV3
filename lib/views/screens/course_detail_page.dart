@@ -786,7 +786,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               onTap: () => Navigator.of(context).maybePop(),
               child: const Padding(
                 padding: EdgeInsets.all(10),
-                child: Icon(Icons.arrow_forward_rounded,
+                child: Icon(Icons.arrow_back_rounded,
                     size: 20, color: AppColor.onSurface),
               ),
             ),
@@ -951,10 +951,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                     backgroundColor: AppColor.obsidianBg,
                     foregroundColor: AppColor.onSurface,
                     automaticallyImplyLeading: false,
-                    // در RTL دکمه‌ی بازگشت باید سمت راست و با فلشِ راست باشد،
-                    // هم‌راستا با بقیه‌ی صفحات اپ.
+                    // در RTL دکمه‌ی بازگشت باید سمت راست و با فلشِ راست باشد.
+                    // arrow_back در RTL خودش آینه می‌شود و به راست اشاره می‌کند؛
+                    // arrow_forward برعکس، آینه شده و به چپ می‌رفت.
                     leading: IconButton(
-                      icon: const Icon(Icons.arrow_forward_rounded),
+                      icon: const Icon(Icons.arrow_back_rounded),
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
                     title: const Text('جزییات دوره',
