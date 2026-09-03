@@ -147,10 +147,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
           if (state is ProductDetailLoading) {
             return _buildLoading();
           } else if (state is ProductDetailError) {
-            return _buildError(state.message, context);
+            return RefreshIndicator(
+              color: AppColor.pitchGreen,
+              backgroundColor: AppColor.card,
+              onRefresh: _refresh,
+              child: _buildError(state.message, context),
+            );
           } else if (state is ProductDetailLoaded) {
             _ensureInitialVariant(state.product);
-            return _buildProductContent(state.product, context);
+            return RefreshIndicator(
+              color: AppColor.pitchGreen,
+              backgroundColor: AppColor.card,
+              onRefresh: _refresh,
+              child: _buildProductContent(state.product, context),
+            );
           }
 
           return _buildLoading();
@@ -184,6 +194,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     });
   }
 
+  /// «کشیدن برای تازه‌سازی»: جزییات محصول را دوباره می‌گیرد و تا رسیدن
+  /// وضعیت نهاییِ بلاک منتظر می‌ماند تا حلقه‌ی نشانگر زودتر از داده محو نشود.
+  Future<void> _refresh() async {
+    final bloc = context.read<ProductDetailBloc>();
+    bloc.add(FetchProductDetail(widget.productId));
+    await bloc.stream
+        .firstWhere((s) => s is! ProductDetailLoading)
+        .timeout(const Duration(seconds: 20), onTimeout: () => bloc.state);
+  }
+
   Widget _buildLoading() {
     return Container(
       color: AppColor.milk,
@@ -195,28 +215,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   Widget _buildError(String message, BuildContext context) {
     return Container(
       color: AppColor.milk,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              message,
-              style: const TextStyle(
-                  fontFamily: 'Estedad', color: AppColor.danger),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 14),
-            GradientButton(
-              label: 'تلاش مجدد',
-              expand: false,
-              height: 42,
-              fontSize: 13,
-              icon: const Icon(Icons.refresh_rounded),
-              onPressed: () => context
-                  .read<ProductDetailBloc>()
+      // اسکرول‌پذیر تا در حالت خطا هم بتوان صفحه را پایین کشید و تازه کرد
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  message,
+                  style: const TextStyle(
+                      fontFamily: 'Estedad', color: AppColor.danger),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 14),
+                GradientButton(
+                  label: 'تلاش مجدد',
+                  expand: false,
+                  height: 42,
+                  fontSize: 13,
+                  icon: const Icon(Icons.refresh_rounded),
+                  onPressed: () => context
+                      .read<ProductDetailBloc>()
                   .add(FetchProductDetail(widget.productId)),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -387,7 +414,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
         // داخل پوسته‌ی ۱۲۰۰ پیکسلی، آکاردئون‌ها زیرشان به عرض کامل پوسته.
         if (AppBreakpoints.isDesktop(context)) {
           return ListView(
-            physics: const BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
             padding: EdgeInsets.zero,
             children: [
               const SizedBox(height: 24),
@@ -424,7 +452,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
           );
         }
         return ListView(
-          physics: const BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics()),
           padding: EdgeInsets.zero,
           children: [
             _buildGalleryPanel(product, variant),

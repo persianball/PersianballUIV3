@@ -76,11 +76,22 @@ class _HomePageState extends State<HomePage> {
         .whenComplete(() => _snappingHero = false);
   }
 
-  reloadHomePage() {
-    context.read<ProductBloc>().add(FetchProducts());
+  /// همه‌ی داده‌های صفحه‌ی خانه را دوباره می‌گیرد. Future برمی‌گرداند تا
+  /// نشانگر «کشیدن برای تازه‌سازی» تا پایان واقعیِ بارگذاری بچرخد؛ پیش‌تر
+  /// چون هیچ‌چیز await نمی‌شد، حلقه بلافاصله محو می‌شد.
+  Future<void> reloadHomePage() async {
+    final productBloc = context.read<ProductBloc>();
+    productBloc.add(FetchProducts());
     context.read<CartBloc>().add(LoadCart(context));
-    _loadFeaturedCourse();
-    _loadUserName();
+    await Future.wait<void>([
+      productBloc.stream
+          .firstWhere((s) => s is! ProductLoading)
+          .timeout(const Duration(seconds: 20),
+              onTimeout: () => productBloc.state)
+          .then((_) {}),
+      _loadFeaturedCourse(),
+      _loadUserName(),
+    ]);
   }
 
   Future<void> _loadFeaturedCourse() async {
@@ -201,7 +212,7 @@ class _HomePageState extends State<HomePage> {
                 return RefreshIndicator(
                   color: AppColor.pitchGreen,
                   backgroundColor: AppColor.card,
-                  onRefresh: () async => reloadHomePage(),
+                  onRefresh: reloadHomePage,
                   child: NotificationListener<ScrollEndNotification>(
                   onNotification: (n) {
                     if (isBigScreen && n.depth == 0) _snapHero(heroHeight);

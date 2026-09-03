@@ -132,6 +132,71 @@ class _AppSliderState extends State<AppSlider> {
   }
 }
 
+// ===================== زمان‌بندیِ رفتن به اسلاید بعد =====================
+
+/// مدت ماندنِ یک اسلاید *تصویری* روی صفحه.
+const Duration _kHeroInterval = Duration(seconds: 6);
+const Duration _kPhoneInterval = Duration(seconds: 5);
+
+/// سقفِ ماندن روی اسلاید ویدیویی؛ اگر ویدیو لود نشد یا رویدادِ پایانش
+/// نرسید، اسلایدر گیر نمی‌کند.
+const Duration _kVideoTimeout = Duration(seconds: 45);
+
+/// اسلاید بعدی خودش می‌آید: تصویرها بعد از [_interval] و ویدیوها بعد از
+/// اینکه کامل پخش شدند (یا سقفِ [_kVideoTimeout]).
+mixin _AutoAdvance<T extends StatefulWidget> on State<T> {
+  final CarouselSliderController carousel = CarouselSliderController();
+  Timer? _timer;
+  int _index = 0;
+
+  List<SliderItem> get slides;
+  Duration get _interval;
+
+  bool get _canAdvance =>
+      slides.length > 1 &&
+      !(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => scheduleNext());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  /// روی اسلاید ویدیویی تایمرِ عادی نداریم؛ فقط تایمرِ ایمنی.
+  void scheduleNext() {
+    _timer?.cancel();
+    if (!mounted || !_canAdvance) return;
+    final bool video = slides[_index].isVideo;
+    _timer = Timer(video ? _kVideoTimeout : _interval, _advance);
+  }
+
+  void _advance() {
+    if (!mounted || !_canAdvance) return;
+    carousel.nextPage(
+      duration: const Duration(milliseconds: 850),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// ویدیوی اسلاید [i] تمام شد؛ فقط اگر همان اسلایدِ روی صفحه باشد جلو می‌رویم.
+  void onVideoEnded(int i) {
+    if (i != _index) return;
+    _timer?.cancel();
+    _advance();
+  }
+
+  void onPageChanged(int i) {
+    setState(() => _index = i);
+    scheduleNext();
+  }
+}
+
 const double _kCoverflowCardHeight = 200;
 const double _kCoverflowBlockHeight = _kCoverflowCardHeight + 40; // + نقاط
 
@@ -154,14 +219,16 @@ class _DesktopHero extends StatefulWidget {
   State<_DesktopHero> createState() => _DesktopHeroState();
 }
 
-class _DesktopHeroState extends State<_DesktopHero> {
-  int _index = 0;
+class _DesktopHeroState extends State<_DesktopHero> with _AutoAdvance {
+  @override
+  List<SliderItem> get slides => widget.items;
+
+  @override
+  Duration get _interval => _kHeroInterval;
 
   @override
   Widget build(BuildContext context) {
     final items = widget.items;
-    final bool reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final bool multi = items.length > 1;
 
     return SizedBox(
@@ -171,18 +238,20 @@ class _DesktopHeroState extends State<_DesktopHero> {
         children: [
           Positioned.fill(
             child: CarouselSlider(
+              carouselController: carousel,
               options: CarouselOptions(
                 height: widget.height,
                 viewportFraction: 1.0,
-                autoPlay: !reduceMotion && multi,
-                autoPlayInterval: const Duration(seconds: 6),
-                autoPlayAnimationDuration: const Duration(milliseconds: 900),
-                autoPlayCurve: Curves.easeOutCubic,
-                pauseAutoPlayOnTouch: true,
-                onPageChanged: (i, _) => setState(() => _index = i),
+                // جلو رفتن دستِ خودمان است تا ویدیو وسطِ پخش قطع نشود.
+                autoPlay: false,
+                onPageChanged: (i, _) => onPageChanged(i),
               ),
               items: [
-                for (final item in items) _HeroSlide(item: item),
+                for (int i = 0; i < items.length; i++)
+                  _HeroSlide(
+                    item: items[i],
+                    onVideoEnded: () => onVideoEnded(i),
+                  ),
               ],
             ),
           ),
@@ -210,19 +279,26 @@ class _DesktopHeroState extends State<_DesktopHero> {
 
 /// رسانه‌ی یک اسلاید: اگر نوعش video باشد ویدیو پخش می‌شود، وگرنه تصویر.
 class _SlideMedia extends StatelessWidget {
-  const _SlideMedia({required this.item});
+  const _SlideMedia({required this.item, this.onVideoEnded});
 
   final SliderItem item;
+
+  /// وقتی ویدیوی این اسلاید تا آخر پخش شد؛ اسلایدر با آن به اسلاید بعد می‌رود.
+  final VoidCallback? onVideoEnded;
 
   @override
   Widget build(BuildContext context) {
     if (item.isVideo) {
-      // پخش خودکار: مرورگرها فقط ویدیوی بی‌صدا را اجازه می‌دهند، پس
-      // muted لازمه‌ی کار کردنِ autoPlay روی وب است.
+      // پخش خودکارِ بی‌صدا: هم لازمه‌ی مجاز بودنِ autoPlay در مرورگر است و
+      // هم صدای ناگهانی توی گوشِ کاربر نمی‌خواند (اگر خواست، از کنترل‌های
+      // خودِ پخش‌کننده صدا را باز می‌کند).
       return InlineVideoPlayer(
         videoUrl: item.videoUrl!,
         autoPlay: true,
         muted: true,
+        // تکرار نمی‌شود تا بعدِ پایانِ ویدیو نوبت به اسلاید بعدی برسد.
+        looping: onVideoEnded == null,
+        onCompleted: onVideoEnded,
       );
     }
     return AppNetworkImage(url: item.imageUrl, fit: BoxFit.cover);
@@ -230,9 +306,10 @@ class _SlideMedia extends StatelessWidget {
 }
 
 class _HeroSlide extends StatelessWidget {
-  const _HeroSlide({required this.item});
+  const _HeroSlide({required this.item, this.onVideoEnded});
 
   final SliderItem item;
+  final VoidCallback? onVideoEnded;
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +321,7 @@ class _HeroSlide extends StatelessWidget {
     final Widget slide = Stack(
       fit: StackFit.expand,
       children: [
-        _SlideMedia(item: item),
+        _SlideMedia(item: item, onVideoEnded: onVideoEnded),
         if (!item.isVideo)
         const DecoratedBox(
           decoration: BoxDecoration(
@@ -323,14 +400,16 @@ class _PhoneCoverflow extends StatefulWidget {
   State<_PhoneCoverflow> createState() => _PhoneCoverflowState();
 }
 
-class _PhoneCoverflowState extends State<_PhoneCoverflow> {
-  int _index = 0;
+class _PhoneCoverflowState extends State<_PhoneCoverflow> with _AutoAdvance {
+  @override
+  List<SliderItem> get slides => widget.items;
+
+  @override
+  Duration get _interval => _kPhoneInterval;
 
   @override
   Widget build(BuildContext context) {
     final items = widget.items;
-    final bool reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final bool single = items.length < 2;
 
     return Column(
@@ -339,6 +418,7 @@ class _PhoneCoverflowState extends State<_PhoneCoverflow> {
         SizedBox(
           height: _kCoverflowCardHeight,
           child: CarouselSlider.builder(
+            carouselController: carousel,
             itemCount: items.length,
             options: CarouselOptions(
               height: _kCoverflowCardHeight,
@@ -346,14 +426,14 @@ class _PhoneCoverflowState extends State<_PhoneCoverflow> {
               enlargeCenterPage: true,
               enlargeFactor: 0.28,
               enlargeStrategy: CenterPageEnlargeStrategy.zoom,
-              autoPlay: !reduceMotion && !single,
-              autoPlayInterval: const Duration(seconds: 5),
-              autoPlayAnimationDuration: const Duration(milliseconds: 850),
-              autoPlayCurve: Curves.easeOutCubic,
-              pauseAutoPlayOnTouch: true,
-              onPageChanged: (i, _) => setState(() => _index = i),
+              // جلو رفتن دستِ خودمان است تا ویدیو وسطِ پخش قطع نشود.
+              autoPlay: false,
+              onPageChanged: (i, _) => onPageChanged(i),
             ),
-            itemBuilder: (context, i, _) => _CoverflowCard(item: items[i]),
+            itemBuilder: (context, i, _) => _CoverflowCard(
+              item: items[i],
+              onVideoEnded: () => onVideoEnded(i),
+            ),
           ),
         ),
         if (!single) ...[
@@ -366,9 +446,10 @@ class _PhoneCoverflowState extends State<_PhoneCoverflow> {
 }
 
 class _CoverflowCard extends StatelessWidget {
-  const _CoverflowCard({required this.item});
+  const _CoverflowCard({required this.item, this.onVideoEnded});
 
   final SliderItem item;
+  final VoidCallback? onVideoEnded;
 
   @override
   Widget build(BuildContext context) {
@@ -388,7 +469,7 @@ class _CoverflowCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _SlideMedia(item: item),
+              _SlideMedia(item: item, onVideoEnded: onVideoEnded),
               if (item.hasCaption && !item.isVideo)
                 const DecoratedBox(
                   decoration: BoxDecoration(

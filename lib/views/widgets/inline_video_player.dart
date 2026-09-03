@@ -14,6 +14,8 @@ class InlineVideoPlayer extends StatefulWidget {
     this.autoPlay = true,
     this.muted = false,
     this.showControls = true,
+    this.looping = true,
+    this.onCompleted,
   });
 
   final String videoUrl;
@@ -24,6 +26,13 @@ class InlineVideoPlayer extends StatefulWidget {
 
   final bool showControls;
 
+  /// تکرارِ بی‌پایان. برای اسلایدری که بعدِ پایانِ ویدیو به اسلاید بعد
+  /// می‌رود باید false باشد تا [onCompleted] صدا زده شود.
+  final bool looping;
+
+  /// یک‌بار، وقتی پخش به انتهای ویدیو رسید.
+  final VoidCallback? onCompleted;
+
   @override
   State<InlineVideoPlayer> createState() => _InlineVideoPlayerState();
 }
@@ -32,6 +41,7 @@ class _InlineVideoPlayerState extends State<InlineVideoPlayer> {
   VideoPlayerController? _video;
   ChewieController? _chewie;
   String? _error;
+  bool _completed = false;
 
   @override
   void initState() {
@@ -43,6 +53,7 @@ class _InlineVideoPlayerState extends State<InlineVideoPlayer> {
   void didUpdateWidget(covariant InlineVideoPlayer old) {
     super.didUpdateWidget(old);
     if (old.videoUrl != widget.videoUrl) {
+      _completed = false;
       _dispose();
       _init();
     }
@@ -57,10 +68,11 @@ class _InlineVideoPlayerState extends State<InlineVideoPlayer> {
         return;
       }
       if (widget.muted) await vc.setVolume(0);
+      if (!widget.looping) vc.addListener(_watchForEnd);
       final cc = ChewieController(
         videoPlayerController: vc,
         autoPlay: widget.autoPlay,
-        looping: true,
+        looping: widget.looping,
         showControls: widget.showControls,
         aspectRatio: vc.value.aspectRatio,
         // BoxFit.contain یعنی کل فریم دیده شود و چیزی از ویدیو بریده نشود
@@ -88,7 +100,19 @@ class _InlineVideoPlayerState extends State<InlineVideoPlayer> {
     }
   }
 
+  /// پایانِ پخش: video_player رویدادِ «تمام شد» ندارد، پس از روی موقعیت
+  /// تشخیص داده می‌شود و فقط یک‌بار خبر می‌دهد.
+  void _watchForEnd() {
+    final v = _video?.value;
+    if (v == null || !v.isInitialized || _completed) return;
+    if (v.duration > Duration.zero && v.position >= v.duration) {
+      _completed = true;
+      widget.onCompleted?.call();
+    }
+  }
+
   void _dispose() {
+    _video?.removeListener(_watchForEnd);
     _chewie?.dispose();
     _video?.dispose();
     _chewie = null;

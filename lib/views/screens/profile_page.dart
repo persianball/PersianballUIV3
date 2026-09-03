@@ -97,6 +97,10 @@ class _ProfilePageState extends State<ProfilePage> {
   /// null یعنی هنوز بررسی نشده
   bool? _loggedIn;
 
+  /// با هر «کشیدن برای تازه‌سازی» یکی زیاد می‌شود؛ کلیدِ فرمِ تکمیل اطلاعات
+  /// عوض شده و فرم دوباره ساخته می‌شود، پس اطلاعات کاربر از سرور تازه می‌آید.
+  int _refreshTick = 0;
+
   @override
   void initState() {
     super.initState();
@@ -107,6 +111,14 @@ class _ProfilePageState extends State<ProfilePage> {
     final loggedIn = await AuthService.isLoggedIn();
     if (!mounted) return;
     setState(() => _loggedIn = loggedIn);
+  }
+
+  /// «کشیدن برای تازه‌سازی»: وضعیت ورود دوباره بررسی می‌شود و فرم اطلاعات
+  /// کاربر از نو بارگذاری می‌شود.
+  Future<void> _refresh() async {
+    await _checkAuth();
+    if (!mounted) return;
+    setState(() => _refreshTick++);
   }
 
   @override
@@ -132,8 +144,16 @@ class _ProfilePageState extends State<ProfilePage> {
           }
         },
         child: _loggedIn == null
-            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
-            : (_loggedIn! ? _buildProfile(context) : _buildGuestView(context)),
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColor.goldEnd))
+            : RefreshIndicator(
+                color: AppColor.goldEnd,
+                backgroundColor: AppColor.card,
+                onRefresh: _refresh,
+                child: _loggedIn!
+                    ? _buildProfile(context)
+                    : _buildGuestView(context),
+              ),
       ),
     );
   }
@@ -142,7 +162,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildGuestView(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Center(
+      // اسکرول‌پذیر تا حالت مهمان هم قابل تازه‌سازی باشد (مثلاً بعد از ورود
+      // از مسیری دیگر) — Center به‌تنهایی هیچ اسکرولی برای کشیدن ندارد
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
         // در دسکتاپ کارت مهمان تمام‌عرض نشود؛ در موبایل بی‌اثر است
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -228,6 +255,9 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           ),
         ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -239,7 +269,8 @@ class _ProfilePageState extends State<ProfilePage> {
     }
     return ListView(
           shrinkWrap: true,
-          physics: BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics()),
           children: [
             // Section 1 - Profile Picture - Username - Name
             _profileHeaderCard(context),
@@ -249,7 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
               textDirection: TextDirection.rtl,
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: _ProfileCompletionForm(),
+                child: _ProfileCompletionForm(key: ValueKey(_refreshTick)),
               ),
             ),
 
@@ -277,7 +308,8 @@ class _ProfilePageState extends State<ProfilePage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Center(
           child: ConstrainedBox(
@@ -303,7 +335,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             shape: AppShapes.border(AppShapes.rLg),
                             shadows: AppColor.cardShadow,
                           ),
-                          child: _ProfileCompletionForm(),
+                          child:
+                              _ProfileCompletionForm(key: ValueKey(_refreshTick)),
                         ),
                       ],
                     ),
@@ -487,6 +520,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
 // ==== PROFILE COMPLETION FORM WIDGET ====
 class _ProfileCompletionForm extends StatefulWidget {
+  const _ProfileCompletionForm({super.key});
+
   @override
   State<_ProfileCompletionForm> createState() => _ProfileCompletionFormState();
 }

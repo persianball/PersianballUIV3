@@ -27,6 +27,10 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     with SingleTickerProviderStateMixin {
   late Future<CourseDetailResponse> _future;
 
+  /// آخرین داده‌ی موفق؛ هنگام «کشیدن برای تازه‌سازی» نگه داشته می‌شود تا
+  /// محتوای صفحه با یک اسپینر تمام‌صفحه جایگزین نشود.
+  CourseDetailResponse? _lastData;
+
   /// واریانتِ انتخاب‌شده (زمان/مکان برگزاری). پیش‌تر دکمه‌ی خرید همیشه
   /// اولین واریانتِ فعال را می‌فرستاد، پس دوره‌های چندزمانه عملاً فقط یک
   /// گزینه‌ی قابل‌خرید داشتند.
@@ -39,10 +43,32 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     // اولین واریانتِ فعال از ابتدا انتخاب می‌شود تا دکمه‌ی خرید هیچ‌وقت
     // بدون گزینه نماند.
     _future.then((data) {
-      if (!mounted || _selectedVariantId != null) return;
+      if (!mounted) return;
+      _lastData = data;
+      if (_selectedVariantId != null) return;
       final active = _activeVariants(data);
       if (active.isNotEmpty) setState(() => _selectedVariantId = active.first.id);
     }).catchError((_) {});
+  }
+
+  /// «کشیدن برای تازه‌سازی»: جزییات دوره را دوباره می‌گیرد. اگر واریانتِ
+  /// انتخاب‌شده دیگر فعال نباشد، اولین واریانت فعالِ جدید انتخاب می‌شود.
+  Future<void> _refresh() async {
+    final future = CourseService.fetchCourseDetail(id: widget.id);
+    setState(() => _future = future);
+    try {
+      final data = await future;
+      if (!mounted) return;
+      _lastData = data;
+      final active = _activeVariants(data);
+      final stillValid = active.any((v) => v.id == _selectedVariantId);
+      if (!stillValid) {
+        setState(() =>
+            _selectedVariantId = active.isEmpty ? null : active.first.id);
+      }
+    } catch (_) {
+      // خطا را همان FutureBuilder نمایش می‌دهد
+    }
   }
 
   List<CourseTimeAndLocationItem> _activeVariants(CourseDetailResponse data) =>
@@ -938,7 +964,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Widget _desktopBody(CourseDetailResponse data) {
     const double maxWidth = 1000;
     return ListView(
-      physics: const BouncingScrollPhysics(),
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
       padding: EdgeInsets.zero,
       children: [
         const SizedBox(height: 20),
@@ -972,13 +999,21 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         backgroundColor: AppColor.obsidianBg,
         body: Directionality(
           textDirection: TextDirection.rtl,
-          child: FutureBuilder<CourseDetailResponse>(
+          child: RefreshIndicator(
+            color: AppColor.goldEnd,
+            backgroundColor: AppColor.surfaceContainer,
+            onRefresh: _refresh,
+            child: FutureBuilder<CourseDetailResponse>(
             future: _future,
             builder: (context, snapshot) {
+              // در حال تازه‌سازی، داده‌ی قبلی روی صفحه می‌ماند
+              final cached = snapshot.data ?? _lastData;
               if (snapshot.connectionState != ConnectionState.done) {
+                if (cached != null) return _body(cached);
                 return const Center(child: CircularProgressIndicator(color: AppColor.goldEnd));
               }
               if (snapshot.hasError || !snapshot.hasData) {
+                if (cached != null) return _body(cached);
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -1007,12 +1042,47 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                 );
               }
       
-              final data = snapshot.data!;
-              // دسکتاپ: تصویر و اطلاعات کلیدی کنار هم، بقیه‌ی بخش‌ها زیرشان
-              if (AppBreakpoints.isDesktop(context)) {
-                return _desktopBody(data);
-              }
-              return CustomScrollView(
+              return _body(snapshot.data!);
+            },
+          ),
+          ),
+        ),
+        // این صفحه هیچ شنونده‌ای برای CartBloc نداشت: بعد از «افزودن به سبد»
+        // نه پیام موفقیت می‌آمد و نه خطا، و کاربر فکر می‌کرد دکمه کار نمی‌کند.
+        bottomNavigationBar: BlocListener<CartBloc, CartState>(
+          listener: _onCartState,
+          child: BlocBuilder<CartBloc, CartState>(
+          builder: (context, cartState) {
+            // دسکتاپ: نوار پایین حذف می‌شود و همین دکمه‌ها داخل پنل اطلاعات
+            // رندر می‌شوند؛ منطق شیت افزودن به سبد دست‌نخورده باقی می‌ماند.
+            if (AppBreakpoints.isDesktop(context)) {
+              return const SizedBox.shrink();
+            }
+            return Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              decoration: ShapeDecoration(
+                color: AppColor.card,
+                shape: AppShapes.borderTop(AppShapes.rXl),
+                shadows: AppColor.floatingShadow,
+              ),
+              child: _actionSection(),
+            );
+          },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// بدنه‌ی صفحه با داده‌ی آماده (دسکتاپ/موبایل)
+  Widget _body(CourseDetailResponse data) {
+    // دسکتاپ: تصویر و اطلاعات کلیدی کنار هم، بقیه‌ی بخش‌ها زیرشان
+    if (AppBreakpoints.isDesktop(context)) {
+      return _desktopBody(data);
+    }
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
                   SliverAppBar(
                     pinned: true,
@@ -1083,34 +1153,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
               );
-            },
-          ),
-        ),
-        // این صفحه هیچ شنونده‌ای برای CartBloc نداشت: بعد از «افزودن به سبد»
-        // نه پیام موفقیت می‌آمد و نه خطا، و کاربر فکر می‌کرد دکمه کار نمی‌کند.
-        bottomNavigationBar: BlocListener<CartBloc, CartState>(
-          listener: _onCartState,
-          child: BlocBuilder<CartBloc, CartState>(
-          builder: (context, cartState) {
-            // دسکتاپ: نوار پایین حذف می‌شود و همین دکمه‌ها داخل پنل اطلاعات
-            // رندر می‌شوند؛ منطق شیت افزودن به سبد دست‌نخورده باقی می‌ماند.
-            if (AppBreakpoints.isDesktop(context)) {
-              return const SizedBox.shrink();
-            }
-            return Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              decoration: ShapeDecoration(
-                color: AppColor.card,
-                shape: AppShapes.borderTop(AppShapes.rXl),
-                shadows: AppColor.floatingShadow,
-              ),
-              child: _actionSection(),
-            );
-          },
-          ),
-        ),
-      ),
-    );
   }
 
   /// بازخوردِ افزودن دوره به سبد — همان الگوی صفحه‌ی محصول
