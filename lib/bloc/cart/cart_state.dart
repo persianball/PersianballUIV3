@@ -49,3 +49,11 @@ class CartError extends CartState {
   @override
   List<Object?> get props => [message];
 }
+
+/// مهمان بودن، «خطا» نیست: صفحه‌ی سبد باید دعوت به ورود نشان دهد، ولی
+/// صفحه‌های محصول/دوره که سبد را در پس‌زمینه بار می‌کنند نباید اسنک‌بار
+/// قرمز بدهند. زیرکلاسِ CartError است تا هر `is CartError` موجود
+/// دست‌نخورده کار کند.
+class CartRequiresLogin extends CartError {
+  const CartRequiresLogin() : super('نیاز به ورود دارید');
+}

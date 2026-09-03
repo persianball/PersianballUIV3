@@ -337,6 +337,25 @@ class _MyAppState extends State<MyApp> {
         // به‌صورت خودکار از defaultRouteName (همان URL مرورگر) خوانده
         // می‌شود و لینک مستقیم به صفحات داخلی درست کار می‌کند.
         onGenerateRoute: AppRouter.onGenerateRoute,
+        // رفتار پیش‌فرض فلاتر برای مسیر اولیه‌ی چندبخشی، پشته را از روی
+        // بخش‌های مسیر می‌سازد: '/course/20' تبدیل می‌شود به
+        // ['/', '/course', '/course/20']. آن '/' یعنی SplashRouter هم ساخته
+        // می‌شود و بعد از یک فریم pushReplacementNamed می‌زند، که صفحه‌ی
+        // دیپ‌لینک‌شده را با '/welcome' یا '/home' جایگزین می‌کرد؛ یعنی
+        // رفرشِ /#/course/20 کاربر را به صفحه‌ی خوش‌آمد می‌انداخت.
+        // اینجا پشته صریحاً ساخته می‌شود: خانه در پایین (تا دکمه‌ی برگشت
+        // کار کند) و خودِ مسیر دیپ‌لینک روی آن.
+        onGenerateInitialRoutes: (initialRoute) {
+          if (initialRoute == '/' || initialRoute.isEmpty) {
+            return [
+              AppRouter.onGenerateRoute(const RouteSettings(name: '/')),
+            ];
+          }
+          return [
+            AppRouter.onGenerateRoute(const RouteSettings(name: '/home')),
+            AppRouter.onGenerateRoute(RouteSettings(name: initialRoute)),
+          ];
+        },
       ),
     );
   }

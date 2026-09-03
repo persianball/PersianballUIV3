@@ -22,7 +22,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       // permanent blank CartLoading screen for guests.
       final token = await AuthService.getToken();
       if (token == null || token.isEmpty) {
-        emit(CartError('نیاز به ورود دارید'));
+        emit(const CartRequiresLogin());
         return;
       }
 

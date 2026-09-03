@@ -1211,7 +1211,10 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         ),
       );
     }
-    if (cartState is CartError) {
+    // بارگذاریِ پس‌زمینه‌ی سبد برای کاربر مهمان خطا نیست؛ پیش‌تر همین
+    // حالت روی هر صفحه‌ی محصول/دوره یک اسنک‌بار قرمز «نیاز به ورود دارید»
+    // می‌انداخت، بی‌آنکه کاربر کاری کرده باشد.
+    if (cartState is CartError && cartState is! CartRequiresLogin) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(cartState.message,

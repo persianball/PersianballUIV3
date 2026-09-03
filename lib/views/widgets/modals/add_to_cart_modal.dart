@@ -11,6 +11,7 @@ import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/utils/login_prompt.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:marketky/views/widgets/cart_flight_animation.dart';
 import 'package:marketky/views/widgets/page_container.dart';
 
 class AddToCartModal extends StatefulWidget {
@@ -31,6 +32,9 @@ class AddToCartModal extends StatefulWidget {
 
 class _AddToCartModalState extends State<AddToCartModal> {
   late int _quantity;
+
+  /// تصویر کالا داخل شیت — مبدأ انیمیشن پرواز به سبد
+  final GlobalKey _thumbKey = GlobalKey();
 
   @override
   void initState() {
@@ -125,6 +129,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
                       SquircleClip(
                         radius: AppShapes.rMd,
                         child: Container(
+                          key: _thumbKey,
                           width: 56,
                           height: 56,
                           color: AppColor.cardMuted,
@@ -290,7 +295,23 @@ class _AddToCartModalState extends State<AddToCartModal> {
                     context
                         .read<CartBloc>()
                         .add(AddToCart(context, widget.cartItem.id, _quantity));
+
+                    // مبدأ پرواز و کانتکست Overlay ریشه را پیش از بسته‌شدن
+                    // شیت برمی‌داریم؛ بعد از pop دیگر در دسترس نیستند.
+                    final rect = CartFlightOverlay.rectOf(_thumbKey);
+                    final rootContext =
+                        Navigator.of(context, rootNavigator: true).context;
+                    final image = _imageUrl(widget.cartItem.image);
+
                     Navigator.of(context).pop();
+
+                    if (rect != null) {
+                      CartFlightOverlay.launch(
+                        rootContext,
+                        imageUrl: image,
+                        sourceRect: rect,
+                      );
+                    }
                   },
                 ),
               ],

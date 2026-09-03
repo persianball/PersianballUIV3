@@ -25,6 +25,10 @@ class SplashRouter extends StatelessWidget {
           );
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          // اگر روی این صفحه چیز دیگری باز است (مثلاً یک دیپ‌لینک)، جایگزین
+          // کردن، آن صفحه را می‌بندد نه این را. فقط وقتی خودمان رویِ پشته‌ایم.
+          final route = ModalRoute.of(context);
+          if (route == null || !route.isCurrent) return;
           Navigator.of(context).pushReplacementNamed(snapshot.data!);
         });
         return const Scaffold(backgroundColor: AppColor.obsidianBg);

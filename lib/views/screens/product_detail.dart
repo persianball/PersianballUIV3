@@ -20,6 +20,7 @@ import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/widgets/html_description_image.dart';
+import 'package:marketky/views/widgets/cart_flight_animation.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
@@ -328,6 +329,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   /// داخل پنل اطلاعات (دسکتاپ) مشترک است — منطق قبلی بدون تغییر.
   void _onCartState(BuildContext context, CartState cartState) {
     if (cartState is CartItemAdded) {
+      // وقتی انیمیشن پرواز کالا به سبد در حال اجراست، خودِ انیمیشن نقش
+      // تأییدیه را دارد؛ دیالوگ نباید روی آن بیفتد.
+      if (CartFlightOverlay.isRunning) return;
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -361,7 +365,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
         ),
       );
     }
-    if (cartState is CartError) {
+    // بارگذاریِ پس‌زمینه‌ی سبد برای کاربر مهمان خطا نیست؛ پیش‌تر همین
+    // حالت روی هر صفحه‌ی محصول/دوره یک اسنک‌بار قرمز «نیاز به ورود دارید»
+    // می‌انداخت، بی‌آنکه کاربر کاری کرده باشد.
+    if (cartState is CartError && cartState is! CartRequiresLogin) {
+      // خطا یعنی چیزی به سبد اضافه نشد؛ انیمیشن باید فوراً قطع شود.
+      CartFlightOverlay.dismiss();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(cartState.message,
