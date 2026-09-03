@@ -4,6 +4,7 @@ import 'package:marketky/constant/app_shapes.dart';
 
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
+import 'package:marketky/views/widgets/category_pill_bar.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_text_styles.dart';
 import 'package:marketky/models/ProductModel.dart';
@@ -215,68 +216,22 @@ class _CatalogPageState extends State<CatalogPage> {
 
   Widget _buildCategoryChips() {
     final bool isDesktop = AppBreakpoints.isDesktop(context);
-    final Widget list = SizedBox(
-      height: 42,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        // در دسکتاپ لبه‌ی چیپ‌ها با لبه‌ی گرید محصولات هم‌راستا می‌شود
-        // (خود چیپ ۴ پیکسل حاشیه‌ی داخلی دارد).
-        padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 12),
-        children: [
-          _categoryChip(
-              label: 'همه',
-              selected: _filter.categoryId == null,
-              onTap: () =>
-                  _updateFilter(_filter.copyWith(clearCategory: true))),
-          ..._categories.map((c) {
-            final count = CatalogService.countInCategory(_all, c.id);
-            return _categoryChip(
-              label: '${c.nameFarsi} ($count)',
-              selected: _filter.categoryId == c.id,
-              onTap: () => _updateFilter(_filter.copyWith(categoryId: c.id)),
-            );
-          }),
-        ],
-      ),
+    // تعداد محصولِ هر دسته نمایش داده نمی‌شود؛ عدد داخل برچسب، نام دسته را
+    // شلوغ و خواندنش را کند می‌کرد. شمارشِ کلِ نتایج در نوار ابزار هست.
+    final int selected = _filter.categoryId == null
+        ? 0
+        : _categories.indexWhere((c) => c.id == _filter.categoryId) + 1;
+    final Widget list = CategoryPillBar(
+      labels: ['همه', ..._categories.map((c) => c.nameFarsi)],
+      selectedIndex: selected < 0 ? 0 : selected,
+      // در دسکتاپ لبه‌ی چیپ‌ها با لبه‌ی گرید محصولات هم‌راستا می‌شود
+      // (خود چیپ ۴ پیکسل حاشیه‌ی داخلی دارد).
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 12),
+      onSelected: (i) => _updateFilter(i == 0
+          ? _filter.copyWith(clearCategory: true)
+          : _filter.copyWith(categoryId: _categories[i - 1].id)),
     );
     return isDesktop ? CenteredContent(child: list) : list;
-  }
-
-  Widget _categoryChip({
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Container(
-        decoration: ShapeDecoration(
-          color: selected ? null : AppColor.cardMuted,
-          gradient: selected ? AppColor.greenGradient : null,
-          shape: AppShapes.pill,
-          shadows: selected ? AppColor.greenShadow : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          shape: AppShapes.pill,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.center,
-              child: Text(label,
-                  style: AppTextStyles.labelSm.copyWith(
-                    letterSpacing: 0,
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected ? Colors.white : AppColor.inkMuted,
-                  )),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildToolbar(int total) {

@@ -5,6 +5,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
+import 'package:marketky/views/widgets/category_pill_bar.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_text_styles.dart';
@@ -466,32 +467,23 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCategoryChips(
       List<Product> all, List<Category> categories, bool isDesktop) {
-    final Widget list = ListView(
-        scrollDirection: Axis.horizontal,
-        // در دسکتاپ لیست داخل ستون مرکزی ۱۲۰۰ است؛ برش لازم است تا
-        // چیپ‌های اسکرول‌شده روی حاشیه‌ی سفید دو طرف نیفتند.
-        clipBehavior: isDesktop ? Clip.hardEdge : Clip.none,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          _CategoryPill(
-            label: 'همه',
-            selected: _filter.categoryId == null,
-            onTap: () =>
-                setState(() => _filter = _filter.copyWith(clearCategory: true)),
-          ),
-          ...categories.map((c) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _CategoryPill(
-                label: '${c.nameFarsi} (${CatalogService.countInCategory(all, c.id)})',
-                selected: _filter.categoryId == c.id,
-                onTap: () =>
-                    setState(() => _filter = _filter.copyWith(categoryId: c.id)),
-              ),
-            );
-          }),
-        ],
-      );
+    // تعداد محصولِ هر دسته از برچسب حذف شد: عدد داخل نام، خواندنِ سریعِ
+    // دسته‌ها را سخت می‌کرد.
+    final int selectedIndex = _filter.categoryId == null
+        ? 0
+        : categories.indexWhere((c) => c.id == _filter.categoryId) + 1;
+    final Widget list = CategoryPillBar(
+      labels: ['همه', ...categories.map((c) => c.nameFarsi)],
+      selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
+      height: 44,
+      // در دسکتاپ لیست داخل ستون مرکزی ۱۲۰۰ است؛ برش لازم است تا
+      // چیپ‌های اسکرول‌شده روی حاشیه‌ی سفید دو طرف نیفتند.
+      clipBehavior: isDesktop ? Clip.hardEdge : Clip.none,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      onSelected: (i) => setState(() => _filter = i == 0
+          ? _filter.copyWith(clearCategory: true)
+          : _filter.copyWith(categoryId: categories[i - 1].id)),
+    );
 
     return _desktopSection(
       isDesktop,
@@ -909,56 +901,6 @@ class _HomePageState extends State<HomePage> {
             onPressed: reloadHomePage,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// چیپ دسته‌بندی قرصی: انتخاب‌شده با پس‌زمینه‌ی گرادیان برند، بقیه خاکستری ملایم
-class _CategoryPill extends StatelessWidget {
-  const _CategoryPill({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Container(
-        decoration: ShapeDecoration(
-          color: selected ? null : AppColor.cardMuted,
-          gradient: selected ? AppColor.greenGradient : null,
-          shape: AppShapes.pill,
-          shadows: selected ? AppColor.greenShadow : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          shape: AppShapes.pill,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 12,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected ? Colors.white : AppColor.inkMuted,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

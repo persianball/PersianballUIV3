@@ -269,3 +269,20 @@ class CourseDetailResponse {
 }
 
 
+
+/// انتخابِ واریانتِ خرید یک دوره (زمان/مکان برگزاری).
+///
+/// قاعده: فقط واریانتِ `is_active` قابل خرید است. اگر انتخابِ کاربر معتبر
+/// نبود (پاک شده، غیرفعال شده، یا هنوز چیزی انتخاب نشده) اولین واریانتِ
+/// فعال برگردانده می‌شود، و اگر هیچ فعالی نبود null.
+CourseTimeAndLocationItem? pickCourseVariant(
+  List<CourseTimeAndLocationItem> all,
+  int? selectedId,
+) {
+  final active = all.where((v) => v.isActive).toList();
+  if (active.isEmpty) return null;
+  for (final v in active) {
+    if (v.id == selectedId) return v;
+  }
+  return active.first;
+}

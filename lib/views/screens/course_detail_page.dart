@@ -27,10 +27,34 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     with SingleTickerProviderStateMixin {
   late Future<CourseDetailResponse> _future;
 
+  /// واریانتِ انتخاب‌شده (زمان/مکان برگزاری). پیش‌تر دکمه‌ی خرید همیشه
+  /// اولین واریانتِ فعال را می‌فرستاد، پس دوره‌های چندزمانه عملاً فقط یک
+  /// گزینه‌ی قابل‌خرید داشتند.
+  int? _selectedVariantId;
+
   @override
   void initState() {
     super.initState();
     _future = CourseService.fetchCourseDetail(id: widget.id);
+    // اولین واریانتِ فعال از ابتدا انتخاب می‌شود تا دکمه‌ی خرید هیچ‌وقت
+    // بدون گزینه نماند.
+    _future.then((data) {
+      if (!mounted || _selectedVariantId != null) return;
+      final active = _activeVariants(data);
+      if (active.isNotEmpty) setState(() => _selectedVariantId = active.first.id);
+    }).catchError((_) {});
+  }
+
+  List<CourseTimeAndLocationItem> _activeVariants(CourseDetailResponse data) =>
+      data.detail.timeAndLocation.where((v) => v.isActive).toList();
+
+  /// واریانتِ فعالِ انتخاب‌شده؛ اگر انتخاب معتبر نبود، اولین فعال.
+  CourseTimeAndLocationItem? _selectedVariant(CourseDetailResponse data) =>
+      pickCourseVariant(data.detail.timeAndLocation, _selectedVariantId);
+
+  void _selectVariant(CourseTimeAndLocationItem item) {
+    if (!item.isActive || _selectedVariantId == item.id) return;
+    setState(() => _selectedVariantId = item.id);
   }
 
   /// قیمت آیتم زمان و مکان: قیمت نهایی، بج قرمز درصد تخفیف و قیمت اصلی خط‌خورده
@@ -379,14 +403,27 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   }
 
   Widget _timeLocationCard(CourseDetailResponse data, int index) {
-                        final item = data.detail.timeAndLocation[index];
+    final item = data.detail.timeAndLocation[index];
+    final bool selected = item.isActive && _selectedVariant(data)?.id == item.id;
                         return _AnimatedSlideFade(
                           delayMs: 60 * index,
-                          child: Container(
+                          child: Opacity(
+                            // واریانتِ غیرفعال قابل خرید نیست؛ باید هم دیده
+                            // شود و هم آشکارا غیرقابل انتخاب به نظر برسد.
+                            opacity: item.isActive ? 1 : 0.55,
+                            child: _VariantTapTarget(
+                            enabled: item.isActive,
+                            onTap: () => _selectVariant(item),
+                            child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOutCubic,
                             margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                             decoration: ShapeDecoration(
             color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
+            shape: AppShapes.border(AppShapes.rLg,
+                side: selected
+                    ? const BorderSide(color: AppColor.goldEnd, width: 2)
+                    : null),
             shadows: AppColor.cardShadow,
           ),
                             child: Padding(
@@ -455,16 +492,20 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                               ),
                                             ),
                                             const SizedBox(width: 8),
-                                            if (item.isActive)
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                                color: AppColor.successDark.withOpacity(0.12),
-                                                child: const Text('فعال',
-                                                    style: TextStyle(
-                                                        fontFamily: 'Estedad',
-                                                        fontSize: 11,
-                                                        color: AppColor.successDark)),
-                                              ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              color: item.isActive
+                                                  ? AppColor.successDark.withOpacity(0.12)
+                                                  : AppColor.outlineVariantDark.withOpacity(0.35),
+                                              child: Text(
+                                                  item.isActive ? 'فعال' : 'ثبت‌نام بسته',
+                                                  style: TextStyle(
+                                                      fontFamily: 'Estedad',
+                                                      fontSize: 11,
+                                                      color: item.isActive
+                                                          ? AppColor.successDark
+                                                          : AppColor.onSurfaceVariant)),
+                                            ),
                                           ],
                                         ),
                                         if (item.time != null) ...[
@@ -523,44 +564,20 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                         const SizedBox(height: 6),
                                         _timeLocationPrice(item),
                                         const SizedBox(height: 12),
+                                        // خودِ کارت انتخاب می‌شود و دکمه‌ی
+                                        // خرید پایین صفحه همان را به سبد
+                                        // می‌افزاید؛ پس اینجا فقط وضعیت
+                                        // انتخاب نشان داده می‌شود.
                                         if (item.isActive)
-                                          SizedBox(
-                                            width: double.infinity,
-                                            child: ElevatedButton(
-                                              onPressed: () {
-                                                showModalBottomSheet(
-                                                  context: context,
-                                                  backgroundColor: Colors.transparent,
-                                                  // بدون این، شیت حداکثر نصف
-                                                  // صفحه است و دکمه‌ی پایین
-                                                  // بریده می‌شود.
-                                                  isScrollControlled: true,
-                                                  builder: (context) => AddCourseToCartModal(courseItem: item),
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: AppColor.goldEnd,
-                                                shape: AppShapes.pill,
-                                                padding: EdgeInsets.symmetric(vertical: 12),
-                                                elevation: 0,
-                                              ),
-                                              child: Text(
-                                                'افزودن به سبد',
-                                                style: TextStyle(
-                                                  fontFamily: 'Estedad',
-                                                  fontWeight: FontWeight.w600,
-                                                  color: AppColor.onGold,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+                                          _VariantSelectionMark(selected: selected),
                                       ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                          ),
+                          ),
                           ),
                         );
   }
@@ -674,6 +691,59 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     );
   }
 
+  /// نوار خرید: اگر دوره چند زمان/مکان دارد، اول نشان می‌دهد کدام یک
+  /// انتخاب شده تا کاربر کورکورانه دکمه را نزند.
+  Widget _actionSection() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FutureBuilder<CourseDetailResponse>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const SizedBox.shrink();
+            final active = _activeVariants(snapshot.data!);
+            if (active.length < 2) return const SizedBox.shrink();
+            final selected = _selectedVariant(snapshot.data!);
+            if (selected == null) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded,
+                      size: 16, color: AppColor.goldEnd),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'انتخاب شما: ${_variantLabel(selected)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColor.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        _actionRow(),
+      ],
+    );
+  }
+
+  /// برچسب کوتاه یک واریانت برای نمایش در نوار خرید
+  String _variantLabel(CourseTimeAndLocationItem item) {
+    final place = (item.location == null || item.location!.isEmpty)
+        ? 'دوره‌ی آنلاین'
+        : item.location!;
+    final time = item.time;
+    return (time == null || time.isEmpty) ? place : '$place — $time';
+  }
+
   /// ردیف دکمه‌های اقدام: میان‌بر سبد + افزودن به سبد
   /// (منطق شیت افزودن به سبد دست‌نخورده است؛ فقط جای رندر عوض می‌شود)
   Widget _actionRow() {
@@ -711,13 +781,12 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           child: FutureBuilder<CourseDetailResponse>(
             future: _future,
             builder: (context, snapshot) {
-              // نه اولین واریانت، بلکه اولین واریانتِ *فعال*: واریانت اول
-              // بعضی دوره‌ها is_active=false است و نباید قابل خرید باشد.
-              final variants =
-                  snapshot.data?.detail.timeAndLocation ?? const [];
-              final active = variants.where((v) => v.isActive);
-              if (snapshot.hasData && active.isNotEmpty) {
-                final firstCourse = active.first;
+              // واریانتِ انتخاب‌شده‌ی کاربر (نه صرفاً اولی): دوره می‌تواند
+              // چند زمان/مکان داشته باشد و همه باید قابل خرید باشند.
+              final selected = snapshot.hasData
+                  ? _selectedVariant(snapshot.data!)
+                  : null;
+              if (selected != null) {
                 return ElevatedButton(
                   onPressed: () {
                     showModalBottomSheet(
@@ -725,7 +794,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                       backgroundColor: Colors.transparent,
                       isScrollControlled: true,
                       builder: (context) =>
-                          AddCourseToCartModal(courseItem: firstCourse),
+                          AddCourseToCartModal(courseItem: selected),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -855,10 +924,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           _badgesRow(data),
           if (items.isNotEmpty) ...[
             const SizedBox(height: 18),
-            _timeLocationPrice(items.first),
+            // قیمتِ همان واریانتی که خریداری می‌شود، نه همیشه اولی
+            _timeLocationPrice(_selectedVariant(data) ?? items.first),
           ],
           const SizedBox(height: 20),
-          _actionRow(),
+          _actionSection(),
         ],
       ),
     );
@@ -1034,7 +1104,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                 shape: AppShapes.borderTop(AppShapes.rXl),
                 shadows: AppColor.floatingShadow,
               ),
-              child: _actionRow(),
+              child: _actionSection(),
             );
           },
           ),
@@ -1132,6 +1202,82 @@ class _AnimatedSlideFade extends StatelessWidget {
         );
       },
       child: child,
+    );
+  }
+}
+/// ناحیه‌ی قابل‌ضربه‌ی کارت واریانت. برای واریانت غیرفعال هیچ ضربه‌ای
+/// نمی‌گیرد و نشانگر ماوس هم عوض نمی‌شود، تا آشکار باشد که قابل انتخاب نیست.
+class _VariantTapTarget extends StatelessWidget {
+  const _VariantTapTarget({
+    required this.child,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final Widget child;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: child,
+      ),
+    );
+  }
+}
+
+/// نشانگر انتخاب زیر هر کارت واریانت: «انتخاب شد» یا دعوت به انتخاب.
+class _VariantSelectionMark extends StatelessWidget {
+  const _VariantSelectionMark({required this.selected});
+
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+      decoration: ShapeDecoration(
+        color: selected
+            ? AppColor.goldEnd.withOpacity(0.16)
+            : Colors.transparent,
+        shape: AppShapes.border(
+          AppShapes.rLg,
+          side: BorderSide(
+            color: selected ? AppColor.goldEnd : AppColor.outlineVariantDark,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            selected
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            size: 16,
+            color: selected ? AppColor.goldEnd : AppColor.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            selected ? 'انتخاب شد' : 'انتخاب این زمان',
+            style: TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: selected ? AppColor.goldEnd : AppColor.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
