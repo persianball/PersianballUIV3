@@ -64,37 +64,50 @@ class _LoginPageState extends State<LoginPage> {
       bottomNavigationBar: SafeArea(
         child: Container(
           width: MediaQuery.of(context).size.width,
-          height: 48,
-          alignment: Alignment.center,
-          child: TextButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => RegisterPage()));
-            },
-            child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'حساب کاربری ندارم!',
-                    style: TextStyle(
-                      fontFamily: 'Estedad',
-                      color: AppColor.onSurfaceVariant,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColor.card,
+            border: Border(top: BorderSide(color: AppColor.line, width: 1)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'حساب کاربری ندارید؟',
+                style: TextStyle(
+                  fontFamily: 'Estedad',
+                  color: AppColor.onSurface,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(width: 8),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => RegisterPage()));
+                },
+                style: TextButton.styleFrom(
+                  minimumSize: Size(88, 44),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  foregroundColor: AppColor.pitchGreen,
+                  backgroundColor: AppColor.pitchGreenSoft,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: AppColor.pitchGreen, width: 1),
                   ),
-                  Text(
-                    'ثبت نام',
-                    style: TextStyle(
-                      fontFamily: 'Estedad',
-                      color: AppColor.goldEnd,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+                child: Text(
+                  'ثبت نام',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    color: AppColor.pitchGreen,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                   ),
-                ],
-            ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
