@@ -11,8 +11,18 @@ import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/utils/login_prompt.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
 import 'package:marketky/views/widgets/app_network_image.dart';
-import 'package:marketky/views/widgets/cart_flight_animation.dart';
 import 'package:marketky/views/widgets/page_container.dart';
+
+/// نتیجه‌ی شیت پس از افزودن موفق: مبدأ انیمیشنِ افتادن کالا داخل سبد.
+///
+/// شیت خودش انیمیشن را اجرا نمی‌کند (با بسته‌شدنش از بین می‌رفت)؛ فقط
+/// می‌گوید تصویر کالا کجای صفحه بود و صفحه‌ی محصول بقیه‌اش را انجام می‌دهد.
+class AddToCartLaunch {
+  const AddToCartLaunch({required this.sourceRect, required this.imageUrl});
+
+  final Rect sourceRect;
+  final String imageUrl;
+}
 
 class AddToCartModal extends StatefulWidget {
   final CartItem cartItem; // محصولی که کاربر می‌خواهد اضافه کند
@@ -33,7 +43,7 @@ class AddToCartModal extends StatefulWidget {
 class _AddToCartModalState extends State<AddToCartModal> {
   late int _quantity;
 
-  /// تصویر کالا داخل شیت — مبدأ انیمیشن پرواز به سبد
+  /// تصویر کالا داخل شیت — مبدأ انیمیشنِ افتادن داخل سبد
   final GlobalKey _thumbKey = GlobalKey();
 
   @override
@@ -296,22 +306,21 @@ class _AddToCartModalState extends State<AddToCartModal> {
                         .read<CartBloc>()
                         .add(AddToCart(context, widget.cartItem.id, _quantity));
 
-                    // مبدأ پرواز و کانتکست Overlay ریشه را پیش از بسته‌شدن
-                    // شیت برمی‌داریم؛ بعد از pop دیگر در دسترس نیستند.
-                    final rect = CartFlightOverlay.rectOf(_thumbKey);
-                    final rootContext =
-                        Navigator.of(context, rootNavigator: true).context;
-                    final image = _imageUrl(widget.cartItem.image);
+                    // مختصات تصویر را پیش از بسته‌شدن شیت برمی‌داریم؛ بعد از
+                    // pop دیگر رندرآبجکتی در کار نیست.
+                    final box = _thumbKey.currentContext?.findRenderObject();
+                    final rect = (box is RenderBox && box.hasSize)
+                        ? box.localToGlobal(Offset.zero) & box.size
+                        : null;
 
-                    Navigator.of(context).pop();
-
-                    if (rect != null) {
-                      CartFlightOverlay.launch(
-                        rootContext,
-                        imageUrl: image,
-                        sourceRect: rect,
-                      );
-                    }
+                    Navigator.of(context).pop(
+                      rect == null
+                          ? null
+                          : AddToCartLaunch(
+                              sourceRect: rect,
+                              imageUrl: _imageUrl(widget.cartItem.image),
+                            ),
+                    );
                   },
                 ),
               ],

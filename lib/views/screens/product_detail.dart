@@ -20,7 +20,8 @@ import 'package:marketky/models/ProductModel.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/screens/image_viewer.dart';
 import 'package:marketky/views/widgets/html_description_image.dart';
-import 'package:marketky/views/widgets/cart_flight_animation.dart';
+import 'package:marketky/views/widgets/cart_drop_animation.dart';
+import 'package:marketky/views/widgets/cart_pop_button.dart';
 import 'package:marketky/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:marketky/views/widgets/product_reviews_section.dart';
 import 'package:marketky/views/widgets/selectable_circle_color.dart';
@@ -53,6 +54,30 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   /// هر setState (مثلاً عوض‌کردن تصویر گالری) رنگ انتخابی کاربر را به رنگ
   /// اول برمی‌گرداند و تغییر رنگ عملاً کار نمی‌کرد.
   int? _variantInitializedFor;
+
+  /// دکمه‌ی گرد سبد در نوار پایین/پنل دسکتاپ؛ بعد از افزودن موفق «پر» می‌شود.
+  final GlobalKey<CartPopButtonState> _cartButtonKey =
+      GlobalKey<CartPopButtonState>();
+
+  /// انیمیشنِ افتادن کالا داخل سبد در جریان است؟
+  bool _dropRunning = false;
+
+  /// پیام «افزوده شد» تا پایان انیمیشن نگه داشته می‌شود تا دیالوگ روی
+  /// انیمیشن نیفتد و کاربر هر دو را ببیند.
+  String? _pendingAddedMessage;
+
+  /// دکمه‌ی سبد برای همین افزودن یک‌بار «پر» شده است؟
+  bool _cartButtonPopped = false;
+
+  /// تعداد اقلام سبد از آخرین وضعیت CartBloc (۰ اگر هنوز بار نشده)
+  static int _cartCount(CartState s) {
+    AllCartFromBackend? cart;
+    if (s is CartLoaded) cart = s.cart;
+    if (s is CartItemChangedQuantity) cart = s.productInCart;
+    if (cart == null || cart.results.isEmpty) return 0;
+    return cart.results.first.items
+        .fold<int>(0, (sum, item) => sum + item.quantity);
+  }
 
 
   /// اشتراک‌گذاری لینک محصول (دیپ‌لینک همین اپ)
@@ -308,18 +333,95 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     return true;
   }
 
-  void _openAddToCart(
-      BuildContext context, ProductDetail product, ProductDetailState s) {
+  Future<void> _openAddToCart(
+      BuildContext context, ProductDetail product, ProductDetailState s) async {
     if (!isLoggedIn(context)) {
       promptLoginIfNeeded(context);
       return;
     }
     if (!_guardStock(context, s)) return;
-    showModalBottomSheet(
+
+    _dropRunning = false;
+    _cartButtonPopped = false;
+    _pendingAddedMessage = null;
+
+    final launch = await showModalBottomSheet<AddToCartLaunch>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => AddToCartModal(cartItem: _cartItemFor(product, s)),
+    );
+
+    if (!mounted || launch == null) return;
+
+    // کالا از شیت جدا می‌شود و داخل دکمه‌ی گرد سبد می‌افتد؛ رسیدنش همان
+    // لحظه‌ای است که دکمه پر می‌شود و بعد دیالوگ تأیید می‌آید.
+    final target = CartDropAnimation.rectOf(_cartButtonKey);
+    if (target == null) {
+      _finishAdd();
+      return;
+    }
+    _dropRunning = true;
+    // بعد از await باید کانتکستِ خودِ State استفاده شود (همان که mounted
+    // وضعیتش را می‌گوید)، نه پارامترِ گرفته‌شده پیش از باز شدن شیت.
+    CartDropAnimation.run(
+      this.context,
+      imageUrl: launch.imageUrl,
+      from: launch.sourceRect,
+      to: target,
+      onLanded: () {
+        if (!mounted) return;
+        _dropRunning = false;
+        _finishAdd();
+      },
+    );
+  }
+
+  /// «پر» کردن دکمه‌ی سبد و نمایش دیالوگ تأیید — هر کدام فقط یک‌بار.
+  void _finishAdd() {
+    if (!_cartButtonPopped) {
+      _cartButtonPopped = true;
+      _cartButtonKey.currentState?.pop();
+    }
+    final message = _pendingAddedMessage;
+    _pendingAddedMessage = null;
+    if (message != null) _showAddedDialog(message);
+  }
+
+  /// دیالوگ «به سبد اضافه شد» — همان دیالوگ همیشگی.
+  void _showAddedDialog(String message) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColor.card,
+        shape: AppShapes.border(AppShapes.rLg),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle_rounded,
+                color: AppColor.success, size: 60),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColor.ink,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 18),
+            GradientButton(
+              label: 'باشه',
+              height: 44,
+              fontSize: 14,
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -327,41 +429,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   /// داخل پنل اطلاعات (دسکتاپ) مشترک است — منطق قبلی بدون تغییر.
   void _onCartState(BuildContext context, CartState cartState) {
     if (cartState is CartItemAdded) {
-      // وقتی انیمیشن پرواز کالا به سبد در حال اجراست، خودِ انیمیشن نقش
-      // تأییدیه را دارد؛ دیالوگ نباید روی آن بیفتد.
-      if (CartFlightOverlay.isRunning) return;
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColor.card,
-          shape: AppShapes.border(AppShapes.rLg),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle_rounded,
-                  color: AppColor.success, size: 60),
-              const SizedBox(height: 16),
-              Text(
-                cartState.message,
-                style: const TextStyle(
-                  fontFamily: 'Estedad',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColor.ink,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 18),
-              GradientButton(
-                label: 'باشه',
-                height: 44,
-                fontSize: 14,
-                onPressed: () => Navigator.of(ctx).pop(),
-              ),
-            ],
-          ),
-        ),
-      );
+      _pendingAddedMessage = cartState.message;
+      // اگر کالا هنوز در حال افتادن است، دیالوگ صبر می‌کند تا برسد؛ وگرنه
+      // (مثلاً وقتی سرور دیرتر جواب داده) همان لحظه نشان داده می‌شود.
+      if (!_dropRunning) _finishAdd();
     }
     // بارگذاریِ پس‌زمینه‌ی سبد برای کاربر مهمان خطا نیست؛ پیش‌تر همین
     // حالت روی هر صفحه‌ی محصول/دوره یک اسنک‌بار قرمز «نیاز به ورود دارید»
@@ -369,8 +440,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     if (cartState is CartError &&
         cartState is! CartRequiresLogin &&
         cartState is! CartRefreshFailed) {
-      // خطا یعنی چیزی به سبد اضافه نشد؛ انیمیشن باید فوراً قطع شود.
-      CartFlightOverlay.dismiss();
+      // افزودن انجام نشد: انیمیشن و دیالوگ در انتظار باید لغو شوند.
+      CartDropAnimation.cancel();
+      _dropRunning = false;
+      _pendingAddedMessage = null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(cartState.message,
@@ -385,11 +458,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   /// پنل اطلاعات؛ onPressed دقیقاً همان منطق قبلی است.
   Widget _actionButtons(BuildContext context, ProductDetail product,
       ProductDetailState variantState) {
-    return GradientButton(
-      label: 'افزودن به سبد',
-      height: 50,
-      icon: const Icon(Icons.add_shopping_cart_rounded),
-      onPressed: () => _openAddToCart(context, product, variantState),
+    return Row(
+      children: [
+        Expanded(
+          child: GradientButton(
+            label: 'افزودن به سبد',
+            height: 50,
+            icon: const Icon(Icons.add_shopping_cart_rounded),
+            onPressed: () => _openAddToCart(context, product, variantState),
+          ),
+        ),
+        const SizedBox(width: 10),
+        // دکمه‌ی گرد سبد، انتهای نوار (چپ در RTL): تا کالایی نیست سفید و
+        // خطی است؛ با افزودن، سبز و توپر می‌شود و شمارنده می‌گیرد.
+        BlocBuilder<CartBloc, CartState>(
+          builder: (context, cartState) => CartPopButton(
+            key: _cartButtonKey,
+            count: _cartCount(cartState),
+            onTap: () => Navigator.of(context).pushNamed('/cart'),
+          ),
+        ),
+      ],
     );
   }
 
