@@ -56,10 +56,8 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColor.obsidianBg,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: AppShapes.radius(AppShapes.rMd),
-      ),
+      clipBehavior: Clip.antiAlias,
+      shape: AppShapes.borderTop(AppShapes.rXl),
       builder: (ctx) => _CourseDetailsSheet(
         cartItemFromBackend: widget.cartItemFromBackend,
         onQuantityChanged: _changeQuantity,
@@ -107,8 +105,8 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // تصویر کوچک، سمت راست
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
+                SquircleClip(
+                  radius: AppShapes.rSm,
                   child: image != null
                       ? Image.network(
                           "${URLs.baseUrl}$image",
@@ -172,12 +170,18 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 1),
-                            color: Colors.red,
+                                horizontal: 6, vertical: 2),
+                            decoration: const ShapeDecoration(
+                              color: AppColor.danger,
+                              shape: AppShapes.pill,
+                            ),
                             child: Text(
                               '$percent%',
                               style: const TextStyle(
-                                  fontSize: 9, color: Colors.white),
+                                  fontFamily: 'Estedad',
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -257,10 +261,17 @@ class _CourseDetailsSheet extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(width: 40, height: 4, color: AppColor.outlineVariantDark),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: const ShapeDecoration(
+                    color: AppColor.outlineVariantDark,
+                    shape: AppShapes.pill,
+                  ),
+                ),
                 const SizedBox(height: 20),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                SquircleClip(
+                  radius: AppShapes.rMd,
                   child: image != null
                       ? Image.network(
                           "${URLs.baseUrl}$image",
@@ -317,11 +328,12 @@ class _CourseDetailsSheet extends StatelessWidget {
                       color: AppColor.successDark.withOpacity(0.08),
                       border:
                           Border.all(color: AppColor.successDark.withOpacity(0.4)),
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
                     ),
                     child: Row(
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
+                        SquircleClip(
+                          radius: AppShapes.rSm,
                           child: gift.image != null
                               ? Image.network(
                                   "${URLs.baseUrl}${gift.image}",
@@ -385,11 +397,17 @@ class _CourseDetailsSheet extends StatelessWidget {
                     children: [
                       Container(
                         padding:
-                            const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
-                        color: Colors.red,
+                            const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+                        decoration: const ShapeDecoration(
+                          color: AppColor.danger,
+                          shape: AppShapes.pill,
+                        ),
                         child: Text('$percent%',
-                            style:
-                                const TextStyle(color: Colors.white, fontSize: 12)),
+                            style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                fontSize: 12)),
                       ),
                       const SizedBox(width: 8),
                       Text(

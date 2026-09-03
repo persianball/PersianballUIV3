@@ -10,6 +10,7 @@ import 'package:marketky/views/widgets/course_cart_item.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
 import 'package:marketky/views/widgets/checkout_timeline.dart';
 import 'package:marketky/views/screens/address_selection_page.dart';
+import 'package:marketky/views/screens/order_summary_page.dart';
 import 'package:marketky/views/screens/login_page.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import 'package:marketky/views/widgets/page_container.dart';
@@ -404,10 +405,13 @@ class _CartPageState extends State<CartPage> {
     final int postPrice = price.postShippingPrice ?? 0;
     final int peykPrice = price.peykShippingPrice ?? 0;
 
-    _desktopShippingMethod ??= isFree ? 'free' : 'post';
+    // سبدِ فقط-دوره ارسال ندارد؛ نه روش، نه هزینه، نه آدرس.
+    final bool needsAddress = cart.requiresAddress;
+    _desktopShippingMethod ??= (isFree || !needsAddress) ? 'free' : 'post';
     final String method = _desktopShippingMethod!;
-    final int shippingCost =
-        method == 'free' ? 0 : (method == 'peyk' ? peykPrice : postPrice);
+    final int shippingCost = (!needsAddress || method == 'free')
+        ? 0
+        : (method == 'peyk' ? peykPrice : postPrice);
     final int payable = base - discounted + tax + shippingCost;
 
     return Container(
@@ -447,16 +451,40 @@ class _CartPageState extends State<CartPage> {
             emphasize: true,
           ),
           const SizedBox(height: 16),
-          const Text(
-            'روش ارسال',
-            style: TextStyle(
-              fontFamily: 'Estedad',
-              fontSize: 14,
-              color: AppColor.onSurfaceVariant,
+          if (needsAddress) ...[
+            const Text(
+              'روش ارسال',
+              style: TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 14,
+                color: AppColor.onSurfaceVariant,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          if (isFree)
+            const SizedBox(height: 8),
+          ],
+          if (!needsAddress)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColor.goldEnd.withOpacity(0.08),
+                border: Border.all(color: AppColor.goldEnd.withOpacity(0.3)),
+                borderRadius: AppShapes.radius(AppShapes.rMd),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.school_outlined, color: AppColor.goldEnd),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                        'این سفارش فقط دوره دارد و ارسال نمی‌خواهد.',
+                        style: TextStyle(
+                            fontFamily: 'Estedad',
+                            color: AppColor.onSurface)),
+                  ),
+                ],
+              ),
+            )
+          else if (isFree)
             Container(
               padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -464,6 +492,7 @@ class _CartPageState extends State<CartPage> {
                 color: AppColor.successDark.withOpacity(0.1),
                 border:
                     Border.all(color: AppColor.successDark.withOpacity(0.4)),
+                borderRadius: AppShapes.radius(AppShapes.rMd),
               ),
               child: Row(
                 children: const [
@@ -516,6 +545,18 @@ class _CartPageState extends State<CartPage> {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
+              if (!needsAddress) {
+                // مرحله‌ی آدرس رد می‌شود.
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => OrderSummaryPage(
+                      cart: cart,
+                      deliveryMethod: 'free',
+                    ),
+                  ),
+                );
+                return;
+              }
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const AddressSelectionPage(),
@@ -531,9 +572,9 @@ class _CartPageState extends State<CartPage> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: AppShapes.pill,
             ),
-            child: const Text(
-              'تسویه و انتخاب آدرس',
-              style: TextStyle(
+            child: Text(
+              needsAddress ? 'تسویه و انتخاب آدرس' : 'تسویه و پرداخت',
+              style: const TextStyle(
                   fontFamily: 'Estedad',
                   color: AppColor.onGold,
                   fontWeight: FontWeight.w600),
@@ -580,11 +621,14 @@ class _CartPageState extends State<CartPage> {
       textDirection: TextDirection.rtl,
       child: InkWell(
         onTap: onToggle,
+        // بدون این، موجِ لمس مستطیلی می‌ماند و از گوشه‌های گردِ سربرگ می‌زند بیرون
+        borderRadius: AppShapes.radius(AppShapes.rMd),
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           decoration: BoxDecoration(
             color: AppColor.goldEnd.withOpacity(0.08),
             border: Border.all(color: AppColor.goldEnd.withOpacity(0.3)),
+            borderRadius: AppShapes.radius(AppShapes.rMd),
           ),
           child: Row(
             children: [
@@ -602,8 +646,9 @@ class _CartPageState extends State<CartPage> {
               SizedBox(width: 6),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: AppColor.goldEnd.withOpacity(0.15),
+                  shape: AppShapes.pill,
                 ),
                 child: Text(
                   '$count',
@@ -647,11 +692,10 @@ class _CartPageState extends State<CartPage> {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
+                    // سطحِ مات روی خودِ محتوا گذاشته می‌شود، نه روی مسیر شیت:
+                    // با DraggableScrollableSheet رنگ‌دادن به خودِ شیت کلِ
+                    // ارتفاع صفحه را پر می‌کند.
                     backgroundColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(color: AppColor.outlineVariantDark),
-                      borderRadius: AppShapes.radius(AppShapes.rMd),
-                    ),
                     builder: (ctx) {
                       return DraggableScrollableSheet(
                         expand: false,
@@ -683,9 +727,16 @@ class _CartPageState extends State<CartPage> {
                               final int peykPrice =
                                   price.peykShippingPrice ?? 0;
 
-                              selectedMethod ??= isFree ? 'free' : 'post';
+                              // سبدی که فقط دوره دارد ارسال نمی‌شود: نه روش
+                              // ارسال دارد، نه هزینه‌ی ارسال، نه آدرس.
+                              final bool needsAddress =
+                                  (context.read<CartBloc>().state as CartLoaded)
+                                      .cart
+                                      .requiresAddress;
+                              selectedMethod ??=
+                                  (isFree || !needsAddress) ? 'free' : 'post';
                               final int shippingCost =
-                                  (selectedMethod == 'free')
+                                  (!needsAddress || selectedMethod == 'free')
                                       ? 0
                                       : (selectedMethod == 'peyk'
                                           ? peykPrice
@@ -719,16 +770,24 @@ class _CartPageState extends State<CartPage> {
 
                               return Directionality(
                                 textDirection: TextDirection.rtl,
-                                child: Column(
+                                // بدون این سطح، شیت شفاف بود و صفحه‌ی سبد از
+                                // پشتش دیده می‌شد.
+                                child: Container(
+                                  clipBehavior: Clip.antiAlias,
+                                  decoration: ShapeDecoration(
+                                    color: AppColor.milk,
+                                    shape: AppShapes.borderTop(AppShapes.rXl),
+                                    shadows: AppColor.floatingShadow,
+                                  ),
+                                  child: Column(
                                   children: [
                                     const SizedBox(height: 8),
                                     Container(
                                       width: 40,
                                       height: 4,
-                                      decoration: BoxDecoration(
+                                      decoration: const ShapeDecoration(
                                           color: AppColor.outlineVariantDark,
-                                          borderRadius:
-                                              BorderRadius.circular(2)),
+                                          shape: AppShapes.pill),
                                     ),
                                     const SizedBox(height: 12),
                                     const Text('جزئیات سفارش',
@@ -794,7 +853,38 @@ class _CartPageState extends State<CartPage> {
                                                   fontSize: 14,
                                                   color: AppColor.onSurfaceVariant)),
                                           const SizedBox(height: 8),
-                                          if (isFree)
+                                          if (!needsAddress)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 10),
+                                              decoration: BoxDecoration(
+                                                color: AppColor.goldEnd
+                                                    .withOpacity(0.08),
+                                                border: Border.all(
+                                                    color: AppColor.goldEnd
+                                                        .withOpacity(0.3)),
+                                                borderRadius:
+                                                    AppShapes.radius(
+                                                        AppShapes.rMd),
+                                              ),
+                                              child: Row(
+                                                children: const [
+                                                  Icon(Icons.school_outlined,
+                                                      color: AppColor.goldEnd),
+                                                  SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Text(
+                                                        'این سفارش فقط دوره دارد و ارسال نمی‌خواهد.',
+                                                        style: TextStyle(
+                                                            color: AppColor
+                                                                .onSurface)),
+                                                  ),
+                                                ],
+                                              ),
+                                            )
+                                          else if (isFree)
                                             Container(
                                               padding:
                                                   const EdgeInsets.symmetric(
@@ -807,6 +897,9 @@ class _CartPageState extends State<CartPage> {
                                                     color: AppColor
                                                         .successDark
                                                         .withOpacity(0.4)),
+                                                borderRadius:
+                                                    AppShapes.radius(
+                                                        AppShapes.rMd),
                                               ),
                                               child: Row(
                                                 children: const [
@@ -874,6 +967,19 @@ class _CartPageState extends State<CartPage> {
                                                         .read<CartBloc>()
                                                         .state as CartLoaded)
                                                     .cart;
+                                                if (!needsAddress) {
+                                                  // مرحله‌ی آدرس رد می‌شود.
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          OrderSummaryPage(
+                                                        cart: cart,
+                                                        deliveryMethod: 'free',
+                                                      ),
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
                                                 Navigator.of(context).push(
                                                   MaterialPageRoute(
                                                     builder: (context) =>
@@ -896,8 +1002,11 @@ class _CartPageState extends State<CartPage> {
                                                 shape:
                                                     AppShapes.pill,
                                               ),
-                                              child: const Text('انتخاب آدرس',
-                                                  style: TextStyle(
+                                              child: Text(
+                                                  needsAddress
+                                                      ? 'انتخاب آدرس'
+                                                      : 'ادامه و پرداخت',
+                                                  style: const TextStyle(
                                                       color: AppColor.onGold)),
                                             ),
                                           ),
@@ -905,6 +1014,7 @@ class _CartPageState extends State<CartPage> {
                                       ),
                                     ),
                                   ],
+                                ),
                                 ),
                               );
                             },

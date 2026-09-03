@@ -6,12 +6,23 @@ import 'package:marketky/constant/app_color.dart';
 /// A simple 3-step horizontal checkout timeline.
 /// Steps: 0 = Cart, 1 = Address & Shipping, 2 = Finalize
 class CheckoutTimeline extends StatelessWidget {
-  final int currentStep; // 0..2
-  const CheckoutTimeline({super.key, required this.currentStep});
+  final int currentStep; // 0..2 (یا 0..1 وقتی مرحله‌ی آدرس حذف شده)
+
+  /// سفارشِ بدون ارسال، مرحله‌ی «آدرس و ارسال» را ندارد؛ نشان‌دادن آن به
+  /// عنوان مرحله‌ی طی‌شده گمراه‌کننده است، پس تایم‌لاین دو-مرحله‌ای می‌شود.
+  final bool skipAddress;
+
+  const CheckoutTimeline({
+    super.key,
+    required this.currentStep,
+    this.skipAddress = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final steps = const ['سبد خرید', 'آدرس و ارسال', 'نهایی‌سازی'];
+    final steps = skipAddress
+        ? const ['سبد خرید', 'نهایی‌سازی']
+        : const ['سبد خرید', 'آدرس و ارسال', 'نهایی‌سازی'];
 
     Widget dot(int index) {
       final active = index <= currentStep;
@@ -50,20 +61,24 @@ class CheckoutTimeline extends StatelessWidget {
           children: [
             Row(
               children: [
-                dot(0),
-                connector(currentStep > 0),
-                dot(1),
-                connector(currentStep > 1),
-                dot(2),
+                for (int i = 0; i < steps.length; i++) ...[
+                  if (i > 0) connector(currentStep > i - 1),
+                  dot(i),
+                ],
               ],
             ),
             const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(steps[0], style: TextStyle(fontSize: 12, color: currentStep >= 0 ? AppColor.onSurface : AppColor.onSurfaceVariant, fontWeight: FontWeight.w600)),
-                Text(steps[1], style: TextStyle(fontSize: 12, color: currentStep >= 1 ? AppColor.onSurface : AppColor.onSurfaceVariant, fontWeight: FontWeight.w600)),
-                Text(steps[2], style: TextStyle(fontSize: 12, color: currentStep >= 2 ? AppColor.onSurface : AppColor.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                for (int i = 0; i < steps.length; i++)
+                  Text(steps[i],
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: currentStep >= i
+                              ? AppColor.onSurface
+                              : AppColor.onSurfaceVariant,
+                          fontWeight: FontWeight.w600)),
               ],
             ),
           ],

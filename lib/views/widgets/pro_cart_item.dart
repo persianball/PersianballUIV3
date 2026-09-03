@@ -55,10 +55,8 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColor.obsidianBg,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColor.outlineVariantDark),
-        borderRadius: AppShapes.radius(AppShapes.rMd),
-      ),
+      clipBehavior: Clip.antiAlias,
+      shape: AppShapes.borderTop(AppShapes.rXl),
       builder: (ctx) => _ProductDetailsSheet(
         cartItemFromBackend: widget.cartItemFromBackend,
         priceFromBack: widget.priceFromBack,
@@ -107,8 +105,8 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // تصویر کوچک، سمت راست
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
+                SquircleClip(
+                  radius: AppShapes.rSm,
                   child: Image.network(
                     "${URLs.baseUrl}$image",
                     width: 48,
@@ -170,12 +168,18 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 1),
-                            color: Colors.red,
+                                horizontal: 6, vertical: 2),
+                            decoration: const ShapeDecoration(
+                              color: AppColor.danger,
+                              shape: AppShapes.pill,
+                            ),
                             child: Text(
                               '$percent%',
                               style: const TextStyle(
-                                  fontSize: 9, color: Colors.white),
+                                  fontFamily: 'Estedad',
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -241,6 +245,7 @@ class MiniQuantityRow extends StatelessWidget {
   Widget _miniIcon(IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
+      customBorder: const CircleBorder(),
       child: Padding(
         padding: const EdgeInsets.all(3),
         child: Icon(icon, size: 14, color: color),
@@ -266,8 +271,12 @@ class MiniQuantityRow extends StatelessWidget {
             : _miniIcon(Icons.delete_outline, Colors.red[400]!, onDelete),
         const SizedBox(width: 4),
         Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColor.outlineVariantDark),
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: const ShapeDecoration(
+            color: AppColor.surfaceContainerHigh,
+            shape: StadiumBorder(
+              side: BorderSide(color: AppColor.outlineVariantDark),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -344,11 +353,14 @@ class _ProductDetailsSheet extends StatelessWidget {
               Container(
                 width: 40,
                 height: 4,
-                color: AppColor.outlineVariantDark,
+                decoration: const ShapeDecoration(
+                  color: AppColor.outlineVariantDark,
+                  shape: AppShapes.pill,
+                ),
               ),
               const SizedBox(height: 20),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+              SquircleClip(
+                radius: AppShapes.rMd,
                 child: Image.network(
                   "${URLs.baseUrl}$image",
                   width: 96,
@@ -414,10 +426,17 @@ class _ProductDetailsSheet extends StatelessWidget {
                   children: [
                     Container(
                       padding:
-                          const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
-                      color: Colors.red,
+                          const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+                      decoration: const ShapeDecoration(
+                        color: AppColor.danger,
+                        shape: AppShapes.pill,
+                      ),
                       child: Text('$percent%',
-                          style: const TextStyle(color: Colors.white, fontSize: 12)),
+                          style: const TextStyle(
+                              fontFamily: 'Estedad',
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontSize: 12)),
                     ),
                     const SizedBox(width: 8),
                     Text(

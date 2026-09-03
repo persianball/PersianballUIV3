@@ -230,3 +230,21 @@ class AllCartFromBackend{
     );
   }
 }
+
+extension CartShipping on AllCartFromBackend {
+  /// آیا این سفارش به آدرس پستی نیاز دارد؟
+  ///
+  /// دوره ارسال فیزیکی ندارد، پس سبدی که فقط دوره دارد نباید کاربر را به
+  /// مرحله‌ی «انتخاب آدرس» بفرستد. دو استثنا: دوره‌ای که هدیه‌ی فیزیکی دارد
+  /// (`gift_product`) و دوره‌ای که خودِ بک‌اند برایش `shipment_required`
+  /// فرستاده — این‌ها باید جایی تحویل داده شوند.
+  bool get requiresAddress {
+    if (results.isEmpty) return false;
+    return results.first.items.any((item) {
+      if (item.product != null) return true;
+      final course = item.course;
+      if (course == null) return false;
+      return course.giftProduct != null || course.shipmentRequired == true;
+    });
+  }
+}

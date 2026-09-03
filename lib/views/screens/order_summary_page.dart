@@ -15,13 +15,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 class OrderSummaryPage extends StatefulWidget {
   final AllCartFromBackend cart;
-  final AddressModel address;
+  /// سفارشِ فقط-دوره آدرس ندارد؛ آن‌وقت این مقدار null است.
+  final AddressModel? address;
   final String deliveryMethod; // 'post' | 'peyk' | 'free'
 
   const OrderSummaryPage({
     super.key,
     required this.cart,
-    required this.address,
+    this.address,
     required this.deliveryMethod,
   });
 
@@ -152,7 +153,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       }
       final body = {
         'delivery_method': widget.deliveryMethod,
-        'address': widget.address.id,
+        'address': widget.address?.id,
         'discount_code': _discountCtrl.text.trim().isEmpty
             ? null
             : _discountCtrl.text.trim(),
@@ -256,9 +257,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                 )
               : Column(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: CheckoutTimeline(currentStep: 2),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: CheckoutTimeline(
+                          currentStep: widget.address == null ? 1 : 2,
+                          skipAddress: widget.address == null),
                     ),
                     Expanded(
                       child: ListView(
@@ -308,7 +311,9 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const CheckoutTimeline(currentStep: 2),
+            CheckoutTimeline(
+                currentStep: widget.address == null ? 1 : 2,
+                skipAddress: widget.address == null),
             const SizedBox(height: 20),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,8 +409,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     );
   }
 
-  /// کارت آدرس و روش ارسال.
+  /// کارت آدرس و روش ارسال — برای سفارشِ بدون ارسال، به‌جای آدرس یک
+  /// توضیح نشان داده می‌شود.
   Widget _buildAddressCard() {
+    final address = widget.address;
+    if (address == null) return _buildNoShippingCard();
     return Container(
                       decoration: ShapeDecoration(
             color: AppColor.surfaceContainer,
@@ -423,20 +431,20 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                     fontWeight: FontWeight.w700,
                                     color: AppColor.onSurface)),
                             const SizedBox(height: 8),
-                            Text(widget.address.addressName ?? 'آدرس انتخابی',
+                            Text(address.addressName ?? 'آدرس انتخابی',
                                 style: const TextStyle(
                                     fontFamily: 'Estedad', color: AppColor.onSurface)),
                             const SizedBox(height: 6),
-                            Text(widget.address.address,
+                            Text(address.address,
                                 style: const TextStyle(
                                     fontFamily: 'Estedad',
                                     color: AppColor.onSurfaceVariant)),
                             const SizedBox(height: 6),
                             Wrap(spacing: 12, runSpacing: 6, children: [
-                              if (widget.address.city != null)
-                                _infoChip('شهر: ${widget.address.city}'),
-                              if (widget.address.province != null)
-                                _infoChip('استان: ${widget.address.province}'),
+                              if (address.city != null)
+                                _infoChip('شهر: ${address.city}'),
+                              if (address.province != null)
+                                _infoChip('استان: ${address.province}'),
                               _infoChip(
                                   'روش ارسال: ${_deliveryLabel(widget.deliveryMethod)}'),
                             ]),
@@ -444,6 +452,45 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                         ),
                       ),
                     );
+  }
+
+  /// سفارشی که فقط دوره دارد ارسال فیزیکی ندارد، پس به‌جای کارت آدرس این
+  /// توضیح می‌آید تا نبودِ آدرس عمدی به نظر برسد، نه جاافتاده.
+  Widget _buildNoShippingCard() {
+    return Container(
+      decoration: ShapeDecoration(
+        color: AppColor.surfaceContainer,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          children: [
+            const Icon(Icons.school_outlined, color: AppColor.successDark),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text('بدون ارسال فیزیکی',
+                      style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontWeight: FontWeight.w700,
+                          color: AppColor.onSurface)),
+                  SizedBox(height: 4),
+                  Text('این سفارش فقط شامل دوره است و نیازی به آدرس ندارد.',
+                      style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12,
+                          color: AppColor.onSurfaceVariant)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// کارت کد تخفیف و کیف پول.
