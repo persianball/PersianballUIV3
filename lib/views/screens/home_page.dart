@@ -141,6 +141,13 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     reloadHomePage();
     startTimer();
+    // نامِ کاربر هم به وضعیت ورود وابسته است؛ سبد را ریشه‌ی برنامه
+    // به‌روز می‌کند، ولی خوش‌آمدگویی حالتِ همین صفحه است.
+    AuthService.authRevision.addListener(_onAuthChanged);
+  }
+
+  void _onAuthChanged() {
+    if (mounted) _loadUserName();
   }
 
   void startTimer() {
@@ -160,6 +167,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    AuthService.authRevision.removeListener(_onAuthChanged);
     flashsaleCountdownTimer?.cancel();
     _debounce?.cancel();
     _searchController.dispose();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marketky/bloc/cart/cart_bloc.dart';
+import 'package:marketky/services/auth_service.dart';
 import 'package:marketky/bloc/login/login_bloc.dart';
 import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -115,7 +116,8 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (context) => ProductDetailVariantBloc()),
         BlocProvider(create: (context) => AddressBloc()),
       ],
-      child: MaterialApp(
+      child: _AuthChangeReloader(
+        child: MaterialApp(
         navigatorKey: appNavigatorKey,
         debugShowCheckedModeBanner: false,
         // تم «چمن و شیر»: پس‌زمینه‌ی شیری، سطح کارت سفید برجسته با سایه‌ی
@@ -357,8 +359,49 @@ class _MyAppState extends State<MyApp> {
           ];
         },
       ),
+      ),
     );
   }
+}
+
+/// وقتی کاربر وارد یا خارج می‌شود، سبد را دوباره می‌خواند.
+///
+/// بدون این، ورودِ وسطِ کار روی صفحه‌های از قبل ساخته‌شده اثری نداشت:
+/// صفحه‌ی خانه LoadCart را فقط در initState می‌فرستد، پس بعد از بازگشت از
+/// صفحه‌ی ورود، بجِ تعداد سبد روی صفر می‌ماند. اینجا بالای درخت نشسته تا
+/// همه‌ی صفحه‌ها با یک‌بار خواندن به‌روز شوند، نه اینکه هر صفحه جدا فکرش را
+/// بکند.
+class _AuthChangeReloader extends StatefulWidget {
+  const _AuthChangeReloader({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_AuthChangeReloader> createState() => _AuthChangeReloaderState();
+}
+
+class _AuthChangeReloaderState extends State<_AuthChangeReloader> {
+  @override
+  void initState() {
+    super.initState();
+    AuthService.authRevision.addListener(_onAuthChanged);
+  }
+
+  @override
+  void dispose() {
+    AuthService.authRevision.removeListener(_onAuthChanged);
+    super.dispose();
+  }
+
+  /// خروج هم مثل ورود مهم است: LoadCart برای کاربر بدون توکن
+  /// CartRequiresLogin می‌دهد و بج صفر می‌شود.
+  void _onAuthChanged() {
+    if (!mounted) return;
+    context.read<CartBloc>().add(LoadCart(context));
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 

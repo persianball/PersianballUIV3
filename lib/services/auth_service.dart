@@ -5,6 +5,16 @@ import 'package:http/http.dart' as http;
 import 'package:marketky/constant/urls.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
+  /// هر ورود یا خروج، این شمارنده را یک واحد جلو می‌برد.
+  ///
+  /// چیزهایی که به وضعیت ورود وابسته‌اند (مثل شمارنده‌ی سبد در نوار بالای
+  /// صفحه‌ی خانه) وقتی کاربر وسط کار وارد می‌شود، خودشان خبردار نمی‌شدند:
+  /// صفحه‌ی قبلی از قبل ساخته شده بود و initState دوباره اجرا نمی‌شد، پس
+  /// LoadCart دیگر فرستاده نمی‌شد و بج روی صفر می‌ماند. این نوتیفایر همان
+  /// خبر است؛ چون همه‌ی نوشتن/پاک‌کردن‌های توکن از این کلاس رد می‌شوند،
+  /// هیچ مسیرِ ورودی از قلم نمی‌افتد.
+  static final ValueNotifier<int> authRevision = ValueNotifier<int>(0);
+
 
   /// خطاهای Django REST Framework معمولاً به شکل {"message": "..."} نیستند؛
   /// به شکل {"field_name": ["پیام خطا"]} یا {"non_field_errors": [...]} یا
@@ -47,7 +57,9 @@ class AuthService {
       final data = jsonDecode(response.body);
       final token = data['token'];
       if(token!=null){
-        saveTokens(token);
+        // باید await شود: بدون آن، ورود «موفق» اعلام می‌شد در حالی که توکن
+        // هنوز روی حافظه ننشسته بود و درخواست بعدی مهمان حساب می‌شد.
+        await saveTokens(token);
       }else{
         print("Token is null ?????");
       }
@@ -76,6 +88,9 @@ class AuthService {
     if(isCoach !=null){
       await prefs.setBool("is_coach", isCoach);
     }
+    // بعد از نوشتنِ توکن خبر بده، نه قبلش؛ وگرنه شنونده‌ها هنوز مهمان
+    // می‌بینند.
+    authRevision.value++;
   }
 
   // گرفتن توکن از حافظه
@@ -132,6 +147,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('refresh_token');
+    authRevision.value++;
   }
 
   // ثبت‌نام با ایمیل
