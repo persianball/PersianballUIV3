@@ -39,6 +39,14 @@ void main() {
     expect(routes.map((r) => r.settings.name), isNot(contains('/')));
   });
 
+  test('لینک مستقیم به جزئیات سفارش روت خودش را دارد', () {
+    final route =
+        AppRouter.onGenerateRoute(const RouteSettings(name: '/order/2097'));
+    // اگر روتِ اختصاصی نباشد، به PageSwitcher می‌افتد
+    expect(route.settings.name, '/order/2097');
+    expect(route, isA<MaterialPageRoute>());
+  });
+
   test('آدرس ریشه همان مسیر عادی splash را می‌گیرد', () {
     final routes = _initialRoutes('/');
     expect(routes.length, 1);

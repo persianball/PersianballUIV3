@@ -1,13 +1,24 @@
 // lib/views/screens/orders_page.dart
+//
+// سفارش‌های کاربر از /v2/order/order/.
+//
+// پیش‌تر این صفحه از /v1/payment/payments/ می‌خواند که فقط شناسه‌ی پرداخت،
+// وضعیت و مبلغ دارد. مشکل اصلی این بود که شناسه‌ی پرداخت با شناسه‌ی سفارش
+// یکی نیست (پرداختِ ۱۹۸۲ ↔ سفارشِ ۲۰۹۷)، پس با آن نمی‌شد جزئیات سفارش را
+// گرفت و صفحه‌ی جزئیات مجبور بود داده‌ی ساختگی نشان دهد.
 import 'package:flutter/material.dart';
+
 import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/screens/order_detail_page.dart';
-import 'package:marketky/models/payment_models.dart';
-import 'package:marketky/services/payment_service.dart';
+import 'package:marketky/constant/app_shapes.dart';
+import 'package:marketky/constant/urls.dart';
+import 'package:marketky/models/order_models.dart';
+import 'package:marketky/services/order_service.dart';
 import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:marketky/utils/jalali_date.dart';
+import 'package:marketky/views/screens/order_detail_page.dart';
 import 'package:marketky/views/widgets/motion.dart';
+import 'package:marketky/views/widgets/shimmer.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -16,320 +27,185 @@ class OrdersPage extends StatefulWidget {
   State<OrdersPage> createState() => _OrdersPageState();
 }
 
-class _OrdersPageState extends State<OrdersPage>
-    with SingleTickerProviderStateMixin {
-  PaymentsResponse? _data;
+class _OrdersPageState extends State<OrdersPage> {
+  final List<Order> _orders = [];
+  int _count = 0;
+  String? _nextUrl;
+
   bool _loading = true;
   bool _loadingMore = false;
   String? _error;
-  String? _nextUrl;
-  final ScrollController _scrollController = ScrollController();
-  late final AnimationController _fadeCtrl;
+
+  final ScrollController _scroll = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 450));
     _fetch();
-    _scrollController.addListener(_onScroll);
+    _scroll.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
-    _fadeCtrl.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
   Future<void> _fetch({bool loadMore = false}) async {
+    if (!mounted) return;
     setState(() {
-      if (!loadMore) _loading = true;
-      if (loadMore) _loadingMore = true;
-      _error = null;
+      if (loadMore) {
+        _loadingMore = true;
+      } else {
+        _loading = _orders.isEmpty;
+        _error = null;
+      }
     });
     try {
-      final res = await PaymentService.fetchPayments(
-          nextPageUrl: loadMore ? _nextUrl : null);
+      final res = await OrderService.fetchOrders(
+          nextUrl: loadMore ? _nextUrl : null);
+      if (!mounted) return;
       setState(() {
-        if (loadMore && _data != null) {
-          _data = PaymentsResponse(
-            count: res.count,
-            next: res.next,
-            previous: res.previous,
-            results: [..._data!.results, ...res.results],
-          );
-        } else {
-          _data = res;
-        }
+        if (!loadMore) _orders.clear();
+        _orders.addAll(res.results);
+        _count = res.count;
         _nextUrl = res.next;
         _loading = false;
         _loadingMore = false;
+        _error = null;
       });
-      // فقط لود اول کل لیست fade-in می‌شود؛ صفحه‌ی بعدی نباید آیتم‌های
-      // از قبل نمایش‌داده‌شده را دوباره محو/ظاهر کند (همان چشمک‌زدن هنگام
-      // رسیدن به انتهای اسکرول).
-      if (!loadMore) _fadeCtrl.forward(from: 0);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.toString();
         _loading = false;
         _loadingMore = false;
+        // اگر قبلاً چیزی نشان داده‌ایم، خطای صفحه‌ی بعد نباید لیست را پاک کند
+        if (_orders.isEmpty) {
+          _error = e.toString().replaceFirst('Exception: ', '');
+        }
       });
     }
   }
 
   void _onScroll() {
-    if (_nextUrl == null || _loadingMore) return;
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      // near bottom, load next page
-      final next = _nextUrl;
-      // _nextUrl = null; // prevent duplicate calls
-      if (next != null) {
-        _fetch(loadMore: true);
-        _nextUrl = null;
-      }
+    if (_nextUrl == null || _loadingMore || _loading) return;
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 240) {
+      _fetch(loadMore: true);
     }
   }
 
-  Color _statusColor(String s) {
-    switch (s.toLowerCase()) {
-      case 'success':
-        return Colors.green.shade600;
-      case 'paid':
-        return Colors.green.shade600;
-      case 'pending':
-        return Colors.orange.shade700;
-      case 'failed':
-      default:
-        return Colors.red.shade600;
-    }
-  }
-
-  IconData _statusIcon(String s) {
-    switch (s.toLowerCase()) {
-      case 'success':
-      case 'paid':
-        return Icons.check_circle;
-      case 'pending':
-        return Icons.hourglass_bottom;
-      case 'failed':
-      default:
-        return Icons.error_outline;
-    }
-  }
-
-  Widget _buildItem(PaymentItem item) {
-    final statusClr = _statusColor(item.status);
-    final priceText = '${thousandSeparator(item.price)} تومان';
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: ShapeDecoration(
-            color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
-      child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => OrderDetailPage(payment: item),
-              ),
-            ),
-            child: Padding(
-              // دسکتاپ: کارت کمی جادارتر
-              padding: EdgeInsets.all(
-                  AppBreakpoints.isDesktop(context) ? 18 : 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ردیف اول: وضعیت (مهم‌ترین اطلاعات) و شماره سفارش
-                  Row(
-                    children: [
-                      Icon(_statusIcon(item.status),
-                          color: statusClr, size: 20),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusClr.withOpacity(0.12),
-                        ),
-                        child: Text(
-                          _statusFa(item.status),
-                          style: TextStyle(
-                            fontFamily: 'Estedad',
-                            color: statusClr,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(Icons.chevron_right,
-                          size: 18, color: AppColor.onSurfaceVariant),
-                      Text(
-                        'سفارش #${item.id}',
-                        style: const TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 12,
-                          color: AppColor.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  // ردیف دوم: مبلغ، برجسته‌ترین عدد کارت
-                  Text(
-                    priceText,
-                    style: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColor.goldEnd,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Divider(height: 1, color: AppColor.outlineVariantDark),
-                  const SizedBox(height: 8),
-                  // ردیف سوم: کد پیگیری، اطلاعات کم‌اهمیت‌تر
-                  Row(
-                    children: [
-                      Icon(Icons.confirmation_number_outlined,
-                          size: 15, color: AppColor.onSurfaceVariant),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'کد پیگیری',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 12,
-                          color: AppColor.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          item.trackingCode,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textDirection: TextDirection.ltr,
-                          textAlign: TextAlign.left,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-    );
-  }
-
-  Widget _buildLoadMoreFooter() {
-    if (!_loadingMore) return const SizedBox.shrink();
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 16),
-      child: Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColor.goldEnd,
-          ),
-        ),
+  void _openDetail(Order order) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        // نسخه‌ی لیست را همراه می‌فرستیم تا صفحه‌ی جزئیات فوراً پر باز شود
+        // و فقط در پس‌زمینه تازه شود.
+        builder: (_) => OrderDetailPage(orderId: order.id, preview: order),
       ),
     );
-  }
-
-  String _statusFa(String s) {
-    switch (s.toLowerCase()) {
-      case 'success':
-      case 'paid':
-        return 'موفق';
-      case 'pending':
-        return 'در انتظار';
-      case 'failed':
-      default:
-        return 'ناموفق';
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: AppColor.obsidianBg,
+      appBar: AppBar(
+        title: const Text('سفارش‌های من',
+            style: TextStyle(
+                fontFamily: 'Estedad',
+                fontWeight: FontWeight.w700,
+                color: AppColor.onSurface)),
         backgroundColor: AppColor.obsidianBg,
-        appBar: AppBar(
-          title: const Text('سفارش‌های من',
-              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
-          backgroundColor: AppColor.obsidianBg,
-          foregroundColor: AppColor.onSurface,
-          elevation: 0,
+        foregroundColor: AppColor.onSurface,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          child: _body(),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
-            : _error != null
-                ? _ErrorView(message: _error!, onRetry: () => _fetch())
-                : RefreshIndicator(
-                    color: AppColor.goldEnd,
-                    onRefresh: () async {
-                      _nextUrl = null;
-                      await _fetch();
-                    },
-                    child: FadeTransition(
-                      // فقط لود اول کل لیست fade-in می‌شود (توضیح در _fetch)
-                      opacity: _fadeCtrl,
-                      child: _centerOnDesktop(ListView.builder(
-                        controller: _scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        // +۱ برای هدر «مجموع سفارش‌ها» و در صورت لود صفحه‌ی
-                        // بعدی، +۱ دیگر برای اسپینر کوچک انتهای لیست
-                        itemCount:
-                            (_data?.results.length ?? 0) + 1 + (_loadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                              child: Text(
-                                'مجموع سفارش‌ها: ${_data?.count ?? 0}',
-                                style: const TextStyle(
-                                    fontFamily: 'Estedad',
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColor.onSurface),
-                              ),
-                            );
-                          }
-                          final itemsCount = _data?.results.length ?? 0;
-                          if (index == itemsCount + 1) {
-                            return _buildLoadMoreFooter();
-                          }
-                          final item = _data!.results[index - 1];
-                          return FadeSlideIn(
-                            delay:
-                                Duration(milliseconds: 45 * ((index - 1) % 6)),
-                            child: _buildItem(item),
-                          );
-                        },
-                      )),
-                    ),
-                  ),
       ),
     );
   }
 
-  /// دسکتاپ: لیست سفارش‌ها وسط‌چین با حداکثر عرض ۹۰۰؛ موبایل بی‌اثر.
-  /// کنترلر اسکرول و لود بی‌نهایت دست‌نخورده می‌مانند.
+  Widget _body() {
+    if (_loading) {
+      // اسکلتون هم مثل لیستِ واقعی وسط‌چین می‌شود، وگرنه لحظه‌ی رسیدنِ
+      // داده چیدمان می‌پرد.
+      return KeyedSubtree(
+        key: const ValueKey('skeleton'),
+        child: _centerOnDesktop(const _OrdersSkeleton()),
+      );
+    }
+    if (_error != null) {
+      return KeyedSubtree(
+        key: const ValueKey('error'),
+        child: _ErrorView(message: _error!, onRetry: () => _fetch()),
+      );
+    }
+    if (_orders.isEmpty) {
+      return KeyedSubtree(
+        key: const ValueKey('empty'),
+        child: _EmptyView(onRetry: () => _fetch()),
+      );
+    }
+    return KeyedSubtree(
+      key: const ValueKey('list'),
+      child: RefreshIndicator(
+        color: AppColor.pitchGreen,
+        onRefresh: () async {
+          _nextUrl = null;
+          await _fetch();
+        },
+        child: _centerOnDesktop(
+          ListView.builder(
+            controller: _scroll,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 24),
+            itemCount: _orders.length + 1 + (_loadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == 0) return _header();
+              if (index == _orders.length + 1) return _loadMoreFooter();
+              final order = _orders[index - 1];
+              return FadeSlideIn(
+                delay: Duration(milliseconds: 45 * ((index - 1) % 6)),
+                child: _OrderCard(order: order, onTap: () => _openDetail(order)),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _header() => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+        child: Row(
+          children: [
+            const Icon(Icons.receipt_long_rounded,
+                size: 18, color: AppColor.pitchGreen),
+            const SizedBox(width: 8),
+            Text('مجموع سفارش‌ها: $_count',
+                style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.onSurface)),
+          ],
+        ),
+      );
+
+  Widget _loadMoreFooter() => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 18),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: AppColor.pitchGreen),
+          ),
+        ),
+      );
+
+  /// دسکتاپ: لیست وسط‌چین با حداکثر عرض ۹۰۰؛ موبایل بی‌اثر.
   Widget _centerOnDesktop(Widget child) {
     if (!AppBreakpoints.isDesktop(context)) return child;
     return Center(
@@ -341,31 +217,338 @@ class _OrdersPageState extends State<OrdersPage>
   }
 }
 
-class _ErrorView extends StatelessWidget {
-  final String message;
+// ---------- کارت سفارش ----------
+
+class _OrderCard extends StatelessWidget {
+  const _OrderCard({required this.order, required this.onTap});
+
+  final Order order;
+  final VoidCallback onTap;
+
+  static Color statusColor(OrderStatus s) {
+    switch (s) {
+      case OrderStatus.paid:
+      case OrderStatus.delivered:
+        return AppColor.successDark;
+      case OrderStatus.sent:
+        return AppColor.pitchGreen;
+      case OrderStatus.pending:
+      case OrderStatus.waitForAdmin:
+        return AppColor.warning;
+      case OrderStatus.failed:
+      case OrderStatus.canceled:
+        return AppColor.danger;
+      case OrderStatus.unknown:
+        return AppColor.onSurfaceVariant;
+    }
+  }
+
+  static String _abs(String path) {
+    if (path.startsWith('http')) return path;
+    final base = URLs.baseUrl.endsWith('/')
+        ? URLs.baseUrl.substring(0, URLs.baseUrl.length - 1)
+        : URLs.baseUrl;
+    return '$base${path.startsWith('/') ? '' : '/'}$path';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = statusColor(order.status);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: PressableScale(
+        onTap: onTap,
+        hoverScale: 1.01,
+        child: Container(
+          padding: EdgeInsets.all(
+              AppBreakpoints.isDesktop(context) ? 18 : 14),
+          decoration: ShapeDecoration(
+            color: AppColor.surfaceContainer,
+            shape: AppShapes.border(AppShapes.rLg),
+            shadows: AppColor.cardShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: ShapeDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      shape: AppShapes.pill,
+                    ),
+                    child: Text(order.status.label,
+                        style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: color)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(formatOrderDate(order.createdAt, withTime: false),
+                      style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12,
+                          color: AppColor.onSurfaceVariant)),
+                  const Spacer(),
+                  Text('#${order.id}',
+                      style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12,
+                          color: AppColor.onSurfaceVariant)),
+                  const Icon(Icons.chevron_left_rounded,
+                      size: 20, color: AppColor.onSurfaceVariant),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // پیش‌نمایشِ اقلام: کاربر بدون باز کردن سفارش می‌فهمد چه خریده
+              if (order.items.isNotEmpty) _itemsPreview(),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Text('${thousandSeparator(order.price.payable)} تومان',
+                      style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColor.pitchGreen)),
+                  const Spacer(),
+                  Icon(Icons.local_shipping_outlined,
+                      size: 15, color: AppColor.onSurfaceVariant),
+                  const SizedBox(width: 5),
+                  Text(order.deliveryLabel,
+                      style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12,
+                          color: AppColor.onSurfaceVariant)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _itemsPreview() {
+    const int maxThumbs = 3;
+    final thumbs = order.items.take(maxThumbs).toList();
+    final extra = order.items.length - thumbs.length;
+    return Row(
+      children: [
+        for (final line in thumbs)
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: ClipRRect(
+              borderRadius: AppShapes.radius(AppShapes.rSm),
+              child: SizedBox(
+                width: 46,
+                height: 46,
+                child: line.image == null || line.image!.isEmpty
+                    ? Container(
+                        color: AppColor.cardMuted,
+                        child: Icon(
+                            line.isCourse
+                                ? Icons.school_rounded
+                                : Icons.image_outlined,
+                            size: 18,
+                            color: AppColor.lineStrong))
+                    : Image.network(_abs(line.image!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                            color: AppColor.cardMuted,
+                            child: const Icon(Icons.broken_image_outlined,
+                                size: 18, color: AppColor.lineStrong))),
+              ),
+            ),
+          ),
+        if (extra > 0)
+          Container(
+            width: 46,
+            height: 46,
+            alignment: Alignment.center,
+            decoration: ShapeDecoration(
+              color: AppColor.cardMuted,
+              shape: AppShapes.border(AppShapes.rSm),
+            ),
+            child: Text('+$extra',
+                style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.onSurfaceVariant)),
+          ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            order.items.first.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 13,
+                height: 1.6,
+                color: AppColor.onSurface),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------- حالت‌های خالی/خطا/بارگذاری ----------
+
+class _OrdersSkeleton extends StatelessWidget {
+  const _OrdersSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(12, 16, 12, 24),
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(4, 0, 4, 12),
+            child: Bone(width: 150, height: 16),
+          ),
+          for (int i = 0; i < 5; i++)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: ShapeDecoration(
+                  color: AppColor.surfaceContainer,
+                  shape: AppShapes.border(AppShapes.rLg),
+                  shadows: AppColor.cardShadow,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Row(children: [
+                      Bone(width: 84, height: 22, radius: 999),
+                      SizedBox(width: 8),
+                      Bone(width: 96, height: 13),
+                      Spacer(),
+                      Bone(width: 44, height: 13),
+                    ]),
+                    SizedBox(height: 14),
+                    Row(children: [
+                      Bone(width: 46, height: 46, radius: 10),
+                      SizedBox(width: 8),
+                      Bone(width: 46, height: 46, radius: 10),
+                      SizedBox(width: 10),
+                      Expanded(child: Bone(height: 14)),
+                    ]),
+                    SizedBox(height: 14),
+                    Row(children: [
+                      Bone(width: 132, height: 18),
+                      Spacer(),
+                      Bone(width: 70, height: 13),
+                    ]),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyView extends StatelessWidget {
+  const _EmptyView({required this.onRetry});
   final VoidCallback onRetry;
-  const _ErrorView({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.wifi_off, size: 40, color: AppColor.onSurfaceVariant),
-          const SizedBox(height: 12),
-          Text(message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: onRetry,
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppColor.goldEnd, shape: AppShapes.pill),
-            child: const Text('تلاش مجدد',
-                style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.receipt_long_outlined,
+                size: 52, color: AppColor.lineStrong),
+            const SizedBox(height: 14),
+            const Text('هنوز سفارشی ثبت نکرده‌اید',
+                style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.onSurface)),
+            const SizedBox(height: 8),
+            const Text('سفارش‌های شما بعد از خرید اینجا نمایش داده می‌شوند.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 12,
+                    color: AppColor.onSurfaceVariant)),
+            const SizedBox(height: 18),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColor.pitchGreen,
+                side: const BorderSide(color: AppColor.pitchGreen),
+                shape: AppShapes.pill,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              ),
+              label: const Text('بارگذاری مجدد',
+                  style: TextStyle(
+                      fontFamily: 'Estedad', fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool needsLogin = message.contains('ورود');
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(needsLogin ? Icons.lock_outline_rounded : Icons.wifi_off_rounded,
+                size: 44, color: AppColor.lineStrong),
+            const SizedBox(height: 14),
+            Text(
+                needsLogin
+                    ? 'برای دیدن سفارش‌ها وارد حساب کاربری شوید'
+                    : message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 14,
+                    color: AppColor.onSurfaceVariant)),
+            const SizedBox(height: 18),
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.pitchGreen,
+                  foregroundColor: Colors.white,
+                  shape: AppShapes.pill,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 12)),
+              child: const Text('تلاش مجدد',
+                  style: TextStyle(
+                      fontFamily: 'Estedad', fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
       ),
     );
   }

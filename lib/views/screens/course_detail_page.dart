@@ -1690,27 +1690,9 @@ class _CourseDetailSkeleton extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: const [
-        // جای SliverAppBarِ کشیده با تصویر پس‌زمینه
-        SizedBox(
-          height: 240,
-          child: Stack(
-            children: [
-              Positioned.fill(child: Bone(radius: 0)),
-              Positioned(
-                top: 14,
-                left: 16,
-                right: 16,
-                child: Row(
-                  children: [
-                    Bone.circle(size: 32),
-                    Expanded(child: Center(child: Bone(width: 90, height: 16))),
-                    SizedBox(width: 32),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        // جای SliverAppBarِ کشیده: تصویر پشتِ نوارِ بالا هم ادامه دارد، پس
+        // یک بلوکِ یک‌دستِ ۲۴۰ پیکسلی همان قاب را نشان می‌دهد
+        Bone(height: 240, radius: 0),
         Padding(
           padding: EdgeInsets.all(16),
           child: Directionality(

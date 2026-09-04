@@ -7,6 +7,7 @@ import 'package:marketky/views/screens/product_detail.dart';
 import 'package:marketky/views/screens/cart_page.dart';
 import 'package:marketky/views/screens/splash_router.dart';
 import 'package:marketky/views/screens/orders_page.dart';
+import 'package:marketky/views/screens/order_detail_page.dart';
 import 'package:marketky/views/screens/addresses_page.dart';
 import 'package:marketky/views/screens/notification_page.dart';
 import 'package:marketky/views/screens/account_security_page.dart';
@@ -34,6 +35,17 @@ class AppRouter {
       final id = int.parse(productMatch.group(1)!);
       return MaterialPageRoute(
         builder: (_) => ProductDetailPage(productId: id),
+        settings: settings,
+      );
+    }
+
+    // Dynamic: /order/{id} — لینک مستقیم به جزئیات سفارش. بدون این،
+    // صفحه‌ی جزئیات فقط با push از لیست باز می‌شد.
+    final orderMatch = RegExp(r'^/order/(\d+)$').firstMatch(name);
+    if (orderMatch != null) {
+      final id = int.parse(orderMatch.group(1)!);
+      return MaterialPageRoute(
+        builder: (_) => OrderDetailPage(orderId: id),
         settings: settings,
       );
     }
