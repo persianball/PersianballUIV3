@@ -1,14 +1,39 @@
 // lib/views/screens/my_course_detail_page.dart
+//
+// صفحه‌ی تماشای دوره‌ی خریداری‌شده.
+//
+// چیدمان: پخش‌کننده در یک SliverAppBarِ سنجاق‌شده (همیشه دیده می‌شود و با
+// اسکرول بریده نمی‌شود)، محتوای دوره زیرِ آن اسکرول می‌کند و فهرستِ کاملِ
+// هفته‌ها/ویدیوها در یک باتم‌شیتِ کشیدنی باز می‌شود.
+//
+// پیشرفتِ تماشا از [CourseProgressService] می‌آید (همان سرویسی که صفحه‌ی
+// معرفیِ دوره استفاده می‌کند)، پس با بازکردنِ صفحه دقیقاً همان ویدیویی که
+// کاربر آخرین‌بار می‌دید، از همان ثانیه‌ای که رها کرده بود، بارگذاری می‌شود.
 import 'dart:async';
-import 'package:marketky/constant/app_shapes.dart';
+import 'dart:math' as math;
+
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
+
 import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_color.dart';
+import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/models/course_models.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:chewie/chewie.dart';
-import 'package:video_player/video_player.dart';
+import 'package:marketky/services/course_progress_service.dart';
 import 'package:marketky/views/widgets/app_buttons.dart';
+import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:marketky/views/widgets/course_lesson_list.dart';
+import 'package:marketky/views/widgets/motion.dart';
+import 'package:marketky/views/widgets/shimmer.dart';
+
+/// ثانیه‌های شمارشِ معکوسِ «درسِ بعدی» بعد از تمام‌شدنِ یک ویدیو.
+const int _kAutoNextSeconds = 6;
+
+/// ارتفاعِ کارتِ نوارِ «در ادامه» — تصویر ۸۸ + عنوانِ دو خطی + نامِ هفته.
+const double _kUpNextCardHeight = 166;
 
 class MyCourseDetailPage extends StatefulWidget {
   final MyCourse myCourse;
@@ -19,501 +44,1321 @@ class MyCourseDetailPage extends StatefulWidget {
 }
 
 class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
-  final ScrollController _scrollController = ScrollController();
-  final ScrollController _listController = ScrollController();
-  Map<int, Set<int>> _watchedByCourse = {}; // courseId -> set of flat indices
-  int? _continueIndex;
-  String? _continueLabel;
-  bool _introExpanded = false;
+  late final List<CourseLesson> _lessons =
+      flattenLessons(widget.myCourse.courseDetail.detail.weeks);
 
-  VideoPlayerController? _videoController;
-  ChewieController? _chewieController;
-  
-  int _selectedWeekIndex = 0;
-  int _selectedSectionIndex = 0;
+  /// پیشرفت و درسِ فعلی به‌صورت Listenable نگه داشته می‌شوند تا فهرستِ
+  /// درس‌ها (چه در شیت، چه در ستونِ دسکتاپ) بدون rebuildِ کلِ صفحه
+  /// به‌روز شود — شیت حتی وقتی باز است زنده می‌ماند.
+  final ValueNotifier<CourseProgress> _progress =
+      ValueNotifier(CourseProgress.empty);
+  final ValueNotifier<String?> _currentKey = ValueNotifier(null);
 
-  int get _courseKey => widget.myCourse.courseDetail.id;
+  final ScrollController _scroll = ScrollController();
+
+  VideoPlayerController? _video;
+  ChewieController? _chewie;
+
+  CourseLesson? _current;
+  bool _booting = true;
+  bool _videoLoading = false;
+  String? _videoError;
+
+  /// پوششِ «درسِ بعدی» که بعد از پایانِ ویدیو با شمارشِ معکوس ظاهر می‌شود.
+  CourseLesson? _nextUp;
+  int _countdown = _kAutoNextSeconds;
+  Timer? _countdownTimer;
+
+  Duration _lastReported = Duration.zero;
+  bool _reachedEnd = false;
+
+  int get _courseId => widget.myCourse.courseDetail.id;
 
   @override
   void initState() {
     super.initState();
-    _loadProgress();
-    _computeContinueWatching();
-    _initPlayer();
+    _boot();
   }
 
   @override
   void dispose() {
-    _chewieController?.dispose();
-    _videoController?.dispose();
-    _listController.dispose();
-    _scrollController.dispose();
+    _countdownTimer?.cancel();
+    _flushProgress();
+    _video?.removeListener(_onTick);
+    _chewie?.dispose();
+    _video?.dispose();
+    _scroll.dispose();
+    _progress.dispose();
+    _currentKey.dispose();
     super.dispose();
   }
 
-  Future<void> _initPlayer() async {
-    await _loadVideoFromSection(_selectedWeekIndex, _selectedSectionIndex);
+  // ==================== بارگذاری و پیشرفت ====================
+
+  Future<void> _boot() async {
+    final loaded = await CourseProgressService.load(_courseId);
+    final progress = await _importLegacyProgress(loaded);
+    if (!mounted) return;
+    _progress.value = progress;
+
+    final start = _resumeTarget(progress);
+    setState(() => _booting = false);
+    if (start != null) {
+      await _play(start, autoPlay: false);
+    }
   }
 
-  Future<void> _loadVideoFromSection(int weekIndex, int sectionIndex) async {
-    final weeks = widget.myCourse.courseDetail.detail.weeks;
-    if (weekIndex >= weeks.length) return;
-    
-    final week = weeks[weekIndex];
-    if (sectionIndex >= week.sections.length) return;
-    
-    final section = week.sections[sectionIndex];
-    final url = section.videoUrl;
-    
-    if ((url ?? '').isEmpty) return;
-    
+  /// نسخه‌ی قدیمیِ صفحه فقط شماره‌ی درس‌های دیده‌شده را ذخیره می‌کرد؛ آن‌ها
+  /// یک‌بار به سرویسِ پیشرفت منتقل می‌شوند تا کاربر تیک‌هایش را از دست ندهد.
+  Future<CourseProgress> _importLegacyProgress(CourseProgress current) async {
+    if (current.videos.isNotEmpty) return current;
+    final prefs = await SharedPreferences.getInstance();
+    final legacyKey = 'watchedVideos_$_courseId';
+    final legacy = prefs.getStringList(legacyKey);
+    if (legacy == null || legacy.isEmpty) return current;
+
+    final indices = legacy
+        .map(int.tryParse)
+        .whereType<int>()
+        .where((i) => i >= 0 && i < _lessons.length)
+        .toList()
+      ..sort();
+
+    var progress = current;
+    for (final i in indices) {
+      final lesson = _lessons[i];
+      progress = await CourseProgressService.setSeen(
+        _courseId,
+        key: lesson.progressKey,
+        title: lesson.title,
+        weekNumber: lesson.weekNumber,
+        seen: true,
+      );
+    }
+    await prefs.remove(legacyKey);
+    return progress;
+  }
+
+  /// ویدیویی که صفحه باید با آن باز شود: آخرین ویدیوی دیده‌شده، وگرنه
+  /// اولین درسِ تماشا‌نشده، وگرنه اولین درسِ قابلِ پخش.
+  CourseLesson? _resumeTarget(CourseProgress progress) {
+    final last = progress.lastKey;
+    if (last != null) {
+      for (final lesson in _lessons) {
+        if (lesson.playable && lesson.progressKey == last) return lesson;
+      }
+    }
+    for (final lesson in _lessons) {
+      if (lesson.playable && !progress.isSeen(lesson.progressKey)) return lesson;
+    }
+    for (final lesson in _lessons) {
+      if (lesson.playable) return lesson;
+    }
+    return null;
+  }
+
+  CourseLesson? _neighbour(int step) {
+    final current = _current;
+    if (current == null) return null;
+    for (int i = current.flatIndex + step;
+        i >= 0 && i < _lessons.length;
+        i += step) {
+      if (_lessons[i].playable) return _lessons[i];
+    }
+    return null;
+  }
+
+  /// درسی که دکمه‌ی «ادامه‌ی تماشا» باید ببرد: نیمه‌تمامِ فعلی، وگرنه
+  /// اولین درسِ تماشا‌نشده.
+  CourseLesson? get _continueTarget {
+    final progress = _progress.value;
+    final current = _current;
+    if (current != null) {
+      final watched = progress.of(current.progressKey);
+      if (watched != null && watched.resumable) return current;
+    }
+    for (final lesson in _lessons) {
+      if (lesson.playable && !progress.isSeen(lesson.progressKey)) return lesson;
+    }
+    return current;
+  }
+
+  // ==================== پخش ====================
+
+  Future<void> _play(CourseLesson lesson, {bool autoPlay = true}) async {
+    if (!lesson.playable) return;
+
+    _cancelAutoNext();
+    _flushProgress();
+    _video?.removeListener(_onTick);
+    final oldChewie = _chewie;
+    final oldVideo = _video;
+
+    setState(() {
+      _current = lesson;
+      _chewie = null;
+      _video = null;
+      _videoLoading = true;
+      _videoError = null;
+    });
+    _currentKey.value = lesson.progressKey;
+    _lastReported = Duration.zero;
+    _reachedEnd = false;
+
+    oldChewie?.dispose();
+    await oldVideo?.dispose();
+
     try {
-      // Dispose previous controllers
-      _chewieController?.dispose();
-      _videoController?.dispose();
-      
-      final vc = VideoPlayerController.networkUrl(Uri.parse(url!));
-      await vc.initialize();
-      final cc = ChewieController(
-        videoPlayerController: vc,
-        autoPlay: false,
+      final controller =
+          VideoPlayerController.networkUrl(Uri.parse(lesson.videoUrl));
+      await controller.initialize();
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      // ادامه از محلِ توقف — مگر اینکه عملاً تهِ ویدیو باشد.
+      final saved = _progress.value.of(lesson.progressKey);
+      if (saved != null && saved.resumable) {
+        final total = controller.value.duration;
+        if (saved.position < total - const Duration(seconds: 3)) {
+          await controller.seekTo(saved.position);
+          _lastReported = saved.position;
+        }
+      }
+
+      controller.addListener(_onTick);
+      final chewie = ChewieController(
+        videoPlayerController: controller,
+        autoPlay: autoPlay,
         looping: false,
+        allowPlaybackSpeedChanging: true,
+        playbackSpeeds: const [0.75, 1, 1.25, 1.5, 1.75, 2],
+        deviceOrientationsOnEnterFullScreen: const [
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ],
+        deviceOrientationsAfterFullScreen: const [DeviceOrientation.portraitUp],
         materialProgressColors: ChewieProgressColors(
-          playedColor: AppColor.goldEnd,
-          handleColor: AppColor.goldEnd,
+          playedColor: AppColor.pitchGreenLight,
+          handleColor: AppColor.pitchGreenLight,
           backgroundColor: Colors.white24,
           bufferedColor: Colors.white54,
         ),
       );
+
       if (!mounted) {
-        vc.dispose();
-        cc.dispose();
+        chewie.dispose();
+        await controller.dispose();
         return;
       }
       setState(() {
-        _videoController = vc;
-        _chewieController = cc;
-        _selectedWeekIndex = weekIndex;
-        _selectedSectionIndex = sectionIndex;
+        _video = controller;
+        _chewie = chewie;
+        _videoLoading = false;
       });
-    } catch (_) {}
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _videoLoading = false;
+        _videoError = 'پخش این ویدیو ممکن نیست. اتصالت را بررسی کن.';
+      });
+    }
   }
 
-  Future<void> _loadProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getStringList('watchedVideos_$_courseKey') ?? [];
+  /// هر ۵ ثانیه محلِ توقف ذخیره می‌شود؛ نوشتنِ بیشتر فقط حافظه را می‌ساید.
+  void _onTick() {
+    final value = _video?.value;
+    if (value == null || !value.isInitialized) return;
+    if (value.duration <= Duration.zero) return;
+
+    final atEnd =
+        value.position >= value.duration - const Duration(milliseconds: 800);
+    if (atEnd && !_reachedEnd) {
+      _reachedEnd = true;
+      _record(value.position, value.duration, seen: true);
+      _startAutoNext();
+      return;
+    }
+    if ((value.position - _lastReported).abs() < const Duration(seconds: 5)) {
+      return;
+    }
+    _record(value.position, value.duration);
+  }
+
+  void _flushProgress() {
+    final value = _video?.value;
+    if (value == null || !value.isInitialized) return;
+    if (value.duration <= Duration.zero) return;
+    _record(value.position, value.duration);
+  }
+
+  Future<void> _record(Duration position, Duration duration,
+      {bool? seen}) async {
+    final lesson = _current;
+    if (lesson == null) return;
+    _lastReported = position;
+    final next = await CourseProgressService.record(
+      _courseId,
+      key: lesson.progressKey,
+      title: lesson.title,
+      weekNumber: lesson.weekNumber,
+      position: position,
+      duration: duration,
+      seen: seen,
+    );
+    if (mounted) _progress.value = next;
+  }
+
+  Future<void> _toggleSeen(CourseLesson lesson) async {
+    final seen = _progress.value.isSeen(lesson.progressKey);
+    final next = await CourseProgressService.setSeen(
+      _courseId,
+      key: lesson.progressKey,
+      title: lesson.title,
+      weekNumber: lesson.weekNumber,
+      seen: !seen,
+    );
+    if (mounted) _progress.value = next;
+  }
+
+  // ==================== درسِ بعدی ====================
+
+  void _startAutoNext() {
+    final next = _neighbour(1);
+    if (next == null) return;
     setState(() {
-      _watchedByCourse[_courseKey] = stored.map(int.parse).toSet();
+      _nextUp = next;
+      _countdown = _kAutoNextSeconds;
+    });
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return timer.cancel();
+      if (_countdown <= 1) {
+        timer.cancel();
+        final target = _nextUp;
+        setState(() => _nextUp = null);
+        if (target != null) _play(target);
+        return;
+      }
+      setState(() => _countdown--);
     });
   }
 
-  Future<void> _saveProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final ids = _watchedByCourse[_courseKey] ?? {};
-    await prefs.setStringList(
-      'watchedVideos_$_courseKey',
-      ids.map((e) => e.toString()).toList(),
+  void _cancelAutoNext() {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    if (_nextUp != null) setState(() => _nextUp = null);
+  }
+
+  void _openLessons() {
+    showCourseLessonsSheet(
+      context,
+      lessons: _lessons,
+      progress: _progress,
+      currentKey: _currentKey,
+      onPlay: _play,
+      onToggleSeen: _toggleSeen,
     );
   }
 
-  void _toggleWatched(int flatIndex) {
-    final set = _watchedByCourse[_courseKey] ?? <int>{};
-    if (set.contains(flatIndex)) {
-      set.remove(flatIndex);
-    } else {
-      set.add(flatIndex);
-    }
-    setState(() {
-      _watchedByCourse[_courseKey] = set;
-    });
-    _saveProgress();
-    _computeContinueWatching();
+  // ==================== پخش‌کننده ====================
+
+  double _playerHeight(BuildContext context, {required bool desktop}) {
+    final size = MediaQuery.of(context).size;
+    final width = desktop
+        ? math.min(size.width * 0.58, 820.0)
+        : size.width;
+    // روی نمایشگرهای کوتاه، ویدیو نباید بیشتر از نیمِ صفحه را بگیرد.
+    return math.min(width * 9 / 16, size.height * 0.46);
   }
 
-  void _onSectionTap(int weekIndex, int sectionIndex) {
-    _loadVideoFromSection(weekIndex, sectionIndex);
-    _toggleWatched(_flatIndexFrom(weekIndex, sectionIndex));
-  }
+  Widget _playerStage({required double height, required bool rounded}) {
+    final detail = widget.myCourse.courseDetail;
+    final poster = _current?.section.videoThumbnail ??
+        detail.videoThumbnail ??
+        (detail.images.isNotEmpty ? detail.images.first : detail.image);
 
-  void _computeContinueWatching() {
-    final weeks = widget.myCourse.courseDetail.detail.weeks;
-    int total = 0;
-    for (final w in weeks) {
-      total += w.sections.length;
-    }
-    if (total == 0) {
-      setState(() {
-        _continueIndex = null;
-        _continueLabel = null;
-      });
-      return;
-    }
-
-    final watched = _watchedByCourse[_courseKey] ?? {};
-    int? nextIndex;
-    int idx = 0;
-    String? label;
-    for (int wi = 0; wi < weeks.length; wi++) {
-      final week = weeks[wi];
-      for (int si = 0; si < week.sections.length; si++, idx++) {
-        if (!watched.contains(idx)) {
-          nextIndex = idx;
-          label = '${week.weekName ?? 'هفته ${week.weekNumber}'} - ${week.sections[si].title}';
-          break;
-        }
-      }
-      if (nextIndex != null) break;
-    }
-    setState(() {
-      _continueIndex = nextIndex;
-      _continueLabel = label;
-    });
-  }
-
-  int _flatIndexFrom(int weekIdx, int sectionIdx) {
-    int idx = 0;
-    for (int i = 0; i < weekIdx; i++) {
-      idx += widget.myCourse.courseDetail.detail.weeks[i].sections.length;
-    }
-    idx += sectionIdx;
-    return idx;
-  }
-
-
-  /// معرفی دوره (آکاردئون) — از بدنه‌ی build جدا شد تا در هر دو چیدمان
-  /// موبایل و دسکتاپ یکسان استفاده شود.
-  Widget _introSection() {
-    return Theme(
-      data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-          unselectedWidgetColor: AppColor.onSurfaceVariant),
-      child: ExpansionTile(
-        iconColor: AppColor.goldEnd,
-        collapsedIconColor: AppColor.onSurfaceVariant,
-        initiallyExpanded: _introExpanded,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 0),
-        onExpansionChanged: (v) => setState(() => _introExpanded = v),
-        title: const Text('معرفی دوره',
-            style: TextStyle(
-                fontFamily: 'Estedad',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColor.onSurface)),
+    final Widget stage = Container(
+      height: height,
+      color: Colors.black,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          const SizedBox(height: 6),
-          Text(widget.myCourse.courseDescription,
-              style: const TextStyle(
-                  fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
-          const SizedBox(height: 8),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 320),
+            switchInCurve: Curves.easeOutCubic,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.97, end: 1).animate(animation),
+                child: child,
+              ),
+            ),
+            child: _playerContent(poster: poster, height: height),
+          ),
+          _topBar(),
+          if (_nextUp != null) _nextUpOverlay(_nextUp!),
         ],
       ),
     );
-  }
 
-  // ==================== چیدمانِ پخش‌کننده‌ی دوره ====================
-
-  /// پخش‌کننده با نسبتِ ثابت ۱۶:۹.
-  ///
-  /// قبلاً ویدیو داخل یک SliverAppBarِ جمع‌شونده بود؛ با اسکرول کوچک و
-  /// بریده می‌شد و عنوان/نوار پیشرفت هم روی کنترل‌های پخش می‌افتاد.
-  Widget _player(MyCourseDetail detail) {
-    final ready = _chewieController != null &&
-        _videoController != null &&
-        _videoController!.value.isInitialized;
-
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Container(
-        color: Colors.black,
-        child: ready
-            ? Chewie(controller: _chewieController!)
-            : Stack(
-                fit: StackFit.expand,
-                children: [
-                  if ((detail.videoThumbnail ?? '').isNotEmpty)
-                    Image.network(detail.videoThumbnail!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            Container(color: AppColor.obsidianBg))
-                  else if (detail.images.isNotEmpty)
-                    Image.network(detail.images.first,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            Container(color: AppColor.obsidianBg))
-                  else
-                    Container(color: AppColor.obsidianBg),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(color: Color(0x66000000)),
-                  ),
-                  const Center(
-                    child: Icon(Icons.play_circle_fill_rounded,
-                        size: 64, color: Colors.white70),
-                  ),
-                ],
-              ),
+    if (!rounded) return stage;
+    return Container(
+      color: AppColor.milk,
+      child: ClipPath(
+        clipper: ShapeBorderClipper(
+          shape: ContinuousRectangleBorder(
+            borderRadius: AppShapes.radiusBottom(AppShapes.rLg),
+          ),
+        ),
+        child: stage,
       ),
     );
   }
 
-  /// عنوان دوره، نوار پیشرفت و دکمه‌ی «ادامه تماشا»
-  Widget _courseHeader(
-    MyCourseDetail detail,
-    double progress,
-    int watchedCount,
-    int totalSections,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+  Widget _playerContent({required String? poster, required double height}) {
+    if (_videoError != null) {
+      return Center(
+        key: const ValueKey('error'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded,
+                  size: 34, color: Colors.white70),
+              const SizedBox(height: 10),
+              Text(
+                _videoError!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 12.5,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: 150,
+                child: GradientButton(
+                  label: 'تلاش دوباره',
+                  height: 38,
+                  fontSize: 12,
+                  onPressed: () {
+                    final lesson = _current;
+                    if (lesson != null) _play(lesson);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final chewie = _chewie;
+    final video = _video;
+    if (chewie != null && video != null && video.value.isInitialized) {
+      return Center(
+        key: const ValueKey('player'),
+        child: AspectRatio(
+          aspectRatio:
+              video.value.aspectRatio == 0 ? 16 / 9 : video.value.aspectRatio,
+          child: Chewie(controller: chewie),
+        ),
+      );
+    }
+
+    // پیش از آماده‌شدنِ ویدیو، همان تصویری که کاربر در فهرستِ دوره‌ها لمس
+    // کرده بود با انتقالِ Hero اینجا می‌نشیند و بعد جایش را به پخش‌کننده
+    // می‌دهد؛ صفحه هیچ لحظه‌ای خالی دیده نمی‌شود.
+    return Stack(
+      key: const ValueKey('poster'),
+      fit: StackFit.expand,
+      children: [
+        Hero(
+          tag: 'mycourse_${widget.myCourse.courseId}',
+          child: AppNetworkImage(
+            url: poster,
+            fit: BoxFit.cover,
+            fallbackAsset: 'assets/images/course_not_found.jpg',
+          ),
+        ),
+        const DecoratedBox(decoration: BoxDecoration(color: Color(0x8C000000))),
+        Center(
+          child: _videoLoading
+              ? const SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2.4, color: Colors.white),
+                )
+              : Icon(
+                  Icons.play_circle_fill_rounded,
+                  size: 58,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+        ),
+      ],
+    );
+  }
+
+  /// نوارِ شفافِ بالای ویدیو: بازگشت + عنوانِ درسِ در حالِ پخش.
+  Widget _topBar() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: IgnorePointer(
+        ignoring: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 22),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xB3000000), Color(0x00000000)],
+            ),
+          ),
+          child: Row(
+            children: [
+              _glassButton(
+                icon: Icons.arrow_forward_rounded,
+                tooltip: 'بازگشت',
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _current?.title ?? widget.myCourse.courseDetail.courseTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        shadows: [Shadow(blurRadius: 6, color: Colors.black54)],
+                      ),
+                    ),
+                    if (_current != null)
+                      Text(
+                        _current!.weekTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 10.5,
+                          color: Colors.white70,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // در دسکتاپ فهرست همیشه در ستونِ کناری باز است.
+              if (!AppBreakpoints.isDesktop(context)) ...[
+                const SizedBox(width: 8),
+                _glassButton(
+                  icon: Icons.playlist_play_rounded,
+                  tooltip: 'فهرست درس‌ها',
+                  onTap: _openLessons,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _glassButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: PressableScale(
+        onTap: onTap,
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: ShapeDecoration(
+            color: Colors.black.withValues(alpha: 0.42),
+            shape: const CircleBorder(
+              side: BorderSide(color: Colors.white24),
+            ),
+          ),
+          child: Icon(icon, size: 19, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  /// بعد از پایانِ ویدیو: کارتِ درسِ بعدی با شمارشِ معکوس.
+  Widget _nextUpOverlay(CourseLesson next) {
+    return Positioned.fill(
+      child: FadeSlideIn(
+        duration: const Duration(milliseconds: 320),
+        child: Container(
+          color: const Color(0xD9000000),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'درس بعدی',
+                style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white54,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                next.title,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 148,
+                    child: GradientButton(
+                      label: 'پخش ($_countdown)',
+                      height: 40,
+                      fontSize: 12.5,
+                      icon: const Icon(Icons.play_arrow_rounded),
+                      onPressed: () {
+                        _cancelAutoNext();
+                        _play(next);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  PressableScale(
+                    onTap: _cancelAutoNext,
+                    child: Container(
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      alignment: Alignment.center,
+                      decoration: ShapeDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        shape: AppShapes.pill.copyWith(
+                          side: const BorderSide(color: Colors.white24),
+                        ),
+                      ),
+                      child: const Text(
+                        'بی‌خیال',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ==================== محتوای زیرِ پخش‌کننده ====================
+
+  /// کارتِ «در حالِ پخش»: عنوان، زمانِ زنده و کلیدهای درسِ قبلی/بعدی.
+  Widget _nowPlayingCard() {
+    final lesson = _current;
+    if (lesson == null) return const SizedBox.shrink();
+    final previous = _neighbour(-1);
+    final next = _neighbour(1);
+
+    return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            detail.courseTitle,
-            style: const TextStyle(
-                fontFamily: 'Estedad',
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: AppColor.onSurface),
-          ),
-          const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: AppColor.cardMuted,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                decoration: const ShapeDecoration(
+                  color: AppColor.pitchGreenSoft,
+                  shape: AppShapes.pill,
+                ),
+                child: Text(
+                  lesson.weekTitle,
+                  style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
                     color: AppColor.pitchGreen,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Text('$watchedCount از $totalSections',
-                  style: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColor.onSurfaceVariant)),
+              const Spacer(),
+              Text(
+                'درس ${lesson.flatIndex + 1} از ${_lessons.length}',
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.inkMuted,
+                ),
+              ),
             ],
           ),
-          if (_continueIndex != null) ...[
-            const SizedBox(height: 12),
-            GradientButton(
-              label: _continueLabel == null
-                  ? 'ادامه تماشا'
-                  : 'ادامه: ${_continueLabel!}',
-              icon: const Icon(Icons.play_arrow_rounded),
-              height: 44,
-              fontSize: 13,
-              onPressed: () => _playFlatIndex(_continueIndex!),
+          const SizedBox(height: 8),
+          Text(
+            lesson.title,
+            style: const TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 15,
+              height: 1.5,
+              fontWeight: FontWeight.w800,
+              color: AppColor.ink,
             ),
-          ],
+          ),
+          const SizedBox(height: 10),
+          _livePosition(),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _stepButton(
+                  label: 'درس قبلی',
+                  icon: Icons.chevron_right_rounded,
+                  onTap: previous == null ? null : () => _play(previous),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _stepButton(
+                  label: 'درس بعدی',
+                  icon: Icons.chevron_left_rounded,
+                  onTap: next == null ? null : () => _play(next),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  /// از ایندکسِ پیوسته، هفته و سکشن را پیدا و پخش می‌کند.
-  void _playFlatIndex(int flatIndex) {
-    final weeks = widget.myCourse.courseDetail.detail.weeks;
-    int idx = 0;
-    for (int wi = 0; wi < weeks.length; wi++) {
-      for (int si = 0; si < weeks[wi].sections.length; si++, idx++) {
-        if (idx == flatIndex) {
-          setState(() => _selectedWeekIndex = wi);
-          _onSectionTap(wi, si);
-          return;
-        }
-      }
+  /// نوارِ زمانِ ویدیو که مستقیم به کنترلرِ پخش گوش می‌دهد (بدون rebuildِ صفحه).
+  Widget _livePosition() {
+    final video = _video;
+    // پیش از آماده‌شدنِ ویدیو همان ساختار با مقدارِ صفر کشیده می‌شود، وگرنه
+    // با آماده‌شدن، ارتفاعِ کارت می‌پرد.
+    if (video == null || !video.value.isInitialized) {
+      return _timeline(Duration.zero, Duration.zero, 0);
     }
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: video,
+      builder: (context, value, _) {
+        final total = value.duration;
+        final fraction = total.inMilliseconds == 0
+            ? 0.0
+            : (value.position.inMilliseconds / total.inMilliseconds)
+                .clamp(0.0, 1.0);
+        return _timeline(value.position, total, fraction);
+      },
+    );
   }
 
-  /// یک ردیفِ درس در لیست
-  Widget _lessonTile({
-    required MyCourseWeekSectionItem section,
-    required int weekIndex,
-    required int sectionIndex,
-    required bool seen,
-    required bool isCurrent,
-  }) {
-    final thumb = (section.videoThumbnail ?? '').trim();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: isCurrent ? AppColor.pitchGreenSoft : AppColor.surfaceContainer,
-        shape: AppShapes.border(
-          AppShapes.rMd,
-          side: BorderSide(
-            color: isCurrent ? AppColor.pitchGreen : AppColor.line,
-            width: isCurrent ? 1.5 : 1,
+  Widget _timeline(Duration position, Duration total, double fraction) {
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: fraction,
+            minHeight: 6,
+            backgroundColor: AppColor.cardMuted,
+            color: AppColor.pitchGreen,
           ),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: section.isLocked
-              ? null
-              : () => _onSectionTap(weekIndex, sectionIndex),
-          child: Padding(
-            // ارتفاعِ ردیف بالای ۴۴ می‌ماند تا هدفِ لمس استاندارد باشد
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: AppShapes.radius(AppShapes.rSm),
-                  child: SizedBox(
-                    width: 76,
-                    height: 46,
-                    child: thumb.isEmpty
-                        ? Container(
-                            color: AppColor.cardMuted,
-                            child: const Icon(Icons.play_circle_outline,
-                                size: 22, color: AppColor.inkMuted),
-                          )
-                        : Image.network(
-                            thumb,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: AppColor.cardMuted,
-                              child: const Icon(Icons.play_circle_outline,
-                                  size: 22, color: AppColor.inkMuted),
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        section.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 13,
-                          fontWeight:
-                              isCurrent ? FontWeight.w800 : FontWeight.w600,
-                          color: section.isLocked
-                              ? AppColor.inkMuted
-                              : AppColor.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Icon(
-                            section.isLocked
-                                ? Icons.lock_outline_rounded
-                                : (seen
-                                    ? Icons.check_circle_rounded
-                                    : Icons.play_circle_outline_rounded),
-                            size: 13,
-                            color: section.isLocked
-                                ? AppColor.danger
-                                : (seen
-                                    ? AppColor.success
-                                    : AppColor.onSurfaceVariant),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            section.isLocked
-                                ? 'قفل'
-                                : (seen ? 'دیده شد' : 'تماشا نشده'),
-                            style: TextStyle(
-                              fontFamily: 'Estedad',
-                              fontSize: 11,
-                              color: section.isLocked
-                                  ? AppColor.danger
-                                  : (seen
-                                      ? AppColor.success
-                                      : AppColor.onSurfaceVariant),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+        const SizedBox(height: 5),
+        Row(
+          children: [
+            Text(
+              _formatDuration(position),
+              style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: AppColor.inkMuted,
+              ),
             ),
+            const Spacer(),
+            Text(
+              _formatDuration(total),
+              style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: AppColor.inkMuted,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _stepButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onTap,
+  }) {
+    final enabled = onTap != null;
+    return PressableScale(
+      onTap: onTap,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.4,
+        child: Container(
+          height: 42,
+          alignment: Alignment.center,
+          decoration: ShapeDecoration(
+            color: AppColor.cardMuted,
+            shape: AppShapes.pill,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 17, color: AppColor.ink),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.ink,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  /// فهرستِ کاملِ درس‌ها: همه‌ی هفته‌ها، هر هفته یک آکاردئون.
-  ///
-  /// قبلاً فقط سکشن‌های هفته‌ی انتخاب‌شده در یک کروسل افقی با
-  /// viewportFraction 0.7 و کارتِ ۲۸۰ پیکسلیِ ثابت نمایش داده می‌شدند؛ روی
-  /// نمایشگر بزرگ عملاً یک ویدیو با فاصله‌های خالیِ زیاد دیده می‌شد.
-  Widget _lessonList(Set<int> watched, {required bool scrollable}) {
-    final weeks = widget.myCourse.courseDetail.detail.weeks;
-    return ListView.builder(
-      controller: scrollable ? _listController : null,
-      shrinkWrap: !scrollable,
-      physics: scrollable
-          ? const BouncingScrollPhysics()
-          : const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      itemCount: weeks.length,
-      itemBuilder: (context, wi) {
-        final week = weeks[wi];
-        final done = week.sections
-            .asMap()
-            .entries
-            .where((e) => watched.contains(_flatIndexFrom(wi, e.key)))
-            .length;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Material(
-            color: AppColor.card,
-            shape: AppShapes.border(AppShapes.rLg,
-                side: const BorderSide(color: AppColor.line)),
-            clipBehavior: Clip.antiAlias,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                  dividerColor: Colors.transparent,
-                  unselectedWidgetColor: AppColor.onSurfaceVariant),
-              child: ExpansionTile(
-                initiallyExpanded: wi == _selectedWeekIndex,
-                onExpansionChanged: (open) {
-                  if (open) setState(() => _selectedWeekIndex = wi);
-                },
-                iconColor: AppColor.pitchGreen,
-                collapsedIconColor: AppColor.onSurfaceVariant,
-                title: Text(
-                  week.weekName?.trim().isNotEmpty == true
-                      ? week.weekName!.trim()
-                      : 'هفته ${week.weekNumber}',
-                  style: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColor.onSurface),
-                ),
-                subtitle: Text(
-                  '$done از ${week.sections.length} ویدیو',
-                  style: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 11,
-                      color: AppColor.onSurfaceVariant),
-                ),
-                childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+  /// کارتِ دوره: عنوان، مربی، حلقه‌ی پیشرفت و بج‌های خلاصه.
+  Widget _courseCard() {
+    final course = widget.myCourse;
+    final detail = course.courseDetail;
+
+    return ValueListenableBuilder<CourseProgress>(
+      valueListenable: _progress,
+      builder: (context, progress, _) {
+        final total = _lessons.length;
+        final seen =
+            _lessons.where((l) => progress.isSeen(l.progressKey)).length;
+        final fraction = total == 0 ? 0.0 : seen / total;
+
+        return _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (int si = 0; si < week.sections.length; si++)
-                    _lessonTile(
-                      section: week.sections[si],
-                      weekIndex: wi,
-                      sectionIndex: si,
-                      seen: watched.contains(_flatIndexFrom(wi, si)),
-                      isCurrent: _selectedWeekIndex == wi &&
-                          _selectedSectionIndex == si,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          detail.courseTitle,
+                          style: const TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 16.5,
+                            height: 1.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColor.ink,
+                          ),
+                        ),
+                        if (course.coach.trim().isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(Icons.person_rounded,
+                                  size: 14, color: AppColor.inkMuted),
+                              const SizedBox(width: 4),
+                              Text(
+                                course.coach,
+                                style: const TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.inkMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
                     ),
+                  ),
+                  const SizedBox(width: 14),
+                  _progressRing(fraction, seen, total),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  PillTag(
+                    label: '${detail.weekCount} هفته',
+                    icon: Icons.calendar_month_rounded,
+                    color: AppColor.categoryBadge,
+                    dense: true,
+                  ),
+                  PillTag(
+                    label: '$total ویدیو',
+                    icon: Icons.play_circle_outline_rounded,
+                    color: AppColor.pitchGreen,
+                    dense: true,
+                  ),
+                  if (detail.courseDuration > 0)
+                    PillTag(
+                      label: '${detail.courseDuration} ساعت',
+                      icon: Icons.schedule_rounded,
+                      color: AppColor.warning,
+                      dense: true,
+                    ),
+                  if (detail.courseDifficulty.trim().isNotEmpty)
+                    PillTag(
+                      label: detail.courseDifficulty,
+                      icon: Icons.trending_up_rounded,
+                      color: AppColor.levelExpert,
+                      dense: true,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Builder(builder: (context) {
+                final target = _continueTarget;
+                final resumable =
+                    progress.of(target?.progressKey ?? '')?.resumable ?? false;
+                return GradientButton(
+                  label: target == null
+                      ? 'درسی برای تماشا نیست'
+                      : seen == total
+                          ? 'تماشای دوباره‌ی دوره'
+                          : resumable
+                              ? 'ادامه از ${_formatDuration(progress.of(target.progressKey)!.position)}'
+                              : 'ادامه‌ی تماشا',
+                  height: 48,
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  onPressed: target == null ? null : () => _play(target),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _progressRing(double fraction, int seen, int total) {
+    return SizedBox(
+      width: 62,
+      height: 62,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 62,
+            height: 62,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: fraction),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => CircularProgressIndicator(
+                value: value,
+                strokeWidth: 6,
+                strokeCap: StrokeCap.round,
+                backgroundColor: AppColor.cardMuted,
+                color: AppColor.pitchGreen,
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '٪${(fraction * 100).round()}',
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: AppColor.ink,
+                ),
+              ),
+              Text(
+                '$seen/$total',
+                style: const TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.inkMuted,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// نوارِ افقیِ «بعدی‌ها» — دسترسیِ یک‌ضربه‌ای بدون بازکردنِ فهرست.
+  Widget _upNextStrip() {
+    return ValueListenableBuilder<CourseProgress>(
+      valueListenable: _progress,
+      builder: (context, progress, _) {
+        final current = _current;
+        final start = current == null ? 0 : current.flatIndex + 1;
+        final upcoming = _lessons
+            .skip(start)
+            .where((l) => l.playable)
+            .take(8)
+            .toList();
+        if (upcoming.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
+              child: Row(
+                children: [
+                  const Text(
+                    'در ادامه',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColor.ink,
+                    ),
+                  ),
+                  const Spacer(),
+                  PressableScale(
+                    onTap: _openLessons,
+                    child: const Row(
+                      children: [
+                        Text(
+                          'همه‌ی درس‌ها',
+                          style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColor.pitchGreen,
+                          ),
+                        ),
+                        Icon(Icons.chevron_left_rounded,
+                            size: 18, color: AppColor.pitchGreen),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: _kUpNextCardHeight,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: upcoming.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, i) => FadeSlideIn(
+                  delay: Duration(milliseconds: 40 * i),
+                  child: _upNextCard(upcoming[i], progress),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _upNextCard(CourseLesson lesson, CourseProgress progress) {
+    final watched = progress.of(lesson.progressKey);
+    final fraction = watched?.fraction ?? 0;
+
+    return PressableScale(
+      onTap: () => _play(lesson),
+      child: SizedBox(
+        width: 176,
+        child: Container(
+          decoration: ShapeDecoration(
+            color: AppColor.card,
+            shape: AppShapes.border(AppShapes.rMd),
+            shadows: AppColor.cardShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SquircleClip(
+                radius: AppShapes.rMd,
+                child: SizedBox(
+                  height: 88,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      AppNetworkImage(
+                        url: lesson.section.videoThumbnail,
+                        fit: BoxFit.cover,
+                        fallbackAsset: 'assets/images/course_not_found.jpg',
+                      ),
+                      const DecoratedBox(
+                        decoration: BoxDecoration(color: Color(0x33000000)),
+                      ),
+                      const Center(
+                        child: Icon(Icons.play_arrow_rounded,
+                            size: 28, color: Colors.white),
+                      ),
+                      if (fraction > 0)
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: LinearProgressIndicator(
+                            value: fraction,
+                            minHeight: 3,
+                            backgroundColor: Colors.white24,
+                            color: watched?.seen == true
+                                ? AppColor.success
+                                : AppColor.pitchGreenLight,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lesson.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 12,
+                        height: 1.35,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      lesson.weekTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 10,
+                        color: AppColor.inkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// معرفی دوره و پیش‌نیازها — جمع‌شونده تا صفحه شلوغ نشود.
+  Widget _aboutCard() {
+    final description = widget.myCourse.courseDescription.trim();
+    final prerequisite =
+        widget.myCourse.courseDetail.detail.preRequirement.trim();
+    if (description.isEmpty && prerequisite.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return _card(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 14),
+          iconColor: AppColor.pitchGreen,
+          collapsedIconColor: AppColor.inkMuted,
+          title: const Text(
+            'درباره‌ی این دوره',
+            style: TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 14.5,
+              fontWeight: FontWeight.w800,
+              color: AppColor.ink,
+            ),
+          ),
+          children: [
+            if (description.isNotEmpty)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  description,
+                  style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 12.5,
+                    height: 1.9,
+                    color: AppColor.inkMuted,
+                  ),
+                ),
+              ),
+            if (prerequisite.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  'پیش‌نیاز',
+                  style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColor.ink,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  prerequisite,
+                  style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 12.5,
+                    height: 1.9,
+                    color: AppColor.inkMuted,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _card({required Widget child, EdgeInsetsGeometry? padding}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        padding: padding ?? const EdgeInsets.all(16),
+        decoration: ShapeDecoration(
+          color: AppColor.card,
+          shape: AppShapes.border(AppShapes.rLg),
+          shadows: AppColor.cardShadow,
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  // ==================== ساخت صفحه ====================
+
+  @override
+  Widget build(BuildContext context) {
+    final desktop = AppBreakpoints.isDesktop(context);
+
+    return Scaffold(
+      backgroundColor: AppColor.milk,
+      extendBodyBehindAppBar: true,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: desktop || _booting ? null : _lessonsFab(),
+      body: _booting
+          ? _CourseSkeleton(
+              playerHeight: _playerHeight(context, desktop: desktop),
+              desktop: desktop,
+            )
+          : desktop
+              ? _desktopLayout()
+              : _mobileLayout(),
+    );
+  }
+
+  Widget _lessonsFab() {
+    return ValueListenableBuilder<CourseProgress>(
+      valueListenable: _progress,
+      builder: (context, progress, _) {
+        final seen =
+            _lessons.where((l) => progress.isSeen(l.progressKey)).length;
+        return FadeSlideIn(
+          child: PressableScale(
+            onTap: _openLessons,
+            child: Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              decoration: ShapeDecoration(
+                gradient: AppColor.greenGradient,
+                shape: AppShapes.pill,
+                shadows: AppColor.greenShadow,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.playlist_play_rounded,
+                      color: AppColor.onPitchGreen, size: 21),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'فهرست درس‌ها',
+                    style: TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColor.onPitchGreen,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: ShapeDecoration(
+                      color: Colors.white.withValues(alpha: 0.22),
+                      shape: AppShapes.pill,
+                    ),
+                    child: Text(
+                      '$seen/${_lessons.length}',
+                      style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColor.onPitchGreen,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -523,116 +1368,315 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final detail = widget.myCourse.courseDetail;
-    final weeks = detail.detail.weeks;
-    final watched = _watchedByCourse[_courseKey] ?? {};
-    final totalSections = weeks.fold<int>(0, (a, b) => a + b.sections.length);
-    final watchedCount = watched.length.clamp(0, totalSections);
-    final progress = totalSections == 0 ? 0.0 : watchedCount / totalSections;
-    final bool desktop = AppBreakpoints.isDesktop(context);
+  Widget _mobileLayout() {
+    final playerHeight = _playerHeight(context, desktop: false);
+    final topPadding = MediaQuery.of(context).padding.top;
 
-    return Scaffold(
-      backgroundColor: AppColor.milk,
-      appBar: AppBar(
-        backgroundColor: AppColor.card,
-        foregroundColor: AppColor.ink,
-        elevation: 0,
-        title: const Text('دوره‌ی من',
-            style: TextStyle(
-                fontFamily: 'Estedad',
-                fontWeight: FontWeight.w800,
-                color: AppColor.ink)),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        top: false,
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: desktop
-              // دسکتاپ: پخش‌کننده در ستون اصلی، فهرست درس‌ها در ستون کناری
-              // — الگوی استانداردِ صفحه‌ی تماشای دوره.
-              ? Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1280),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: ListView(
-                              controller: _scrollController,
-                              physics: const BouncingScrollPhysics(),
-                              children: [
-                                ClipRRect(
-                                  borderRadius:
-                                      AppShapes.radius(AppShapes.rLg),
-                                  child: _player(detail),
-                                ),
-                                _courseHeader(detail, progress, watchedCount,
-                                    totalSections),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                      16, 8, 16, 24),
-                                  child: _introSection(),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          SizedBox(
-                            width: 380,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
-                                  child: Text('فهرست درس‌ها',
-                                      style: TextStyle(
-                                          fontFamily: 'Estedad',
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColor.ink)),
-                                ),
-                                Expanded(
-                                    child: _lessonList(watched,
-                                        scrollable: true)),
-                              ],
-                            ),
-                          ),
-                        ],
+    return CustomScrollView(
+      controller: _scroll,
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.black,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          elevation: 0,
+          toolbarHeight: playerHeight,
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+          flexibleSpace: Column(
+            children: [
+              Container(height: topPadding, color: Colors.black),
+              _playerStage(height: playerHeight, rounded: true),
+            ],
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: FadeSlideIn(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: _nowPlayingCard(),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: FadeSlideIn(
+            delay: const Duration(milliseconds: 70),
+            child: _courseCard(),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: FadeSlideIn(
+            delay: const Duration(milliseconds: 140),
+            child: _upNextStrip(),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: FadeSlideIn(
+            delay: const Duration(milliseconds: 200),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: _aboutCard(),
+            ),
+          ),
+        ),
+        // جای دکمه‌ی شناورِ «فهرست درس‌ها»
+        const SliverToBoxAdapter(child: SizedBox(height: 96)),
+      ],
+    );
+  }
+
+  /// دسکتاپ: پخش‌کننده و محتوا در ستونِ اصلی، فهرستِ درس‌ها همیشه باز در
+  /// ستونِ کناری (باتم‌شیت روی ماوس معنا ندارد).
+  Widget _desktopLayout() {
+    final playerHeight = _playerHeight(context, desktop: true);
+
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1360),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: CustomScrollView(
+                    controller: _scroll,
+                    physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics()),
+                    slivers: [
+                      SliverAppBar(
+                        pinned: true,
+                        primary: false,
+                        automaticallyImplyLeading: false,
+                        backgroundColor: AppColor.milk,
+                        surfaceTintColor: Colors.transparent,
+                        elevation: 0,
+                        toolbarHeight: playerHeight,
+                        flexibleSpace: SquircleClip(
+                          radius: AppShapes.rLg,
+                          child: _playerStage(
+                              height: playerHeight, rounded: false),
+                        ),
                       ),
+                      SliverToBoxAdapter(
+                        child: FadeSlideIn(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: _nowPlayingCard(),
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: FadeSlideIn(
+                          delay: const Duration(milliseconds: 70),
+                          child: _courseCard(),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: FadeSlideIn(
+                          delay: const Duration(milliseconds: 140),
+                          child: _aboutCard(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 20),
+                SizedBox(
+                  width: 400,
+                  child: Container(
+                    decoration: ShapeDecoration(
+                      color: AppColor.card,
+                      shape: AppShapes.border(AppShapes.rLg),
+                      shadows: AppColor.cardShadow,
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+                          child: Row(
+                            children: [
+                              const Text(
+                                'فهرست درس‌ها',
+                                style: TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColor.ink,
+                                ),
+                              ),
+                              const Spacer(),
+                              ValueListenableBuilder<CourseProgress>(
+                                valueListenable: _progress,
+                                builder: (context, progress, _) {
+                                  final seen = _lessons
+                                      .where(
+                                          (l) => progress.isSeen(l.progressKey))
+                                      .length;
+                                  return Text(
+                                    '$seen از ${_lessons.length}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Estedad',
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColor.inkMuted,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: CourseLessonList(
+                            lessons: _lessons,
+                            progress: _progress,
+                            currentKey: _currentKey,
+                            onPlay: _play,
+                            onToggleSeen: _toggleSeen,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                )
-              // موبایل: پخش‌کننده‌ی ثابت بالا، بعد عنوان/پیشرفت، بعد فهرست کامل
-              : ListView(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _formatDuration(Duration d) {
+  final hours = d.inHours;
+  final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return hours > 0 ? '$hours:$minutes:$seconds' : '${d.inMinutes}:$seconds';
+}
+
+/// اسکلتونِ شیمرِ صفحه — دقیقاً هم‌ساختارِ چیدمانِ نهایی، تا لحظه‌ی
+/// جایگزینی پرشِ لِی‌اوت دیده نشود.
+class _CourseSkeleton extends StatelessWidget {
+  const _CourseSkeleton({required this.playerHeight, required this.desktop});
+
+  final double playerHeight;
+  final bool desktop;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(height: playerHeight, color: AppColor.cardMuted),
+        const SizedBox(height: 22),
+        _boneCard(
+          children: const [
+            Bone(width: 96, height: 20, radius: 999),
+            SizedBox(height: 14),
+            Bone(width: double.infinity, height: 15),
+            SizedBox(height: 8),
+            Bone(width: 180, height: 15),
+            SizedBox(height: 18),
+            Bone(width: double.infinity, height: 6, radius: 999),
+            SizedBox(height: 20),
+            Bone(width: double.infinity, height: 42, radius: 999),
+          ],
+        ),
+        _boneCard(
+          children: const [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Bone(width: double.infinity, height: 16),
+                      SizedBox(height: 10),
+                      Bone(width: 120, height: 12),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 14),
+                Bone.circle(size: 62),
+              ],
+            ),
+            SizedBox(height: 18),
+            Row(
+              children: [
+                Bone(width: 72, height: 22, radius: 999),
+                SizedBox(width: 6),
+                Bone(width: 66, height: 22, radius: 999),
+                SizedBox(width: 6),
+                Bone(width: 58, height: 22, radius: 999),
+              ],
+            ),
+            SizedBox(height: 18),
+            Bone(width: double.infinity, height: 48, radius: 999),
+          ],
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 6, 20, 12),
+          child: Bone(width: 90, height: 16),
+        ),
+        SizedBox(
+          height: _kUpNextCardHeight,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: 3,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, __) => const Bone(
+              width: 176,
+              height: _kUpNextCardHeight,
+              radius: AppShapes.rMd * 1.7,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    return Shimmer(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: desktop
+            ? Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _player(detail),
-                    _courseHeader(
-                        detail, progress, watchedCount, totalSections),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: _introSection(),
+                    Expanded(child: content),
+                    const SizedBox(width: 20),
+                    const SizedBox(
+                      width: 400,
+                      child: Bone(height: 620, radius: AppShapes.rLg * 1.7),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
-                      child: Text('فهرست درس‌ها',
-                          style: TextStyle(
-                              fontFamily: 'Estedad',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppColor.ink)),
-                    ),
-                    _lessonList(watched, scrollable: false),
                   ],
                 ),
-        ),
+              )
+            : content,
+      ),
+    );
+  }
+
+  /// کارتِ اسکلتون بدونِ پس‌زمینه‌ی سفید: شیمر با BlendMode.srcATop رنگِ
+  /// هر پیکسلِ مات را عوض می‌کند، پس اگر کارت پس‌زمینه داشته باشد استخوان‌ها
+  /// در آن حل می‌شوند و اسکلتون یک بلوکِ یک‌دستِ خاکستری دیده می‌شود.
+  Widget _boneCard({required List<Widget> children}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 0, 32, 26),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
       ),
     );
   }

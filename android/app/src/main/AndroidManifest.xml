@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- اندروید ۱۳ به بالا برای نمایش نوتیفیکیشن اجازه‌ی صریح می‌خواهد -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="PersianShop"
         android:name="${applicationName}"
@@ -60,6 +62,12 @@
                 <data android:scheme="marketky" />
             </intent-filter>
         </activity-alias>
+
+        <!-- کانال پیش‌فرض؛ بدون آن، پیام‌های بدون channel_id روی اندروید ۸+
+             در کانالِ «Miscellaneous» می‌افتند. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="persianball_default" />
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

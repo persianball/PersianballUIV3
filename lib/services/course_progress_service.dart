@@ -166,6 +166,37 @@ class CourseProgressService {
     return next;
   }
 
+  /// علامت‌زدنِ دستیِ «دیدم / ندیدم» توسط کاربر.
+  ///
+  /// برخلافِ [record] این یکی می‌تواند «دیده‌شده» را پس هم بگیرد، چون
+  /// انتخابِ صریحِ کاربر است نه استنتاج از محلِ پخش.
+  static Future<CourseProgress> setSeen(
+    int courseId, {
+    required String key,
+    required String title,
+    required String weekNumber,
+    required bool seen,
+  }) async {
+    final current = cached(courseId);
+    final previous = current.videos[key];
+    final updated = VideoProgress(
+      key: key,
+      title: title,
+      weekNumber: weekNumber,
+      // برداشتنِ تیک یعنی «از اول»، وگرنه محلِ توقف حفظ می‌شود.
+      position: seen ? (previous?.position ?? Duration.zero) : Duration.zero,
+      duration: previous?.duration ?? Duration.zero,
+      seen: seen,
+      updatedAt: DateTime.now(),
+    );
+    final videos = Map<String, VideoProgress>.from(current.videos)
+      ..[key] = updated;
+    final next = CourseProgress(videos: videos, lastKey: current.lastKey);
+    _cache[courseId] = next;
+    await _persist(courseId, next);
+    return next;
+  }
+
   static Future<void> _persist(int courseId, CourseProgress p) async {
     try {
       final prefs = await SharedPreferences.getInstance();

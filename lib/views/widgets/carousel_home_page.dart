@@ -8,6 +8,8 @@ import '../screens/cart_page.dart';
 import 'custom_icon_button_widget.dart';
 import 'dummy_search_widget_1.dart';
 import '../screens/message_page.dart';
+import '../../services/auth_service.dart';
+import '../../services/user_message_service.dart';
 
 Widget buildCarouselItem(BuildContext context,String imageUrl) {
   context.read<CartBloc>().add(LoadCart(context));
@@ -68,17 +70,7 @@ Widget buildCarouselItem(BuildContext context,String imageUrl) {
                     }
                   ),
                   SizedBox(width: 16),
-                  CustomIconButtonWidget(
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => MessagePage()));
-                    },
-                    value: 2,
-                    icon: SvgPicture.asset(
-                      'assets/icons/Chat.svg',
-                      color: Colors.white,
-                    ),
-                  ),
+                  const MessagesIconButton(),
                 ],
               ),
             ],
@@ -96,4 +88,54 @@ Widget buildCarouselItem(BuildContext context,String imageUrl) {
       ],
     ),
   );
+}
+/// آیکنِ پیام‌ها در نوار بالای صفحه‌ی خانه، با بجِ خوانده‌نشده‌های واقعی.
+///
+/// بج پیش‌تر عدد ثابتِ ۲ بود. حالا از /v1/user/message/ خوانده می‌شود؛
+/// چون [buildCarouselItem] با هر اسلاید دوباره اجرا می‌شود، درخواست عمداً
+/// اینجا (در initState یک ویجت جدا) زده می‌شود نه در بدنه‌ی کاروسل، وگرنه
+/// هر چرخشِ اسلاید یک درخواست تازه می‌فرستاد.
+class MessagesIconButton extends StatefulWidget {
+  const MessagesIconButton({super.key});
+
+  @override
+  State<MessagesIconButton> createState() => _MessagesIconButtonState();
+}
+
+class _MessagesIconButtonState extends State<MessagesIconButton> {
+  @override
+  void initState() {
+    super.initState();
+    UserMessageService.refreshUnread();
+    // ورود/خروجِ وسطِ کار: بج باید با حساب جدید یکی شود.
+    AuthService.authRevision.addListener(_onAuthChanged);
+  }
+
+  @override
+  void dispose() {
+    AuthService.authRevision.removeListener(_onAuthChanged);
+    super.dispose();
+  }
+
+  void _onAuthChanged() => UserMessageService.refreshUnread();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: UserMessageService.unreadNotifier,
+      builder: (context, unread, _) => CustomIconButtonWidget(
+        onTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const MessagePage()),
+          );
+          UserMessageService.refreshUnread();
+        },
+        value: unread,
+        icon: SvgPicture.asset(
+          'assets/icons/Chat.svg',
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
 }

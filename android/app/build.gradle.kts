@@ -1,12 +1,14 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    // لازم برای خواندن google-services.json (Firebase)
+    id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
-    namespace = "com.example.marketky"
+    namespace = "com.persianball.football"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +22,10 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.marketky"
+        // شناسه‌ی واقعی اپ. google-services.json به همین package_name کلید
+        // خورده و اگر فرق کند، پلاگین گوگل موقع build خطا می‌دهد.
+        // ضمناً گوگل‌پلی اپ با com.example.* را رد می‌کند.
+        applicationId = "com.persianball.football"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

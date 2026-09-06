@@ -325,8 +325,10 @@ class _LoginPageState extends State<LoginPage> {
                 BlocConsumer<LoginBloc, LoginState>(
                   listener: (context, state) {
                     if (state is LoginAuthenticated) {
-                      if (widget.popOnSuccess &&
-                          Navigator.of(context).canPop()) {
+                      // هر جا که کاربر از آن به صفحه‌ی ورود آمده، بعد از
+                      // موفقیت باید همان‌جا برگردد (نه همیشه صفحه‌ی خانه)؛
+                      // popOnSuccess فقط برای انتقال نتیجه (true) لازم است.
+                      if (Navigator.of(context).canPop()) {
                         Navigator.of(context).pop(true); // signal success
                       } else {
                         Navigator.of(context).pushReplacementNamed('/home');

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1099509125025",
+    "project_id": "persianball-sport",
+    "storage_bucket": "persianball-sport.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1099509125025:android:ec8ec4b2d7e7bdcc6a45e0",
+        "android_client_info": {
+          "package_name": "com.persianball.football"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1099509125025-91ip1ueoipr9bkn1v588uk0geegm7af5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFxOFbfoMgDjObF2GufPoEwM-y6OmuEXc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1099509125025-91ip1ueoipr9bkn1v588uk0geegm7af5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

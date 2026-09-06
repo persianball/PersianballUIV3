@@ -1,268 +1,100 @@
+// lib/views/screens/message_detail_page.dart
+//
+// متن کاملِ یک پیام از /v1/user/message/.
+//
+// نسخه‌ی قبلی یک صفحه‌ی چتِ دوطرفه با حباب‌های ساختگی و فیلد «ارسال پیام»
+// بود؛ بک‌اند چنین چیزی ندارد و صندوق فقط خواندنی است، پس دکمه‌ای که کاری
+// نمی‌کند حذف شد.
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Message.dart';
-import 'package:marketky/views/widgets/page_container.dart';
+import 'package:marketky/constant/app_shapes.dart';
+import 'package:marketky/services/user_message_service.dart';
+import 'package:marketky/utils/jalali_date.dart';
 
-class MessageDetailPage extends StatefulWidget {
-  final Message data;
+class MessageDetailPage extends StatelessWidget {
+  const MessageDetailPage({super.key, required this.data});
 
-  MessageDetailPage({
-    required this.data,
-  });
+  final UserMessage data;
 
-  @override
-  _MessageDetailPageState createState() => _MessageDetailPageState();
-}
-
-class _MessageDetailPageState extends State<MessageDetailPage> {
   @override
   Widget build(BuildContext context) {
+    final date = data.createdAtDate;
     return Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          centerTitle: false,
-          backgroundColor: Colors.white,
-          elevation: 0,
-          title: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                margin: EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  color: AppColor.border,
-                  image: DecorationImage(
-                    image: AssetImage('${widget.data.shopLogoUrl}'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              Text('${widget.data.shopName}',
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600)),
-            ],
-          ),
-          leading: IconButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(Icons.arrow_back_rounded),
-          ),
-          bottom: PreferredSize(
-            preferredSize: Size.fromHeight(1),
-            child: Container(
-              height: 1,
-              width: MediaQuery.of(context).size.width,
-              color: AppColor.primarySoft,
-            ),
-          ),
-          systemOverlayStyle: SystemUiOverlayStyle.light,
-        ),
-        body: PageContainer(
-            child: Column(
-          children: [
-            // Section 1 - Chat
-            Expanded(
-              child: Container(
-                child: ListView(
-                  padding: EdgeInsets.all(16),
-                  physics: BouncingScrollPhysics(),
-                  reverse: true,
-                  children: [
-                    MyBubbleChatWidget(
-                      chat:
-                          'Lorem ipsum dolor ut labore et dolore magna aliqua. Ut enim ad minim veniam',
-                      time: '10:48',
-                    ),
-                    SenderBubbleChatWidget(
-                      chat:
-                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, ad minim veniam',
-                      time: '10:48',
-                    ),
-                    MyBubbleChatWidget(
-                      chat:
-                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
-                      time: '10:48',
-                    ),
-                    SenderBubbleChatWidget(
-                      chat:
-                          'Log elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
-                      time: '10:48',
-                    ),
-                    MyBubbleChatWidget(
-                      chat:
-                          'por incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
-                      time: '10:48',
-                    ),
-                    SenderBubbleChatWidget(
-                      chat:
-                          'Lorem ipsum dpor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
-                      time: '10:48',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Section 2 - Chat Bar
-            Container(
-              width: MediaQuery.of(context).size.width,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                border:
-                    Border(top: BorderSide(color: AppColor.border, width: 1)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // TextField
-                  Expanded(
-                    child: TextField(
-                      maxLines: null,
-                      decoration: InputDecoration(
-                        suffixIcon: IconButton(
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.camera_alt_outlined,
-                            color: AppColor.primary,
-                          ),
-                        ),
-                        hintText: 'Type a message here...',
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: AppColor.border, width: 1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: AppColor.border, width: 1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Send Button
-                  Container(
-                    margin: EdgeInsets.only(left: 16),
-                    width: 42,
-                    height: 42,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: Icon(Icons.send_rounded,
-                          color: Colors.white, size: 18),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColor.primary,
-                        padding: EdgeInsets.all(0),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        shadowColor: Colors.transparent,
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-            Container(
-              height: MediaQuery.of(context).viewInsets.bottom,
-              color: Colors.transparent,
-            ),
-          ],
-        )));
-  }
-}
-
-class MyBubbleChatWidget extends StatelessWidget {
-  final String chat;
-  final String time;
-
-  MyBubbleChatWidget({
-    required this.chat,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(top: 16),
-      alignment: Alignment.centerRight,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            '$time',
-            style: TextStyle(color: AppColor.secondary.withOpacity(0.5)),
-          ),
-          Container(
-            margin: EdgeInsets.only(left: 16),
-            width: MediaQuery.of(context).size.width * 65 / 100,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(
-              '$chat',
-              textAlign: TextAlign.right,
-              style: TextStyle(color: Colors.white, height: 150 / 100),
-            ),
-            decoration: BoxDecoration(
-              color: AppColor.primary,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(8),
-                topLeft: Radius.circular(8),
-                bottomRight: Radius.circular(8),
-              ),
-            ),
-          ),
-        ],
+      backgroundColor: AppColor.obsidianBg,
+      appBar: AppBar(
+        backgroundColor: AppColor.obsidianBg,
+        foregroundColor: AppColor.onSurface,
+        elevation: 0,
+        title: const Text('پیام',
+            style: TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColor.onSurface)),
       ),
-    );
-  }
-}
-
-class SenderBubbleChatWidget extends StatelessWidget {
-  final String chat;
-  final String time;
-
-  SenderBubbleChatWidget({
-    required this.chat,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(top: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: EdgeInsets.only(right: 16),
-            width: MediaQuery.of(context).size.width * 65 / 100,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(
-              '$chat',
-              textAlign: TextAlign.left,
-              style: TextStyle(color: AppColor.secondary, height: 150 / 100),
-            ),
-            decoration: BoxDecoration(
-              color: AppColor.primarySoft,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-                bottomRight: Radius.circular(8),
-              ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+                maxWidth: AppBreakpoints.isDesktop(context) ? 800 : 10000),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+              physics: const BouncingScrollPhysics(),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: ShapeDecoration(
+                    color: AppColor.surfaceContainer,
+                    shape: AppShapes.border(AppShapes.rLg),
+                    shadows: AppColor.cardShadow,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(data.displayTitle,
+                          style: const TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              height: 1.7,
+                              color: AppColor.onSurface)),
+                      if (date != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.schedule_rounded,
+                                size: 14, color: AppColor.onSurfaceVariant),
+                            const SizedBox(width: 6),
+                            Text(formatOrderDate(date),
+                                style: const TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 12,
+                                    color: AppColor.onSurfaceVariant)),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 14),
+                      const Divider(height: 1, color: AppColor.line),
+                      const SizedBox(height: 14),
+                      SelectableText(
+                        data.body.isEmpty ? 'این پیام متنی ندارد.' : data.body,
+                        style: TextStyle(
+                            fontFamily: 'Estedad',
+                            fontSize: 14,
+                            height: 1.9,
+                            color: data.body.isEmpty
+                                ? AppColor.onSurfaceVariant
+                                : AppColor.onSurface),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          Text(
-            '$time',
-            style: TextStyle(color: AppColor.secondary.withOpacity(0.5)),
-          ),
-        ],
+        ),
       ),
     );
   }

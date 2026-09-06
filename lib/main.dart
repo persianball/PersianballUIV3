@@ -17,6 +17,7 @@ import 'package:marketky/views/widgets/animated_gradient_background.dart';
 import 'bloc/product/product_bloc.dart';
 import 'dart:async';
 import 'package:marketky/services/slider_service.dart';
+import 'package:marketky/services/push_notification_service.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -28,6 +29,10 @@ void main() async {
   // پس‌زمینه شروع می‌کنیم تا هزینه‌اش با اسپلش/خوش‌آمد همپوشانی کند.
   await SliderService.warmUp();
   SliderService.prefetchAll();
+
+  // پوش‌نوتیفیکیشن: خودش هیچ‌وقت throw نمی‌کند و بدونِ انتظار اجرا می‌شود،
+  // پس نه بالا آمدن اپ را کند می‌کند نه با ردِ اجازه یا نبودِ شبکه می‌شکند.
+  unawaited(PushNotificationService.init());
 
   runApp(MyApp());
 

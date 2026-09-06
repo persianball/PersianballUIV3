@@ -44,10 +44,20 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
     _fetch();
     _fetchUserCourses();
     _controller.addListener(_onScroll);
+    // این صفحه در FadeIndexedStack (page_switcher) زنده نگه داشته می‌شود،
+    // پس initState فقط یک‌بار اجرا می‌شود. بدون این listener، اگر کاربر
+    // وسط کار وارد شود، تب «دوره‌های من» همچنان «نیاز به ورود» نشان
+    // می‌داد چون _needLogin از همان بارِ اول (مهمان) مانده بود.
+    AuthService.authRevision.addListener(_onAuthChanged);
+  }
+
+  void _onAuthChanged() {
+    if (mounted) _fetchUserCourses();
   }
 
   @override
   void dispose() {
+    AuthService.authRevision.removeListener(_onAuthChanged);
     _controller.dispose();
     _tabController.dispose();
     super.dispose();
@@ -709,7 +719,11 @@ class _UserCoursesListState extends State<_UserCoursesList> {
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: ListTile(
-                    leading: _CourseThumbnail(url: widget.abs(course.courseThumbnail)),
+                    leading: Hero(
+                      tag: 'mycourse_${course.courseId}',
+                      child: _CourseThumbnail(
+                          url: widget.abs(course.courseThumbnail)),
+                    ),
                     title: Text(course.courseDetail.courseTitle,
                         style: TextStyle(
                             fontFamily: 'Estedad',
