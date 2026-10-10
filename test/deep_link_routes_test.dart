@@ -1,7 +1,7 @@
 // رفرش روی یک آدرس عمیق (مثل /#/course/20) نباید کاربر را به صفحه‌ی
-// خوش‌آمد/خانه بیندازد. رفتار پیش‌فرض فلاتر پشته را از بخش‌های مسیر
-// می‌سازد و SplashRouter را هم داخلش می‌آورد؛ این تست پشته‌ی صریح را
-// تضمین می‌کند.
+// خانه بیندازد. رفتار پیش‌فرض فلاتر پشته را از بخش‌های مسیر می‌سازد و
+// روتِ '/' را هم زیرِ آن می‌گذارد، که صفحه‌ی دیپ‌لینک‌شده را جایگزین
+// می‌کرد؛ این تست پشته‌ی صریح را تضمین می‌کند.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marketky/core/app_router.dart';
@@ -26,7 +26,7 @@ void main() {
         return MaterialPageRoute(builder: (_) => const SizedBox(), settings: s);
       },
     ));
-    // همین رفتار بود که SplashRouter را وارد بازی می‌کرد
+    // همین رفتار بود که روتِ ریشه را وارد بازی می‌کرد
     expect(generated, contains('/'));
   });
 
@@ -35,7 +35,7 @@ void main() {
     expect(routes.length, 2);
     expect(routes.first.settings.name, '/home');
     expect(routes.last.settings.name, '/course/20');
-    // هیچ روتِ '/' ای ساخته نمی‌شود، پس SplashRouter اجرا نمی‌شود
+    // هیچ روتِ '/' ای ساخته نمی‌شود، پس چیزی جایگزینِ دیپ‌لینک نمی‌شود
     expect(routes.map((r) => r.settings.name), isNot(contains('/')));
   });
 

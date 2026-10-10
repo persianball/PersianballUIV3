@@ -1,56 +1,82 @@
+// صندوق پیام‌های کاربر (/v1/user/messages/).
+//
+// نسخه‌ی قبلیِ این تست روی شکلِ *حدسی* پیام نوشته شده بود (title/body/
+// is_read) چون موقع نوشتنش صندوقِ حساب تست خالی بود و DRF شمای GET را
+// در OPTIONS نمی‌دهد. حالا شکل واقعی معلوم است: متن در «text» است، عنوان
+// جدا ندارد، و خوانده‌شدن با «seen_at» مشخص می‌شود نه یک بولینِ is_read.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marketky/services/user_message_service.dart';
 
 void main() {
-  group('پارسرِ تحمل‌پذیرِ پیام', () {
-    test('نام‌های رایج فیلد شناسایی می‌شوند', () {
+  group('مدل پیام', () {
+    test('فیلدهای واقعی سرور خوانده می‌شوند', () {
       final m = UserMessage.fromJson({
         'id': 7,
-        'title': 'سلام',
-        'body': 'متن پیام',
-        'created_at': '2026-09-01T10:00:00Z',
-        'is_read': true,
+        'text': 'سفارش شما ارسال شد',
+        'created_at': '2026-09-01T10:00:00+03:30',
+        'seen_at': null,
+        'user': 5061,
       });
       expect(m.id, 7);
-      expect(m.title, 'سلام');
-      expect(m.body, 'متن پیام');
-      expect(m.isRead, isTrue);
+      expect(m.text, 'سفارش شما ارسال شد');
+      expect(m.user, 5061);
+      expect(m.createdAt, isNotNull);
+      // آفستِ سرور حفظ می‌شود، نه تبدیل به UTC
+      expect(m.createdAt!.hour, 10);
     });
 
-    test('نام‌های جای‌گزین هم کار می‌کنند', () {
-      final m = UserMessage.fromJson({
-        'subject': 'عنوان',
-        'message': 'محتوا',
-        'date': '۱۴۰۴/۰۶/۱۰',
-        'is_readed': false,
-      });
-      expect(m.title, 'عنوان');
-      expect(m.body, 'محتوا');
-      expect(m.createdAt, '۱۴۰۴/۰۶/۱۰');
-      expect(m.isRead, isFalse);
+    test('خوانده‌شدن از seen_at می‌آید، نه یک بولین', () {
+      expect(UserMessage.fromJson({'text': 'x', 'seen_at': null}).isRead,
+          isFalse);
+      expect(
+          UserMessage.fromJson({
+            'text': 'x',
+            'seen_at': '2026-09-02T08:00:00+03:30',
+          }).isRead,
+          isTrue);
     });
 
-    test('پیامِ ناشناخته کرش نمی‌کند و خالی می‌ماند', () {
+    test('پیامِ ناقص کرش نمی‌کند', () {
       final m = UserMessage.fromJson({'something_else': 1});
-      expect(m.title, '');
-      expect(m.body, '');
+      expect(m.text, '');
       expect(m.isRead, isFalse);
       expect(m.displayTitle, 'پیام');
+      expect(m.id, isNull);
     });
 
-    test('نبودِ عنوان از متن جبران می‌شود', () {
-      final short = UserMessage.fromJson({'body': 'سفارش شما ارسال شد'});
-      expect(short.displayTitle, 'سفارش شما ارسال شد');
+    test('تیتر از خطِ اولِ متن ساخته می‌شود', () {
+      final oneLine = UserMessage.fromJson({'text': 'سفارش شما ارسال شد'});
+      expect(oneLine.displayTitle, 'سفارش شما ارسال شد');
+      // متنِ تک‌خطی تماماً در تیتر آمده، پس تکرارش زیر آن بی‌معنی است
+      expect(oneLine.hasMoreThanTitle, isFalse);
 
-      final long = UserMessage.fromJson({'body': 'ب' * 80});
+      final multi = UserMessage.fromJson({'text': 'عنوان\nادامه‌ی پیام'});
+      expect(multi.displayTitle, 'عنوان');
+      expect(multi.hasMoreThanTitle, isTrue);
+    });
+
+    test('تیترِ بلند بریده می‌شود', () {
+      final long = UserMessage.fromJson({'text': 'ب' * 80});
       expect(long.displayTitle.endsWith('…'), isTrue);
-      expect(long.displayTitle.length, lessThanOrEqualTo(41));
+      expect(long.displayTitle.length, lessThanOrEqualTo(49));
+      expect(long.hasMoreThanTitle, isTrue);
     });
 
-    test('is_read فقط با true واقعی، خوانده حساب می‌شود', () {
-      expect(UserMessage.fromJson({'is_read': 'yes'}).isRead, isFalse);
-      expect(UserMessage.fromJson({'is_read': 1}).isRead, isFalse);
-      expect(UserMessage.fromJson({'is_read': true}).isRead, isTrue);
+    test('copyWithSeen پیام را خوانده می‌کند بدون دست زدن به بقیه', () {
+      final m = UserMessage.fromJson({'id': 3, 'text': 'سلام'});
+      final seen = m.copyWithSeen(DateTime(2026, 9, 2));
+      expect(m.isRead, isFalse, reason: 'نسخه‌ی اصلی نباید عوض شود');
+      expect(seen.isRead, isTrue);
+      expect(seen.id, 3);
+      expect(seen.text, 'سلام');
+    });
+  });
+
+  group('صفحه‌بندی', () {
+    test('صفحه‌ی خالی امن است', () {
+      expect(UserMessagesPage.empty.results, isEmpty);
+      expect(UserMessagesPage.empty.count, 0);
+      expect(UserMessagesPage.empty.next, isNull);
     });
   });
 }
