@@ -99,7 +99,7 @@ class _AccountSecurityPageState extends State<AccountSecurityPage> {
     setState(() => _busy = false);
     _snack(result.message);
     if (result.success) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (_) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
     }
   }
 

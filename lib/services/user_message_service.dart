@@ -1,15 +1,16 @@
 // lib/services/user_message_service.dart
 //
-// صندوق پیام‌های درون‌اپ.
+// صندوق پیام‌های درون‌اپ (در بک‌اند: Notification).
 //
-//   GET /v1/user/message/   → {count, next, previous, results:[…]}
+//   GET   /v1/user/messages/        → {count, next, previous, results:[…]}
+//                                     پارامترهای صفحه‌بندی: limit / offset
+//   PATCH /v1/user/messages/<id>/   → {seen_at: "<ISO>"}  ← علامتِ «خوانده شد»
 //
-// ⚠️ در زمان نوشتن این کد صندوقِ حساب تست خالی بود (count: 0) و DRF برای
-// متد GET شمای فیلدها را در OPTIONS برنمی‌گرداند، پس نام دقیقِ فیلدهای هر
-// پیام از سرور قابل استخراج نبود. برای همین پارسر عمداً «تحمل‌پذیر» نوشته
-// شده: چند نامِ رایج را امتحان می‌کند و هرچه پیدا نکرد خالی می‌ماند، تا با
-// اولین پیام واقعی بدون کرش کار کند. وقتی یک نمونه‌ی واقعی موجود شد،
-// [UserMessage.fromJson] باید دقیق شود.
+// شمای هر پیام طبق OpenAPI سرور:
+//   {id, text, created_at, seen_at, user}
+// همه‌ی فیلدها جز seen_at فقط-خواندنی‌اند؛ یعنی تنها کاری که کلاینت می‌تواند
+// روی یک پیام انجام دهد، ثبتِ زمانِ دیده‌شدن است. عنوانِ جدا وجود ندارد،
+// پس هرجا عنوان لازم است از خطِ اولِ text ساخته می‌شود.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -20,48 +21,50 @@ import 'package:marketky/utils/jalali_date.dart';
 
 class UserMessage {
   final int? id;
-  final String title;
-  final String body;
-  final String createdAt;
-  final bool isRead;
+  final String text;
+  final DateTime? createdAt;
+  final DateTime? seenAt;
+  final int? user;
 
   const UserMessage({
     this.id,
-    required this.title,
-    required this.body,
-    required this.createdAt,
-    required this.isRead,
+    required this.text,
+    this.createdAt,
+    this.seenAt,
+    this.user,
   });
 
-  static String _pick(Map<String, dynamic> j, List<String> keys) {
-    for (final k in keys) {
-      final v = j[k];
-      if (v is String && v.trim().isNotEmpty) return v.trim();
-      if (v is num) return '$v';
-    }
-    return '';
-  }
+  factory UserMessage.fromJson(Map<String, dynamic> j) => UserMessage(
+        id: j['id'] is int ? j['id'] as int : int.tryParse('${j['id']}'),
+        text: (j['text'] as String?)?.trim() ?? '',
+        createdAt: parseServerDate(j['created_at'] as String?),
+        seenAt: parseServerDate(j['seen_at'] as String?),
+        user: j['user'] is int ? j['user'] as int : int.tryParse('${j['user']}'),
+      );
 
-  factory UserMessage.fromJson(Map<String, dynamic> j) {
-    final read = j['is_read'] ?? j['is_readed'] ?? j['read'] ?? j['seen'];
-    return UserMessage(
-      id: j['id'] is int ? j['id'] as int : int.tryParse('${j['id']}'),
-      title: _pick(j, ['title', 'subject', 'header', 'name']),
-      body: _pick(j, ['body', 'message', 'text', 'content', 'description']),
-      createdAt: _pick(j, ['created_at', 'created', 'date', 'timestamp']),
-      isRead: read == true,
-    );
-  }
+  /// خوانده‌شده = سرور برایش زمانِ دیده‌شدن ثبت کرده است.
+  bool get isRead => seenAt != null;
 
-  /// عنوانِ قابل نمایش؛ اگر سرور عنوان نداده باشد از متن ساخته می‌شود.
+  /// همان پیام با زمانِ دیده‌شدنِ جدید (برای به‌روزرسانیِ خوش‌بینانه‌ی لیست).
+  UserMessage copyWithSeen(DateTime when) => UserMessage(
+        id: id,
+        text: text,
+        createdAt: createdAt,
+        seenAt: when,
+        user: user,
+      );
+
+  /// خطِ اولِ متن به‌عنوان تیتر — سرور فیلد عنوان ندارد.
   String get displayTitle {
-    if (title.isNotEmpty) return title;
-    if (body.isEmpty) return 'پیام';
-    return body.length <= 40 ? body : '${body.substring(0, 40)}…';
+    if (text.isEmpty) return 'پیام';
+    final firstLine = text.split('\n').first.trim();
+    final head = firstLine.isEmpty ? text : firstLine;
+    return head.length <= 48 ? head : '${head.substring(0, 48)}…';
   }
 
-  /// تاریخِ سرور با حفظِ منطقه‌ی زمانیِ خودش؛ اگر قابل خواندن نبود null.
-  DateTime? get createdAtDate => parseServerDate(createdAt);
+  /// اگر متن چندخطی/بلند باشد، ادامه‌اش زیر تیتر نشان داده می‌شود؛ وگرنه
+  /// تیتر خودش کلِ پیام است و تکرارِ آن در ردیف بی‌معنی است.
+  bool get hasMoreThanTitle => text.trim() != displayTitle;
 }
 
 class UserMessagesPage {
@@ -81,7 +84,7 @@ class UserMessagesPage {
 class UserMessageService {
   UserMessageService._();
 
-  static const String _path = 'v1/user/message/';
+  static const String _path = 'v1/user/messages/';
 
   /// تعداد پیام‌های خوانده‌نشده برای بجِ نوار بالای صفحه‌ی خانه.
   ///
@@ -101,23 +104,30 @@ class UserMessageService {
   static String _normalize(String url) =>
       url.startsWith('http://') ? url.replaceFirst('http://', 'https://') : url;
 
-  /// یک صفحه از پیام‌ها. [nextUrl] را از نتیجه‌ی قبلی بدهید تا صفحه‌بندی شود.
-  ///
-  /// در خطا استثنا پرتاب می‌کند تا صفحه بتواند «تلاش مجدد» نشان دهد؛
-  /// برای مصرف‌کننده‌های بی‌صدا (مثل بج) [fetchOrNull] هست.
-  static Future<UserMessagesPage> fetch({String? nextUrl}) async {
+  static Future<Map<String, String>> _headers() async {
     final token = await AuthService.getToken();
     if (token == null || token.isEmpty) {
       throw Exception('نیاز به ورود');
     }
-
-    final url = nextUrl != null && nextUrl.isNotEmpty
-        ? _normalize(nextUrl)
-        : '$_base/$_path';
-    final res = await http.get(Uri.parse(url), headers: {
+    return {
       'Authorization': 'token $token',
       'Accept': 'application/json',
-    }).timeout(const Duration(seconds: 20));
+    };
+  }
+
+  /// یک صفحه از پیام‌ها. [nextUrl] را از نتیجه‌ی قبلی بدهید تا صفحه‌بندی شود.
+  ///
+  /// در خطا استثنا پرتاب می‌کند تا صفحه بتواند «تلاش مجدد» نشان دهد؛
+  /// برای مصرف‌کننده‌های بی‌صدا (مثل بج) [fetchOrNull] هست.
+  static Future<UserMessagesPage> fetch({String? nextUrl, int? limit}) async {
+    final headers = await _headers();
+    final url = nextUrl != null && nextUrl.isNotEmpty
+        ? _normalize(nextUrl)
+        : '$_base/$_path${limit != null ? '?limit=$limit' : ''}';
+
+    final res = await http
+        .get(Uri.parse(url), headers: headers)
+        .timeout(const Duration(seconds: 20));
 
     if (res.statusCode == 401 || res.statusCode == 403) {
       throw Exception('نیاز به ورود');
@@ -128,17 +138,6 @@ class UserMessageService {
 
     // سرور charset اعلام نمی‌کند؛ بدون utf8.decode متن فارسی خراب می‌شود.
     final data = jsonDecode(utf8.decode(res.bodyBytes));
-
-    // برخی اندپوینت‌های همین بک‌اند بدون صفحه‌بندی و به شکل آرایه پاسخ
-    // می‌دهند؛ هر دو حالت پذیرفته می‌شود.
-    if (data is List) {
-      final results = <UserMessage>[
-        for (final r in data)
-          if (r is Map<String, dynamic>) UserMessage.fromJson(r)
-      ];
-      return UserMessagesPage(
-          count: results.length, next: null, results: results);
-    }
     if (data is! Map<String, dynamic>) return UserMessagesPage.empty;
 
     final results = <UserMessage>[];
@@ -153,21 +152,51 @@ class UserMessageService {
   }
 
   /// همان [fetch] ولی بدون استثنا — برای جاهایی که خطا نباید دیده شود.
-  static Future<UserMessagesPage?> fetchOrNull({String? nextUrl}) async {
+  static Future<UserMessagesPage?> fetchOrNull({
+    String? nextUrl,
+    int? limit,
+  }) async {
     try {
-      return await fetch(nextUrl: nextUrl);
+      return await fetch(nextUrl: nextUrl, limit: limit);
     } catch (_) {
       return null;
     }
   }
 
+  /// ثبتِ «خوانده شد» با نوشتنِ زمانِ فعلی در seen_at.
+  ///
+  /// تنها فیلدِ نوشتنیِ سریالایزر همین است، پس PATCH با همین یک کلید کافی
+  /// است. اگر ناموفق بود false برمی‌گرداند تا صفحه بتواند حالتِ خوش‌بینانه
+  /// را برگرداند؛ استثنا پرتاب نمی‌کند چون باز کردنِ پیام نباید به خاطر
+  /// این درخواستِ جانبی خطا نشان دهد.
+  static Future<bool> markSeen(int id) async {
+    try {
+      final res = await http
+          .patch(
+            Uri.parse('$_base/$_path$id/'),
+            headers: {
+              ...await _headers(),
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'seen_at': DateTime.now().toUtc().toIso8601String(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+      return res.statusCode >= 200 && res.statusCode < 300;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// تعداد پیام‌های خوانده‌نشده — برای نشانِ روی آیکن پیام‌ها.
   ///
-  /// فقط صفحه‌ی اول شمرده می‌شود: سرور شمارنده‌ی جداگانه‌ای برای
-  /// خوانده‌نشده‌ها ندارد و پیمایشِ همه‌ی صفحه‌ها برای یک بجِ کوچک
-  /// نمی‌ارزد. اگر بعداً فیلدی مثل unread_count اضافه شد، همین‌جا عوض شود.
+  /// سرور نه فیلترِ خوانده‌نشده دارد نه شمارنده‌ی جدا، پس ناچار باید خودِ
+  /// پیام‌ها شمرده شوند. با limit بالا معمولاً همه‌ی صندوق در همین یک
+  /// درخواست می‌آید؛ اگر بعداً اندپوینتی مثل unread_count اضافه شد،
+  /// همین‌جا عوض شود.
   static Future<int> unreadCount() async {
-    final page = await fetchOrNull();
+    final page = await fetchOrNull(limit: 100);
     if (page == null) return 0;
     return page.results.where((m) => !m.isRead).length;
   }

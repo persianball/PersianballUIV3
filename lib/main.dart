@@ -346,12 +346,9 @@ class _MyAppState extends State<MyApp> {
         onGenerateRoute: AppRouter.onGenerateRoute,
         // رفتار پیش‌فرض فلاتر برای مسیر اولیه‌ی چندبخشی، پشته را از روی
         // بخش‌های مسیر می‌سازد: '/course/20' تبدیل می‌شود به
-        // ['/', '/course', '/course/20']. آن '/' یعنی SplashRouter هم ساخته
-        // می‌شود و بعد از یک فریم pushReplacementNamed می‌زند، که صفحه‌ی
-        // دیپ‌لینک‌شده را با '/welcome' یا '/home' جایگزین می‌کرد؛ یعنی
-        // رفرشِ /#/course/20 کاربر را به صفحه‌ی خوش‌آمد می‌انداخت.
-        // اینجا پشته صریحاً ساخته می‌شود: خانه در پایین (تا دکمه‌ی برگشت
-        // کار کند) و خودِ مسیر دیپ‌لینک روی آن.
+        // ['/', '/course', '/course/20']؛ یعنی '/course' هم که روت معتبری
+        // نیست ساخته می‌شود. اینجا پشته صریحاً ساخته می‌شود: خانه در پایین
+        // (تا دکمه‌ی برگشت کار کند) و خودِ مسیر دیپ‌لینک روی آن.
         onGenerateInitialRoutes: (initialRoute) {
           if (initialRoute == '/' || initialRoute.isEmpty) {
             return [

@@ -524,7 +524,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
           child: Row(
             children: [
               _glassButton(
-                icon: Icons.arrow_forward_rounded,
+                icon: Icons.arrow_back_rounded,
                 tooltip: 'بازگشت',
                 onTap: () => Navigator.of(context).maybePop(),
               ),

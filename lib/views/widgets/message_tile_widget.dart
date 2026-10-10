@@ -7,13 +7,16 @@ import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/services/user_message_service.dart';
 import 'package:marketky/utils/jalali_date.dart';
-import 'package:marketky/views/screens/message_detail_page.dart';
 import 'package:marketky/views/widgets/motion.dart';
 
 class MessageTileWidget extends StatelessWidget {
-  const MessageTileWidget({super.key, required this.data});
+  const MessageTileWidget({super.key, required this.data, required this.onTap});
 
   final UserMessage data;
+
+  /// باز کردنِ پیام دستِ صفحه است، نه ردیف: صفحه باید هم‌زمان seen_at را
+  /// ثبت کند و لیست را به‌روز نگه دارد.
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +25,7 @@ class MessageTileWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: PressableScale(
         hoverScale: 1.01,
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => MessageDetailPage(data: data)),
-          );
-        },
+        onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: ShapeDecoration(
@@ -96,10 +95,10 @@ class MessageTileWidget extends StatelessWidget {
                           ),
                       ],
                     ),
-                    if (data.body.isNotEmpty) ...[
+                    if (data.hasMoreThanTitle) ...[
                       const SizedBox(height: 6),
                       Text(
-                        data.body,
+                        data.text,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -110,10 +109,10 @@ class MessageTileWidget extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (data.createdAtDate != null) ...[
+                    if (data.createdAt != null) ...[
                       const SizedBox(height: 8),
                       Text(
-                        formatOrderDate(data.createdAtDate),
+                        formatOrderDate(data.createdAt),
                         style: const TextStyle(
                           fontFamily: 'Estedad',
                           fontSize: 11,

@@ -1,11 +1,9 @@
 // lib/core/app_router.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/views/screens/welcome_page.dart';
 import 'package:marketky/views/screens/page_switcher.dart';
 import 'package:marketky/views/screens/login_page.dart';
 import 'package:marketky/views/screens/product_detail.dart';
 import 'package:marketky/views/screens/cart_page.dart';
-import 'package:marketky/views/screens/splash_router.dart';
 import 'package:marketky/views/screens/orders_page.dart';
 import 'package:marketky/views/screens/order_detail_page.dart';
 import 'package:marketky/views/screens/addresses_page.dart';
@@ -24,7 +22,7 @@ class AppRouter {
 
     if (name == '/') {
       return MaterialPageRoute(
-        builder: (_) => const SplashRouter(),
+        builder: (_) => PageSwitcher(),
         settings: settings,
       );
     }
@@ -61,8 +59,6 @@ class AppRouter {
     }
 
     switch (name) {
-      case '/welcome':
-        return MaterialPageRoute(builder: (_) => WelcomePage(), settings: settings);
       case '/home':
         return MaterialPageRoute(builder: (_) => PageSwitcher(), settings: settings);
       case '/login':

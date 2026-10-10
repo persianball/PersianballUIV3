@@ -11,6 +11,7 @@ import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:marketky/services/user_message_service.dart';
+import 'package:marketky/views/screens/message_detail_page.dart';
 import 'package:marketky/views/widgets/message_tile_widget.dart';
 import 'package:marketky/views/widgets/motion.dart';
 import 'package:marketky/views/widgets/shimmer.dart';
@@ -69,8 +70,7 @@ class _MessagePageState extends State<MessagePage> {
         _loadingMore = false;
         _error = null;
       });
-      UserMessageService.unreadNotifier.value =
-          _messages.where((m) => !m.isRead).length;
+      _syncUnreadBadge();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -92,6 +92,35 @@ class _MessagePageState extends State<MessagePage> {
   }
 
   int get _unread => _messages.where((m) => !m.isRead).length;
+
+  /// باز کردنِ پیام و ثبتِ «خوانده شد».
+  ///
+  /// ردیف بلافاصله بی‌نشان می‌شود و PATCH در پس‌زمینه می‌رود؛ اگر سرور
+  /// نپذیرفت همان ردیف دوباره خوانده‌نشده می‌شود، تا کاربر بجی نبیند که
+  /// با واقعیتِ سرور نمی‌خواند.
+  Future<void> _open(int index) async {
+    final message = _messages[index];
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => MessageDetailPage(data: message)),
+    );
+
+    final id = message.id;
+    if (message.isRead || id == null) return;
+
+    setState(() => _messages[index] = message.copyWithSeen(DateTime.now()));
+    _syncUnreadBadge();
+
+    final ok = await UserMessageService.markSeen(id);
+    if (!mounted || ok) return;
+    final at = _messages.indexWhere((m) => m.id == id);
+    if (at != -1) {
+      setState(() => _messages[at] = message);
+      _syncUnreadBadge();
+    }
+  }
+
+  void _syncUnreadBadge() =>
+      UserMessageService.unreadNotifier.value = _unread;
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +198,10 @@ class _MessagePageState extends State<MessagePage> {
               if (index == _messages.length) return _loadMoreFooter();
               return FadeSlideIn(
                 delay: Duration(milliseconds: 45 * (index % 6)),
-                child: MessageTileWidget(data: _messages[index]),
+                child: MessageTileWidget(
+                  data: _messages[index],
+                  onTap: () => _open(index),
+                ),
               );
             },
           ),

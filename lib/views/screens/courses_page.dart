@@ -732,7 +732,7 @@ class _UserCoursesListState extends State<_UserCoursesList> {
                     subtitle: Text('پیشرفت: به زودی',
                         style: TextStyle(
                             fontFamily: 'Estedad', color: AppColor.onSurfaceVariant, fontSize: 12)),
-                    trailing: Icon(Icons.arrow_back_ios_new_rounded, color: AppColor.onSurfaceVariant, size: 16),
+                    trailing: Icon(Icons.arrow_forward_ios_rounded, color: AppColor.onSurfaceVariant, size: 16),
                     onTap: () => widget.onTapCourse(course),
                   ),
                 ),

@@ -15,7 +15,6 @@ class DeepLinkResolver {
   static const Set<String> _staticRoutes = {
     '/',
     '/home',
-    '/welcome',
     '/login',
     '/cart',
     '/orders',

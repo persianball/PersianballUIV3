@@ -20,7 +20,7 @@ class MessageDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = data.createdAtDate;
+    final date = data.createdAt;
     return Scaffold(
       backgroundColor: AppColor.obsidianBg,
       appBar: AppBar(
@@ -53,15 +53,18 @@ class MessageDetailPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(data.displayTitle,
-                          style: const TextStyle(
-                              fontFamily: 'Estedad',
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                              height: 1.7,
-                              color: AppColor.onSurface)),
+                      // متن کامل پایین‌تر می‌آید؛ اگر پیام کوتاه باشد تیتر
+                      // عیناً همان متن است و تکرارش فقط شلوغی است.
+                      if (data.hasMoreThanTitle)
+                        Text(data.displayTitle,
+                            style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                height: 1.7,
+                                color: AppColor.onSurface)),
                       if (date != null) ...[
-                        const SizedBox(height: 8),
+                        if (data.hasMoreThanTitle) const SizedBox(height: 8),
                         Row(
                           children: [
                             const Icon(Icons.schedule_rounded,
@@ -75,16 +78,18 @@ class MessageDetailPage extends StatelessWidget {
                           ],
                         ),
                       ],
-                      const SizedBox(height: 14),
-                      const Divider(height: 1, color: AppColor.line),
-                      const SizedBox(height: 14),
+                      if (data.hasMoreThanTitle || date != null) ...[
+                        const SizedBox(height: 14),
+                        const Divider(height: 1, color: AppColor.line),
+                        const SizedBox(height: 14),
+                      ],
                       SelectableText(
-                        data.body.isEmpty ? 'این پیام متنی ندارد.' : data.body,
+                        data.text.isEmpty ? 'این پیام متنی ندارد.' : data.text,
                         style: TextStyle(
                             fontFamily: 'Estedad',
                             fontSize: 14,
                             height: 1.9,
-                            color: data.body.isEmpty
+                            color: data.text.isEmpty
                                 ? AppColor.onSurfaceVariant
                                 : AppColor.onSurface),
                       ),
