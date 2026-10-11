@@ -32,8 +32,12 @@ jobs:
 
       - run: flutter pub get
 
-      # اگر تست‌ها قرمز باشند، نسخه‌ی خراب منتشر نمی‌شود
-      - run: flutter analyze
+      # اگر تست‌ها قرمز باشند، نسخه‌ی خراب منتشر نمی‌شود.
+      # --no-fatal-infos لازم است: پروژه حدود ۳۰۰ هشدارِ سبکِ سبک‌شناسی
+      # دارد (withOpacity منسوخ، نام فایل‌های قدیمی، avoid_print) و
+      # flutter analyze به‌صورت پیش‌فرض حتی روی info هم با کد ۱ خارج
+      # می‌شود. خطاهای واقعی و warning ها همچنان انتشار را متوقف می‌کنند.
+      - run: flutter analyze --no-fatal-infos
       - run: flutter test
 
       # Pages این مخزن را در زیرمسیرِ /<repo>/ سرو می‌کند، پس base-href

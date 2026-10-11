@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/screens/page_switcher.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';

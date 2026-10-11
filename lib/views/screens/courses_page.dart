@@ -749,9 +749,10 @@ class _UserCoursesListState extends State<_UserCoursesList> {
 /// تصویر دوره با نمایش عکس پیش‌فرض در صورت نبود آدرس یا خطای لود
 class _CourseThumbnail extends StatelessWidget {
   final String url;
-  final double size;
+  static const double size = 60;
 
-  const _CourseThumbnail({required this.url, this.size = 60});
+  // size همیشه پیش‌فرض بود و هیچ فراخوانی مقداری نمی‌داد
+  const _CourseThumbnail({required this.url});
 
   Widget _fallback() => Image.asset(
         'assets/images/course_not_found.jpg',
