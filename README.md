@@ -98,3 +98,36 @@ You can support me at [trakteer](https://trakteer.id/mrezkys) <br>
 ## Announcement
 
 Now MarketKy already relased v1.0.0
+
+---
+
+## انتشار نسخه‌ی وب (GitHub Pages)
+
+سایت با هر push روی `dev` از طریق `.github/workflows/deploy.yml` منتشر می‌شود:
+
+```
+https://persianball.github.io/PersianballUIV3/
+```
+
+ورک‌فلو قبل از انتشار `flutter analyze` و `flutter test` را اجرا می‌کند، پس
+نسخه‌ی خراب روی سایت نمی‌رود.
+
+### دو نکته‌ای که اگر فراموش شوند صفحه سفید می‌شود
+
+**۱. `base href`** — در `web/index.html` باید `$FLUTTER_BASE_HREF` بماند، نه
+`"/"` ثابت. Pages اپ را زیرمسیرِ `/PersianballUIV3/` سرو می‌کند و ورک‌فلو
+همان را با `--base-href` پاس می‌دهد. اگر مقدار ثابت شود، خودِ build خطا
+می‌دهد و در عمل همه‌ی asset ها ۴۰۴ می‌شوند.
+
+**۲. مسیردهی hash** — اپ از `#/route` استفاده می‌کند. این لازم است، چون
+GitHub Pages برای SPA فالبک ندارد و مسیرهای معمولی ۴۰۴ می‌دهند. اگر روزی
+`usePathUrlStrategy()` اضافه شد، رفرش روی هر صفحه‌ی داخلی می‌شکند.
+
+### محدودیت شناخته‌شده: اسلایدرها روی وبِ میزبانی‌شده بارگذاری نمی‌شوند
+
+سرور گالری روی `http://2.144.27.195:8000` است و HTTPS ندارد. GitHub Pages
+فقط HTTPS سرو می‌کند و مرورگر درخواست‌های HTTP از صفحه‌ی HTTPS را بلاک
+می‌کند (mixed content). روی `localhost` دیده نمی‌شود چون آنجا هم HTTP است.
+
+راه‌حل سمت سرور است: گالری پشت `pball.ah8ad3.ir` بیاید که هم HTTPS دارد و
+هم فایل‌های تصویرِ اسلایدها همان‌جا سرو می‌شوند.
