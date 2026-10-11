@@ -39,7 +39,9 @@ jobs:
       # Pages این مخزن را در زیرمسیرِ /<repo>/ سرو می‌کند، پس base-href
       # باید همان باشد وگرنه همه‌ی asset ها ۴۰۴ می‌شوند.
       # tree-shake-icons خاموش است چون اپ آیکن‌ها را به‌صورت داینامیک می‌سازد.
-      - run: flutter build web --release --no-tree-shake-icons --base-href=/${{ github.event.repository.name }}/
+      # GITHUB_REPOSITORY همیشه «owner/repo» است و روی اجرای دستی هم ست
+      # می‌شود؛ github.event.repository روی بعضی رویدادها خالی است.
+      - run: flutter build web --release --no-tree-shake-icons --base-href="/${GITHUB_REPOSITORY#*/}/"
 
       - uses: actions/upload-pages-artifact@v3
         with:
