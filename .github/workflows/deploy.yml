@@ -1,0 +1,56 @@
+# انتشار نسخه‌ی وبِ اپ روی GitHub Pages.
+#
+# از شاخه‌ی dev منتشر می‌شود چون کار جاری آنجاست (main خیلی عقب است).
+# اگر خواستید از main منتشر شود، فقط همین نام شاخه را عوض کنید.
+name: Deploy web to GitHub Pages
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.35.1
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # اگر تست‌ها قرمز باشند، نسخه‌ی خراب منتشر نمی‌شود
+      - run: flutter analyze
+      - run: flutter test
+
+      # Pages این مخزن را در زیرمسیرِ /<repo>/ سرو می‌کند، پس base-href
+      # باید همان باشد وگرنه همه‌ی asset ها ۴۰۴ می‌شوند.
+      # tree-shake-icons خاموش است چون اپ آیکن‌ها را به‌صورت داینامیک می‌سازد.
+      - run: flutter build web --release --no-tree-shake-icons --base-href=/${{ github.event.repository.name }}/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
