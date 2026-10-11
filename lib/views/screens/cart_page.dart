@@ -105,12 +105,20 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
+  /// عرضِ حالت‌های خالی/خطا. هم‌اندازه‌ی ستونِ متنِ بقیه‌ی صفحات، تا در
+  /// دسکتاپ یک پیامِ کوتاه کشیده نشود روی تمام عرض صفحه.
+  static const double _promptMaxWidth = 420;
+
   /// حالت خالی سبد خرید
   Widget _buildEmptyCart() {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Center(
-        child: Padding(
+        child: ConstrainedBox(
+          // حالت‌های خالی/خطا در دسکتاپ نباید تمام عرض را بگیرند؛ همان
+          // ستونِ باریکِ وسط‌چین که بقیه‌ی صفحات دارند.
+          constraints: const BoxConstraints(maxWidth: _promptMaxWidth),
+          child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -157,6 +165,7 @@ class _CartPageState extends State<CartPage> {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -167,7 +176,9 @@ class _CartPageState extends State<CartPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Center(
-        child: Padding(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _promptMaxWidth),
+          child: Padding(
           padding: EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -233,6 +244,7 @@ class _CartPageState extends State<CartPage> {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -261,7 +273,15 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  /// چیدمان دسکتاپ (>=1024): دو ستون در پوسته‌ی مرکزی ۱۲۰۰ پیکسلی —
+  /// عرضِ محتوا در دسکتاپ.
+  ///
+  /// عمداً ۱۰۸۰ است نه ۱۲۰۰ِ پیش‌فرض: سبد اولین قدمِ همان جریانی است که با
+  /// صفحه‌ی آدرس/خلاصه‌ی سفارش ادامه پیدا می‌کند، و آن صفحه باریک‌تر است.
+  /// با ۱۲۰۰ محتوا موقع رفتن به قدم بعد یک‌باره جمع می‌شد، و ردیفِ هر کالا
+  /// هم آن‌قدر کشیده می‌شد که بین عنوان و قیمت فاصله‌ی خالیِ بزرگی می‌افتاد.
+  static const double _desktopMaxWidth = 1080;
+
+  /// چیدمان دسکتاپ (>=1024): دو ستون در پوسته‌ی مرکزی —
   /// بخش‌های آیتم‌ها در ستون اصلی و خلاصه سفارش + دکمه تسویه در ستون کناری.
   Widget _buildDesktopCartContent(AllCartFromBackend cart) {
     if (cart.count == 0 ||
@@ -277,6 +297,7 @@ class _CartPageState extends State<CartPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: CenteredContent(
+        maxWidth: _desktopMaxWidth,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

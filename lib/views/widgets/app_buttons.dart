@@ -85,7 +85,13 @@ class GradientButton extends StatelessWidget {
             onTap: active ? onPressed : null,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Center(child: content),
+              // widthFactor وقتی expand=false لازم است: Center بدونِ آن
+              // تمام عرضِ در دسترس را می‌گیرد، پس این پرچم عملاً بی‌اثر بود
+              // و دکمه‌های «غیرکشیده» در دسکتاپ تمام‌عرض می‌شدند.
+              child: Center(
+                widthFactor: expand ? null : 1,
+                child: content,
+              ),
             ),
           ),
         ),
