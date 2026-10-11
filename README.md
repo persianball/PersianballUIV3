@@ -103,7 +103,9 @@ Now MarketKy already relased v1.0.0
 
 ## انتشار نسخه‌ی وب (GitHub Pages)
 
-سایت با هر push روی `dev` از طریق `.github/workflows/deploy.yml` منتشر می‌شود:
+سایت با هر push روی `main` از طریق `.github/workflows/deploy.yml` منتشر
+می‌شود (`dev` = کار در جریان، `main` = آنچه زنده است). برای انتشار:
+`git push origin dev:main`
 
 ```
 https://persianball.github.io/PersianballUIV3/

@@ -1,7 +1,12 @@
 # انتشار نسخه‌ی وبِ اپ روی GitHub Pages.
 #
-# از شاخه‌ی dev منتشر می‌شود چون کار جاری آنجاست (main خیلی عقب است).
-# اگر خواستید از main منتشر شود، فقط همین نام شاخه را عوض کنید.
+# از main منتشر می‌شود، نه dev. محیطِ github-pages به‌صورت پیش‌فرض فقط به
+# شاخه‌ی پیش‌فرضِ مخزن اجازه‌ی استقرار می‌دهد؛ وقتی تریگر روی dev بود،
+# مرحله‌ی build سبز می‌شد ولی deploy با خطای «Branch is not allowed to
+# deploy to github-pages» رد می‌شد.
+#
+# یعنی: dev = کار در جریان، main = آنچه روی سایت زنده است.
+# برای انتشار:  git push origin dev:main
 name: Deploy web to GitHub Pages
 
 on:
