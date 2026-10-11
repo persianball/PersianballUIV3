@@ -16,14 +16,22 @@ import 'package:marketky/models/slider_item.dart';
 class SliderService {
   SliderService._();
 
-  /// سرورِ گالری — فقط برای خودِ API.
-  static const String host = 'http://2.144.27.195:8000';
-  static const String _endpoint = '$host/v1/gallery/slider/';
+  /// هاستِ اصلی، هم برای API و هم برای تصاویر.
+  ///
+  /// پیش‌تر اسلایدرها از `http://2.144.27.195:8000` خوانده می‌شدند. دو
+  /// مشکل داشت:
+  ///   • HTTP بود و روی نسخه‌ی وبِ میزبانی‌شده (HTTPS) مرورگر کلِ درخواست
+  ///     را به‌عنوان mixed content بلاک می‌کرد، پس اسلایدرها خالی می‌ماندند.
+  ///   • کند بود؛ اندازه‌گیری‌شده ۲ تا ۶ ثانیه در برابر حدود ۰٫۸ ثانیه اینجا.
+  /// همان داده را برمی‌گرداند (تأیید شد: پاسخ‌ها یکسان‌اند) و فایل‌های
+  /// `/media/...` هم از ابتدا روی همین هاست سرو می‌شدند.
+  static String get host => URLs.baseUrl.endsWith('/')
+      ? URLs.baseUrl.substring(0, URLs.baseUrl.length - 1)
+      : URLs.baseUrl;
 
-  /// تصاویرِ اسلاید روی سرور گالری نیستند: هر مسیر `/media/...` آنجا ۴۰۴
-  /// می‌دهد و فایل‌ها روی هاست اصلی سرو می‌شوند. پیش‌تر آدرس تصویر با هاست
-  /// گالری ساخته می‌شد، پس هیچ اسلایدی تصویرش بارگذاری نمی‌شد و کاربر فقط
-  /// اسپینر و بعد جای خالی می‌دید.
+  static String get _endpoint => '$host/v1/gallery/slider/';
+
+  /// تصاویر هم روی همین هاست‌اند.
   static String get mediaBase => URLs.baseUrl;
 
   static const Duration _ttl = Duration(minutes: 5);
