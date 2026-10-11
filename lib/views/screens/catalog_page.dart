@@ -123,21 +123,41 @@ class _CatalogPageState extends State<CatalogPage> {
     final results = CatalogService.apply(_all, _filter);
     final visible = results.take(_visibleCount).toList();
 
+    // روی پشته نشسته‌ایم یا تبِ نوار پاییم؟
+    final bool canPop = Navigator.of(context).canPop();
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        // دسکتاپ: عنوان صفحه در نوار بالای اپ تکرار می‌شود، پس اپ‌بار مخصوص
-        // این تب حذف می‌شود.
-        appBar: AppBreakpoints.isDesktop(context)
+        // این صفحه دو جور باز می‌شود و هرکدام اپ‌بارِ متفاوتی می‌خواهد:
+        //
+        //   • به‌عنوان تبِ نوار پایین → راهِ برگشتی وجود ندارد و نباید
+        //     دکمه‌ی بازگشت نشان داده شود. در دسکتاپ هم نوار بالای اپ
+        //     عنوان را دارد، پس اپ‌بار اصلاً لازم نیست.
+        //   • به‌عنوان یک روتِ مستقل (فیلترِ صفحه‌ی خانه، «مشاهده محصولات»
+        //     در سبدِ خالی، دیپ‌لینک، روتِ ‎/catalog) → روی پشته نشسته و
+        //     باید راه برگشت داشته باشد.
+        //
+        // پیش‌تر در هر دو حالت دکمه‌ی بازگشت حذف می‌شد و در حالت دوم کاربر
+        // گیر می‌افتاد؛ در دسکتاپ که اپ‌بار هم نبود، اصلاً هیچ راه خروجی
+        // نداشت.
+        appBar: (AppBreakpoints.isDesktop(context) && !canPop)
             ? null
             : AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          // این صفحه یکی از تب‌های نوار پایین است؛ دکمه‌ی بازگشت خودکار
-          // نباید نمایش داده شود.
           automaticallyImplyLeading: false,
+          // arrow_back در RTL خودش آینه می‌شود و به راست اشاره می‌کند —
+          // هم‌راستا با بقیه‌ی صفحات اپ.
+          leading: canPop
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded,
+                      color: AppColor.ink),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                )
+              : null,
           title: Text('فروشگاه',
               style: AppTextStyles.headlineMd
                   .copyWith(fontSize: 17, color: AppColor.ink)),

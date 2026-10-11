@@ -42,26 +42,35 @@ class CartPopButtonState extends State<CartPopButton>
     duration: kCartPopDuration,
   );
 
-  /// تا وقتی سبد از سرور دوباره خوانده نشده، [widget.count] هنوز قدیمی است؛
-  /// این مقدار موقتاً به آن اضافه می‌شود تا دکمه همان لحظه پر شود.
-  int _pending = 0;
+  /// فقط برای «پر» دیده شدنِ دکمه در فاصله‌ی بینِ افزودن و رسیدنِ شمارنده‌ی
+  /// سرور. عمداً به عدد اضافه نمی‌شود.
+  ///
+  /// پیش‌تر این مقدار به [widget.count] اضافه می‌شد تا نشان فوراً جلو برود.
+  /// ولی انیمیشنِ افتادنِ کالا داخل سبد چند صد میلی‌ثانیه طول می‌کشد و در
+  /// عمل شمارنده‌ی واقعی *قبل از* pop می‌رسید؛ آن‌وقت یکی هم روی عددِ
+  /// درستِ سرور اضافه می‌شد و نشان یکی بیشتر نشان می‌داد.
+  int _pendingFill = 0;
 
   /// اجرای انیمیشنِ «پر شدن». از بیرون (بعد از افزودن موفق) صدا زده می‌شود.
   void pop({int added = 1}) {
     HapticFeedback.lightImpact();
-    setState(() => _pending = added);
+    setState(() => _pendingFill = added);
     _c.forward(from: 0);
   }
 
   @override
   void didUpdateWidget(covariant CartPopButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // شمارنده‌ی واقعی رسید؛ افزایش موقت دیگر لازم نیست.
-    if (oldWidget.count != widget.count) _pending = 0;
+    // شمارنده‌ی واقعی رسید؛ پر کردنِ موقت دیگر لازم نیست.
+    if (oldWidget.count != widget.count) _pendingFill = 0;
   }
 
-  int get _count => widget.count + _pending;
-  bool get _filled => _count > 0;
+  /// عدد همیشه همان چیزی است که سرور گفته — هیچ تخمینی رویش سوار نمی‌شود.
+  int get _count => widget.count;
+
+  /// ظاهرِ پر: یا واقعاً چیزی در سبد هست، یا همین الان افزوده شده و
+  /// شمارنده هنوز نرسیده.
+  bool get _filled => widget.count > 0 || _pendingFill > 0;
 
   @override
   void dispose() {
@@ -194,7 +203,9 @@ class CartPopButtonState extends State<CartPopButton>
                 ),
               ),
               // نشان تعداد — بالا-چپ (سمت «انتهای» چیدمان RTL)
-              if (badgeIn > 0)
+              // تا وقتی عددِ واقعی نرسیده نشان رسم نمی‌شود، وگرنه «۰»
+              // دیده می‌شد.
+              if (badgeIn > 0 && _count > 0)
                 Positioned(
                   top: -4,
                   left: -4,
