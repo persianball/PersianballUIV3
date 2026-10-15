@@ -15,7 +15,6 @@ import 'package:persian_ball/services/recently_viewed_service.dart';
 import 'package:persian_ball/services/analytics_service.dart';
 import 'package:persian_ball/constant/urls.dart';
 import 'package:persian_ball/models/CartModel.dart';
-import 'package:persian_ball/models/ColorWay.dart';
 import 'package:persian_ball/models/ProductModel.dart';
 import 'package:persian_ball/utils/ThousandsFormatter.dart';
 import 'package:persian_ball/views/screens/image_viewer.dart';
@@ -24,9 +23,10 @@ import 'package:persian_ball/views/widgets/cart_drop_animation.dart';
 import 'package:persian_ball/views/widgets/cart_pop_button.dart';
 import 'package:persian_ball/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:persian_ball/views/widgets/product_reviews_section.dart';
-import 'package:persian_ball/views/widgets/selectable_circle_color.dart';
 import 'package:persian_ball/views/widgets/selectable_circle_size.dart';
 import 'package:persian_ball/views/widgets/shoe_size_guide.dart';
+import 'package:persian_ball/views/widgets/variant_swatch_picker.dart';
+import 'package:persian_ball/views/widgets/liquid_reveal.dart';
 import 'package:persian_ball/constant/shoe_size_chart.dart';
 import 'package:persian_ball/views/widgets/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,17 +36,18 @@ import '../../bloc/product_detail/product_detail_event.dart';
 import '../../bloc/product_detail/product_detail_state.dart';
 import '../widgets/similar_product_card.dart';
 
-
 class ProductDetailPage extends StatefulWidget {
   final int productId;
 
-  const ProductDetailPage({Key? key, required this.productId}) : super(key: key);
+  const ProductDetailPage({Key? key, required this.productId})
+      : super(key: key);
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
 }
 
-class _ProductDetailPageState extends State<ProductDetailPage> with SingleTickerProviderStateMixin {
+class _ProductDetailPageState extends State<ProductDetailPage>
+    with SingleTickerProviderStateMixin {
   /// اسلاید فعلی گالری تا با تعویض رنگ همان اسلاید حفظ شود
   int _carouselIndex = 0;
 
@@ -81,7 +82,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
         .fold<int>(0, (sum, item) => sum + item.quantity);
   }
 
-
   /// اشتراک‌گذاری لینک محصول (دیپ‌لینک همین اپ)
   Future<void> _shareProduct(String productName) async {
     final link = '${URLs.baseUrl}/product/${widget.productId}';
@@ -115,9 +115,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     animation = CurvedAnimation(
       parent: animationController,
       curve: Curves.easeIn,
-
     );
-
 
     context.read<ProductDetailBloc>().add(FetchProductDetail(widget.productId));
     // ثبت در بازدیدهای اخیر و آنالیتیکس
@@ -172,7 +170,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
       body: BlocBuilder<ProductDetailBloc, ProductDetailState>(
         builder: (context, state) {
-
           if (state is ProductDetailLoading) {
             return _buildLoading();
           } else if (state is ProductDetailError) {
@@ -234,8 +231,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
   }
 
   Widget _buildLoading() {
-    return _ProductDetailSkeleton(
-        desktop: AppBreakpoints.isDesktop(context));
+    return _ProductDetailSkeleton(desktop: AppBreakpoints.isDesktop(context));
   }
 
   Widget _buildError(String message, BuildContext context) {
@@ -265,7 +261,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                   icon: const Icon(Icons.refresh_rounded),
                   onPressed: () => context
                       .read<ProductDetailBloc>()
-                  .add(FetchProductDetail(widget.productId)),
+                      .add(FetchProductDetail(widget.productId)),
                 ),
               ],
             ),
@@ -524,8 +520,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                     children: [
                       Expanded(
                         flex: 11, // ~۵۵٪ عرض
-                        child: _buildGalleryPanel(product, variant,
-                            desktop: true),
+                        child:
+                            _buildGalleryPanel(product, variant, desktop: true),
                       ),
                       const SizedBox(width: 24),
                       Expanded(
@@ -586,6 +582,39 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     }
   }
 
+  static Color _parseRgb(String? rgb) {
+    final hex = (rgb ?? '').trim().replaceFirst('#', '');
+    final v = int.tryParse(hex, radix: 16);
+    if (v == null || hex.isEmpty || hex.length > 6) return AppColor.lineStrong;
+    return Color(0xff000000 + v);
+  }
+
+  /// تصویرِ کاشیِ رنگ: `image`ِ واریانت، وگرنه آیکن یا اولین عکسش.
+  static String? _variantThumb(ProductVariant v) {
+    for (final p in [
+      v.image,
+      v.icon,
+      if (v.images.isNotEmpty) v.images.first
+    ]) {
+      final s = (p ?? '').trim();
+      if (s.isEmpty || s.toLowerCase() == 'null') continue;
+      return s.startsWith('http') ? s : '${URLs.baseUrl}$s';
+    }
+    return null;
+  }
+
+  /// با عوض شدنِ رنگ، همان سایزِ قبلی اگر در رنگِ تازه موجود بود می‌ماند؛
+  /// وگرنه اولین سایزِ موجود. رنگِ بی‌سایز → null.
+  static SizeVariant? _carrySize(ProductVariant next, SizeVariant? current) {
+    if (next.sizeVariants.isEmpty) return null;
+    if (current != null) {
+      for (final sv in next.sizeVariants) {
+        if (sv.size.trim() == current.size.trim() && sv.inStock) return sv;
+      }
+    }
+    return firstAvailableSizeVariant(next.sizeVariants);
+  }
+
   /// انتقال «مورف»: هم‌زمان محو، مقیاس و کمی جابه‌جایی عمودی، تا تعویض
   /// تصویر/رنگ به‌جای پرش، تبدیل نرم دیده شود.
   Widget _morph(Widget child, Animation<double> animation) {
@@ -624,8 +653,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     final int itemCount = images.length + (hasVideo ? 1 : 0);
     // با تعویض رنگ، همان ایندکسی که کاربر قبلاً انتخاب کرده حفظ می‌شود؛
     // اگر واریانت جدید آن ایندکس را نداشته باشد، تصویر اول نشان داده می‌شود.
-    final int index =
-        (_carouselIndex >= 0 && _carouselIndex < itemCount) ? _carouselIndex : 0;
+    final int index = (_carouselIndex >= 0 && _carouselIndex < itemCount)
+        ? _carouselIndex
+        : 0;
     final bool showVideo = hasVideo && index == images.length;
 
     // پس‌زمینه‌ی قاب تصویر با رنگ همان واریانت و آلفای ۰٫۵
@@ -657,43 +687,57 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
               Positioned.fill(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 76, 108, 20),
+                  // عوض شدنِ رنگ: تصویرِ تازه با دایره‌ی مایع از پایین باز
+                  // می‌شود. عوض شدنِ تامبنیل در همان رنگ: «مورف»ِ داخلی.
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 420),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: _morph,
+                    duration: const Duration(milliseconds: 720),
+                    transitionBuilder: (child, a) =>
+                        liquidRevealTransition(child, a),
                     layoutBuilder: (current, previous) => Stack(
-                      alignment: Alignment.center,
+                      fit: StackFit.expand,
                       children: [...previous, if (current != null) current],
                     ),
-                    child: showVideo
-                        // ویدیو داخل همان قاب تصویر پخش می‌شود، نه دیالوگ جدا
-                        ? InlineVideoPlayer(
-                            key: ValueKey('video-$variantKey'),
-                            videoUrl: video,
-                          )
-                        : MouseRegion(
-                            key: ValueKey('img-$variantKey-$index'),
-                            cursor: images.isEmpty
-                                ? MouseCursor.defer
-                                : SystemMouseCursors.click,
-                            child: GestureDetector(
-                              onTap: images.isEmpty
-                                  ? null
-                                  : () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              ImageViewer(imageUrl: images),
-                                        ),
-                                      ),
-                              child: AppNetworkImage(
-                                url: images.isEmpty ? null : images[index],
-                                fit: BoxFit.contain,
-                                width: double.infinity,
-                                height: double.infinity,
+                    child: KeyedSubtree(
+                      key: ValueKey('variant-$variantKey'),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 420),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: _morph,
+                        layoutBuilder: (current, previous) => Stack(
+                          alignment: Alignment.center,
+                          children: [...previous, if (current != null) current],
+                        ),
+                        child: showVideo
+                            // ویدیو داخل همان قاب تصویر پخش می‌شود، نه دیالوگ جدا
+                            ? InlineVideoPlayer(
+                                key: ValueKey('video-$variantKey'),
+                                videoUrl: video,
+                              )
+                            : MouseRegion(
+                                key: ValueKey('img-$variantKey-$index'),
+                                cursor: images.isEmpty
+                                    ? MouseCursor.defer
+                                    : SystemMouseCursors.click,
+                                child: GestureDetector(
+                                  onTap: images.isEmpty
+                                      ? null
+                                      : () => Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  ImageViewer(imageUrl: images),
+                                            ),
+                                          ),
+                                  child: AppNetworkImage(
+                                    url: images.isEmpty ? null : images[index],
+                                    fit: BoxFit.contain,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -736,11 +780,24 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 top: 76,
                 bottom: 18,
                 width: 76,
-                child: _buildThumbRail(
-                  images: images,
-                  selected: index,
-                  video: hasVideo ? video : null,
-                  variantId: variantKey,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 420),
+                  switchInCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, a) => FadeTransition(
+                    opacity: a,
+                    child: SlideTransition(
+                      position:
+                          Tween(begin: const Offset(0, 0.06), end: Offset.zero)
+                              .animate(a),
+                      child: child,
+                    ),
+                  ),
+                  child: _buildThumbRail(
+                    images: images,
+                    selected: index,
+                    video: hasVideo ? video : null,
+                    variantId: variantKey,
+                  ),
                 ),
               ),
             ],
@@ -831,7 +888,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     // نباشد (بک‌اند price را null داده) به‌جای عدد، «تماس بگیرید» می‌آید.
     final int original = size?.price ?? product.price ?? 0;
     final int? pct = size?.discountPercentage ?? product.discountPercentage;
-    final bool hasDiscount = pct != null && pct > 0 && pct < 100 && original > 0;
+    final bool hasDiscount =
+        pct != null && pct > 0 && pct < 100 && original > 0;
     final int finalPrice =
         hasDiscount ? (original * (1 - pct / 100)).toInt() : original;
 
@@ -942,35 +1000,42 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                       ],
                     ),
                   ),
-                  if (product.variants.isNotEmpty)
-                    SelectableCircleColor(
-                      circleSize: 22,
-                      spacing: 8,
-                      colorWay: product.variants
-                          .map((v) => ColorWay(
-                                color: Color(0xff000000 +
-                                    int.parse(v.colorRgb!, radix: 16)),
-                                name: v.color ?? 'ناشناس',
-                                imageUrl: v.image != null
-                                    ? '${URLs.baseUrl}${v.image}'
-                                    : null,
-                              ))
-                          .toList(),
-                      onColorSelected: (int vIndex) {
-                        if (product.variants[vIndex].sizeVariants.isNotEmpty) {
-                          final s = firstAvailableSizeVariant(
-                              product.variants[vIndex].sizeVariants)!;
-                          // ایندکس تصویر انتخاب‌شده عمداً ریست نمی‌شود؛ اگر
-                          // واریانت جدید همان تعداد تصویر را داشته باشد،
-                          // کاربر روی همان زاویه‌ی قبلی می‌ماند.
-                          context.read<ProductDetailVariantBloc>().add(
-                              ChangeProductColorEvent(
-                                  product.variants[vIndex], s));
-                        }
-                      },
-                    ),
                 ],
               ),
+
+              // انتخابِ رنگ با تصویرِ هر واریانت
+              if (product.variants.length > 1) ...[
+                const SizedBox(height: 20),
+                VariantSwatchPicker(
+                  tileSize: AppBreakpoints.isDesktop(context) ? 72 : 60,
+                  selectedIndex: variant == null
+                      ? 0
+                      : product.variants
+                          .indexWhere((v) => v.id == variant.id)
+                          .clamp(0, product.variants.length - 1),
+                  swatches: [
+                    for (final v in product.variants)
+                      VariantSwatch(
+                        name: (v.color ?? '').trim().isEmpty ||
+                                v.color!.trim().toLowerCase() == 'null'
+                            ? 'رنگ'
+                            : v.color!.trim(),
+                        color: _parseRgb(v.colorRgb),
+                        imageUrl: _variantThumb(v),
+                        available: v.sizeVariants.isEmpty ||
+                            v.sizeVariants.any((sv) => sv.inStock),
+                      ),
+                  ],
+                  onSelected: (i) {
+                    final next = product.variants[i];
+                    // ایندکس تصویرِ گالری عمداً ریست نمی‌شود؛ اگر واریانت
+                    // جدید همان تعداد تصویر را داشته باشد، کاربر روی همان
+                    // زاویه‌ی قبلی می‌ماند.
+                    context.read<ProductDetailVariantBloc>().add(
+                        ChangeProductColorEvent(next, _carrySize(next, size)));
+                  },
+                ),
+              ],
 
               if (variant != null && variant.sizeVariants.isNotEmpty) ...[
                 const SizedBox(height: 20),
@@ -1004,8 +1069,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                 .where((sv) => sv.size.trim() == eu)
                                 .firstOrNull;
                             if (pick == null) return;
-                            context.read<ProductDetailVariantBloc>().add(
-                                ChangeProductColorEvent(variant, pick));
+                            context
+                                .read<ProductDetailVariantBloc>()
+                                .add(ChangeProductColorEvent(variant, pick));
                           },
                         ),
                       ),
@@ -1014,8 +1080,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                 const SizedBox(height: 10),
                 SelectableCircleSize(
                   key: ValueKey(variant.id),
-                  productSize:
-                      variant.sizeVariants.map((s) => s.size).toList(),
+                  productSize: variant.sizeVariants.map((s) => s.size).toList(),
                   sizeAvailability:
                       variant.sizeVariants.map((s) => s.inStock).toList(),
                   // انتخاب از «راهنمای سایز» هم باید اینجا دیده شود
@@ -1201,9 +1266,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
     );
     return desktop ? CenteredContent(child: content) : content;
   }
-
 }
-
 
 /// اسکلتونِ صفحه‌ی جزئیات محصول: دقیقاً همان چیدمانِ صفحه‌ی بارگذاری‌شده
 /// (قابِ گالری + ریلِ تامبنیل، کارتِ اطلاعات، آکاردئون‌ها) با شیمر، تا هنگام
@@ -1437,7 +1500,6 @@ class _AccordionBones extends StatelessWidget {
     );
   }
 }
-
 
 /// لینکِ «راهنمای سایز» کنارِ عنوانِ انتخابِ سایز
 class _SizeGuideLink extends StatelessWidget {
