@@ -1,5 +1,6 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:marketky/views/widgets/app_logo.dart';
 import 'package:marketky/constant/app_color.dart';
 import 'package:marketky/views/widgets/motion.dart';
 import 'package:marketky/views/screens/home_page.dart';
@@ -182,16 +183,9 @@ class _DesktopNavBar extends StatelessWidget implements PreferredSizeWidget {
                   onTap: () => onSelect(0),
                   child: Row(
                     children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: const ShapeDecoration(
-                          gradient: AppColor.greenGradient,
-                          shape: CircleBorder(),
-                        ),
-                        child: const Icon(Icons.sports_soccer,
-                            color: AppColor.onPitchGreen, size: 22),
-                      ),
+                      // لوگو مستقیم روی نوارِ سفید؛ دایره‌ی سبزِ قبلی
+                      // حذف شد چون نوارِ سبزِ لوگو روی آن محو می‌شد.
+                      const AppLogo(size: 40),
                       const SizedBox(width: 10),
                       const Text(
                         'پرشین شاپ',

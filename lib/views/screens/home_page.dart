@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marketky/views/widgets/app_logo.dart';
 import 'package:marketky/constant/app_breakpoints.dart';
 import 'package:marketky/views/widgets/category_pill_bar.dart';
 import 'package:marketky/constant/app_color.dart';
@@ -314,18 +315,8 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
       child: Row(
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: const ShapeDecoration(
-              shape: CircleBorder(),
-              shadows: AppColor.cardShadow,
-              image: DecorationImage(
-                image: AssetImage('assets/images/avatar_for_comments.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+          // جای برند: پیش‌تر یک عکسِ آواتارِ عمومی اینجا بود.
+          const AppLogo(size: 42),
           Expanded(
             child: Text(
               'پرشین شاپ',
