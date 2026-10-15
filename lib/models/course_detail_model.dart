@@ -195,6 +195,105 @@ class CourseTimeAndLocationItem {
   }
 }
 
+int _asInt(dynamic v) => v is int ? v : int.tryParse('${v ?? ''}') ?? 0;
+
+/// یک دوره‌ی زیرمجموعه داخلِ یک دوره‌ی «مجموعه‌ای».
+///
+/// دوره می‌تواند از چند دوره‌ی دیگر تشکیل شود و هر کدام برنامه‌ی هفتگیِ
+/// خودش را دارد (همان شکلِ `detail.sections` در دوره‌ی معمولی). زیرمجموعه
+/// خودش هم می‌تواند زیرمجموعه داشته باشد؛ رابط کاربری برای یک سطح طراحی
+/// شده ولی سطوحِ عمیق‌تر را هم با تورفتگی نشان می‌دهد.
+///
+/// قراردادِ پیشنهادی با بک‌اند (داخلِ `detail`):
+///   "sub_courses": [{ "id", "order", "course_title", "image",
+///     "course_description", "course_difficulty", "course_duration",
+///     "week_count", "video_count", "sections": [...], "sub_courses": [...] }]
+class SubCourse {
+  final int id;
+  final int order;
+  final String title;
+  final String image;
+  final String description;
+  final String difficulty;
+
+  /// همان واحدِ `course_duration` دوره‌ی اصلی (ثانیه)
+  final int duration;
+  final int weekCount;
+  final int videoCount;
+  final List<CourseWeek> weeks;
+  final List<SubCourse> subCourses;
+
+  const SubCourse({
+    required this.id,
+    required this.order,
+    required this.title,
+    required this.image,
+    required this.description,
+    required this.difficulty,
+    required this.duration,
+    required this.weekCount,
+    required this.videoCount,
+    required this.weeks,
+    required this.subCourses,
+  });
+
+  List<CourseWeekGroup> get weekGroups => CourseWeekGroup.groupByWeek(weeks);
+
+  /// تعداد ویدیوها از خودِ برنامه شمرده می‌شود؛ اگر بک‌اند برنامه را
+  /// نفرستاده باشد (مثلاً در لیست)، عددِ اعلام‌شده‌اش.
+  int get totalVideos {
+    final own = weeks.fold<int>(0, (n, w) => n + w.sections.length);
+    final nested = subCourses.fold<int>(0, (n, c) => n + c.totalVideos);
+    return (own == 0 && nested == 0) ? videoCount : own + nested;
+  }
+
+  int get totalWeeks {
+    final own = weekGroups.length;
+    final nested = subCourses.fold<int>(0, (n, c) => n + c.totalWeeks);
+    return (own == 0 && nested == 0) ? weekCount : own + nested;
+  }
+
+  /// همه‌ی ویدیوهایش قفل است (هنوز خریداری نشده)
+  bool get isFullyLocked {
+    final all = [for (final w in weeks) ...w.sections];
+    final nestedLocked = subCourses.every((c) => c.isFullyLocked);
+    return (all.isNotEmpty || subCourses.isNotEmpty) &&
+        all.every((s) => s.isLocked) &&
+        nestedLocked;
+  }
+
+  static List<SubCourse> listFrom(dynamic raw) {
+    if (raw is! List) return const [];
+    final list = <SubCourse>[];
+    for (final e in raw) {
+      if (e is Map<String, dynamic>) list.add(SubCourse.fromJson(e));
+    }
+    // ترتیبِ آموزشی مهم است؛ اگر order نیامده بود، ترتیبِ خودِ پاسخ می‌ماند
+    // (sort پایدار است و همه صفر می‌شوند).
+    list.sort((a, b) => a.order.compareTo(b.order));
+    return list;
+  }
+
+  factory SubCourse.fromJson(Map<String, dynamic> json) {
+    return SubCourse(
+      id: _asInt(json['id']),
+      order: _asInt(json['order']),
+      title: (json['course_title'] ?? json['title'] ?? '').toString(),
+      image: (json['image'] ?? '').toString(),
+      description: (json['course_description'] ?? '').toString(),
+      difficulty: (json['course_difficulty'] ?? '').toString(),
+      duration: _asInt(json['course_duration']),
+      weekCount: _asInt(json['week_count']),
+      videoCount: _asInt(json['video_count']),
+      weeks: [
+        for (final e in (json['sections'] as List? ?? const []))
+          if (e is Map<String, dynamic>) CourseWeek.fromJson(e),
+      ],
+      subCourses: SubCourse.listFrom(json['sub_courses']),
+    );
+  }
+}
+
 class CourseDetailInner {
   final String preRequirement;
   final int videoCount;
@@ -202,8 +301,21 @@ class CourseDetailInner {
   final List<CourseWeek> weeks;
   final List<CourseTimeAndLocationItem> timeAndLocation;
 
+  /// دوره‌های تشکیل‌دهنده؛ خالی یعنی دوره‌ی معمولی.
+  final List<SubCourse> subCourses;
+
   /// هفته‌ها پس از گروه‌بندی بر اساس `week_number`.
   List<CourseWeekGroup> get weekGroups => CourseWeekGroup.groupByWeek(weeks);
+
+  /// دوره‌ای که از چند دوره‌ی دیگر تشکیل شده
+  bool get isBundle => subCourses.isNotEmpty;
+
+  int get bundleVideoCount =>
+      subCourses.fold<int>(0, (n, c) => n + c.totalVideos) +
+      weeks.fold<int>(0, (n, w) => n + w.sections.length);
+
+  int get bundleWeekCount =>
+      subCourses.fold<int>(0, (n, c) => n + c.totalWeeks) + weekGroups.length;
 
   CourseDetailInner({
     required this.preRequirement,
@@ -211,6 +323,7 @@ class CourseDetailInner {
     required this.length,
     required this.weeks,
     required this.timeAndLocation,
+    this.subCourses = const [],
   });
 
   factory CourseDetailInner.fromJson(Map<String, dynamic> json) {
@@ -226,6 +339,7 @@ class CourseDetailInner {
       length: json['length'] is int ? json['length'] : int.tryParse('${json['length']}') ?? 0,
       weeks: weeks,
       timeAndLocation: times,
+      subCourses: SubCourse.listFrom(json['sub_courses']),
     );
   }
 }

@@ -16,6 +16,7 @@ import 'package:marketky/bloc/cart/cart_bloc.dart';
 import 'package:marketky/views/widgets/detail_tabs.dart';
 import 'package:marketky/views/widgets/shimmer.dart';
 import 'package:marketky/views/widgets/modals/video_player_dialog.dart';
+import 'package:marketky/views/widgets/locked_lessons_veil.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final int id;
@@ -41,8 +42,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   /// پیشرفتِ تماشا روی همین دستگاه (کدام ویدیو تا کجا دیده شده).
   CourseProgress _progress = CourseProgress.empty;
 
-  /// هفته‌ی بازِ آکاردئون. با ورود به صفحه هفته‌ی اول باز است.
+  /// هفته‌ی بازِ آکاردئون، به‌شکلِ «محدوده|شماره» (محدوده خالی = خودِ دوره،
+  /// c<id> = یک زیرمجموعه). هر زیرمجموعه هفته‌ی ۱ خودش را دارد، پس شماره‌ی
+  /// هفته به‌تنهایی یکتا نیست. با ورود به صفحه هفته‌ی اول باز است.
   String? _openWeek;
+
+  /// زیرمجموعه‌های بازِ یک دوره‌ی مجموعه‌ای
+  final Set<int> _openSubCourses = <int>{};
 
   /// پیشنهادِ «ادامه‌ی تماشا» در هر بار ورود فقط یک‌بار نشان داده می‌شود.
   bool _resumeAsked = false;
@@ -179,14 +185,44 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   }
 
   void _openFirstWeek(CourseDetailResponse data) {
-    if (_openWeek != null || data.detail.weekGroups.isEmpty) return;
-    setState(() => _openWeek = data.detail.weekGroups.first.weekNumber);
+    if (_openWeek != null) return;
+    if (data.detail.isBundle) {
+      final first = data.detail.subCourses.first;
+      setState(() {
+        _openSubCourses.add(first.id);
+        if (first.weekGroups.isNotEmpty) {
+          _openWeek = _weekId('c${first.id}', first.weekGroups.first.weekNumber);
+        }
+      });
+      return;
+    }
+    if (data.detail.weekGroups.isEmpty) return;
+    setState(() => _openWeek = _weekId('', data.detail.weekGroups.first.weekNumber));
+  }
+
+  /// شناسه‌ی یک هفته در آکاردئون
+  String _weekId(String scope, String weekNumber) => '$scope|$weekNumber';
+
+  /// باز کردنِ مسیرِ رسیدن به یک ویدیو (زیرمجموعه‌ها + هفته)
+  void _reveal(_Located f) {
+    setState(() {
+      _openSubCourses.addAll(f.path);
+      _openWeek = _weekId(f.scope, f.weekNumber);
+    });
   }
 
   /// شناسه‌ی پایدارِ یک ویدیو: آدرسِ ویدیو، و اگر نبود هفته+عنوان.
-  String _sectionKey(CourseWeekSectionItem s, String weekNumber) {
+  ///
+  /// برای خودِ دوره (scope خالی) دقیقاً همان قالبِ قبلی است تا پیشرفت‌های
+  /// ذخیره‌شده معتبر بمانند؛ در زیرمجموعه‌ها شناسه‌ی دوره هم وارد می‌شود
+  /// چون هر کدام «هفته‌ی ۱» خودش را دارد.
+  String _sectionKey(CourseWeekSectionItem s, String weekNumber,
+      [String scope = '']) {
     final url = (s.videoUrl ?? '').trim();
-    return url.isNotEmpty ? url : 'w$weekNumber::${s.title}';
+    if (url.isNotEmpty) return url;
+    return scope.isEmpty
+        ? 'w$weekNumber::${s.title}'
+        : '$scope/w$weekNumber::${s.title}';
   }
 
   String _clock(Duration d) {
@@ -206,14 +242,33 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   }
 
   /// ویدیوی متناظر با یک پیشرفتِ ذخیره‌شده را در داده‌ی دوره پیدا می‌کند.
-  (CourseWeekSectionItem, String)? _findSection(
-      CourseDetailResponse data, String key) {
+  _Located? _findSection(CourseDetailResponse data, String key) {
     for (final week in data.detail.weekGroups) {
       for (final s in week.allSections) {
-        if (_sectionKey(s, week.weekNumber) == key) return (s, week.weekNumber);
+        if (_sectionKey(s, week.weekNumber) == key) {
+          return _Located(s, week.weekNumber, '', const []);
+        }
       }
     }
-    return null;
+    _Located? walk(List<SubCourse> subs, List<int> path) {
+      for (final c in subs) {
+        final scope = 'c${c.id}';
+        final here = [...path, c.id];
+        for (final week in c.weekGroups) {
+          for (final s in week.allSections) {
+            if (_sectionKey(s, week.weekNumber, scope) == key) {
+              return _Located(s, week.weekNumber, scope, here,
+                  courseTitle: c.title);
+            }
+          }
+        }
+        final deeper = walk(c.subCourses, here);
+        if (deeper != null) return deeper;
+      }
+      return null;
+    }
+
+    return walk(data.detail.subCourses, const []);
   }
 
   /// یک‌بار در هر ورود: اگر ویدیوی نیمه‌کاره‌ای هست، ادامه‌اش را پیشنهاد بده.
@@ -225,12 +280,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     if (found == null) return;
     _resumeAsked = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _showResumeDialog(last, found.$1, found.$2);
+      if (mounted) _showResumeDialog(last, found);
     });
   }
 
-  Future<void> _showResumeDialog(
-      VideoProgress p, CourseWeekSectionItem section, String weekNumber) async {
+  Future<void> _showResumeDialog(VideoProgress p, _Located found) async {
+    final section = found.section;
+    final weekNumber = found.weekNumber;
     final go = await showDialog<bool>(
       context: context,
       builder: (ctx) => Directionality(
@@ -264,7 +320,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               ),
               const SizedBox(height: 4),
               Text(
-                'هفته $weekNumber · ${_ago(p.updatedAt)}',
+                '${found.courseTitle != null ? '${found.courseTitle} · ' : ''}هفته $weekNumber · ${_ago(p.updatedAt)}',
                 style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 12,
@@ -316,8 +372,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       ),
     );
     if (go != true || !mounted) return;
-    setState(() => _openWeek = weekNumber);
-    _onSectionTap(section, weekNumber);
+    _reveal(found);
+    _onSectionTap(section, weekNumber, found.scope);
   }
 
   /// کارتِ «ادامه‌ی تماشا» بالای برنامه‌ی هفتگی — همیشه در دسترس، برخلافِ
@@ -327,8 +383,9 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     if (last == null) return null;
     final found = _findSection(data, last.key);
     if (found == null) return null;
-    final section = found.$1;
-    final weekNumber = found.$2;
+    final section = found.section;
+    final weekNumber = found.weekNumber;
+    final where = found.courseTitle != null ? '${found.courseTitle} · ' : '';
     final bool done = last.seen;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -341,8 +398,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         child: InkWell(
           borderRadius: AppShapes.radius(AppShapes.rLg),
           onTap: () {
-            setState(() => _openWeek = weekNumber);
-            _onSectionTap(section, weekNumber);
+            _reveal(found);
+            _onSectionTap(section, weekNumber, found.scope);
           },
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -377,8 +434,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                       const SizedBox(height: 2),
                       Text(
                         done
-                            ? 'هفته $weekNumber · کامل دیده شده · ${_ago(last.updatedAt)}'
-                            : 'هفته $weekNumber · دقیقه‌ی ${_clock(last.position)} · ${_ago(last.updatedAt)}',
+                            ? '$whereهفته $weekNumber · کامل دیده شده · ${_ago(last.updatedAt)}'
+                            : '$whereهفته $weekNumber · دقیقه‌ی ${_clock(last.position)} · ${_ago(last.updatedAt)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -398,10 +455,10 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   }
 
   /// زیرعنوانِ هفته: تعداد ویدیو و اینکه چندتایش دیده شده.
-  String _weekSubtitle(CourseWeekGroup week) {
+  String _weekSubtitle(CourseWeekGroup week, [String scope = '']) {
     final total = week.allSections.length;
     final seen = week.allSections
-        .where((s) => _progress.isSeen(_sectionKey(s, week.weekNumber)))
+        .where((s) => _progress.isSeen(_sectionKey(s, week.weekNumber, scope)))
         .length;
     if (seen == 0) return '$total ویدیو';
     if (seen == total) return '$total ویدیو · همه دیده شد';
@@ -447,7 +504,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     );
   }
 
-  void _onSectionTap(CourseWeekSectionItem section, String weekNumber) {
+  void _onSectionTap(CourseWeekSectionItem section, String weekNumber,
+      [String scope = '']) {
     if (section.isLocked) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('این ویدیو قفل است، ابتدا دوره را تهیه کنید')),
@@ -461,7 +519,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       );
       return;
     }
-    final key = _sectionKey(section, weekNumber);
+    final key = _sectionKey(section, weekNumber, scope);
     final saved = _progress.of(key);
     showVideoPlayerDialog(
       context,
@@ -498,175 +556,571 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     return '${minutes}دقیقه';
   }
 
-  Widget _weekCard(CourseDetailResponse data, int index) {
-                        final week = data.detail.weekGroups[index];
-                        return _AnimatedSlideFade(
-                          delayMs: 50 * index,
-                          child: Container(
-                            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            decoration: ShapeDecoration(
-            color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
+  /// همه‌ی ویدیوهای این هفته قفل‌اند (هنوز خریداری نشده)
+  bool _isWeekLocked(CourseWeekGroup week) {
+    final all = week.allSections;
+    return all.isNotEmpty && all.every((s) => s.isLocked);
+  }
+
+  /// می‌شود از روی پرده‌ی قفل مستقیم به خرید رفت؟
+  bool get _canPurchase {
+    final data = _lastData;
+    return data != null && _selectedVariant(data) != null;
+  }
+
+  /// همان شیتِ «افزودن به سبد» دکمه‌ی اصلی، برای پرده‌ی ویدیوهای قفل.
+  void _openPurchase() {
+    final data = _lastData;
+    final selected = data == null ? null : _selectedVariant(data);
+    if (selected == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('این دوره فعلاً قابل خرید نیست')),
+      );
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => AddCourseToCartModal(courseItem: selected),
+    );
+  }
+
+  Widget _lockedChip() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: ShapeDecoration(
+          color: AppColor.onSurfaceVariant.withValues(alpha: 0.12),
+          shape: AppShapes.pill,
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_rounded, size: 11, color: AppColor.onSurfaceVariant),
+            SizedBox(width: 3),
+            Text('قفل',
+                style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.onSurfaceVariant)),
+          ],
+        ),
+      );
+
+  /// یک هفته‌ی برنامه. [scope] خالی یعنی خودِ دوره، c<id> یعنی یک زیرمجموعه.
+  Widget _weekCard(CourseWeekGroup week,
+      {String scope = '', int index = 0, double hMargin = 16}) {
+    final id = _weekId(scope, week.weekNumber);
+    final locked = _isWeekLocked(week);
+    return _AnimatedSlideFade(
+      delayMs: 50 * index,
+      child: Container(
+        margin: EdgeInsets.fromLTRB(hMargin, 8, hMargin, 8),
+        decoration: ShapeDecoration(
+          color: AppColor.surfaceContainer,
+          shape: AppShapes.border(AppShapes.rLg),
+          shadows: AppColor.cardShadow,
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+              dividerColor: Colors.transparent,
+              unselectedWidgetColor: AppColor.onSurfaceVariant),
+          child: ExpansionTile(
+            // کلید شاملِ هفته‌ی باز است تا با «ادامه‌ی تماشا» همان هفته
+            // باز شود.
+            key: ValueKey('week_${id}_$_openWeek'),
+            initiallyExpanded: id == _openWeek,
+            onExpansionChanged: (open) => _openWeek = open ? id : null,
+            iconColor: AppColor.goldEnd,
+            collapsedIconColor: AppColor.onSurfaceVariant,
+            title: Row(
+              children: [
+                Flexible(
+                  child: Text('هفته ${week.weekNumber}',
+                      style: const TextStyle(
+                          fontFamily: 'Estedad',
+                          fontWeight: FontWeight.w700,
+                          color: AppColor.onSurface)),
+                ),
+                if (locked) ...[const SizedBox(width: 8), _lockedChip()],
+              ],
+            ),
+            subtitle: Text(
+                locked
+                    ? '${week.allSections.length} ویدیو · پس از تهیه‌ی دوره باز می‌شود'
+                    : _weekSubtitle(week, scope),
+                style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 11,
+                    color: AppColor.onSurfaceVariant)),
+            children: [
+              // هفته‌ی کاملاً قفل: همه‌ی گروه‌ها زیرِ یک پرده‌ی تار، نه یک
+              // پرده برای هر گروه.
+              if (locked)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  child: LockedLessonsVeil(
+                    count: week.allSections.length,
+                    onUnlock: _canPurchase ? _openPurchase : null,
+                    message:
+                        'با تهیه‌ی دوره، همه‌ی جلسه‌های این هفته باز می‌شوند',
+                    child: Column(
+                      children: [
+                        for (final g in week.groups)
+                          _groupBlock(g, week, scope,
+                              veilLocked: false,
+                              margin: const EdgeInsets.only(bottom: 8)),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                for (final g in week.groups) _groupBlock(g, week, scope),
+            ],
           ),
-                            child: Theme(
-                              data: Theme.of(context).copyWith(
-                                  dividerColor: Colors.transparent,
-                                  unselectedWidgetColor: AppColor.onSurfaceVariant),
-                              child: ExpansionTile(
-                              // کلید شاملِ هفته‌ی باز است تا با «ادامه‌ی
-                              // تماشا» همان هفته باز شود.
-                              key: ValueKey('week_${week.weekNumber}_$_openWeek'),
-                              initiallyExpanded: week.weekNumber == _openWeek,
-                              onExpansionChanged: (open) =>
-                                  _openWeek = open ? week.weekNumber : null,
-                              iconColor: AppColor.goldEnd,
-                              collapsedIconColor: AppColor.onSurfaceVariant,
-                              title: Text('هفته ${week.weekNumber}',
-                                  style: const TextStyle(
-                                      fontFamily: 'Estedad',
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColor.onSurface)),
-                              subtitle: Text(
-                                  _weekSubtitle(week),
-                                  style: const TextStyle(
-                                      fontFamily: 'Estedad',
-                                      fontSize: 11,
-                                      color: AppColor.onSurfaceVariant)),
-                              // هر هفته یک یا چند «گروه» دارد و ویدیوها زیر
-                              // هر گروه می‌نشینند.
-                              children: [
-                                for (final group in week.groups)
-                                Container(
-                                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: ShapeDecoration(
-            color: AppColor.obsidianBg,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
+        ),
+      ),
+    );
+  }
+
+  /// یک گروهِ داخلِ هفته. اگر بخشی از ویدیوهایش قفل باشد، بازها عادی و
+  /// قفل‌ها زیرِ پرده‌ی تار می‌آیند.
+  Widget _groupBlock(CourseWeek group, CourseWeekGroup week, String scope,
+      {bool veilLocked = true,
+      EdgeInsets margin = const EdgeInsets.fromLTRB(12, 0, 12, 12)}) {
+    final lockedItems = group.sections.where((s) => s.isLocked).toList();
+    final showVeil = veilLocked && lockedItems.isNotEmpty;
+    final plain = showVeil
+        ? group.sections.where((s) => !s.isLocked).toList()
+        : group.sections;
+    return Container(
+      margin: margin,
+      padding: const EdgeInsets.all(8),
+      decoration: ShapeDecoration(
+        color: AppColor.obsidianBg,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if ((group.weekName ?? '').trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 2, 4, 10),
+              child: Row(
+                children: [
+                  const Icon(Icons.folder_open_rounded,
+                      size: 15, color: AppColor.pitchGreen),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      group.weekName!.trim(),
+                      style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColor.onSurface,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${group.sections.length}',
+                    style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 11,
+                      color: AppColor.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          for (int i = 0; i < plain.length; i++)
+            _lessonTile(plain[i], week, scope, i,
+                isLast: i == plain.length - 1 && !showVeil),
+          if (showVeil) ...[
+            if (plain.isNotEmpty) const SizedBox(height: 8),
+            LockedLessonsVeil(
+              count: lockedItems.length,
+              onUnlock: _canPurchase ? _openPurchase : null,
+              child: Column(
+                children: [
+                  for (int i = 0; i < lockedItems.length; i++)
+                    _lessonTile(lockedItems[i], week, scope, i,
+                        isLast: i == lockedItems.length - 1),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// یک ردیفِ ویدیو
+  Widget _lessonTile(
+      CourseWeekSectionItem s, CourseWeekGroup week, String scope, int i,
+      {required bool isLast}) {
+    final watched = _progress.of(_sectionKey(s, week.weekNumber, scope));
+    return _AnimatedSlideFade(
+      delayMs: 40 * i,
+      child: Container(
+        margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
+        decoration: BoxDecoration(
+          color: AppColor.surfaceContainer,
+          border: Border.all(color: AppColor.outlineVariantDark),
+        ),
+        child: ListTile(
+          dense: true,
+          // ویدیوهای باز با انیمیشن در دیالوگ پخش می‌شوند
+          onTap: () => _onSectionTap(s, week.weekNumber, scope),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          leading: Icon(
+              s.isLocked
+                  ? Icons.lock
+                  : (watched?.seen ?? false)
+                      ? Icons.check_circle
+                      : Icons.play_circle_fill,
+              color: s.isLocked
+                  ? AppColor.onSurfaceVariant
+                  : AppColor.successDark),
+          title: Text(
+            s.title,
+            style: const TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColor.onSurface),
           ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                    if ((group.weekName ?? '').trim().isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                            4, 2, 4, 10),
-                                        child: Row(
-                                          children: [
-                                            const Icon(
-                                                Icons.folder_open_rounded,
-                                                size: 15,
-                                                color: AppColor.pitchGreen),
-                                            const SizedBox(width: 6),
-                                            Expanded(
-                                              child: Text(
-                                                group.weekName!.trim(),
-                                                style: const TextStyle(
-                                                  fontFamily: 'Estedad',
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: AppColor.onSurface,
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              '${group.sections.length}',
-                                              style: const TextStyle(
-                                                fontFamily: 'Estedad',
-                                                fontSize: 11,
-                                                color:
-                                                    AppColor.onSurfaceVariant,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ...group.sections
-                                        .asMap()
-                                        .entries
-                                        .map((entry) {
-                                      final i = entry.key;
-                                      final s = entry.value;
-                                      return _AnimatedSlideFade(
-                                        delayMs: 40 * i,
-                                        child: Container(
-                                          margin: EdgeInsets.only(
-                                              bottom: i ==
-                                                      group.sections.length - 1
-                                                  ? 0
-                                                  : 8),
-                                          decoration: BoxDecoration(
-                                            color: AppColor.surfaceContainer,
-                                            border: Border.all(
-                                                color: AppColor.outlineVariantDark),
-                                          ),
-                                          child: Builder(builder: (context) {
-                                          final watched = _progress.of(
-                                              _sectionKey(s, week.weekNumber));
-                                          return ListTile(
-                                            dense: true,
-                                            // ویدیوهای باز با انیمیشن در دیالوگ پخش می‌شوند
-                                            onTap: () =>
-                                                _onSectionTap(s, week.weekNumber),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 4),
-                                            leading: Icon(
-                                                s.isLocked
-                                                    ? Icons.lock
-                                                    : (watched?.seen ?? false)
-                                                        ? Icons.check_circle
-                                                        : Icons.play_circle_fill,
-                                                color: s.isLocked
-                                                    ? AppColor.onSurfaceVariant
-                                                    : AppColor.successDark),
-                                            title: Text(
-                                              s.title,
-                                              style: const TextStyle(
-                                                  fontFamily: 'Estedad',
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: AppColor.onSurface),
-                                            ),
-                                            // وضعیتِ تماشا: تیکِ «دیده شد» یا
-                                            // نوارِ نیمه‌کاره با محلِ توقف.
-                                            subtitle: watched == null
-                                                ? null
-                                                : _watchStatus(watched),
-                                            // اگر کاور ویدیو نبود یا لود نشد، عکس پیش‌فرض
-                                            trailing: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              child: (s.videoThumbnail ?? '')
-                                                      .isEmpty
-                                                  ? _sectionFallbackThumb()
-                                                  : Image.network(
-                                                      _abs(s.videoThumbnail!),
-                                                      width: 56,
-                                                      height: 36,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder:
-                                                          (_, __, ___) =>
-                                                              _sectionFallbackThumb(),
-                                                    ),
-                                            ),
-                                          );
-                                          }),
-                                        ),
-                                      );
-                                    }),
-                                    ],
-                                  ),
+          // وضعیتِ تماشا: تیکِ «دیده شد» یا نوارِ نیمه‌کاره با محلِ توقف.
+          subtitle: watched == null ? null : _watchStatus(watched),
+          // اگر کاور ویدیو نبود یا لود نشد، عکس پیش‌فرض
+          trailing: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: (s.videoThumbnail ?? '').isEmpty
+                ? _sectionFallbackThumb()
+                : Image.network(
+                    _abs(s.videoThumbnail!),
+                    width: 56,
+                    height: 36,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _sectionFallbackThumb(),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---------- دوره‌ی مجموعه‌ای ----------
+
+  /// کارتِ خلاصه‌ی بالای مسیر: «این مجموعه از ۳ دوره تشکیل شده».
+  Widget _bundleSummary(CourseDetailResponse data) {
+    final d = data.detail;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.all(14),
+      decoration: ShapeDecoration(
+        color: AppColor.pitchGreenSoft,
+        shape: AppShapes.border(AppShapes.rLg),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const ShapeDecoration(
+              color: AppColor.surfaceContainer,
+              shape: CircleBorder(),
+            ),
+            child: const Icon(Icons.layers_rounded,
+                color: AppColor.pitchGreen, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'این مجموعه از ${d.subCourses.length} دوره تشکیل شده',
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColor.onSurface),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${d.bundleWeekCount} هفته · ${d.bundleVideoCount} ویدیو · به ترتیبِ زیر',
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 11.5,
+                      color: AppColor.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// مسیرِ یادگیری: دوره‌ها به ترتیب، با شماره و خطِ اتصال.
+  List<Widget> _subCourseNodes(List<SubCourse> subs, {int depth = 0}) => [
+        for (int i = 0; i < subs.length; i++)
+          _subCourseNode(subs[i],
+              index: i, isLast: i == subs.length - 1, depth: depth),
+      ];
+
+  Widget _subCourseNode(SubCourse c,
+      {required int index, required bool isLast, int depth = 0}) {
+    final open = _openSubCourses.contains(c.id);
+    final scope = 'c${c.id}';
+    const double rail = 18; // فاصله‌ی مرکزِ دایره از لبه‌ی شروع
+    const double dot = 36;
+    return _AnimatedSlideFade(
+      delayMs: 60 * index,
+      child: Padding(
+        padding: EdgeInsetsDirectional.fromSTEB(
+            depth == 0 ? 16 : 4, 0, depth == 0 ? 16 : 0, 0),
+        child: Stack(
+          children: [
+            // خطِ اتصال به دوره‌ی قبلی و بعدی
+            if (index > 0)
+              const PositionedDirectional(
+                start: rail - 1,
+                top: 0,
+                height: 10,
+                child: _RailLine(),
+              ),
+            if (!isLast)
+              const PositionedDirectional(
+                start: rail - 1,
+                top: 10 + dot,
+                bottom: 0,
+                child: _RailLine(),
+              ),
+            Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 4 : 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      width: dot,
+                      height: dot,
+                      alignment: Alignment.center,
+                      decoration: ShapeDecoration(
+                        gradient: open ? AppColor.greenGradient : null,
+                        color: open ? null : AppColor.surfaceContainer,
+                        shape: CircleBorder(
+                          side: BorderSide(
+                              color: AppColor.pitchGreen
+                                  .withValues(alpha: open ? 0 : 0.45),
+                              width: 1.5),
+                        ),
+                        shadows: open ? AppColor.greenShadow : null,
+                      ),
+                      child: Text(
+                        '${index + 1}',
+                        style: TextStyle(
+                          fontFamily: 'Estedad',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: open
+                              ? AppColor.onPitchGreen
+                              : AppColor.pitchGreen,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: _subCourseCard(c, open: open, scope: scope, depth: depth)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _subCourseCard(SubCourse c,
+      {required bool open, required String scope, required int depth}) {
+    final locked = c.isFullyLocked;
+    return Container(
+      decoration: ShapeDecoration(
+        color: AppColor.surfaceContainer,
+        shape: AppShapes.border(AppShapes.rLg,
+            side: open
+                ? BorderSide(
+                    color: AppColor.pitchGreen.withValues(alpha: 0.35))
+                : null),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: AppShapes.radius(AppShapes.rLg),
+              onTap: () => setState(() {
+                open ? _openSubCourses.remove(c.id) : _openSubCourses.add(c.id);
+              }),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
+                      child: SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: c.image.isEmpty
+                            ? Container(
+                                color: AppColor.pitchGreenSoft,
+                                child: const Icon(Icons.school_rounded,
+                                    color: AppColor.pitchGreen),
+                              )
+                            : Image.network(
+                                _abs(c.image),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: AppColor.pitchGreenSoft,
+                                  child: const Icon(Icons.school_rounded,
+                                      color: AppColor.pitchGreen),
                                 ),
-                              ],
-                            ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            c.title.isEmpty ? 'دوره' : c.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 14,
+                                height: 1.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.onSurface),
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              if (c.totalWeeks > 0)
+                                _miniChip(Icons.calendar_month_rounded,
+                                    '${c.totalWeeks} هفته'),
+                              if (c.totalVideos > 0)
+                                _miniChip(Icons.play_circle_fill_rounded,
+                                    '${c.totalVideos} ویدیو'),
+                              if (c.difficulty.trim().isNotEmpty)
+                                _miniChip(Icons.military_tech_rounded,
+                                    c.difficulty.trim()),
+                              if (c.subCourses.isNotEmpty)
+                                _miniChip(Icons.layers_rounded,
+                                    '${c.subCourses.length} دوره'),
+                              if (locked) _lockedChip(),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: open ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 220),
+                      child: const Icon(Icons.keyboard_arrow_down_rounded,
+                          color: AppColor.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: !open
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (c.description.trim().isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                            child: Text(
+                              c.description.trim(),
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 12.5,
+                                  height: 1.8,
+                                  color: AppColor.onSurfaceVariant),
                             ),
                           ),
-                        );
+                        for (int i = 0; i < c.weekGroups.length; i++)
+                          _weekCard(c.weekGroups[i],
+                              scope: scope, index: i, hMargin: 8),
+                        if (c.subCourses.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+                            child: Column(
+                              children:
+                                  _subCourseNodes(c.subCourses, depth: depth + 1),
+                            ),
+                          ),
+                        if (c.weekGroups.isEmpty && c.subCourses.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.fromLTRB(12, 4, 12, 10),
+                            child: Text(
+                              'برنامه‌ی این دوره به‌زودی منتشر می‌شود.',
+                              style: TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 12,
+                                  color: AppColor.onSurfaceVariant),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
   }
+
+  Widget _miniChip(IconData icon, String label) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: ShapeDecoration(
+          color: AppColor.cardMuted,
+          shape: AppShapes.pill,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: AppColor.onSurfaceVariant),
+            const SizedBox(width: 4),
+            Text(label,
+                style: const TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 11,
+                    color: AppColor.onSurfaceVariant)),
+          ],
+        ),
+      );
 
   /// آواتار کوچک پشتیبان/مربی
   Widget _coachAvatar(CourseCoach coach) {
@@ -957,15 +1411,20 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       spacing: 8,
       runSpacing: 8,
       children: [
+        if (data.detail.isBundle)
+          _infoChip('شامل ${data.detail.subCourses.length} دوره',
+              icon: Icons.layers_rounded, color: AppColor.pitchGreen),
         _infoChip('سطح: ${data.courseDifficulty}',
             icon: Icons.military_tech_rounded, color: AppColor.levelExpert),
-        _infoChip('تعداد هفته: ${data.weekCount}',
+        _infoChip(
+            'تعداد هفته: ${data.weekCount > 0 || !data.detail.isBundle ? data.weekCount : data.detail.bundleWeekCount}',
             icon: Icons.calendar_month_rounded, color: AppColor.categoryBadge),
         _infoChip('تعداد سکشن: ${data.sectionCount}',
             icon: Icons.view_list_rounded, color: AppColor.pitchGreen),
         _infoChip('مدت دوره: ${_formatDuration(data.courseDuration)}',
             icon: Icons.schedule_rounded, color: AppColor.warning),
-        _infoChip('تعداد ویدیو: ${data.detail.videoCount}',
+        _infoChip(
+            'تعداد ویدیو: ${data.detail.videoCount > 0 || !data.detail.isBundle ? data.detail.videoCount : data.detail.bundleVideoCount}',
             icon: Icons.play_circle_fill_rounded, color: AppColor.danger),
       ],
     );
@@ -1023,22 +1482,39 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Widget _detailTabs(CourseDetailResponse data) {
     return DetailTabs(
       tabs: [
-        DetailTab(
-          title: 'برنامه هفتگی',
-          icon: Icons.calendar_month_rounded,
-          builder: (context) {
-            final resume = _resumeCard(data);
-            return Column(
-              children: [
-                if (resume != null) resume,
-                ...List.generate(
-                  data.detail.weekGroups.length,
-                  (index) => _weekCard(data, index),
-                ),
-              ],
-            );
-          },
-        ),
+        // دوره‌ی مجموعه‌ای: مسیرِ دوره‌های تشکیل‌دهنده، هرکدام با برنامه‌ی
+        // هفتگیِ خودش.
+        if (data.detail.isBundle)
+          DetailTab(
+            title: 'دوره‌های این مجموعه',
+            icon: Icons.layers_rounded,
+            builder: (context) {
+              final resume = _resumeCard(data);
+              return Column(
+                children: [
+                  if (resume != null) resume,
+                  _bundleSummary(data),
+                  ..._subCourseNodes(data.detail.subCourses),
+                ],
+              );
+            },
+          ),
+        // برنامه‌ی هفتگیِ خودِ دوره (در مجموعه‌ها فقط اگر جلسه‌ی مشترک دارد)
+        if (!data.detail.isBundle || data.detail.weekGroups.isNotEmpty)
+          DetailTab(
+            title: 'برنامه هفتگی',
+            icon: Icons.calendar_month_rounded,
+            builder: (context) {
+              final resume = data.detail.isBundle ? null : _resumeCard(data);
+              return Column(
+                children: [
+                  if (resume != null) resume,
+                  for (int i = 0; i < data.detail.weekGroups.length; i++)
+                    _weekCard(data.detail.weekGroups[i], index: i),
+                ],
+              );
+            },
+          ),
         DetailTab(
           title: 'زمان و مکان برگزاری',
           icon: Icons.place_rounded,
@@ -1870,4 +2346,33 @@ class _DesktopInfoBones extends StatelessWidget {
       ],
     );
   }
+}
+
+/// جای یک ویدیو در درختِ دوره: محدوده (خودِ دوره یا c<id>)، هفته، و مسیرِ
+/// زیرمجموعه‌هایی که باید باز شوند تا دیده شود.
+class _Located {
+  const _Located(this.section, this.weekNumber, this.scope, this.path,
+      {this.courseTitle});
+
+  final CourseWeekSectionItem section;
+  final String weekNumber;
+  final String scope;
+  final List<int> path;
+
+  /// عنوانِ زیرمجموعه، برای «ادامه‌ی تماشا»
+  final String? courseTitle;
+}
+
+/// خطِ عمودیِ مسیرِ یادگیری بینِ دوره‌ها
+class _RailLine extends StatelessWidget {
+  const _RailLine();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 2,
+        decoration: BoxDecoration(
+          color: AppColor.pitchGreen.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(1),
+        ),
+      );
 }
