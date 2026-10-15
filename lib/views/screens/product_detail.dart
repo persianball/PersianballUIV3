@@ -282,36 +282,32 @@ class _ProductDetailPageState extends State<ProductDetailPage>
 
   /// ساخت CartItem از همان داده‌های موجود (بدون تغییر منطق قبلی)
   CartItem _cartItemFor(ProductDetail product, ProductDetailState s) {
+    ProductVariant? variant;
+    SizeVariant? size;
     if (s is ProductDetailSizeChanged) {
-      return CartItem(
-        id: s.productSize.id,
-        name: product.nameFarsi ?? "",
-        image: s.productVariant.image ?? "",
-        price: s.productSize.price,
-        quantity: 1,
-        productId: product.id,
-        discountPrice: s.productSize.discountPercentage,
-      );
+      variant = s.productVariant;
+      size = s.productSize;
+    } else if (s is ProductDetailChangedState) {
+      variant = s.productVariant;
+      size = s.productSize; // رنگِ بی‌سایز: null
     }
-    if (s is ProductDetailChangedState) {
-      return CartItem(
-        id: s.productSize!.id,
-        name: product.nameFarsi ?? "",
-        image: s.productVariant.image ?? "",
-        price: s.productSize!.price,
-        quantity: 1,
-        productId: product.id,
-        discountPrice: s.productSize!.discountPercentage,
-      );
+    String? clean(String? v) {
+      final t = (v ?? '').trim();
+      return (t.isEmpty || t.toLowerCase() == 'null') ? null : t;
     }
+
     return CartItem(
-      id: product.id,
+      id: size?.id ?? product.id,
       name: product.nameFarsi ?? "",
-      image: product.image ?? "",
-      price: product.price!,
+      image: variant?.image ?? product.image ?? "",
+      price: size?.price ?? product.price ?? 0,
       quantity: 1,
       productId: product.id,
-      discountPrice: product.discountPercentage,
+      discountPrice: size?.discountPercentage ?? product.discountPercentage,
+      size: clean(size?.size),
+      // رنگ فقط وقتی معنا دارد که محصول بیش از یک رنگ داشته باشد
+      colorName: product.variants.length > 1 ? clean(variant?.color) : null,
+      colorRgb: clean(variant?.colorRgb),
     );
   }
 

@@ -10,6 +10,9 @@ import 'package:persian_ball/constant/app_color.dart';
 import 'package:persian_ball/views/widgets/checkout_timeline.dart';
 import 'package:persian_ball/views/screens/order_summary_page.dart';
 import 'package:persian_ball/models/CartModel.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
 
 import '../../bloc/address/address_state.dart';
 
@@ -29,8 +32,13 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
     context.read<AddressBloc>().add(LoadAddresses(context));
   }
 
+  /// همان پوسته‌ی سبد خرید (قدمِ قبلیِ همین جریان)، تا رفتن از سبد به آدرس
+  /// و بعد خلاصه‌ی سفارش پرش نداشته باشد.
+  static const double _desktopMaxWidth = 1080;
+
   @override
   Widget build(BuildContext context) {
+    final bool desktop = AppBreakpoints.isDesktop(context);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -42,12 +50,15 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
           title: const Text('انتخاب آدرس',
               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _openCreateDialog,
-          backgroundColor: AppColor.goldEnd,
-          shape: AppShapes.border(AppShapes.rMd),
-          child: const Icon(Icons.add, color: AppColor.onGold),
-        ),
+        // دسکتاپ دکمه‌ی «افزودن» را در سربرگِ لیست دارد
+        floatingActionButton: desktop
+            ? null
+            : FloatingActionButton(
+                onPressed: _openCreateDialog,
+                backgroundColor: AppColor.goldEnd,
+                shape: AppShapes.border(AppShapes.rMd),
+                child: const Icon(Icons.add, color: AppColor.onGold),
+              ),
         body: BlocConsumer<AddressBloc, AddressState>(
           listener: (context, state) {
             if (state is AddressError) {
@@ -59,69 +70,9 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
               return const Center(child: CircularProgressIndicator(color: AppColor.goldEnd));
             }
             if (state is AddressLoaded) {
-              final list = state.list;
-              return Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: CheckoutTimeline(currentStep: 1),
-                  ),
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: list.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (_, i) {
-                        final item = list[i];
-                        final isFirst = i == 0;
-                        final isLast = i == list.length - 1;
-                        return TimelineTile(
-                          isFirst: isFirst,
-                          isLast: isLast,
-                          indicatorStyle: IndicatorStyle(
-                            width: 24,
-                            height: 24,
-                            indicator: Container(
-                              decoration: BoxDecoration(
-                                color: selectedAddressId == item.id
-                                    ? AppColor.goldEnd
-                                    : AppColor.surfaceContainer,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppColor.goldEnd, width: 2),
-                              ),
-                              child: Icon(Icons.location_on,
-                                  size: 14,
-                                  color: selectedAddressId == item.id
-                                      ? AppColor.onGold
-                                      : AppColor.goldEnd),
-                            ),
-                          ),
-                          beforeLineStyle: LineStyle(color: AppColor.outlineVariantDark, thickness: 2),
-                          afterLineStyle: LineStyle(color: AppColor.outlineVariantDark, thickness: 2),
-                          endChild: _addressCard(item),
-                        );
-                      },
-                    ),
-                  ),
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width*0.5,
-                        child: ElevatedButton(
-                          onPressed: selectedAddressId == null ? null : _goToPayment,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColor.goldEnd,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: AppShapes.pill,
-                          ),
-                          child: const Text('نهایی‌سازی و پرداخت',
-                              style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              );
+              return desktop
+                  ? _desktopBody(state.list)
+                  : _mobileBody(state.list);
             }
             return const SizedBox();
           },
@@ -130,15 +81,297 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
     );
   }
 
-  Widget _addressCard(AddressModel a) {
+  // ---------- موبایل/تبلت ----------
+
+  Widget _mobileBody(List<AddressModel> list) {
+    return PageContainer(
+      maxWidth: 720,
+      child: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: CheckoutTimeline(currentStep: 1),
+          ),
+          Expanded(
+            child: list.isEmpty
+                ? _emptyState()
+                : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 80),
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) {
+                      final item = list[i];
+                      return TimelineTile(
+                        isFirst: i == 0,
+                        isLast: i == list.length - 1,
+                        indicatorStyle: IndicatorStyle(
+                          width: 24,
+                          height: 24,
+                          indicator: Container(
+                            decoration: BoxDecoration(
+                              color: selectedAddressId == item.id
+                                  ? AppColor.goldEnd
+                                  : AppColor.surfaceContainer,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColor.goldEnd, width: 2),
+                            ),
+                            child: Icon(Icons.location_on,
+                                size: 14,
+                                color: selectedAddressId == item.id
+                                    ? AppColor.onGold
+                                    : AppColor.goldEnd),
+                          ),
+                        ),
+                        beforeLineStyle: LineStyle(color: AppColor.outlineVariantDark, thickness: 2),
+                        afterLineStyle: LineStyle(color: AppColor.outlineVariantDark, thickness: 2),
+                        endChild: _addressCard(item),
+                      );
+                    },
+                  ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              // پیش‌تر نصفِ عرضِ پنجره بود: روی گوشی تنگ، روی تبلت کشیده
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: _payButton(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------- دسکتاپ ----------
+
+  Widget _desktopBody(List<AddressModel> list) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: CenteredContent(
+        maxWidth: _desktopMaxWidth,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const CheckoutTimeline(currentStep: 1),
+            const SizedBox(height: 20),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text('آدرس‌های شما',
+                                style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColor.onSurface)),
+                          ),
+                          TextButton.icon(
+                            onPressed: _openCreateDialog,
+                            icon: const Icon(Icons.add_location_alt_outlined,
+                                color: AppColor.goldEnd),
+                            label: const Text('افزودن آدرس جدید',
+                                style: TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.goldEnd)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      if (list.isEmpty)
+                        SizedBox(height: 320, child: _emptyState())
+                      else
+                        // دو ستون: کارتِ آدرس در یک ستونِ ۷۰۰ پیکسلی خیلی
+                        // کشیده و کم‌ارتفاع می‌شد
+                        LayoutBuilder(builder: (context, c) {
+                          const gap = 14.0;
+                          final w = (c.maxWidth - gap) / 2;
+                          return Wrap(
+                            spacing: gap,
+                            runSpacing: gap,
+                            children: [
+                              for (int i = 0; i < list.length; i++)
+                                SizedBox(
+                                  width: w,
+                                  child: FadeSlideIn(
+                                    delay: Duration(milliseconds: 45 * (i % 6)),
+                                    child: _addressCard(list[i], margin: EdgeInsets.zero),
+                                  ),
+                                ),
+                            ],
+                          );
+                        }),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                SizedBox(
+                  width: AppBreakpoints.sidebarWidth,
+                  child: FadeSlideIn(
+                    delay: const Duration(milliseconds: 90),
+                    child: _desktopSidebar(list),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _desktopSidebar(List<AddressModel> list) {
+    AddressModel? selected;
+    for (final a in list) {
+      if (a.id == selectedAddressId) selected = a;
+    }
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(20),
+      decoration: ShapeDecoration(
+        color: AppColor.card,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('ارسال به',
+              style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.onSurface)),
+          const SizedBox(height: 12),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: selected == null
+                ? Row(
+                    key: const ValueKey('none'),
+                    children: const [
+                      Icon(Icons.touch_app_outlined,
+                          size: 20, color: AppColor.onSurfaceVariant),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text('یکی از آدرس‌ها را انتخاب کن',
+                            style: TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 13,
+                                color: AppColor.onSurfaceVariant)),
+                      ),
+                    ],
+                  )
+                : Row(
+                    key: ValueKey(selected.id),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.location_on,
+                          size: 20, color: AppColor.goldEnd),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(selected.addressName ?? 'آدرس بدون نام',
+                                style: const TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.onSurface)),
+                            const SizedBox(height: 4),
+                            Text(selected.address,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontFamily: 'Estedad',
+                                    fontSize: 12.5,
+                                    height: 1.7,
+                                    color: AppColor.onSurfaceVariant)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          const SizedBox(height: 20),
+          _payButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _payButton() {
+    return ElevatedButton(
+      onPressed: selectedAddressId == null ? null : _goToPayment,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColor.goldEnd,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: AppShapes.pill,
+      ),
+      child: const Text('نهایی‌سازی و پرداخت',
+          style: TextStyle(fontFamily: 'Estedad', color: AppColor.onGold)),
+    );
+  }
+
+  Widget _emptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.location_off_outlined,
+                size: 48, color: AppColor.onSurfaceVariant),
+            const SizedBox(height: 12),
+            const Text('هنوز آدرسی ثبت نکرده‌ای',
+                style: TextStyle(
+                    fontFamily: 'Estedad',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.onSurface)),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _openCreateDialog,
+              icon: const Icon(Icons.add, color: AppColor.goldEnd),
+              label: const Text('افزودن آدرس',
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.goldEnd)),
+              style: OutlinedButton.styleFrom(
+                shape: AppShapes.pill,
+                side: const BorderSide(color: AppColor.goldEnd),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _addressCard(AddressModel a,
+      {EdgeInsets margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 4)}) {
+    final bool selected = a.id == selectedAddressId;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      margin: margin,
       decoration: ShapeDecoration(
             color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
+            shape: AppShapes.border(AppShapes.rLg,
+                side: BorderSide(
+                    color: selected ? AppColor.goldEnd : Colors.transparent,
+                    width: 1.5)),
             shadows: AppColor.cardShadow,
           ),
       child: InkWell(
+        customBorder: AppShapes.border(AppShapes.rLg),
         onTap: () => setState(() => selectedAddressId = a.id),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -158,10 +391,12 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'ویرایش',
                     icon: const Icon(Icons.edit_outlined, color: AppColor.onSurfaceVariant),
                     onPressed: () => _openEditDialog(a),
                   ),
                   IconButton(
+                    tooltip: 'حذف',
                     icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                     onPressed: () => _confirmDelete(a.id!),
                   ),
@@ -240,6 +475,8 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
       isScrollControlled: true,
       backgroundColor: AppColor.surfaceContainerOpaque,
       shape: AppShapes.borderTop(AppShapes.rXl),
+      // در دسکتاپ شیت تمام‌عرضِ پنجره نمی‌شود
+      constraints: const BoxConstraints(maxWidth: 640),
       builder: (ctx) {
         return Directionality(
           textDirection: TextDirection.rtl,
@@ -285,14 +522,16 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                       Expanded(child: _input(home, 'تلفن ثابت')),
                     ]),
                     _input(email, 'ایمیل'),
-                    Row(children: [
+                    // setStateِ خودِ شیت؛ setStateِ صفحه تیکِ داخلِ شیت را
+                    // تازه نمی‌کرد
+                    StatefulBuilder(builder: (ctx, setSheet) => Row(children: [
                       Checkbox(
                           value: isDefault,
                           activeColor: AppColor.goldEnd,
-                          onChanged: (b) => setState(() => isDefault = b ?? false)),
+                          onChanged: (b) => setSheet(() => isDefault = b ?? false)),
                       const Text('آدرس پیش‌فرض',
                           style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
-                    ]),
+                    ])),
                     const SizedBox(height: 12),
                     ElevatedButton(
                       onPressed: () {

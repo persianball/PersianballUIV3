@@ -11,6 +11,11 @@ class CartItem {
   final int quantity;
   final int? discountPrice;
 
+  /// فقط برای نمایش در شیتِ «افزودن به سبد»: سایز و رنگِ انتخاب‌شده
+  final String? size;
+  final String? colorName;
+  final String? colorRgb;
+
   CartItem({
     required this.id,
     required this.productId,
@@ -18,7 +23,10 @@ class CartItem {
     required this.image,
     required this.price,
     required this.quantity,
-    this.discountPrice
+    this.discountPrice,
+    this.size,
+    this.colorName,
+    this.colorRgb,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {

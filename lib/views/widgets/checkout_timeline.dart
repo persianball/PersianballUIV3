@@ -71,14 +71,20 @@ class CheckoutTimeline extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Flexible: روی گوشیِ باریک با متنِ بزرگ‌شده برچسب‌ها
+                // به‌جای سرریز، کوتاه می‌شوند
                 for (int i = 0; i < steps.length; i++)
-                  Text(steps[i],
+                  Flexible(
+                    child: Text(steps[i],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                           fontSize: 12,
                           color: currentStep >= i
                               ? AppColor.onSurface
                               : AppColor.onSurfaceVariant,
                           fontWeight: FontWeight.w600)),
+                  ),
               ],
             ),
           ],

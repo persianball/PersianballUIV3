@@ -166,14 +166,29 @@ class _AddToCartModalState extends State<AddToCartModal> {
                                 color: AppColor.ink,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'تعداد: $_quantity',
-                              style: const TextStyle(
-                                fontFamily: 'Estedad',
-                                fontSize: 11,
-                                color: AppColor.inkMuted,
-                              ),
+                            const SizedBox(height: 6),
+                            // سایز و رنگِ همان چیزی که دارد به سبد می‌رود؛ پیش‌تر
+                            // فقط تعداد دیده می‌شد و کاربر مطمئن نبود سایزِ
+                            // درست را برداشته
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                if (widget.cartItem.size != null)
+                                  _specChip(
+                                    label: 'سایز',
+                                    value: widget.cartItem.size!,
+                                    highlight: true,
+                                  ),
+                                if (widget.cartItem.colorName != null)
+                                  _specChip(
+                                    label: 'رنگ',
+                                    value: widget.cartItem.colorName!,
+                                    dot: _rgb(widget.cartItem.colorRgb),
+                                  ),
+                                _specChip(
+                                    label: 'تعداد', value: '$_quantity'),
+                              ],
                             ),
                           ],
                         ),
@@ -331,6 +346,63 @@ class _AddToCartModalState extends State<AddToCartModal> {
     );
   }
 
+  static Color? _rgb(String? hex) {
+    final h = (hex ?? '').replaceFirst('#', '').trim();
+    final v = int.tryParse(h, radix: 16);
+    if (v == null || h.isEmpty || h.length > 6) return null;
+    return Color(0xff000000 + v);
+  }
+
+  Widget _specChip({
+    required String label,
+    required String value,
+    bool highlight = false,
+    Color? dot,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: ShapeDecoration(
+        color: highlight ? AppColor.pitchGreenSoft : AppColor.cardMuted,
+        shape: const StadiumBorder(),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dot != null) ...[
+            Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(
+                color: dot,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColor.lineStrong, width: 0.8),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            '$label: ',
+            style: const TextStyle(
+                fontFamily: 'Estedad', fontSize: 11, color: AppColor.inkMuted),
+          ),
+          Flexible(
+            child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              color: highlight ? AppColor.pitchGreen : AppColor.ink,
+            ),
+          ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _imageUrl(String raw) {
     if (raw.isEmpty) return '';
     if (raw.startsWith('http')) return raw;
@@ -397,8 +469,12 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
+        // برچسب کوتاه می‌شود، نه مبلغ
+        Flexible(
+          child: Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontFamily: 'Estedad',
             fontSize: bold ? 14 : 13,
@@ -406,6 +482,8 @@ class _SummaryRow extends StatelessWidget {
             fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
           ),
         ),
+        ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: TextStyle(

@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:persian_ball/constant/app_shapes.dart';
 import 'package:flutter/material.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
 import 'package:http/http.dart' as http;
 import 'package:persian_ball/constant/app_color.dart';
 import 'package:persian_ball/constant/urls.dart';
@@ -255,7 +256,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                   shippingCost: shippingCost,
                   payable: payable,
                 )
-              : Column(
+              // تبلت: مثلِ صفحه‌ی آدرس حداکثر ۷۲۰، نه تمام‌عرض
+              : PageContainer(
+                  maxWidth: 720,
+                  child: Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -288,12 +292,14 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     ),
                   ],
                 ),
+                ),
         ),
       ),
     );
   }
 
-  /// چیدمان دسکتاپ (>=1024): محتوای مرکزی حداکثر ~۹۰۰ پیکسل با دو ستون —
+  /// چیدمان دسکتاپ (>=1024): همان پوسته‌ی ۱۰۸۰ِ سبد و آدرس (سه قدمِ یک
+  /// جریان؛ پیش‌تر ۹۰۰ بود و محتوا در قدمِ آخر یک‌باره جمع می‌شد) با دو ستون —
   /// آیتم‌ها/آدرس/کد تخفیف در ستون اصلی و جمع مبالغ + دکمه پرداخت در ستون کناری.
   Widget _buildDesktopBody({
     required List<CartItemFromBackend> items,
@@ -307,7 +313,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: CenteredContent(
-        maxWidth: 900,
+        maxWidth: 1080,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -334,7 +340,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                 const SizedBox(width: 24),
                 // ستون کناری: جمع مبالغ + پرداخت (بالا-چین)
                 SizedBox(
-                  width: 300,
+                  width: AppBreakpoints.sidebarWidth,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
