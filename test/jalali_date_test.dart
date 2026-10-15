@@ -37,7 +37,7 @@ void main() {
 
   test('قالب فارسی با ارقام فارسی', () {
     final d = parseServerDate('2025-09-11T14:18:06+03:30');
-    expect(formatOrderDate(d), '۲۰ شهریور ۱۴۰۴ · ۱۴:۱۸');
+    expect(formatOrderDate(d), '۲۰ شهریور ۱۴۰۴، ساعت ۱۴:۱۸');
     expect(formatOrderDate(d, withTime: false), '۲۰ شهریور ۱۴۰۴');
   });
 }

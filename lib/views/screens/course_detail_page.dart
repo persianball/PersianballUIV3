@@ -320,7 +320,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               ),
               const SizedBox(height: 4),
               Text(
-                '${found.courseTitle != null ? '${found.courseTitle} · ' : ''}هفته $weekNumber · ${_ago(p.updatedAt)}',
+                '${found.courseTitle != null ? '${found.courseTitle}، ' : ''}هفته $weekNumber، ${_ago(p.updatedAt)}',
                 style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 12,
@@ -385,7 +385,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     if (found == null) return null;
     final section = found.section;
     final weekNumber = found.weekNumber;
-    final where = found.courseTitle != null ? '${found.courseTitle} · ' : '';
+    final where = found.courseTitle != null ? '${found.courseTitle}، ' : '';
     final bool done = last.seen;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -434,8 +434,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                       const SizedBox(height: 2),
                       Text(
                         done
-                            ? '$whereهفته $weekNumber · کامل دیده شده · ${_ago(last.updatedAt)}'
-                            : '$whereهفته $weekNumber · دقیقه‌ی ${_clock(last.position)} · ${_ago(last.updatedAt)}',
+                            ? '$whereهفته $weekNumber، کامل دیده شده، ${_ago(last.updatedAt)}'
+                            : '$whereهفته $weekNumber، دقیقه‌ی ${_clock(last.position)}، ${_ago(last.updatedAt)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -461,8 +461,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         .where((s) => _progress.isSeen(_sectionKey(s, week.weekNumber, scope)))
         .length;
     if (seen == 0) return '$total ویدیو';
-    if (seen == total) return '$total ویدیو · همه دیده شد';
-    return '$total ویدیو · $seen دیده شد';
+    if (seen == total) return '$total ویدیو، همه دیده شد';
+    return '$total ویدیو، $seen دیده شد';
   }
 
   /// خطِ وضعیتِ زیرِ عنوانِ ویدیو در لیستِ هفته.
@@ -647,7 +647,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             ),
             subtitle: Text(
                 locked
-                    ? '${week.allSections.length} ویدیو · پس از تهیه‌ی دوره باز می‌شود'
+                    ? '${week.allSections.length} ویدیو، پس از تهیه‌ی دوره باز می‌شود'
                     : _weekSubtitle(week, scope),
                 style: const TextStyle(
                     fontFamily: 'Estedad',
@@ -851,7 +851,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${d.bundleWeekCount} هفته · ${d.bundleVideoCount} ویدیو · به ترتیبِ زیر',
+                  '${d.bundleWeekCount} هفته، ${d.bundleVideoCount} ویدیو، به ترتیبِ زیر',
                   style: const TextStyle(
                       fontFamily: 'Estedad',
                       fontSize: 11.5,

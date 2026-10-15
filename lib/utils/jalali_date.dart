@@ -95,14 +95,16 @@ class JalaliDate {
   }
 }
 
-/// تاریخِ سرور (ISO با آفست) به «۱۲ شهریور ۱۴۰۴ · ۱۴:۱۸».
+/// تاریخِ سرور (ISO با آفست) به «۱۲ شهریور ۱۴۰۴، ساعت ۱۴:۱۸».
 ///
 /// اگر آفست منطقه‌ی خودِ رشته موجود باشد همان حفظ می‌شود، پس تاریخِ نمایش
 /// با آنچه فروشنده در پنل می‌بیند یکی است — نه وقتِ محلیِ دستگاهِ کاربر.
 String formatOrderDate(DateTime? date, {bool withTime = true}) {
   if (date == null) return '—';
   final j = JalaliDate.fromDateTime(date);
-  return withTime ? '${j.long} · ${JalaliDate.time(date)}' : j.long;
+  // جداکننده عمداً «،» است نه «·»: نقطه‌ی وسط در فارسی عیناً شبیهِ رقمِ صفر
+  // «۰» است و «۱۴۰۴ · ۱۴:۱۸» به‌صورتِ «۱۴۰۴۰ ۱۴:۱۸» خوانده می‌شد.
+  return withTime ? '${j.long}، ساعت ${JalaliDate.time(date)}' : j.long;
 }
 
 /// تاریخِ سرور را با حفظِ منطقه‌ی زمانیِ خودش می‌خواند.
