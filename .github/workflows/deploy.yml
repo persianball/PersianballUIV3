@@ -50,7 +50,16 @@ jobs:
       # tree-shake-icons خاموش است چون اپ آیکن‌ها را به‌صورت داینامیک می‌سازد.
       # GITHUB_REPOSITORY همیشه «owner/repo» است و روی اجرای دستی هم ست
       # می‌شود؛ github.event.repository روی بعضی رویدادها خالی است.
-      - run: flutter build web --release --no-tree-shake-icons --base-href="/${GITHUB_REPOSITORY#*/}/"
+      # --no-web-resources-cdn: موتورِ رندر (CanvasKit) از خودِ سایت سرو شود نه از
+      # www.gstatic.com. service worker فقط هم‌مبدأ را کش می‌کند، پس با CDN
+      # اپِ نصب‌شده بدون اینترنت هیچ چیزی نمی‌کشید؛ ضمناً برای کاربرانِ ایران
+      # دسترسی به هاست‌های گوگل همیشه قابل اتکا نیست.
+      - run: flutter build web --release --no-tree-shake-icons --no-web-resources-cdn --base-href="/${GITHUB_REPOSITORY#*/}/"
+
+      # service worker ـِ فلاتر کلیدها را نسبت به origin می‌سازد و زیرِ مسیرِ
+      # /<repo>/ هیچ‌چیز را از کش سرو نمی‌کند (اپ بدونِ اینترنت باز نمی‌شد).
+      # اگر قالبِ فلاتر عوض شود، این اسکریپت عمداً build را می‌شکند.
+      - run: python3 tool/patch_service_worker.py build/web/flutter_service_worker.js
 
       - uses: actions/upload-pages-artifact@v3
         with:

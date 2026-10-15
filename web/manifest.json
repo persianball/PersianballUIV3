@@ -1,23 +1,30 @@
 {
-    "name": "marketky",
-    "short_name": "marketky",
-    "start_url": ".",
+    "id": "./",
+    "name": "پرشین شاپ",
+    "short_name": "پرشین شاپ",
+    "description": "فروشگاه و آکادمی فوتبال پرشین بال",
+    "lang": "fa",
+    "dir": "rtl",
+    "start_url": "./",
+    "scope": "./",
     "display": "standalone",
+    "orientation": "portrait",
     "background_color": "#FFFFFF",
     "theme_color": "#1B7A3E",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "categories": ["shopping", "sports", "education"],
     "prefer_related_applications": false,
     "icons": [
         {
             "src": "icons/Icon-192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "icons/Icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "icons/Icon-maskable-192.png",
@@ -30,6 +37,26 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "فروشگاه",
+            "short_name": "فروشگاه",
+            "url": "./#/catalog",
+            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png" }]
+        },
+        {
+            "name": "سبد خرید",
+            "short_name": "سبد",
+            "url": "./#/cart",
+            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png" }]
+        },
+        {
+            "name": "سفارش‌های من",
+            "short_name": "سفارش‌ها",
+            "url": "./#/orders",
+            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png" }]
         }
     ]
 }
