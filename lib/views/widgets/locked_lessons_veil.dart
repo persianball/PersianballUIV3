@@ -34,6 +34,11 @@ class LockedLessonsVeil extends StatelessWidget {
   final VoidCallback? onUnlock;
   final String message;
 
+  /// فقط چند ردیفِ اول تار نشان داده می‌شود، نه کلِ فهرست. یک گروهِ ۱۷
+  /// جلسه‌ای ~۱۰۰۰ پیکسل تاری می‌ساخت و کارتِ قفل وسطش گم می‌شد؛ تعدادِ
+  /// جلسه‌ها را خودِ کارت می‌گوید.
+  static const double _previewMaxHeight = 260;
+
   static String _fa(int n) {
     const d = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
     return n.toString().split('').map((c) {
@@ -58,17 +63,28 @@ class LockedLessonsVeil extends StatelessWidget {
           // حداقلِ ثابت داشت و کارت داخلش وسط‌چین و بریده می‌شد؛ روی گوشیِ
           // باریک با متنِ بزرگ‌شده، بالا و پایینِ کارت (و دکمه) از کادر بیرون
           // می‌زد و ناپدید می‌شد.
+          // کارت بالای کادر است تا همان لحظه‌ای که تاری شروع می‌شود دیده
+          // شود، نه وسطِ یک فهرستِ بلند.
           child: Stack(
-            alignment: Alignment.center,
+            alignment: Alignment.topCenter,
             children: [
-              // ۱) محتوای واقعی، کاملاً تار
+              // ۱) چند ردیفِ اولِ محتوای واقعی، کاملاً تار
               IgnorePointer(
-                child: ImageFiltered(
-                  // decal: لبه‌ها به سمتِ بیرون کشیده نمی‌شوند و قابِ تیره
-                  // دورِ کادر نمی‌افتد
-                  imageFilter: ImageFilter.blur(
-                      sigmaX: 7, sigmaY: 7, tileMode: TileMode.decal),
-                  child: child,
+                child: ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(maxHeight: _previewMaxHeight),
+                  // اسکرول‌ویوِ غیرفعال فقط برای اینکه فهرستِ بلندتر بدونِ
+                  // خطای سرریز بریده شود.
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: ImageFiltered(
+                      // decal: لبه‌ها به سمتِ بیرون کشیده نمی‌شوند و قابِ
+                      // تیره دورِ کادر نمی‌افتد
+                      imageFilter: ImageFilter.blur(
+                          sigmaX: 7, sigmaY: 7, tileMode: TileMode.decal),
+                      child: child,
+                    ),
+                  ),
                 ),
               ),
               // ۲) پرده‌ی شیری که پایینش غلیظ‌تر است تا کارت خوانا بماند
@@ -80,8 +96,10 @@ class LockedLessonsVeil extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         AppColor.surfaceContainer.withValues(alpha: 0.30),
-                        AppColor.surfaceContainer.withValues(alpha: 0.78),
+                        AppColor.surfaceContainer.withValues(alpha: 0.70),
+                        AppColor.surfaceContainer.withValues(alpha: 0.96),
                       ],
+                      stops: const [0, 0.6, 1],
                     ),
                   ),
                 ),
@@ -89,8 +107,7 @@ class LockedLessonsVeil extends StatelessWidget {
               // ۳) کارتِ وسط — عمداً Positioned نیست تا خودش هم در ارتفاعِ
               // کادر سهم داشته باشد.
               Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [

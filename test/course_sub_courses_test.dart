@@ -163,6 +163,23 @@ void main() {
       expect(unlocks, 1);
     });
 
+    testWidgets('فهرستِ بلند فقط یک پیش‌نمایشِ کوتاه است و دکمه بالاست',
+        (t) async {
+      await t.pumpWidget(host(LockedLessonsVeil(
+        count: 17,
+        onUnlock: () {},
+        child: Column(children: [
+          for (int i = 0; i < 17; i++) const SizedBox(height: 60),
+        ]),
+      )));
+      final veil = t.getRect(find.byType(LockedLessonsVeil));
+      expect(veil.height, lessThan(400),
+          reason: '۱۷ ردیف نباید ~۱۰۰۰ پیکسل تاری بسازد');
+      final button = t.getRect(find.text('تهیه‌ی دوره'));
+      expect(button.top - veil.top, lessThan(260),
+          reason: 'دکمه باید بی‌اسکرول دیده شود، نه وسطِ فهرست');
+    });
+
     testWidgets('بدونِ امکانِ خرید، دکمه نشان داده نمی‌شود', (t) async {
       await t.pumpWidget(host(const LockedLessonsVeil(
         count: 3,
