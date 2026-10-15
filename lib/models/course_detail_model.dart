@@ -28,10 +28,16 @@ class CourseWeek {
   final String? weekName;
   final List<CourseWeekSectionItem> sections;
 
+  /// عنوانِ نمایشیِ هفته وقتی «هفته‌ی N» کافی نیست (مثلاً «Upper» در
+  /// زیرمجموعه‌ای که از نامِ هفته‌ها ساخته شده). کلیدِ پیشرفت همچنان
+  /// [weekNumber] است.
+  final String? title;
+
   CourseWeek({
     required this.weekNumber,
     required this.weekName,
     required this.sections,
+    this.title,
   });
 
   factory CourseWeek.fromJson(Map<String, dynamic> json) {
@@ -56,6 +62,12 @@ class CourseWeekGroup {
   final List<CourseWeek> groups;
 
   const CourseWeekGroup({required this.weekNumber, required this.groups});
+
+  /// «هفته ۳»، یا عنوانِ خاصِ هفته اگر داشته باشد.
+  String get title {
+    final t = groups.isEmpty ? null : groups.first.title?.trim();
+    return (t == null || t.isEmpty) ? 'هفته $weekNumber' : t;
+  }
 
   /// همه‌ی ویدیوهای هفته، بدون توجه به گروه (برای شمارش و ایندکسِ پیوسته).
   List<CourseWeekSectionItem> get allSections =>
@@ -262,6 +274,98 @@ class SubCourse {
         nestedLocked;
   }
 
+  /// سه لایه از روی نامِ هفته‌ها.
+  ///
+  /// بک‌اند دوره‌ی مجموعه‌ای را (فعلاً) بدونِ `sub_courses` می‌فرستد و هر
+  /// ورودیِ `sections` نامی به شکلِ «۴-دوره دریبلینگ سرعت – پا عوض کردن –
+  /// هفته اول» دارد: «زیردوره – هفته/بخش». ورودی‌های پشتِ‌سرِ‌همی که
+  /// زیردوره‌ی یکسان دارند یک [SubCourse] می‌شوند. ورودیِ تک (مثل «۱۶-انواع
+  /// دریبل») خودش یک زیردوره با یک هفته است.
+  ///
+  /// اگر چیزی گروه نشد (دوره‌ی معمولی با «هفته اول، هفته دوم…») یا همه
+  /// یک گروه شدند، null: دوره همان شکلِ ساده نمایش داده می‌شود.
+  static List<SubCourse>? deriveFromWeekNames(List<CourseWeek> weeks) {
+    if (weeks.length < 2) return null;
+    final parsed = [for (final w in weeks) _splitWeekName(w.weekName)];
+
+    // گروه‌بندیِ ورودی‌های پشتِ‌سرِ‌هم با سرِ یکسان
+    final runs = <List<int>>[];
+    for (int i = 0; i < weeks.length; i++) {
+      final head = parsed[i].head;
+      final prev = runs.isEmpty ? null : runs.last;
+      if (prev != null &&
+          head != null &&
+          parsed[prev.last].head == head) {
+        prev.add(i);
+      } else {
+        runs.add([i]);
+      }
+    }
+    if (runs.length < 2 || runs.length == weeks.length) return null;
+
+    final result = <SubCourse>[];
+    for (int r = 0; r < runs.length; r++) {
+      final run = runs[r];
+      final single = run.length == 1;
+      final first = parsed[run.first];
+      final title = single ? first.full : first.head!;
+      final subWeeks = <CourseWeek>[];
+      for (int k = 0; k < run.length; k++) {
+        final w = weeks[run[k]];
+        final tail = single ? null : parsed[run[k]].tail;
+        // «هفته اول/دوم…» از روی ترتیب شماره می‌خورد، نه از متن؛ متنِ
+        // بک‌اند گاهی تکراری/اشتباه است. بخش‌های بی‌نامِ هفته (Upper،
+        // «قواعد و راز…») نامِ خودشان را نگه می‌دارند.
+        final isWeekLabel = tail == null || tail.startsWith('هفته');
+        subWeeks.add(CourseWeek(
+          weekNumber: w.weekNumber,
+          weekName: null,
+          sections: w.sections,
+          title: isWeekLabel ? 'هفته ${k + 1}' : tail,
+        ));
+      }
+      result.add(SubCourse(
+        id: r + 1,
+        order: r,
+        title: title,
+        image: '',
+        description: '',
+        difficulty: '',
+        duration: 0,
+        weekCount: subWeeks.length,
+        videoCount: subWeeks.fold(0, (n, w) => n + w.sections.length),
+        weeks: subWeeks,
+        subCourses: const [],
+      ));
+    }
+    return result;
+  }
+
+  static final RegExp _leadingNumber = RegExp(r'^\s*[0-9۰-۹]+\s*[-–—.)]\s*');
+  static final RegExp _dash = RegExp(r'\s*[-–—]\s*');
+
+  /// «۴-دوره X – هفته اول» → full «دوره X – هفته اول»، head «دوره X»،
+  /// tail «هفته اول». بدونِ خط‌تیره، head و tail null.
+  static ({String full, String? head, String? tail}) _splitWeekName(
+      String? raw) {
+    var full = (raw ?? '').trim().replaceFirst(_leadingNumber, '');
+    full = full.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final matches = _dash.allMatches(full).toList();
+    if (matches.isEmpty) return (full: full, head: null, tail: null);
+    final m = matches.last;
+    final head = full.substring(0, m.start).trim();
+    final tail = full.substring(m.end).trim();
+    if (head.isEmpty || tail.isEmpty) {
+      return (full: full, head: null, tail: null);
+    }
+    // خط‌تیره‌های داخلِ خودِ نام (– در «سرعت – پا عوض کردن») یکسان می‌شوند
+    return (
+      full: full,
+      head: head.replaceAll(_dash, ' – '),
+      tail: tail,
+    );
+  }
+
   static List<SubCourse> listFrom(dynamic raw) {
     if (raw is! List) return const [];
     final list = <SubCourse>[];
@@ -333,13 +437,24 @@ class CourseDetailInner {
     final times = (json['time_and_location'] as List<dynamic>? ?? [])
         .map((e) => CourseTimeAndLocationItem.fromJson(e as Map<String, dynamic>))
         .toList();
+    // زیرمجموعه‌ها: اگر بک‌اند `sub_courses` فرستاد همان، وگرنه از نامِ
+    // هفته‌ها (و آن‌وقت هفته‌ها فقط داخلِ زیرمجموعه‌ها نمایش داده می‌شوند).
+    var subs = SubCourse.listFrom(json['sub_courses']);
+    var ownWeeks = weeks;
+    if (subs.isEmpty) {
+      final derived = SubCourse.deriveFromWeekNames(weeks);
+      if (derived != null) {
+        subs = derived;
+        ownWeeks = const [];
+      }
+    }
     return CourseDetailInner(
       preRequirement: (json['pre_requirement'] ?? '').toString(),
       videoCount: json['video_count'] is int ? json['video_count'] : int.tryParse('${json['video_count']}') ?? 0,
       length: json['length'] is int ? json['length'] : int.tryParse('${json['length']}') ?? 0,
-      weeks: weeks,
+      weeks: ownWeeks,
       timeAndLocation: times,
-      subCourses: SubCourse.listFrom(json['sub_courses']),
+      subCourses: subs,
     );
   }
 }

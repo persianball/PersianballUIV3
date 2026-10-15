@@ -246,7 +246,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     for (final week in data.detail.weekGroups) {
       for (final s in week.allSections) {
         if (_sectionKey(s, week.weekNumber) == key) {
-          return _Located(s, week.weekNumber, '', const []);
+          return _Located(s, week.weekNumber, '', const [],
+              weekTitle: week.title);
         }
       }
     }
@@ -258,7 +259,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           for (final s in week.allSections) {
             if (_sectionKey(s, week.weekNumber, scope) == key) {
               return _Located(s, week.weekNumber, scope, here,
-                  courseTitle: c.title);
+                  courseTitle: c.title, weekTitle: week.title);
             }
           }
         }
@@ -320,7 +321,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               ),
               const SizedBox(height: 4),
               Text(
-                '${found.courseTitle != null ? '${found.courseTitle}، ' : ''}هفته $weekNumber، ${_ago(p.updatedAt)}',
+                '${found.courseTitle != null ? '${found.courseTitle}، ' : ''}${found.weekTitle}، ${_ago(p.updatedAt)}',
                 style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 12,
@@ -434,8 +435,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                       const SizedBox(height: 2),
                       Text(
                         done
-                            ? '$whereهفته $weekNumber، کامل دیده شده، ${_ago(last.updatedAt)}'
-                            : '$whereهفته $weekNumber، دقیقه‌ی ${_clock(last.position)}، ${_ago(last.updatedAt)}',
+                            ? '$where${found.weekTitle}، کامل دیده شده، ${_ago(last.updatedAt)}'
+                            : '$where${found.weekTitle}، دقیقه‌ی ${_clock(last.position)}، ${_ago(last.updatedAt)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -651,7 +652,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             title: Row(
               children: [
                 Flexible(
-                  child: Text('هفته ${week.weekNumber}',
+                  child: Text(week.title,
                       style: const TextStyle(
                           fontFamily: 'Estedad',
                           fontWeight: FontWeight.w700,
@@ -2345,7 +2346,8 @@ class _DesktopInfoBones extends StatelessWidget {
 /// زیرمجموعه‌هایی که باید باز شوند تا دیده شود.
 class _Located {
   const _Located(this.section, this.weekNumber, this.scope, this.path,
-      {this.courseTitle});
+      {this.courseTitle, String? weekTitle})
+      : weekTitle = weekTitle ?? 'هفته $weekNumber';
 
   final CourseWeekSectionItem section;
   final String weekNumber;
@@ -2354,6 +2356,9 @@ class _Located {
 
   /// عنوانِ زیرمجموعه، برای «ادامه‌ی تماشا»
   final String? courseTitle;
+
+  /// «هفته ۲» یا «Upper» — همان که روی کارتِ هفته نوشته شده
+  final String weekTitle;
 }
 
 /// خطِ عمودیِ مسیرِ یادگیری بینِ دوره‌ها
