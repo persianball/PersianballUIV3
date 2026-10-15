@@ -1,13 +1,18 @@
 # flutter pub run flutter_launcher_icons
 flutter_launcher_icons:
-  image_path: "assets/icons/persianshop_icon.png"
+  image_path: "assets/icons/pers_icon.png"
 
   android: "launcher_icon"
   # image_path_android: "assets/icon/icon.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
-  # adaptive_icon_background: "assets/icon/background.png"
-  # adaptive_icon_foreground: "assets/icon/foreground.png"
-  # adaptive_icon_foreground_inset: 16
+  # آیکن تطبیقی اندروید: لانچر لایه‌ی جلویی را با دایره/اسکوئرکل برش می‌دهد
+  # و فقط دایره‌ی ۶۶dp وسطِ لایه‌ی ۱۰۸dp امن است (شعاع ~۳۰٫۵٪).
+  # دورترین نقطه‌ی لوگو (نوکِ نوار سبز) ~۳۶٫۵٪ از مرکز فاصله دارد، پس
+  # inset باید حداقل ~۸٪ باشد. ۱۰ بزرگ‌ترین مقدارِ امن با کمی حاشیه است؛
+  # ۱۶ هم امن بود ولی با پدینگِ خودِ تصویر، لوگو بی‌دلیل ریز می‌شد.
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/pers_icon.png"
+  adaptive_icon_foreground_inset: 10
   # adaptive_icon_monochrome: "assets/icon/monochrome.png"
 
   ios: true
@@ -20,15 +25,15 @@ flutter_launcher_icons:
 
   web:
     generate: true
-    image_path: "assets/icons/persianshop_icon.png"
-    background_color: "#hexcode"
-    theme_color: "#hexcode"
+    image_path: "assets/icons/pers_icon.png"
+    background_color: "#FFFFFF"
+    theme_color: "#1B7A3E"
 
   windows:
     generate: true
-    image_path: "assets/icons/persianshop_icon.png"
+    image_path: "assets/icons/pers_icon.png"
     icon_size: 48 # min:48, max:256, default: 48
 
   macos:
     generate: true
-    image_path: "assets/icons/persianshop_icon.png"
+    image_path: "assets/icons/pers_icon.png"
