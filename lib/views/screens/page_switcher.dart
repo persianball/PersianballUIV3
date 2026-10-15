@@ -188,7 +188,7 @@ class _DesktopNavBar extends StatelessWidget implements PreferredSizeWidget {
                       const AppLogo(size: 40),
                       const SizedBox(width: 10),
                       const Text(
-                        'پرشین شاپ',
+                        'پرشین بال',
                         style: TextStyle(
                           fontFamily: 'Estedad',
                           fontSize: 18,

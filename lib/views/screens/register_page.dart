@@ -161,7 +161,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Container(
               margin: EdgeInsets.only(top: 20, bottom: 12),
               child: Text(
-                'به پرشین شاپ خوش آمدید  👋',
+                'به پرشین بال خوش آمدید  👋',
                 style: TextStyle(
                   fontFamily: 'Estedad',
                   color: AppColor.onSurface,

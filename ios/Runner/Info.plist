@@ -10,6 +10,9 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!-- نامِ زیرِ آیکن در صفحه‌ی اصلی؛ بدونِ آن iOS نامِ داخلیِ «marketky» را نشان می‌داد -->
+	<key>CFBundleDisplayName</key>
+	<string>پرشین بال</string>
 	<key>CFBundleName</key>
 	<string>marketky</string>
 	<key>CFBundlePackageType</key>

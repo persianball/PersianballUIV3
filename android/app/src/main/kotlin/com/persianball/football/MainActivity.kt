@@ -24,7 +24,7 @@ class MainActivity : FlutterActivity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val channel = NotificationChannel(
             "persianball_default",
-            "اعلان‌های پرشین شاپ",
+            "اعلان‌های پرشین بال",
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
             description = "سفارش‌ها، دوره‌ها و پیام‌های فروشگاه"

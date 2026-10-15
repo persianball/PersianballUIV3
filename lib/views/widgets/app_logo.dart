@@ -27,7 +27,7 @@ class AppLogo extends StatelessWidget {
       // فقط به اندازه‌ی نمایش دیکد شود، نه ۵۱۲ پیکسلِ کامل
       cacheWidth: (size * dpr).round(),
       filterQuality: FilterQuality.medium,
-      semanticLabel: 'پرشین شاپ',
+      semanticLabel: 'پرشین بال',
     );
   }
 }

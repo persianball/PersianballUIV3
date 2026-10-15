@@ -23,8 +23,8 @@ void main() {
     });
 
     test('نام خالی به نامِ پیش‌فرض تبدیل می‌شود', () {
-      expect(_c('').displayName, 'کاربر پرشین شاپ');
-      expect(_c('   ').displayName, 'کاربر پرشین شاپ');
+      expect(_c('').displayName, 'کاربر پرشین بال');
+      expect(_c('   ').displayName, 'کاربر پرشین بال');
     });
 
     test('نبودِ فیلد username کرش نمی‌کند', () {
@@ -34,7 +34,7 @@ void main() {
         'created_at': '2024-12-13T11:58:37+03:30',
       });
       expect(c.username, '');
-      expect(c.displayName, 'کاربر پرشین شاپ');
+      expect(c.displayName, 'کاربر پرشین بال');
     });
 
     test('حرف اول برای آواتار درست است (فارسی و لاتین)', () {

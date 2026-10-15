@@ -319,7 +319,7 @@ class _HomePageState extends State<HomePage> {
           const AppLogo(size: 42),
           Expanded(
             child: Text(
-              'پرشین شاپ',
+              'پرشین بال',
               textAlign: TextAlign.center,
               style: AppTextStyles.headlineMd.copyWith(
                 fontSize: 17,

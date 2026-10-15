@@ -166,7 +166,7 @@ class ProductComment {
   /// دست‌نخورده نمایش داده می‌شوند.
   String get displayName {
     final u = username.trim();
-    if (u.isEmpty) return 'کاربر پرشین شاپ';
+    if (u.isEmpty) return 'کاربر پرشین بال';
     final digitsOnly = RegExp(r'^0?\d{10,11}$');
     if (digitsOnly.hasMatch(u) && u.length >= 7) {
       return '${u.substring(0, 4)}***${u.substring(u.length - 3)}';
