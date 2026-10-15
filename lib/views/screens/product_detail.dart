@@ -26,6 +26,8 @@ import 'package:persian_ball/views/widgets/modals/add_to_cart_modal.dart';
 import 'package:persian_ball/views/widgets/product_reviews_section.dart';
 import 'package:persian_ball/views/widgets/selectable_circle_color.dart';
 import 'package:persian_ball/views/widgets/selectable_circle_size.dart';
+import 'package:persian_ball/views/widgets/shoe_size_guide.dart';
+import 'package:persian_ball/constant/shoe_size_chart.dart';
 import 'package:persian_ball/views/widgets/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../bloc/cart/cart_bloc.dart';
@@ -972,14 +974,42 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
 
               if (variant != null && variant.sizeVariants.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                const Text(
-                  'انتخاب سایز',
-                  style: TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColor.ink,
-                  ),
+                Row(
+                  children: [
+                    const Text(
+                      'انتخاب سایز',
+                      style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.ink,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (ShoeSizeChart.appliesTo(
+                      categoryName: product.category.nameFarsi,
+                      productName: product.nameFarsi,
+                      sizes: variant.sizeVariants.map((s) => s.size),
+                    ))
+                      _SizeGuideLink(
+                        onTap: () => showShoeSizeGuide(
+                          context,
+                          availability: {
+                            for (final sv in variant.sizeVariants)
+                              sv.size.trim(): sv.inStock,
+                          },
+                          selectedSize: size?.size.trim(),
+                          onPick: (eu) {
+                            final pick = variant.sizeVariants
+                                .where((sv) => sv.size.trim() == eu)
+                                .firstOrNull;
+                            if (pick == null) return;
+                            context.read<ProductDetailVariantBloc>().add(
+                                ChangeProductColorEvent(variant, pick));
+                          },
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 SelectableCircleSize(
@@ -988,6 +1018,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                       variant.sizeVariants.map((s) => s.size).toList(),
                   sizeAvailability:
                       variant.sizeVariants.map((s) => s.inStock).toList(),
+                  // انتخاب از «راهنمای سایز» هم باید اینجا دیده شود
+                  selectedSizeIndex: size == null
+                      ? null
+                      : (() {
+                          final i = variant.sizeVariants
+                              .indexWhere((sv) => sv.id == size.id);
+                          return i < 0 ? null : i;
+                        })(),
                   onSizeSelected: (int i) {
                     context.read<ProductDetailVariantBloc>().add(
                         ChangeProductColorEvent(
@@ -1396,6 +1434,45 @@ class _AccordionBones extends StatelessWidget {
         SizedBox(height: 12),
         Bone(height: 58, radius: AppShapes.rLg),
       ],
+    );
+  }
+}
+
+
+/// لینکِ «راهنمای سایز» کنارِ عنوانِ انتخابِ سایز
+class _SizeGuideLink extends StatelessWidget {
+  const _SizeGuideLink({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColor.pitchGreenSoft,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.straighten_rounded,
+                  size: 16, color: AppColor.pitchGreen),
+              SizedBox(width: 6),
+              Text(
+                'راهنمای سایز',
+                style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.pitchGreen,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -51,6 +51,16 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
   }
 
   @override
+  void didUpdateWidget(covariant SelectableCircleSize old) {
+    super.didUpdateWidget(old);
+    // انتخاب از بیرون (مثلاً راهنمای سایز) دکمه‌ها را هم جابه‌جا می‌کند
+    final next = widget.selectedSizeIndex;
+    if (next != null && next != old.selectedSizeIndex && next != _selectedIndex) {
+      setState(() => _selectedIndex = next);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       margin: widget.margin,
