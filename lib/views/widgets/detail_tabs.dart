@@ -1,7 +1,6 @@
 // lib/views/widgets/detail_tabs.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
+import 'package:marketky/views/widgets/category_pill_bar.dart';
 
 class DetailTab {
   final String title;
@@ -76,8 +75,11 @@ class _DetailTabsState extends State<DetailTabs> {
                   ],
                 ),
                 transitionBuilder: (child, animation) {
+                  // در RTL تبِ بعدی سمتِ چپ است، پس محتوای تازه از چپ وارد
+                  // می‌شود — هم‌جهت با حرکتِ قرصِ سبز. پیش‌تر برعکس بود و
+                  // محتوا خلافِ جهتِ نشانگر سُر می‌خورد.
                   final slide = Tween<Offset>(
-                    begin: Offset(0.06 * _direction, 0),
+                    begin: Offset(-0.06 * _direction, 0),
                     end: Offset.zero,
                   ).animate(animation);
                   return FadeTransition(
@@ -97,56 +99,17 @@ class _DetailTabsState extends State<DetailTabs> {
     );
   }
 
+  /// همان نوارِ دسته‌بندیِ فروشگاه: یک قرصِ سبزِ واحد که از تبِ قبلی کنده
+  /// می‌شود و تا تبِ جدید سُر می‌خورد. پیش‌تر هر چیپ رنگِ خودش را عوض
+  /// می‌کرد و جابه‌جایی یک پرشِ ناگهانی بود.
   Widget _tabBar() {
-    return SizedBox(
-      height: 42,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none,
-        itemCount: widget.tabs.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final tab = widget.tabs[i];
-          final selected = i == _index;
-          return GestureDetector(
-            onTap: () => _select(i),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.center,
-              decoration: ShapeDecoration(
-                color: selected ? null : AppColor.cardMuted,
-                gradient: selected ? AppColor.greenGradient : null,
-                shape: AppShapes.pill,
-                shadows: selected ? AppColor.greenShadow : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (tab.icon != null) ...[
-                    Icon(
-                      tab.icon,
-                      size: 16,
-                      color: selected ? Colors.white : AppColor.inkMuted,
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  Text(
-                    tab.title,
-                    style: TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 13,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      color: selected ? Colors.white : AppColor.inkMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+    return CategoryPillBar(
+      labels: [for (final t in widget.tabs) t.title],
+      icons: [for (final t in widget.tabs) t.icon],
+      selectedIndex: _index,
+      onSelected: _select,
+      padding: EdgeInsets.zero,
+      fontSize: 13,
     );
   }
 }

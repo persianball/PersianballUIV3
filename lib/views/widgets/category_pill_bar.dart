@@ -20,9 +20,19 @@ class CategoryPillBar extends StatefulWidget {
     this.height = 42,
     this.padding = const EdgeInsets.symmetric(horizontal: 12),
     this.clipBehavior = Clip.none,
+    this.icons,
+    this.fontSize,
   });
 
   final List<String> labels;
+
+  /// آیکنِ اختیاری کنارِ هر برچسب (هم‌طولِ [labels]؛ null یعنی بدون آیکن).
+  /// تب‌های صفحه‌ی جزئیاتِ دوره از همین نوار استفاده می‌کنند تا جابه‌جایی
+  /// بینشان دقیقاً همان حرکتِ دسته‌بندی‌های فروشگاه را داشته باشد.
+  final List<IconData?>? icons;
+
+  /// اندازه‌ی متن؛ پیش‌فرض همان labelSm
+  final double? fontSize;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
   final double height;
@@ -213,17 +223,41 @@ class _CategoryPillBarState extends State<CategoryPillBar> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           alignment: Alignment.center,
-                          child: AnimatedDefaultTextStyle(
-                            duration: _travel,
-                            curve: Curves.easeOutCubic,
-                            style: AppTextStyles.labelSm.copyWith(
-                              letterSpacing: 0,
-                              fontWeight:
-                                  i == sel ? FontWeight.w700 : FontWeight.w500,
-                              color:
-                                  i == sel ? Colors.white : AppColor.inkMuted,
-                            ),
-                            child: Text(widget.labels[i]),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (widget.icons != null &&
+                                  i < widget.icons!.length &&
+                                  widget.icons![i] != null) ...[
+                                // رنگِ آیکن هم با همان آهنگِ متن عوض می‌شود
+                                TweenAnimationBuilder<Color?>(
+                                  tween: ColorTween(
+                                      end: i == sel
+                                          ? Colors.white
+                                          : AppColor.inkMuted),
+                                  duration: _travel,
+                                  curve: Curves.easeOutCubic,
+                                  builder: (_, c, __) =>
+                                      Icon(widget.icons![i], size: 16, color: c),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              AnimatedDefaultTextStyle(
+                                duration: _travel,
+                                curve: Curves.easeOutCubic,
+                                style: AppTextStyles.labelSm.copyWith(
+                                  letterSpacing: 0,
+                                  fontSize: widget.fontSize,
+                                  fontWeight: i == sel
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: i == sel
+                                      ? Colors.white
+                                      : AppColor.inkMuted,
+                                ),
+                                child: Text(widget.labels[i]),
+                              ),
+                            ],
                           ),
                         ),
                       ),
