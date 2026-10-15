@@ -54,7 +54,12 @@ jobs:
       # www.gstatic.com. service worker فقط هم‌مبدأ را کش می‌کند، پس با CDN
       # اپِ نصب‌شده بدون اینترنت هیچ چیزی نمی‌کشید؛ ضمناً برای کاربرانِ ایران
       # دسترسی به هاست‌های گوگل همیشه قابل اتکا نیست.
-      - run: flutter build web --release --no-tree-shake-icons --no-web-resources-cdn --base-href="/${GITHUB_REPOSITORY#*/}/"
+      # --wasm: خروجی دوتایی است؛ مرورگرهای با WasmGC (کروم/فایرفاکس/سافاری ۱۸+)
+      # رندررِ skwasm را می‌گیرند که اسکرولِ اول و دیکودِ تصویر را بدونِ
+      # فریمِ طولانی انجام می‌دهد، بقیه خودکار به همان main.dart.js
+      # (CanvasKit) برمی‌گردند. Pages هدرِ COOP/COEP نمی‌دهد، پس skwasm
+      # تک‌نخی اجرا می‌شود؛ سنجیده شده و همچنان از CanvasKit روان‌تر است.
+      - run: flutter build web --wasm --release --no-tree-shake-icons --no-web-resources-cdn --base-href="/${GITHUB_REPOSITORY#*/}/"
 
       # service worker ـِ فلاتر کلیدها را نسبت به origin می‌سازد و زیرِ مسیرِ
       # /<repo>/ هیچ‌چیز را از کش سرو نمی‌کند (اپ بدونِ اینترنت باز نمی‌شد).

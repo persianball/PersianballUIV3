@@ -111,6 +111,7 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
                     "${URLs.baseUrl}$image",
                     width: 48,
                     height: 48,
+                    cacheWidth: 144,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) =>
                         Image.asset('assets/images/placeholder.jpg', width: 48, height: 48),
@@ -365,6 +366,7 @@ class _ProductDetailsSheet extends StatelessWidget {
                   "${URLs.baseUrl}$image",
                   width: 96,
                   height: 96,
+                  cacheWidth: 288,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) =>
                       Image.asset('assets/images/placeholder.jpg', width: 96, height: 96),

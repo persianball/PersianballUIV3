@@ -38,13 +38,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Timer? flashsaleCountdownTimer;
-  Duration flashsaleCountdownDuration = Duration(
-    hours: 24 - DateTime.now().hour,
-    minutes: 60 - DateTime.now().minute,
-    seconds: 60 - DateTime.now().second,
-  );
-
   /// اولین دوره‌ی واقعی، برای بخش «دوره‌های ویژه»
   Course? _featuredCourse;
 
@@ -141,7 +134,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     reloadHomePage();
-    startTimer();
     // نامِ کاربر هم به وضعیت ورود وابسته است؛ سبد را ریشه‌ی برنامه
     // به‌روز می‌کند، ولی خوش‌آمدگویی حالتِ همین صفحه است.
     AuthService.authRevision.addListener(_onAuthChanged);
@@ -151,25 +143,9 @@ class _HomePageState extends State<HomePage> {
     if (mounted) _loadUserName();
   }
 
-  void startTimer() {
-    flashsaleCountdownTimer = Timer.periodic(Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {
-          final seconds = flashsaleCountdownDuration.inSeconds - 1;
-          if (seconds < 1) {
-            flashsaleCountdownTimer?.cancel();
-          } else {
-            flashsaleCountdownDuration = Duration(seconds: seconds);
-          }
-        });
-      }
-    });
-  }
-
   @override
   void dispose() {
     AuthService.authRevision.removeListener(_onAuthChanged);
-    flashsaleCountdownTimer?.cancel();
     _debounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
@@ -178,13 +154,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    String seconds =
-        flashsaleCountdownDuration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    String minutes =
-        flashsaleCountdownDuration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    String hours =
-        flashsaleCountdownDuration.inHours.remainder(24).toString().padLeft(2, '0');
-
     // دسکتاپ (>=1024): پوسته‌ی بالای صفحه (page_switcher) هدر را نمایش
     // می‌دهد؛ اینجا فقط محتوای مرکزی با عرض حداکثر ۱۲۰۰ چیده می‌شود.
     final bool isDesktop = AppBreakpoints.isDesktop(context);
@@ -275,8 +244,7 @@ class _HomePageState extends State<HomePage> {
                                 _featuredCourse!, isDesktop)),
                       if (flashProducts.isNotEmpty)
                         SliverToBoxAdapter(
-                          child: _buildFlashSaleSection(flashProducts, hours,
-                              minutes, seconds, isDesktop),
+                          child: _buildFlashSaleSection(flashProducts, isDesktop),
                         ),
                       // فضای خالی زیر لیست تا نوار ناوبری شناور روی محتوا
                       // نیفتد؛ در دسکتاپ نوار پایینی وجود ندارد.
@@ -828,8 +796,7 @@ class _HomePageState extends State<HomePage> {
 
   // ==== فروش ویژه ====
 
-  Widget _buildFlashSaleSection(List<Product> products, String hours,
-      String minutes, String seconds, bool isDesktop) {
+  Widget _buildFlashSaleSection(List<Product> products, bool isDesktop) {
     // دسکتاپ: کارت‌های عریض‌تر و فاصله‌ی داخلی بیشتر؛ همان لیست افقی.
     final double itemWidth = isDesktop ? 200 : 165;
     final double listHeight = isDesktop ? 306 : 268;
@@ -857,19 +824,7 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.white,
                     gradient: AppColor.greenGradient,
                   ),
-                  Row(
-                    textDirection: TextDirection.ltr,
-                    children: [
-                      FlashsaleCountdownTile(digit: hours[0]),
-                      FlashsaleCountdownTile(digit: hours[1]),
-                      Text(':', style: AppTextStyles.bodyLg),
-                      FlashsaleCountdownTile(digit: minutes[0]),
-                      FlashsaleCountdownTile(digit: minutes[1]),
-                      Text(':', style: AppTextStyles.bodyLg),
-                      FlashsaleCountdownTile(digit: seconds[0]),
-                      FlashsaleCountdownTile(digit: seconds[1]),
-                    ],
-                  ),
+                  const _FlashSaleCountdown(),
                 ],
               ),
             ),
@@ -1094,6 +1049,68 @@ class _ProductBone extends StatelessWidget {
           Bone(width: 70, height: 14),
         ],
       ),
+    );
+  }
+}
+
+/// شمارشِ معکوسِ «فروش ویژه» تا نیمه‌شب.
+///
+/// تایمرِ یک‌ثانیه‌ای قبلاً روی خودِ HomePage بود و هر ثانیه setStateِ کلِ
+/// صفحه را صدا می‌زد: اسلایدر، شبکه‌ی محصولات، همه‌ی کارت‌ها و سایه‌ها
+/// دوباره ساخته می‌شدند؛ روی وب این یک تکانِ منظم وسطِ اسکرول بود. حالا
+/// فقط همین شش رقم هر ثانیه بازسازی می‌شوند.
+class _FlashSaleCountdown extends StatefulWidget {
+  const _FlashSaleCountdown();
+
+  @override
+  State<_FlashSaleCountdown> createState() => _FlashSaleCountdownState();
+}
+
+class _FlashSaleCountdownState extends State<_FlashSaleCountdown> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  /// تا نیمه‌شب — از روی ساعتِ واقعی، نه کم کردنِ تیک‌ها، تا بعد از
+  /// مکثِ تب یا خوابِ دستگاه هم درست بماند.
+  static Duration _untilMidnight() {
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day + 1);
+    return midnight.difference(now);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = _untilMidnight();
+    String two(int n) => n.toString().padLeft(2, '0');
+    final hours = two(d.inHours);
+    final minutes = two(d.inMinutes.remainder(60));
+    final seconds = two(d.inSeconds.remainder(60));
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      textDirection: TextDirection.ltr,
+      children: [
+        FlashsaleCountdownTile(digit: hours[0]),
+        FlashsaleCountdownTile(digit: hours[1]),
+        Text(':', style: AppTextStyles.bodyLg),
+        FlashsaleCountdownTile(digit: minutes[0]),
+        FlashsaleCountdownTile(digit: minutes[1]),
+        Text(':', style: AppTextStyles.bodyLg),
+        FlashsaleCountdownTile(digit: seconds[0]),
+        FlashsaleCountdownTile(digit: seconds[1]),
+      ],
     );
   }
 }

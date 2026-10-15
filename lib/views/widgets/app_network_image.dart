@@ -1,4 +1,6 @@
 // lib/views/widgets/app_network_image.dart
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:persian_ball/constant/app_color.dart';
@@ -26,22 +28,50 @@ class AppNetworkImage extends StatelessWidget {
     this.borderRadius,
   });
 
+  /// سقفِ عرضِ دیکود؛ بزرگ‌تر از این روی هیچ نمایشگری فرقی نمی‌کند.
+  static const int _maxDecodeWidth = 1600;
+
   @override
   Widget build(BuildContext context) {
-    final Widget image = (url == null || url!.isEmpty)
-        ? _fallback()
-        : CachedNetworkImage(
-            imageUrl: url!,
-            width: width,
-            height: height,
-            fit: fit,
-            placeholder: (_, __) => _skeleton(),
-            errorWidget: (_, __, ___) => _fallback(),
-          );
+    if (url == null || url!.isEmpty) return _clip(_fallback());
 
-    if (borderRadius == null) return image;
-    return ClipRRect(borderRadius: borderRadius!, child: image);
+    // عکس‌های محصول اغلب ۱۵۰۰–۳۰۰۰ پیکسل‌اند ولی در کارت ۲۰۰–۴۰۰ پیکسل
+    // نمایش داده می‌شوند. بدونِ memCacheWidth کلِ تصویر در اندازه‌ی اصلی
+    // دیکود و در حافظه‌ی گرافیکی نگه داشته می‌شد و هر فریمِ اسکرول همان
+    // تصویرِ بزرگ کوچک می‌شد؛ روی وب این یکی از عاملانِ اصلیِ لرزشِ
+    // اسکرول بود. اینجا تصویر به اندازه‌ی واقعیِ کادر (× چگالی) دیکود
+    // می‌شود. برای cover بزرگ‌ترین بعد ملاک است تا تصویرِ پهن در کادرِ
+    // بلند تار نشود.
+    final double dpr = MediaQuery.devicePixelRatioOf(context);
+    return LayoutBuilder(builder: (context, c) {
+      double? w = (width != null && width!.isFinite)
+          ? width
+          : (c.hasBoundedWidth ? c.maxWidth : null);
+      double? h = (height != null && height!.isFinite)
+          ? height
+          : (c.hasBoundedHeight ? c.maxHeight : null);
+      final double? logical = (w == null && h == null)
+          ? null
+          : math.max(w ?? 0, h ?? 0);
+      final int? decodeWidth = (logical == null || logical <= 0)
+          ? null
+          : math.min(_maxDecodeWidth, (logical * dpr).ceil());
+
+      return _clip(CachedNetworkImage(
+        imageUrl: url!,
+        width: width,
+        height: height,
+        fit: fit,
+        memCacheWidth: decodeWidth,
+        placeholder: (_, __) => _skeleton(),
+        errorWidget: (_, __, ___) => _fallback(),
+      ));
+    });
   }
+
+  Widget _clip(Widget image) => borderRadius == null
+      ? image
+      : ClipRRect(borderRadius: borderRadius!, child: image);
 
   Widget _fallback() => Image.asset(
         fallbackAsset,

@@ -639,16 +639,22 @@ class _BouncingChevronState extends State<_BouncingChevron>
   Widget build(BuildContext context) {
     final bool reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    return IconButton(
-      onPressed: widget.onTap,
-      icon: AnimatedBuilder(
-        animation: _c,
-        builder: (context, child) => Transform.translate(
-          offset: Offset(0, reduceMotion ? 0 : 6 * _c.value),
-          child: child,
+    // RepaintBoundary: این فلش هر فریم جابه‌جا می‌شود؛ بدونِ مرزِ رسمِ
+    // جداگانه، کلِ هیرو (و لایه‌ی روی ویدیو) هر فریم دوباره رسم می‌شد —
+    // روی وب این یعنی رسمِ تمام‌عرض ۶۰ بار در ثانیه فقط برای یک آیکنِ
+    // ۴۰ پیکسلی.
+    return RepaintBoundary(
+      child: IconButton(
+        onPressed: widget.onTap,
+        icon: AnimatedBuilder(
+          animation: _c,
+          builder: (context, child) => Transform.translate(
+            offset: Offset(0, reduceMotion ? 0 : 6 * _c.value),
+            child: child,
+          ),
+          child: const Icon(Icons.keyboard_arrow_down_rounded,
+              color: Colors.white70, size: 40),
         ),
-        child: const Icon(Icons.keyboard_arrow_down_rounded,
-            color: Colors.white70, size: 40),
       ),
     );
   }

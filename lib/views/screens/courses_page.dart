@@ -768,6 +768,7 @@ class _CourseThumbnail extends StatelessWidget {
       url,
       width: size,
       height: size,
+      cacheWidth: (size * 3).round(),
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => _fallback(),
       loadingBuilder: (context, child, progress) {

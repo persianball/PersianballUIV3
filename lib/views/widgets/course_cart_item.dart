@@ -112,6 +112,7 @@ class _CourseCartItemCardState extends State<CourseCartItemCard> {
                           "${URLs.baseUrl}$image",
                           width: 48,
                           height: 48,
+                          cacheWidth: 144,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
                               Icon(Icons.school, size: 28, color: AppColor.goldEnd),
@@ -277,6 +278,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                           "${URLs.baseUrl}$image",
                           width: 96,
                           height: 96,
+                          cacheWidth: 288,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
                               Icon(Icons.school, size: 56, color: AppColor.goldEnd),
@@ -339,6 +341,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                                   "${URLs.baseUrl}${gift.image}",
                                   width: 44,
                                   height: 44,
+                                  cacheWidth: 132,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) => Icon(
                                       Icons.card_giftcard,

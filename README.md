@@ -98,7 +98,7 @@ flutter build apk --release
 ```
 
 ```bash
-flutter build web --release --no-tree-shake-icons --no-web-resources-cdn --base-href=/PersianballUIV3/
+flutter build web --wasm --release --no-tree-shake-icons --no-web-resources-cdn --base-href=/PersianballUIV3/
 ```
 
 شناسه‌ی اپ در اندروید و iOS `com.persianball.football` است. تنظیماتِ Firebase و کارهای باقی‌مانده‌ی iOS و وب در [FIREBASE.md](FIREBASE.md) آمده است.
@@ -120,6 +120,7 @@ git push origin dev:main
 1. **`base href`**: در `web/index.html` باید مقدارِ `$FLUTTER_BASE_HREF` بماند، نه `"/"` ثابت. Pages اپ را زیرِ مسیرِ `/PersianballUIV3/` سرو می‌کند.
 2. **مسیردهیِ hash** (`#/route`): GitHub Pages برای SPA فالبک ندارد. اگر `usePathUrlStrategy()` اضافه شود، رفرش روی هر صفحه‌ی داخلی ۴۰۴ می‌دهد.
 3. **`--no-web-resources-cdn`**: موتورِ رندر را از خودِ سایت سرو می‌کند، نه از gstatic. service worker فقط فایل‌های هم‌مبدأ را کش می‌کند.
+4. **`--wasm`**: خروجی دوتایی می‌سازد. مرورگرهای با WasmGC (کروم، فایرفاکس، سافاری ۱۸ به بالا) رندررِ skwasm را می‌گیرند که اسکرولِ اول و دیکودِ تصویر را بدونِ فریمِ طولانی انجام می‌دهد؛ بقیه خودکار به `main.dart.js` (CanvasKit) برمی‌گردند. Pages هدرِ COOP/COEP نمی‌دهد، پس skwasm تک‌نخی اجرا می‌شود و همچنان روان‌تر از CanvasKit سنجیده شده است. بدونِ این پرچم، سایت کار می‌کند ولی روی اولین اسکرول تکان می‌خورد.
 4. **`tool/patch_service_worker.py`** بعد از build اجرا می‌شود. service worker ـِ پیش‌فرضِ فلاتر زیرِ زیرمسیر هیچ فایلی را از کش سرو نمی‌کند.
 
 ## اعتبار

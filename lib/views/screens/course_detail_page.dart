@@ -819,6 +819,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                     _abs(s.videoThumbnail!),
                     width: 56,
                     height: 36,
+                    cacheWidth: 168,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => _sectionFallbackThumb(),
                   ),
@@ -1003,6 +1004,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                               )
                             : Image.network(
                                 _abs(c.image),
+                                cacheWidth: 180, // کادرِ ۶۰px
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Container(
                                   color: AppColor.pitchGreenSoft,
