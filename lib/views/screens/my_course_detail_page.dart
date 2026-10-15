@@ -23,11 +23,13 @@ import 'package:persian_ball/constant/app_color.dart';
 import 'package:persian_ball/constant/app_shapes.dart';
 import 'package:persian_ball/models/course_models.dart';
 import 'package:persian_ball/services/course_progress_service.dart';
+import 'package:persian_ball/services/hls_quality.dart';
 import 'package:persian_ball/views/widgets/app_buttons.dart';
 import 'package:persian_ball/views/widgets/app_network_image.dart';
 import 'package:persian_ball/views/widgets/course_lesson_list.dart';
 import 'package:persian_ball/views/widgets/motion.dart';
 import 'package:persian_ball/views/widgets/shimmer.dart';
+import 'package:persian_ball/views/widgets/video_quality_button.dart';
 
 /// ثانیه‌های شمارشِ معکوسِ «درسِ بعدی» بعد از تمام‌شدنِ یک ویدیو.
 const int _kAutoNextSeconds = 6;
@@ -60,6 +62,11 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
   ChewieController? _chewie;
 
   CourseLesson? _current;
+
+  /// کیفیت‌های m3u8ِ درسِ فعلی؛ null در [_quality] یعنی خودکار.
+  List<HlsVariant> _variants = const [];
+  HlsVariant? _quality;
+
   bool _booting = true;
   bool _videoLoading = false;
   String? _videoError;
@@ -185,7 +192,24 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
 
   // ==================== پخش ====================
 
-  Future<void> _play(CourseLesson lesson, {bool autoPlay = true}) async {
+  /// عوض کردنِ کیفیت: همان درس از همان ثانیه با playlistِ کیفیتِ انتخابی.
+  Future<void> _setQuality(HlsVariant? q) async {
+    final lesson = _current;
+    final video = _video;
+    if (lesson == null || q == _quality) return;
+    HlsQuality.savePreferredHeight(q?.height);
+    final at = video?.value.position;
+    final wasPlaying = video?.value.isPlaying ?? false;
+    setState(() => _quality = q);
+    await _play(lesson, autoPlay: wasPlaying, startAt: at, keepQuality: true);
+  }
+
+  Future<void> _play(
+    CourseLesson lesson, {
+    bool autoPlay = true,
+    Duration? startAt,
+    bool keepQuality = false,
+  }) async {
     if (!lesson.playable) return;
 
     _cancelAutoNext();
@@ -209,8 +233,19 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     await oldVideo?.dispose();
 
     try {
-      final controller =
-          VideoPlayerController.networkUrl(Uri.parse(lesson.videoUrl));
+      // کیفیتِ دلخواهِ قبلیِ کاربر روی درسِ تازه هم اعمال می‌شود.
+      if (!keepQuality) {
+        final results = await Future.wait([
+          HlsQuality.variants(lesson.videoUrl),
+          HlsQuality.preferredHeight(),
+        ]);
+        if (!mounted) return;
+        final variants = results[0] as List<HlsVariant>;
+        _variants = variants;
+        _quality = HlsQuality.closest(variants, results[1] as int?);
+      }
+      final url = _quality?.url ?? lesson.videoUrl;
+      final controller = VideoPlayerController.networkUrl(Uri.parse(url));
       await controller.initialize();
       if (!mounted) {
         await controller.dispose();
@@ -219,7 +254,12 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
 
       // ادامه از محلِ توقف — مگر اینکه عملاً تهِ ویدیو باشد.
       final saved = _progress.value.of(lesson.progressKey);
-      if (saved != null && saved.resumable) {
+      if (startAt != null && startAt > Duration.zero) {
+        if (startAt < controller.value.duration - const Duration(seconds: 1)) {
+          await controller.seekTo(startAt);
+          _lastReported = startAt;
+        }
+      } else if (saved != null && saved.resumable) {
         final total = controller.value.duration;
         if (saved.position < total - const Duration(seconds: 3)) {
           await controller.seekTo(saved.position);
@@ -560,6 +600,15 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                   ],
                 ),
               ),
+              if (_variants.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                VideoQualityButton(
+                  variants: _variants,
+                  selected: _quality,
+                  busy: _videoLoading,
+                  onSelected: _setQuality,
+                ),
+              ],
               // در دسکتاپ فهرست همیشه در ستونِ کناری باز است.
               if (!AppBreakpoints.isDesktop(context)) ...[
                 const SizedBox(width: 8),

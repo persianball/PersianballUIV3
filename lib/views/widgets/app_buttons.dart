@@ -11,6 +11,7 @@ class GradientButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.icon,
+    this.trailingIcon,
     this.height = 52,
     this.expand = true,
     this.gradient,
@@ -25,6 +26,9 @@ class GradientButton extends StatelessWidget {
 
   /// آیکن کوچک کنار متن (ترجیحاً آیکن مینیمال یا SvgPicture)
   final Widget? icon;
+
+  /// آیکنِ بعد از متن — در RTL سمتِ چپِ دکمه، جای طبیعیِ فلشِ «برو».
+  final Widget? trailingIcon;
 
   final double height;
   final bool expand;
@@ -64,6 +68,13 @@ class GradientButton extends StatelessWidget {
                   color: foregroundColor,
                 ),
               ),
+              if (trailingIcon != null) ...[
+                const SizedBox(width: 8),
+                IconTheme(
+                  data: IconThemeData(color: foregroundColor, size: 18),
+                  child: trailingIcon!,
+                ),
+              ],
             ],
           );
 

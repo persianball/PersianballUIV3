@@ -751,7 +751,9 @@ class _HomePageState extends State<HomePage> {
                 expand: false,
                 height: isDesktop ? 44 : 38,
                 fontSize: isDesktop ? 13 : 12,
-                icon: const Icon(Icons.arrow_back_rounded),
+                // در RTL «جلو» یعنی چپ: arrow_forward خودش آینه می‌شود و ←
+                // نشان می‌دهد، و بعد از متن (سمتِ چپ) می‌نشیند.
+                trailingIcon: const Icon(Icons.arrow_forward_rounded),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
                       builder: (_) => CourseDetailPage(id: course.id)),

@@ -23,7 +23,7 @@ import 'package:persian_ball/core/slider_link.dart';
 import 'package:persian_ball/models/slider_item.dart';
 import 'package:persian_ball/services/slider_service.dart';
 import 'package:persian_ball/views/widgets/app_network_image.dart';
-import 'package:persian_ball/views/widgets/inline_video_player.dart';
+import 'package:persian_ball/views/widgets/slider_video.dart';
 import 'package:persian_ball/views/widgets/motion.dart';
 
 class AppSlider extends StatefulWidget {
@@ -289,13 +289,9 @@ class _SlideMedia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (item.isVideo) {
-      // پخش خودکارِ بی‌صدا: هم لازمه‌ی مجاز بودنِ autoPlay در مرورگر است و
-      // هم صدای ناگهانی توی گوشِ کاربر نمی‌خواند (اگر خواست، از کنترل‌های
-      // خودِ پخش‌کننده صدا را باز می‌کند).
-      return InlineVideoPlayer(
+      // بدونِ نوارِ پخش؛ فقط دکمه‌ی صدا (SliderVideo).
+      return SliderVideo(
         videoUrl: item.videoUrl!,
-        autoPlay: true,
-        muted: true,
         // تکرار نمی‌شود تا بعدِ پایانِ ویدیو نوبت به اسلاید بعدی برسد.
         looping: onVideoEnded == null,
         onCompleted: onVideoEnded,

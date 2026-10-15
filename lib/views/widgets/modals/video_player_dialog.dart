@@ -3,6 +3,8 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/services/hls_quality.dart';
+import 'package:persian_ball/views/widgets/video_quality_button.dart';
 import 'package:video_player/video_player.dart';
 
 /// دیالوگ پخش ویدیو به صورت پورتریت با انیمیشن نرم.
@@ -87,15 +89,54 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
   Duration _lastReported = Duration.zero;
   bool _finished = false;
 
+  /// کیفیت‌های فایلِ m3u8؛ خالی یعنی دکمه‌ی کیفیت نمایش داده نمی‌شود.
+  List<HlsVariant> _variants = const [];
+
+  /// null = خودکار
+  HlsVariant? _quality;
+  bool _switching = false;
+
   @override
   void initState() {
     super.initState();
-    _init();
+    _boot();
   }
 
-  Future<void> _init() async {
+  /// اگر کاربر قبلاً کیفیتی انتخاب کرده بود، ویدیو از همان اول با آن باز
+  /// می‌شود، نه اینکه اول خودکار (۱۴۴p) پخش شود و بعد عوض شود.
+  Future<void> _boot() async {
+    final results = await Future.wait([
+      HlsQuality.variants(widget.videoUrl),
+      HlsQuality.preferredHeight(),
+    ]);
+    if (!mounted) return;
+    final variants = results[0] as List<HlsVariant>;
+    _variants = variants;
+    _quality = HlsQuality.closest(variants, results[1] as int?);
+    await _init(startAt: widget.startAt);
+  }
+
+  Future<void> _setQuality(HlsVariant? q) async {
+    final old = _videoController;
+    if (q == _quality || old == null) return;
+    HlsQuality.savePreferredHeight(q?.height);
+    final at = old.value.position;
+    final wasPlaying = old.value.isPlaying;
+    setState(() {
+      _quality = q;
+      _switching = true;
+    });
+    await _init(startAt: at, autoPlay: wasPlaying);
+    if (mounted) setState(() => _switching = false);
+  }
+
+  Future<void> _init({
+    Duration startAt = Duration.zero,
+    bool autoPlay = true,
+  }) async {
     try {
-      final vc = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+      final url = _quality?.url ?? widget.videoUrl;
+      final vc = VideoPlayerController.networkUrl(Uri.parse(url));
       await vc.initialize();
       if (!mounted) {
         vc.dispose();
@@ -103,15 +144,15 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
       }
       // ادامه از محلِ توقف؛ اگر آن محل عملاً پایانِ ویدیو بود از اول.
       final total = vc.value.duration;
-      if (widget.startAt > Duration.zero &&
+      if (startAt > Duration.zero &&
           total > Duration.zero &&
-          widget.startAt < total - const Duration(seconds: 3)) {
-        await vc.seekTo(widget.startAt);
+          startAt < total - const Duration(seconds: 3)) {
+        await vc.seekTo(startAt);
       }
       vc.addListener(_onTick);
       final cc = ChewieController(
         videoPlayerController: vc,
-        autoPlay: true,
+        autoPlay: autoPlay,
         looping: false,
         // پخش و تمام‌صفحه هر دو در حالت پورتریت می‌مانند
         deviceOrientationsOnEnterFullScreen: const [
@@ -127,10 +168,17 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
           bufferedColor: Colors.white54,
         ),
       );
+      // پخش‌کننده‌ی قبلی (موقعِ عوض کردنِ کیفیت) بعد از آماده شدنِ جدید
+      // بسته می‌شود تا تصویر وسطش سیاه نشود.
+      final oldVc = _videoController;
+      final oldCc = _chewieController;
+      oldVc?.removeListener(_onTick);
       setState(() {
         _videoController = vc;
         _chewieController = cc;
       });
+      oldCc?.dispose();
+      oldVc?.dispose();
     } catch (e) {
       if (mounted) setState(() => _error = 'پخش این ویدیو ممکن نیست');
     }
@@ -213,6 +261,12 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
+                          ),
+                          VideoQualityButton(
+                            variants: _variants,
+                            selected: _quality,
+                            busy: _switching,
+                            onSelected: _setQuality,
                           ),
                           IconButton(
                             onPressed: () => Navigator.of(context).pop(),

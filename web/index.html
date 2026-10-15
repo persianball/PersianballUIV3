@@ -30,6 +30,13 @@
   <style>
     html, body { margin: 0; height: 100%; background: #FFFFFF; }
 
+    /* جهتِ متنِ خودِ اپ را Flutter از Directionality می‌گیرد، نه از HTML.
+       ولی ویدیو و وب‌ویو (platform view) عنصرِ واقعیِ HTML هستند که فلاتر
+       با position:absolute + transform جا می‌اندازد؛ در سندِ rtl نقطه‌ی
+       شروعِ این عناصر لبه‌ی راست است و ویدیوی اسلایدر ~۱۲۰px به راست
+       می‌لغزید و سمتِ چپش نوارِ سیاه می‌ماند. */
+    flutter-view { direction: ltr; }
+
     /* صفحه‌ی بارگذاری: فلاتر وب چند ثانیه طول می‌کشد تا اولین فریم را بکشد
        و تا آن موقع صفحه کاملاً سفید و بی‌نشانه بود. */
     #splash {
