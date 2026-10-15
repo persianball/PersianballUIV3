@@ -1,14 +1,14 @@
 // views/widgets/modals/add_course_to_cart_modal.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/cart/cart_bloc.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/models/course_detail_model.dart';
-import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/utils/login_prompt.dart';
-import 'package:marketky/views/widgets/app_buttons.dart';
-import 'package:marketky/views/widgets/page_container.dart';
+import 'package:persian_ball/bloc/cart/cart_bloc.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/models/course_detail_model.dart';
+import 'package:persian_ball/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/utils/login_prompt.dart';
+import 'package:persian_ball/views/widgets/app_buttons.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
 
 class AddCourseToCartModal extends StatefulWidget {
   final CourseTimeAndLocationItem

@@ -3,12 +3,12 @@
 // تبدیل لینک ورودی به روت داخلی اپ.
 //
 // دو شکل لینک پشتیبانی می‌شود:
-//   ۱) اسکیم اختصاصی:  marketky://product/12
+//   ۱) اسکیم اختصاصی:  persianball://product/12
 //   ۲) لینک وب هاست‌های مجاز: http://2.144.27.195:8000/product/12
 //
 // هر لینکی که هاستش در URLs.deepLinkHosts نباشد یا مسیرش جزو روت‌های اپ نباشد
 // (مثل /media/... یا /v2/product/...) نادیده گرفته می‌شود تا اپ بی‌دلیل باز نشود.
-import 'package:marketky/constant/urls.dart';
+import 'package:persian_ball/constant/urls.dart';
 
 class DeepLinkResolver {
   /// روت‌های ثابت اپ
@@ -37,7 +37,7 @@ class DeepLinkResolver {
     String path;
 
     if (scheme == URLs.appScheme) {
-      // marketky://product/12  →  host=product ، path=/12
+      // persianball://product/12  →  host=product ، path=/12
       path = uri.host.isEmpty
           ? (uri.path.isEmpty ? '/' : uri.path)
           : '/${uri.host}${uri.path}';

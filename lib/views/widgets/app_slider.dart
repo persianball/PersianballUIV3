@@ -15,16 +15,16 @@ import 'dart:async';
 // می‌روند.
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/constant/app_text_styles.dart';
-import 'package:marketky/core/slider_link.dart';
-import 'package:marketky/models/slider_item.dart';
-import 'package:marketky/services/slider_service.dart';
-import 'package:marketky/views/widgets/app_network_image.dart';
-import 'package:marketky/views/widgets/inline_video_player.dart';
-import 'package:marketky/views/widgets/motion.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_text_styles.dart';
+import 'package:persian_ball/core/slider_link.dart';
+import 'package:persian_ball/models/slider_item.dart';
+import 'package:persian_ball/services/slider_service.dart';
+import 'package:persian_ball/views/widgets/app_network_image.dart';
+import 'package:persian_ball/views/widgets/inline_video_player.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
 
 class AppSlider extends StatefulWidget {
   const AppSlider({

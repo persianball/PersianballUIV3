@@ -59,7 +59,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Custom scheme -->
-                <data android:scheme="marketky" />
+                <data android:scheme="persianball" />
             </intent-filter>
         </activity-alias>
 

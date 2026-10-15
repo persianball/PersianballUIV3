@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/core/model/Product.dart';
+import 'package:persian_ball/core/model/Product.dart';
 
 class ProductService {
   static List<Product> productData = productRawData.map((data) => Product.fromJson(data)).toList();

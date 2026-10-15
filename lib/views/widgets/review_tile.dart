@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Review.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/core/model/Review.dart';
 import 'package:smooth_star_rating_null_safety/smooth_star_rating_null_safety.dart';
 
 class ReviewTile extends StatelessWidget {

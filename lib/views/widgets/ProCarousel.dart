@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-import 'package:marketky/constant/app_color.dart';
+import 'package:persian_ball/constant/app_color.dart';
 
 // Simple media model to support both images and videos with thumbnails
 enum MediaType { image, video }

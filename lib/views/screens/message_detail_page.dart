@@ -7,11 +7,11 @@
 // نمی‌کند حذف شد.
 import 'package:flutter/material.dart';
 
-import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/services/user_message_service.dart';
-import 'package:marketky/utils/jalali_date.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/services/user_message_service.dart';
+import 'package:persian_ball/utils/jalali_date.dart';
 
 class MessageDetailPage extends StatelessWidget {
   const MessageDetailPage({super.key, required this.data});

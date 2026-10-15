@@ -1,11 +1,11 @@
 // lib/views/screens/forgot_password_page.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/services/account_service.dart';
-import 'package:marketky/views/widgets/page_container.dart';
-import 'package:marketky/views/widgets/auth_background.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/services/account_service.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
+import 'package:persian_ball/views/widgets/auth_background.dart';
 
 /// بازیابی رمز عبور در دو مرحله: ارسال کد و ثبت رمز جدید
 class ForgotPasswordPage extends StatefulWidget {

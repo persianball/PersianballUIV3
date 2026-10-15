@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/ProductModel.dart';
-import 'package:marketky/services/catalog_service.dart';
+import 'package:persian_ball/models/ProductModel.dart';
+import 'package:persian_ball/services/catalog_service.dart';
 
 Product _p({
   required int id,

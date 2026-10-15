@@ -1,7 +1,7 @@
 // انتخاب واریانت دوره: پیش‌تر دکمه‌ی خرید همیشه اولین واریانتِ فعال را
 // می‌فرستاد، پس دوره‌های چندزمانه فقط یک گزینه‌ی قابل‌خرید داشتند.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/course_detail_model.dart';
+import 'package:persian_ball/models/course_detail_model.dart';
 
 CourseTimeAndLocationItem _v(int id, {required bool active}) =>
     CourseTimeAndLocationItem.fromJson({

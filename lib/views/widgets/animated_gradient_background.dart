@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
+import 'package:persian_ball/constant/app_color.dart';
 
 /// پس‌زمینه‌ی گرادیانِ متحرک و نرمِ سراسری اپ.
 ///

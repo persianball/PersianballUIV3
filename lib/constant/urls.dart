@@ -2,8 +2,8 @@ class URLs{
     // static const baseUrl = "https://api2.persianball.ir";
     static const baseUrl = "https://pball.ah8ad3.ir/";
 
-    /// اسکیم اختصاصی اپ: marketky://product/12
-    static const appScheme = "marketky";
+    /// اسکیم اختصاصی اپ: persianball://product/12
+    static const appScheme = "persianball";
 
     /// هاست‌هایی که لینک وبشان باید داخل اپ باز شود.
     /// وقتی دامنه نهایی آماده شد فقط کافی است اینجا و در AndroidManifest

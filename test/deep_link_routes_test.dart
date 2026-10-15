@@ -4,7 +4,7 @@
 // می‌کرد؛ این تست پشته‌ی صریح را تضمین می‌کند.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/core/app_router.dart';
+import 'package:persian_ball/core/app_router.dart';
 
 List<Route<dynamic>> _initialRoutes(String initialRoute) {
   if (initialRoute == '/' || initialRoute.isEmpty) {

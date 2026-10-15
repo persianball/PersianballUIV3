@@ -31,8 +31,8 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/services/auth_service.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/services/auth_service.dart';
 
 /// نتیجه‌ی ارسال امتیاز/نظر
 class RatingResult {

@@ -13,7 +13,7 @@
 //     همیشه null بوده‌اند.
 //   • آدرس یک رشته‌ی تخت است با فیلدهای برچسب‌دار داخلش (postal code، …).
 
-import 'package:marketky/utils/jalali_date.dart';
+import 'package:persian_ball/utils/jalali_date.dart';
 
 /// وضعیت سفارش — مقادیر دیده‌شده: pending، failed، wait_for_admin.
 enum OrderStatus { pending, waitForAdmin, paid, sent, delivered, failed, canceled, unknown }

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:marketky/models/CartModel.dart';
+import 'package:persian_ball/models/CartModel.dart';
 import '../constant/urls.dart';
 
 class CartService {

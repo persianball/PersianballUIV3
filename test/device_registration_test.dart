@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/services/device_registration_service.dart';
+import 'package:persian_ball/services/device_registration_service.dart';
 
 DeviceProfile _p({
   String display = 'display',

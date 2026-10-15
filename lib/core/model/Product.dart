@@ -1,6 +1,6 @@
-import 'package:marketky/models/ColorWay.dart';
-import 'package:marketky/core/model/ProductSize.dart';
-import 'package:marketky/core/model/Review.dart';
+import 'package:persian_ball/models/ColorWay.dart';
+import 'package:persian_ball/core/model/ProductSize.dart';
+import 'package:persian_ball/core/model/Review.dart';
 
 class Product {
   List<String> image;

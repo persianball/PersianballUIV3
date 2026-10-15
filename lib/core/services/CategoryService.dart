@@ -1,4 +1,4 @@
-import 'package:marketky/core/model/Category.dart';
+import 'package:persian_ball/core/model/Category.dart';
 
 class CategoryService {
   static List<Category> categoryData = categoryRawData.map((data) => Category.fromJson(data)).toList();

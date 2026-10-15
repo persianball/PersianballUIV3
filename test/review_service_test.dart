@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/services/review_service.dart';
+import 'package:persian_ball/services/review_service.dart';
 
 void main() {
   test('میانگین امتیاز درست محاسبه می‌شود', () {

@@ -4,7 +4,7 @@
 // می‌شوند و مسیر از کادر بیرون می‌زند.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
 
 void main() {
   // همان ابعادِ دکمه‌ی «انتخاب شد»: عریض و کوتاه، با شعاعِ rLg

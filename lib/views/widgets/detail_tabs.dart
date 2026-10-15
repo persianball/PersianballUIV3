@@ -1,6 +1,6 @@
 // lib/views/widgets/detail_tabs.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/views/widgets/category_pill_bar.dart';
+import 'package:persian_ball/views/widgets/category_pill_bar.dart';
 
 class DetailTab {
   final String title;

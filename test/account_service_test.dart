@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/services/account_service.dart';
+import 'package:persian_ball/services/account_service.dart';
 
 void main() {
   group('بازیابی رمز', () {

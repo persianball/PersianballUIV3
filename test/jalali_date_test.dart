@@ -1,6 +1,6 @@
 // تاریخ شمسی و حفظِ منطقه‌ی زمانیِ سرور.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/utils/jalali_date.dart';
+import 'package:persian_ball/utils/jalali_date.dart';
 
 void main() {
   test('تبدیل میلادی به شمسی', () {

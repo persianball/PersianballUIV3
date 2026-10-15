@@ -1,7 +1,7 @@
 // utils/auth_guard.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/login/login_bloc.dart';
+import 'package:persian_ball/bloc/login/login_bloc.dart';
 
 /// Ensures user is authenticated before performing [action].
 /// - If authenticated: runs [action] immediately.

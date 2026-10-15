@@ -1,6 +1,6 @@
 // core/model/Cart.dart
-import 'package:marketky/models/ProductModel.dart';
-import 'package:marketky/utils/json_parse.dart';
+import 'package:persian_ball/models/ProductModel.dart';
+import 'package:persian_ball/utils/json_parse.dart';
 
 class CartItem {
   final int id;

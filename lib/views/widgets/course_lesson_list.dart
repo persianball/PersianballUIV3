@@ -7,12 +7,12 @@
 // کناریِ دسکتاپ، تا هر دو چیدمان دقیقاً یک رفتار داشته باشند.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/models/course_models.dart';
-import 'package:marketky/services/course_progress_service.dart';
-import 'package:marketky/views/widgets/app_network_image.dart';
-import 'package:marketky/views/widgets/motion.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/models/course_models.dart';
+import 'package:persian_ball/services/course_progress_service.dart';
+import 'package:persian_ball/views/widgets/app_network_image.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
 
 /// ارتفاعِ ثابتِ ردیف‌ها؛ ثابت بودنشان اجازه می‌دهد محلِ «درسِ فعلی» بدون
 /// ساختنِ ویجت‌های خارج از دید دقیق حساب و به آن اسکرول شود.

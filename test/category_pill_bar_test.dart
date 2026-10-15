@@ -2,7 +2,7 @@
 // جابه‌جا می‌شود (نه یک پس‌زمینه‌ی جداگانه برای هر دکمه).
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/views/widgets/category_pill_bar.dart';
+import 'package:persian_ball/views/widgets/category_pill_bar.dart';
 
 Widget _host(int selected, ValueChanged<int> onSelected) => MaterialApp(
       home: Directionality(

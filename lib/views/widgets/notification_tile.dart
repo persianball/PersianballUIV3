@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Notification.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/core/model/Notification.dart';
 
 class NotificationTile extends StatelessWidget {
   final GestureTapCallback onTap;

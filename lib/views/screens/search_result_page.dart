@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Product.dart';
-import 'package:marketky/core/services/ProductService.dart';
-import 'package:marketky/views/widgets/page_container.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/core/model/Product.dart';
+import 'package:persian_ball/core/services/ProductService.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
 
 class SearchResultPage extends StatefulWidget {
   final String searchKeyword;

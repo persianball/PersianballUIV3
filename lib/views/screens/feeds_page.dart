@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/ExploreItem.dart';
-import 'package:marketky/core/model/ExploreUpdate.dart';
-import 'package:marketky/core/services/ExploreService.dart';
-import 'package:marketky/views/widgets/explore_card_widget.dart';
-import 'package:marketky/views/widgets/main_app_bar_widget.dart';
-import 'package:marketky/views/widgets/update_card_widget.dart';
-import 'package:marketky/views/widgets/page_container.dart';
-import 'package:marketky/utils/responsive.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/core/model/ExploreItem.dart';
+import 'package:persian_ball/core/model/ExploreUpdate.dart';
+import 'package:persian_ball/core/services/ExploreService.dart';
+import 'package:persian_ball/views/widgets/explore_card_widget.dart';
+import 'package:persian_ball/views/widgets/main_app_bar_widget.dart';
+import 'package:persian_ball/views/widgets/update_card_widget.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
+import 'package:persian_ball/utils/responsive.dart';
 
 class FeedsPage extends StatefulWidget {
   @override

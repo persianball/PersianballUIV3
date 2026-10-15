@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/views/widgets/app_network_image.dart';
-import 'package:marketky/views/widgets/motion.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/views/widgets/app_network_image.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
 
 import '../../constant/urls.dart';
 import '../../models/ProductModel.dart';

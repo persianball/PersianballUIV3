@@ -2,8 +2,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/models/address_model.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/models/address_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddressService {

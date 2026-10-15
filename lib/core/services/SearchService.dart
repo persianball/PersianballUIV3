@@ -1,4 +1,4 @@
-import 'package:marketky/core/model/Search.dart';
+import 'package:persian_ball/core/model/Search.dart';
 
 class SearchService {
   static List<SearchHistory> listSearchHistory = listSearchHistoryRawData.map((data) => SearchHistory.fromJson(data)).toList();

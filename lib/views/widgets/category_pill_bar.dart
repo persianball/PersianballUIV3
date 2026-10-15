@@ -7,9 +7,9 @@
 // قرصِ سبز وجود دارد که پشت برچسب‌ها می‌نشیند و هنگام انتخاب، از دکمه‌ی
 // قبلی کنده می‌شود و تا دکمه‌ی جدید سُر می‌خورد.
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/constant/app_text_styles.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_text_styles.dart';
 
 class CategoryPillBar extends StatefulWidget {
   const CategoryPillBar({

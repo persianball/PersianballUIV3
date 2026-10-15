@@ -8,17 +8,17 @@
 // گرفت و صفحه‌ی جزئیات مجبور بود داده‌ی ساختگی نشان دهد.
 import 'package:flutter/material.dart';
 
-import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/models/order_models.dart';
-import 'package:marketky/services/order_service.dart';
-import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/utils/jalali_date.dart';
-import 'package:marketky/views/screens/order_detail_page.dart';
-import 'package:marketky/views/widgets/motion.dart';
-import 'package:marketky/views/widgets/shimmer.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/models/order_models.dart';
+import 'package:persian_ball/services/order_service.dart';
+import 'package:persian_ball/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/utils/jalali_date.dart';
+import 'package:persian_ball/views/screens/order_detail_page.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
+import 'package:persian_ball/views/widgets/shimmer.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});

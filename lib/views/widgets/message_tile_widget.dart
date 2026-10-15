@@ -3,11 +3,11 @@
 // یک ردیف از صندوق پیام‌ها (/v1/user/message/).
 import 'package:flutter/material.dart';
 
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/services/user_message_service.dart';
-import 'package:marketky/utils/jalali_date.dart';
-import 'package:marketky/views/widgets/motion.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/services/user_message_service.dart';
+import 'package:persian_ball/utils/jalali_date.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
 
 class MessageTileWidget extends StatelessWidget {
   const MessageTileWidget({super.key, required this.data, required this.onTap});

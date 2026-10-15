@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
+import 'package:persian_ball/constant/app_color.dart';
 
 /// مقیاس تایپوگرافی طرح Obsidian Gold Athletics (stitch_elite_football_hub)،
 /// با فونت Estedad به‌جای Vazirmatn طرح اصلی.

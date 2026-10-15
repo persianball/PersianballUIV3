@@ -1,7 +1,7 @@
 // مدل سفارش، بر پایه‌ی پاسخ واقعی /v2/order/order/2097/.
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/order_models.dart';
+import 'package:persian_ball/models/order_models.dart';
 
 // همان بدنه‌ی واقعی سرور، فقط خلاصه‌شده به فیلدهایی که مدل می‌خواند.
 const String _json = '''

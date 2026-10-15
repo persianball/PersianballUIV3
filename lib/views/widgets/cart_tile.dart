@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/models/CartModel.dart';
-import 'package:marketky/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/models/CartModel.dart';
+import 'package:persian_ball/utils/ThousandsFormatter.dart';
 
 import '../../constant/urls.dart';
 

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/cart/cart_bloc.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/models/CartModel.dart';
-import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/views/widgets/pro_cart_item.dart' show MiniQuantityRow;
+import 'package:persian_ball/bloc/cart/cart_bloc.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/models/CartModel.dart';
+import 'package:persian_ball/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/views/widgets/pro_cart_item.dart' show MiniQuantityRow;
 
 import '../../constant/urls.dart';
 

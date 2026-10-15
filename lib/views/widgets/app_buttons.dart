@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
 
 /// دکمه‌ی اصلی اپ: قرصی (کاملاً گرد)، پس‌زمینه‌ی گرادیان سبز و سایه‌ی
 /// سبزفام تا برجسته دیده شود. هیچ گوشه‌ی تیزی ندارد.

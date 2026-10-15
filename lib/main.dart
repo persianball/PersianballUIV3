@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/cart/cart_bloc.dart';
-import 'package:marketky/services/auth_service.dart';
-import 'package:marketky/bloc/login/login_bloc.dart';
-import 'package:marketky/bloc/product_detail/product_detail_bloc.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
+import 'package:persian_ball/bloc/cart/cart_bloc.dart';
+import 'package:persian_ball/services/auth_service.dart';
+import 'package:persian_ball/bloc/login/login_bloc.dart';
+import 'package:persian_ball/bloc/product_detail/product_detail_bloc.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
 import 'package:flutter/services.dart';
-import 'package:marketky/core/app_router.dart';
-import 'package:marketky/core/fade_page_transitions.dart';
-import 'package:marketky/bloc/address/address_bloc.dart';
+import 'package:persian_ball/core/app_router.dart';
+import 'package:persian_ball/core/fade_page_transitions.dart';
+import 'package:persian_ball/bloc/address/address_bloc.dart';
 import 'package:app_links/app_links.dart';
-import 'package:marketky/core/deep_link_resolver.dart';
-import 'package:marketky/views/widgets/animated_gradient_background.dart';
+import 'package:persian_ball/core/deep_link_resolver.dart';
+import 'package:persian_ball/views/widgets/animated_gradient_background.dart';
 
 import 'bloc/product/product_bloc.dart';
 import 'dart:async';
-import 'package:marketky/services/slider_service.dart';
-import 'package:marketky/services/push_notification_service.dart';
+import 'package:persian_ball/services/slider_service.dart';
+import 'package:persian_ball/services/push_notification_service.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 

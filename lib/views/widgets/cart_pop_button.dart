@@ -13,7 +13,7 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:marketky/constant/app_color.dart';
+import 'package:persian_ball/constant/app_color.dart';
 
 /// مدت میکرو-انیمیشنِ «پر شدن» دکمه‌ی سبد.
 const Duration kCartPopDuration = Duration(milliseconds: 1300);

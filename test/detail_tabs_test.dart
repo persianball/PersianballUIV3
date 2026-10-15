@@ -3,7 +3,7 @@
 // سُر می‌خورد، نه اینکه هر چیپ جداگانه رنگ عوض کند.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/views/widgets/detail_tabs.dart';
+import 'package:persian_ball/views/widgets/detail_tabs.dart';
 
 Widget _host() => MaterialApp(
       home: Scaffold(

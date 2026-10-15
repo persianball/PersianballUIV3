@@ -11,8 +11,8 @@ import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/widgets/app_network_image.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/views/widgets/app_network_image.dart';
 
 /// مدت افتادن کالا داخل سبد. عمداً کند است تا چشم مسیر را دنبال کند.
 const Duration kCartDropDuration = Duration(milliseconds: 1250);

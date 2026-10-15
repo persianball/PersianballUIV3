@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/views/screens/account_security_page.dart';
+import 'package:persian_ball/views/screens/account_security_page.dart';
 
 /// وضعیت مخفی‌بودن فیلد رمزی که این لیبل را دارد
 bool _obscured(WidgetTester tester, String label) {

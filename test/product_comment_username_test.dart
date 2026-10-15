@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/ProductModel.dart';
+import 'package:persian_ball/models/ProductModel.dart';
 
 ProductComment _c(String username) => ProductComment.fromJson({
       'text': 'متن نظر',

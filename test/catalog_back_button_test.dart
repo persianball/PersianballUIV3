@@ -6,7 +6,7 @@
 // دکمه‌ی بازگشتی گیر می‌افتاد — در دسکتاپ که اپ‌بار هم نبود، بدتر.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/views/screens/catalog_page.dart';
+import 'package:persian_ball/views/screens/catalog_page.dart';
 
 void main() {
   Finder backButton() => find.byIcon(Icons.arrow_back_rounded);

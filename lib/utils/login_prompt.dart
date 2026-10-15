@@ -4,11 +4,11 @@
 // در بخش‌های مختلف صفحه‌ی خانه برای کاربر مهمان استفاده می‌شود.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/login/login_bloc.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_text_styles.dart';
-import 'package:marketky/views/screens/login_page.dart';
-import 'package:marketky/views/widgets/app_buttons.dart';
+import 'package:persian_ball/bloc/login/login_bloc.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_text_styles.dart';
+import 'package:persian_ball/views/screens/login_page.dart';
+import 'package:persian_ball/views/widgets/app_buttons.dart';
 
 /// آیا کاربر (بر اساس LoginBloc) وارد شده است؟
 bool isLoggedIn(BuildContext context) =>

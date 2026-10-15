@@ -5,7 +5,7 @@
 // «_JsonMap is not a subtype of type int?» از پارس بیفتد و صفحه‌ی سبد
 // پیام «محصول در سبد مشکلی دارد» نشان دهد.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/CartModel.dart';
+import 'package:persian_ball/models/CartModel.dart';
 
 Map<String, dynamic> _basket({
   Object? supportCoach,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/models/ProductModel.dart';
-import 'package:marketky/views/widgets/item_card.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/models/ProductModel.dart';
+import 'package:persian_ball/views/widgets/item_card.dart';
 
 Product _product({int? price, int? discount}) => Product(
       id: 1,

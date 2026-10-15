@@ -2,7 +2,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/models/CartModel.dart';
+import 'package:persian_ball/models/CartModel.dart';
 import '../../services/auth_service.dart';
 import '../../services/cart_service.dart';
 

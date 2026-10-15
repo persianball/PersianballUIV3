@@ -1,5 +1,5 @@
-import 'package:marketky/core/model/ExploreItem.dart';
-import 'package:marketky/core/model/ExploreUpdate.dart';
+import 'package:persian_ball/core/model/ExploreItem.dart';
+import 'package:persian_ball/core/model/ExploreUpdate.dart';
 
 class ExploreService {
   static List<ExploreItem> listExploreItem = listExploreItemRawData.map((data) => ExploreItem.fromJson(data)).toList();

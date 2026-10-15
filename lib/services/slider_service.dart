@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/models/slider_item.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/models/slider_item.dart';
 
 /// دریافت اسلایدهای گالری از بک‌اند، با پیمایشِ کاملِ صفحه‌بندی و کش.
 ///

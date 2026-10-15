@@ -1,6 +1,6 @@
 // widgets/selectable_circle_size.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
+import 'package:persian_ball/constant/app_color.dart';
 
 /// انتخاب‌گر سایز، طبق طرح Obsidian Gold Athletics: دکمه‌های مربعی گوشه‌تیز
 /// (این ویجت فقط در product_detail.dart استفاده می‌شود، پس بدون نگرانی از

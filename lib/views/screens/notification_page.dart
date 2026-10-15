@@ -1,10 +1,10 @@
 // lib/views/screens/notification_page.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/services/notification_service.dart';
-import 'package:marketky/views/widgets/motion.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/services/notification_service.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/views/widgets/motion.dart';
+import 'package:persian_ball/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
 
 import '../../constant/app_color.dart';
 import '../../constant/app_shapes.dart';

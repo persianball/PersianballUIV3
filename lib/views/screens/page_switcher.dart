@@ -1,16 +1,16 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:marketky/views/widgets/app_logo.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/views/widgets/motion.dart';
-import 'package:marketky/views/screens/home_page.dart';
-import 'package:marketky/views/screens/profile_page.dart';
-import 'package:marketky/views/screens/courses_page.dart';
-import 'package:marketky/views/screens/catalog_page.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
+import 'package:persian_ball/views/widgets/app_logo.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/views/widgets/motion.dart';
+import 'package:persian_ball/views/screens/home_page.dart';
+import 'package:persian_ball/views/screens/profile_page.dart';
+import 'package:persian_ball/views/screens/courses_page.dart';
+import 'package:persian_ball/views/screens/catalog_page.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/cart/cart_bloc.dart';
-import 'package:marketky/views/widgets/auth_background.dart';
+import 'package:persian_ball/bloc/cart/cart_bloc.dart';
+import 'package:persian_ball/views/widgets/auth_background.dart';
 
 class PageSwitcher extends StatefulWidget {
   @override

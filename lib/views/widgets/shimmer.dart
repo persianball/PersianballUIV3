@@ -4,7 +4,7 @@
 // صفحه‌ی بارگذاری‌شده را تقلید می‌کند. برای ساختنِ اسکلتون از [Bone] استفاده
 // کنید و کلِ درخت را داخل یک [Shimmer] بگذارید.
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
+import 'package:persian_ball/constant/app_color.dart';
 
 class Shimmer extends StatefulWidget {
   const Shimmer({super.key, required this.child});

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/services/recently_viewed_service.dart';
+import 'package:persian_ball/services/recently_viewed_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

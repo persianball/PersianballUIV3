@@ -4,7 +4,7 @@
 // انجام می‌دهد و دکمه بی‌صدا از کار می‌افتد. این تست همان را می‌گیرد.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/core/app_router.dart';
+import 'package:persian_ball/core/app_router.dart';
 
 void main() {
   test('روت /login نتیجه‌ی bool برمی‌گرداند', () {

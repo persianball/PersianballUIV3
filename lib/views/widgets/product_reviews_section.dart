@@ -1,11 +1,11 @@
 // lib/views/widgets/product_reviews_section.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_text_styles.dart';
-import 'package:marketky/models/ProductModel.dart';
-import 'package:marketky/services/rating_service.dart';
-import 'package:marketky/views/widgets/app_buttons.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_text_styles.dart';
+import 'package:persian_ball/models/ProductModel.dart';
+import 'package:persian_ball/services/rating_service.dart';
+import 'package:persian_ball/views/widgets/app_buttons.dart';
 
 /// بخش نظرات و پرسش‌وپاسخ محصول در صفحه جزئیات کالا
 class ProductReviewsSection extends StatefulWidget {

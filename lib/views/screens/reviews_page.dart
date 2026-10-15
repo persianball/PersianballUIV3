@@ -1,8 +1,8 @@
 // lib/views/screens/reviews_page.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/services/review_service.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/services/review_service.dart';
 
 /// همه نظرات یک محصول با فیلتر بر اساس ستاره
 class ReviewsPage extends StatefulWidget {

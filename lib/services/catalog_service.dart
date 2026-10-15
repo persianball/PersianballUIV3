@@ -17,8 +17,8 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/models/ProductModel.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/models/ProductModel.dart';
 
 enum ProductSort {
   newest,

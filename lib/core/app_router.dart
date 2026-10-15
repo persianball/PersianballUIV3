@@ -1,20 +1,20 @@
 // lib/core/app_router.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/views/screens/page_switcher.dart';
-import 'package:marketky/views/screens/login_page.dart';
-import 'package:marketky/views/screens/product_detail.dart';
-import 'package:marketky/views/screens/cart_page.dart';
-import 'package:marketky/views/screens/orders_page.dart';
-import 'package:marketky/views/screens/order_detail_page.dart';
-import 'package:marketky/views/screens/addresses_page.dart';
-import 'package:marketky/views/screens/notification_page.dart';
-import 'package:marketky/views/screens/account_security_page.dart';
-import 'package:marketky/views/screens/forgot_password_page.dart';
-import 'package:marketky/views/screens/static_pages.dart';
-import 'package:marketky/views/screens/catalog_page.dart';
-import 'package:marketky/views/screens/course_detail_page.dart';
-import 'package:marketky/views/screens/my_course_detail_page.dart';
-import 'package:marketky/models/course_models.dart';
+import 'package:persian_ball/views/screens/page_switcher.dart';
+import 'package:persian_ball/views/screens/login_page.dart';
+import 'package:persian_ball/views/screens/product_detail.dart';
+import 'package:persian_ball/views/screens/cart_page.dart';
+import 'package:persian_ball/views/screens/orders_page.dart';
+import 'package:persian_ball/views/screens/order_detail_page.dart';
+import 'package:persian_ball/views/screens/addresses_page.dart';
+import 'package:persian_ball/views/screens/notification_page.dart';
+import 'package:persian_ball/views/screens/account_security_page.dart';
+import 'package:persian_ball/views/screens/forgot_password_page.dart';
+import 'package:persian_ball/views/screens/static_pages.dart';
+import 'package:persian_ball/views/screens/catalog_page.dart';
+import 'package:persian_ball/views/screens/course_detail_page.dart';
+import 'package:persian_ball/views/screens/my_course_detail_page.dart';
+import 'package:persian_ball/models/course_models.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {

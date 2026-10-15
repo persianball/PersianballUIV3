@@ -1,8 +1,8 @@
 // lib/views/widgets/app_network_image.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
 
 /// تصویر شبکه‌ای با کش دیسک، اسکلتون لودینگ و تصویر پیش‌فرض.
 ///

@@ -2,8 +2,8 @@
 // هفتگیِ خودش را دارد. قراردادِ پیشنهادی: detail.sub_courses (بازگشتی).
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/course_detail_model.dart';
-import 'package:marketky/views/widgets/locked_lessons_veil.dart';
+import 'package:persian_ball/models/course_detail_model.dart';
+import 'package:persian_ball/views/widgets/locked_lessons_veil.dart';
 
 Map<String, dynamic> _week(String n, List<bool> locks, {String? name}) => {
       'week_number': n,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:marketky/views/screens/search_page.dart';
+import 'package:persian_ball/views/screens/search_page.dart';
 
 import '../../bloc/cart/cart_bloc.dart';
 import '../screens/cart_page.dart';

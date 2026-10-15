@@ -18,8 +18,8 @@
 // UI به کاربر شفاف بگوید عملیات واقعی نیست. حذف حساب چون endpoint دارد،
 // واقعاً صدا زده می‌شود.
 import 'package:http/http.dart' as http;
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/services/auth_service.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/services/auth_service.dart';
 
 class AccountActionResult {
   final bool success;

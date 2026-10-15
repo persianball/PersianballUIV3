@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
-import 'package:marketky/services/auth_service.dart';
+import 'package:persian_ball/services/auth_service.dart';
 
 import '../../constant/urls.dart';
 

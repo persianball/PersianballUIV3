@@ -1,17 +1,17 @@
 // views/widgets/modals/add_to_cart_modal.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/cart/cart_bloc.dart';
-import 'package:marketky/services/analytics_service.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/models/CartModel.dart';
-import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/utils/login_prompt.dart';
-import 'package:marketky/views/widgets/app_buttons.dart';
-import 'package:marketky/views/widgets/app_network_image.dart';
-import 'package:marketky/views/widgets/page_container.dart';
+import 'package:persian_ball/bloc/cart/cart_bloc.dart';
+import 'package:persian_ball/services/analytics_service.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/models/CartModel.dart';
+import 'package:persian_ball/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/utils/login_prompt.dart';
+import 'package:persian_ball/views/widgets/app_buttons.dart';
+import 'package:persian_ball/views/widgets/app_network_image.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
 
 /// نتیجه‌ی شیت پس از افزودن موفق: مبدأ انیمیشنِ افتادن کالا داخل سبد.
 ///

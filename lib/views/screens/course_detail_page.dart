@@ -1,22 +1,22 @@
 // lib/views/screens/course_detail_page.dart
 import 'package:flutter/material.dart';
-import 'package:marketky/views/widgets/app_buttons.dart';
-import 'package:marketky/constant/app_shapes.dart';
+import 'package:persian_ball/views/widgets/app_buttons.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/models/course_detail_model.dart';
-import 'package:marketky/services/course_progress_service.dart';
-import 'package:marketky/services/course_service.dart';
-import 'package:marketky/utils/ThousandsFormatter.dart';
-import 'package:marketky/views/widgets/modals/add_course_to_cart_modal.dart';
-import 'package:marketky/bloc/cart/cart_bloc.dart';
-import 'package:marketky/views/widgets/detail_tabs.dart';
-import 'package:marketky/views/widgets/shimmer.dart';
-import 'package:marketky/views/widgets/modals/video_player_dialog.dart';
-import 'package:marketky/views/widgets/locked_lessons_veil.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/models/course_detail_model.dart';
+import 'package:persian_ball/services/course_progress_service.dart';
+import 'package:persian_ball/services/course_service.dart';
+import 'package:persian_ball/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/views/widgets/modals/add_course_to_cart_modal.dart';
+import 'package:persian_ball/bloc/cart/cart_bloc.dart';
+import 'package:persian_ball/views/widgets/detail_tabs.dart';
+import 'package:persian_ball/views/widgets/shimmer.dart';
+import 'package:persian_ball/views/widgets/modals/video_player_dialog.dart';
+import 'package:persian_ball/views/widgets/locked_lessons_veil.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final int id;

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/slider_item.dart';
+import 'package:persian_ball/models/slider_item.dart';
 
 SliderItem _item(String image, String base) =>
     SliderItem.fromJson({'image': image, 'slider_type': 'product'}, base);

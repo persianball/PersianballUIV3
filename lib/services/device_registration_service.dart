@@ -23,8 +23,8 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/services/auth_service.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/services/auth_service.dart';
 
 /// اطلاعاتی که سرور برای یک دستگاه می‌خواهد.
 class DeviceProfile {

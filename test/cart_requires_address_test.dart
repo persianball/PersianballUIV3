@@ -4,7 +4,7 @@
 // بفرستد؛ مگر دوره‌ای که هدیه‌ی فیزیکی دارد یا بک‌اند برایش
 // shipment_required فرستاده باشد.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/CartModel.dart';
+import 'package:persian_ball/models/CartModel.dart';
 
 Map<String, dynamic> _course({
   Object? gift,

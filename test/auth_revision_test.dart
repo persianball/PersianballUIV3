@@ -5,7 +5,7 @@
 // فرستاده نمی‌شد. حالا هر ورود/خروج authRevision را جلو می‌برد و ریشه‌ی
 // برنامه سبد را دوباره می‌خواند.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/services/auth_service.dart';
+import 'package:persian_ball/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

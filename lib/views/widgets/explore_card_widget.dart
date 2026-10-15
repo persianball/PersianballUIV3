@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/core/model/ExploreItem.dart';
+import 'package:persian_ball/core/model/ExploreItem.dart';
 
 class ExploreCardWidget extends StatelessWidget {
   final ExploreItem data;

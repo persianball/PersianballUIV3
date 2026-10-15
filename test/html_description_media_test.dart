@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/views/widgets/html_description_image.dart';
+import 'package:persian_ball/views/widgets/html_description_image.dart';
 
 /// همان HTML واقعی که ادیتور بک‌اند برای ویدیوی امبدشده تولید می‌کند
 const _realEditorHtml = '''

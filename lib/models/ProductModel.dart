@@ -1,5 +1,5 @@
 import 'package:characters/characters.dart';
-import 'package:marketky/utils/json_parse.dart';
+import 'package:persian_ball/utils/json_parse.dart';
 
 // core/model/Product.dart
 class Product {

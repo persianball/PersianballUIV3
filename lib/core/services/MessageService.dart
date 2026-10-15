@@ -1,4 +1,4 @@
-import 'package:marketky/core/model/Message.dart';
+import 'package:persian_ball/core/model/Message.dart';
 
 class MessageService {
   static List<Message> messageData = messageListRawData.map((data) => Message.fromJson(data)).toList();

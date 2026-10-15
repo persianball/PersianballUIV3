@@ -6,8 +6,8 @@
 // موبایل عمودی و نسخه‌ی دسکتاپ افقی است. کشیدنِ یکی روی دیگری هم کیفیت را
 // خراب می‌کند و هم مرکزِ آرامِ تصویر را از وسط خارج می‌کند.
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_color.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_color.dart';
 
 /// کدام پس‌زمینه: صفحات ورود، یا پوسته‌ی اصلی اپ.
 enum AppBackdrop { auth, main }

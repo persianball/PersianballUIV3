@@ -4,8 +4,8 @@
 // می‌شود: خطا در میانه‌ی انیمیشن، تمام‌نشدنِ کنترلر، یا نرسیدنِ onLanded.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/views/widgets/cart_drop_animation.dart';
-import 'package:marketky/views/widgets/cart_pop_button.dart';
+import 'package:persian_ball/views/widgets/cart_drop_animation.dart';
+import 'package:persian_ball/views/widgets/cart_pop_button.dart';
 
 void main() {
   group('CartPopButton', () {

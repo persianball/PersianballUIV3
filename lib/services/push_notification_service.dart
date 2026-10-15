@@ -16,8 +16,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:marketky/firebase_options.dart';
-import 'package:marketky/services/device_registration_service.dart';
+import 'package:persian_ball/firebase_options.dart';
+import 'package:persian_ball/services/device_registration_service.dart';
 
 /// هندلرِ پیام در حالتِ پس‌زمینه/بسته.
 ///

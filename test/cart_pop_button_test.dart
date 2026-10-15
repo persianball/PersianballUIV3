@@ -6,7 +6,7 @@
 // روی عددِ درست سوار می‌شد و نشان یکی بیشتر نشان می‌داد.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/views/widgets/cart_pop_button.dart';
+import 'package:persian_ball/views/widgets/cart_pop_button.dart';
 
 void main() {
   final key = GlobalKey<CartPopButtonState>();

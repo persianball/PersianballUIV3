@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/ProductModel.dart';
-import 'package:marketky/services/notification_service.dart';
+import 'package:persian_ball/models/ProductModel.dart';
+import 'package:persian_ball/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/course_detail_model.dart';
+import 'package:persian_ball/models/course_detail_model.dart';
 
 /// شکلِ واقعیِ یک ورودی هفته از پاسخ بک‌اند
 Map<String, dynamic> _week(String number, String? name, int sections) => {

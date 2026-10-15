@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/models/ProductModel.dart';
+import 'package:persian_ball/models/ProductModel.dart';
 
 SizeVariant _s(String size, int count) =>
     SizeVariant(id: size.hashCode, size: size, discountPercentage: 0, price: 1000, count: count);

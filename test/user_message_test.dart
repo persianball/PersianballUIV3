@@ -5,7 +5,7 @@
 // در OPTIONS نمی‌دهد. حالا شکل واقعی معلوم است: متن در «text» است، عنوان
 // جدا ندارد، و خوانده‌شدن با «seen_at» مشخص می‌شود نه یک بولینِ is_read.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/services/user_message_service.dart';
+import 'package:persian_ball/services/user_message_service.dart';
 
 void main() {
   group('مدل پیام', () {

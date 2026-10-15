@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marketky/core/deep_link_resolver.dart';
+import 'package:persian_ball/core/deep_link_resolver.dart';
 
 String? _r(String url) => DeepLinkResolver.resolve(Uri.parse(url));
 
@@ -49,16 +49,16 @@ void main() {
   });
 
   group('اسکیم اختصاصی اپ', () {
-    test('marketky://product/12', () {
-      expect(_r('marketky://product/12'), '/product/12');
+    test('persianball://product/12', () {
+      expect(_r('persianball://product/12'), '/product/12');
     });
 
-    test('marketky://orders', () {
-      expect(_r('marketky://orders'), '/orders');
+    test('persianball://orders', () {
+      expect(_r('persianball://orders'), '/orders');
     });
 
     test('مسیر ناشناخته در اسکیم اختصاصی رد می‌شود', () {
-      expect(_r('marketky://unknown/5'), isNull);
+      expect(_r('persianball://unknown/5'), isNull);
     });
   });
 

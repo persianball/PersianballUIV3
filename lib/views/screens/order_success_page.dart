@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/app_shapes.dart';
-import 'package:marketky/views/screens/page_switcher.dart';
-import 'package:marketky/views/widgets/page_container.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/app_shapes.dart';
+import 'package:persian_ball/views/screens/page_switcher.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
 
 class OrderSuccessPage extends StatelessWidget {
   @override

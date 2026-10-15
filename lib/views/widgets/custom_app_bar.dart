@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
+import 'package:persian_ball/constant/app_color.dart';
 
 class CustomAppBar extends StatelessWidget {
   const CustomAppBar({

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Search.dart';
-import 'package:marketky/core/services/SearchService.dart';
-import 'package:marketky/views/screens/search_result_page.dart';
-import 'package:marketky/views/widgets/popular_search_card.dart';
-import 'package:marketky/views/widgets/search_history_tile.dart';
-import 'package:marketky/views/widgets/page_container.dart';
-import 'package:marketky/constant/app_breakpoints.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/core/model/Search.dart';
+import 'package:persian_ball/core/services/SearchService.dart';
+import 'package:persian_ball/views/screens/search_result_page.dart';
+import 'package:persian_ball/views/widgets/popular_search_card.dart';
+import 'package:persian_ball/views/widgets/search_history_tile.dart';
+import 'package:persian_ball/views/widgets/page_container.dart';
+import 'package:persian_ball/constant/app_breakpoints.dart';
 
 class SearchPage extends StatefulWidget {
   @override

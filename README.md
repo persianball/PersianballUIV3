@@ -1,146 +1,129 @@
-# MarketKy.
+<div dir="rtl">
 
-## Introduction
+# پرشین بال
 
-MarketKy is a Free Flutter E-Commerce App Starter Template that can help you develop an E-Commerce or Market application much faster. You just need to add some adjustment to the frontend and you can create your own backend.
+<img src="assets/icons/pers_icon.png" width="96" alt="پرشین بال">
 
-## App Screenshot
-<img src="https://github.com/mrezkys/marketky/blob/main/demo/banner.jpg" width="auto" height="auto" >
-<img src="https://github.com/mrezkys/marketky/blob/main/demo/shot.jpg" width="auto" height="auto" >
-<img src="https://github.com/mrezkys/marketky/blob/main/demo/details.jpg" width="auto" height="auto" >
+**Persian Ball**: a football shop and academy app (Flutter, Persian/RTL). It runs on Android, iOS and the web, and the web build installs as a PWA.
 
-## Whats inside
-- Welcome Page
-- Login Page
-- Register Page
-- OTP Verification Page
-- Home Page
-- Profile Page
-- Feeds Page
-- Notification Page
-- Cart Page Empty
-- Cart Page
-- Search Page
-- Search Result Page
-- Product Detail Page
-- Review Page
-- Order Success Page
-- Message Page
-- Message Detail Page
-- Image Viewer
-- Page Switcher
---------
-- Add to Cart Modal
---------
-- Cart Tile Widget
-- Category Card Widget
-- Custom App Bar Widget
-- Custom Icon Button Widget
-- Dummy Search Widget 1
-- Dummy Search Widget 2
-- Explore Card Widget
-- Item Card Widget
-- Main App Bar Widget
-- Menu Tile Widget
-- Message Tile Widget
-- Notification Tile Widget
-- Popular Search Card Widget
-- Ratig Tag Widget
-- Review Tile Widget
-- Search History Tile Widget
-- Selectable Circle Color Widget
-- Selectable Circle Size Widget
-- Update Widget
+اپِ فروشگاه و آکادمی فوتبال «پرشین بال». کاربر از آن تجهیزات می‌خرد، در دوره‌های آموزشی ثبت‌نام می‌کند و ویدیوهای دوره را می‌بیند. اپ با Flutter نوشته شده و تمامِ رابطش فارسی و راست‌به‌چپ است.
 
+نسخه‌ی وب: <https://persianball.github.io/PersianballUIV3/>
 
-## Installation
+## امکانات
 
-**Step 1:**
+**فروشگاه**
+- خانه با اسلایدر، دسته‌بندی‌ها و پیشنهادها
+- فروشگاه با دسته‌بندی‌هایی که با یک «قرص» متحرک عوض می‌شوند
+- جستجو، صفحه‌ی محصول، انتخابِ رنگ و سایز با نمایشِ موجودی
+- نظرها و امتیازدهی، و «خبرم کن» برای کالاهای ناموجود
 
-Download or clone this repo by using the link below:
+**دوره‌ها**
+- جزئیاتِ دوره با تب‌های «برنامه‌ی هفتگی» و «زمان و مکانِ برگزاری»
+- انتخابِ گونه‌های دوره، مثلاً سانس‌ها یا شعبه‌های مختلف
+- **دوره‌ی مجموعه‌ای:** دوره‌ای که از چند زیردوره ساخته شده و هر زیردوره برنامه‌ی هفتگیِ خودش را دارد
+- ویدیوهای قفل پشتِ یک پرده‌ی تار نمایش داده می‌شوند و کارتِ «تهیه‌ی دوره» رویشان است
+- «دوره‌های من» با پخش‌کننده‌ی ویدیو و ذخیره‌ی پیشرفت
+
+**خرید و حساب**
+- سبد خرید با انیمیشنِ افتادنِ کالا در سبد
+- انتخابِ آدرس، خلاصه‌ی سفارش و پرداخت درون‌اپ
+- فهرست و جزئیاتِ سفارش‌ها با تاریخِ شمسی
+- ورود با رمز یا کدِ یک‌بارمصرف، ثبت‌نام، فراموشیِ رمز و امنیتِ حساب
+- پیام‌ها و اعلان‌ها، و اعلانِ push با Firebase Cloud Messaging (فعلاً فقط اندروید)
+
+**پلتفرم**
+- لینکِ عمیق با اسکیمِ `persianball://product/12` و لینک‌های وبِ دامنه‌های اپ
+- نسخه‌ی وب قابلِ نصب (PWA) است و پوسته‌ی اپ بدونِ اینترنت هم باز می‌شود
+- چیدمانِ واکنش‌گرا برای موبایل و دسکتاپ
+
+## فناوری‌ها
+
+| بخش | ابزار |
+|---|---|
+| فریم‌ورک | Flutter 3.35.1 (Dart 3) |
+| مدیریتِ وضعیت | `flutter_bloc`, `equatable` |
+| شبکه | `http`, `cached_network_image` |
+| ویدیو | `video_player`, `chewie` |
+| محتوای HTML | `flutter_html_all` |
+| پرداخت | `webview_flutter` |
+| لینکِ عمیق | `app_links` |
+| اعلان | `firebase_core`, `firebase_messaging` |
+| ذخیره‌ی محلی | `shared_preferences` |
+
+بک‌اند: `https://pball.ah8ad3.ir` با احرازِ هویتِ token. نشانی در `lib/constant/urls.dart` است.
+
+## ساختارِ پروژه
 
 ```
-https://github.com/mrezkys/marketky.git
+lib/
+├── main.dart              نقطه‌ی شروع، تم، مسیرِ اولیه و لینکِ عمیق
+├── core/                  app_router (همه‌ی مسیرها)، deep_link_resolver
+├── bloc/                  cart، login، otp، address، product، ...
+├── services/              تماس با API (هر حوزه یک فایل)
+├── models/                مدل‌های داده و parse کردنِ JSON
+├── constant/              رنگ، تایپوگرافی، شکل‌ها، URL ها
+├── utils/                 تاریخِ شمسی، auth guard، ...
+└── views/
+    ├── screens/           صفحه‌ها
+    └── widgets/           ویجت‌های مشترک
+test/                      تست‌های واحد و ویجت
+tool/                      patch_service_worker.py (برای PWA)
 ```
 
-**Step 2:**
+نامِ پکیجِ Dart **`persian_ball`** است. importها به این شکل نوشته می‌شوند: `import 'package:persian_ball/...';`
 
-Go to project root and execute the following command in console to get the required dependencies: 
+## اجرا
 
+```bash
+flutter pub get
 ```
-flutter pub get 
-```
 
-**Step 3:**
-
-You can run this project by using this command
-
-```
+```bash
 flutter run
 ```
 
-
-## About the Author
-
-MarketKy is Developed by [mrezkys](https://www.facebook.com/mrezkys12)
-The User Interface are designed by [mrezkys](https://dribbble.com/mrezkys)
-
-## Thanks To
-Iconly, icons that i used on this project, created by [Piqo Design](https://www.figma.com/@piqodesign) also images from adidas, nike, zara and pexels.
-
-## License
-MarketKy is under MIT License.
-
-## Donate
-You can support me at [trakteer](https://trakteer.id/mrezkys) <br>
-<a href="https://trakteer.id/mrezkys" target="_blank"><img id="wse-buttons-preview" src="https://cdn.trakteer.id/images/embed/trbtn-red-5.png" height="45" style="border: 0px; height: 45px;" alt="Trakteer Saya"></a>
-
-## Announcement
-
-Now MarketKy already relased v1.0.0
-
----
-
-## انتشار نسخه‌ی وب (GitHub Pages)
-
-سایت با هر push روی `main` از طریق `.github/workflows/deploy.yml` منتشر
-می‌شود (`dev` = کار در جریان، `main` = آنچه زنده است). برای انتشار:
-`git push origin dev:main`
-
-```
-https://persianball.github.io/PersianballUIV3/
+```bash
+flutter test
 ```
 
-ورک‌فلو قبل از انتشار `flutter analyze` و `flutter test` را اجرا می‌کند، پس
-نسخه‌ی خراب روی سایت نمی‌رود.
+```bash
+flutter analyze --no-fatal-infos
+```
 
-### دو نکته‌ای که اگر فراموش شوند صفحه سفید می‌شود
+برای build:
 
-**۱. `base href`** — در `web/index.html` باید `$FLUTTER_BASE_HREF` بماند، نه
-`"/"` ثابت. Pages اپ را زیرمسیرِ `/PersianballUIV3/` سرو می‌کند و ورک‌فلو
-همان را با `--base-href` پاس می‌دهد. اگر مقدار ثابت شود، خودِ build خطا
-می‌دهد و در عمل همه‌ی asset ها ۴۰۴ می‌شوند.
+```bash
+flutter build apk --release
+```
 
-**۲. مسیردهی hash** — اپ از `#/route` استفاده می‌کند. این لازم است، چون
-GitHub Pages برای SPA فالبک ندارد و مسیرهای معمولی ۴۰۴ می‌دهند. اگر روزی
-`usePathUrlStrategy()` اضافه شد، رفرش روی هر صفحه‌ی داخلی می‌شکند.
+```bash
+flutter build web --release --no-tree-shake-icons --no-web-resources-cdn --base-href=/PersianballUIV3/
+```
 
-### نصب به‌عنوان اپ (PWA) و کار بدون اینترنت
+شناسه‌ی اپ در اندروید و iOS `com.persianball.football` است. تنظیماتِ Firebase و کارهای باقی‌مانده‌ی iOS و وب در [FIREBASE.md](FIREBASE.md) آمده است.
 
-سایت قابل نصب است (آیکن نصب در نوار آدرس کروم، «Add to Home Screen» در
-سافاری iOS) و پوسته‌ی اپ بدون اینترنت هم باز می‌شود. دو چیز این را ممکن
-می‌کند و نباید برداشته شوند:
+## انتشارِ نسخه‌ی وب (GitHub Pages)
 
-- `--no-web-resources-cdn` در build: موتور رندر از خودِ سایت سرو می‌شود نه
-  `www.gstatic.com`؛ service worker فقط هم‌مبدأ را کش می‌کند.
-- `tool/patch_service_worker.py` بعد از build: service worker ـِ فلاتر زیرِ
-  زیرمسیر (`/<repo>/`) هیچ‌چیز را از کش سرو نمی‌کرد.
+سایت با هر push روی `main` از طریقِ `.github/workflows/deploy.yml` منتشر می‌شود. شاخه‌ی `dev` کارِ در جریان است و `main` همان چیزی است که روی سایت است. برای انتشار:
 
-### محدودیت شناخته‌شده: اسلایدرها روی وبِ میزبانی‌شده بارگذاری نمی‌شوند
+```bash
+git push origin dev:main
+```
 
-سرور گالری روی `http://2.144.27.195:8000` است و HTTPS ندارد. GitHub Pages
-فقط HTTPS سرو می‌کند و مرورگر درخواست‌های HTTP از صفحه‌ی HTTPS را بلاک
-می‌کند (mixed content). روی `localhost` دیده نمی‌شود چون آنجا هم HTTP است.
+ورک‌فلو پیش از انتشار `flutter analyze` و `flutter test` را اجرا می‌کند. اگر یکی از این دو شکست بخورد، نسخه منتشر نمی‌شود.
 
-راه‌حل سمت سرور است: گالری پشت `pball.ah8ad3.ir` بیاید که هم HTTPS دارد و
-هم فایل‌های تصویرِ اسلایدها همان‌جا سرو می‌شوند.
+### چیزهایی که نباید عوض شوند
+
+اگر هر کدام از این‌ها عوض شود، سایت سفید می‌شود یا کارِ آفلاین می‌شکند:
+
+1. **`base href`**: در `web/index.html` باید مقدارِ `$FLUTTER_BASE_HREF` بماند، نه `"/"` ثابت. Pages اپ را زیرِ مسیرِ `/PersianballUIV3/` سرو می‌کند.
+2. **مسیردهیِ hash** (`#/route`): GitHub Pages برای SPA فالبک ندارد. اگر `usePathUrlStrategy()` اضافه شود، رفرش روی هر صفحه‌ی داخلی ۴۰۴ می‌دهد.
+3. **`--no-web-resources-cdn`**: موتورِ رندر را از خودِ سایت سرو می‌کند، نه از gstatic. service worker فقط فایل‌های هم‌مبدأ را کش می‌کند.
+4. **`tool/patch_service_worker.py`** بعد از build اجرا می‌شود. service worker ـِ پیش‌فرضِ فلاتر زیرِ زیرمسیر هیچ فایلی را از کش سرو نمی‌کند.
+
+## اعتبار
+
+رابطِ اولیه از قالبِ متن‌باز [MarketKy](https://github.com/mrezkys/marketky) (مجوزِ MIT) شروع شده و از آن زمان تقریباً به‌طورِ کامل بازنویسی شده است. متنِ مجوز در [LICENSE](LICENSE) است.
+
+</div>

@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html_table/flutter_html_table.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/constant/urls.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/constant/urls.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// یک تصویر تکی داخل توضیحات محصول. تصاویر خروجی ادیتور بک‌اند معمولاً

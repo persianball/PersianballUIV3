@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:marketky/constant/app_color.dart';
-import 'package:marketky/core/model/Search.dart';
+import 'package:persian_ball/constant/app_color.dart';
+import 'package:persian_ball/core/model/Search.dart';
 
 class SearchHistoryTile extends StatelessWidget {
   SearchHistoryTile({required this.data, required this.onTap});

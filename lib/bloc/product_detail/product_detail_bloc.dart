@@ -1,7 +1,7 @@
 // bloc/product_detail/product_detail_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marketky/bloc/product_detail/product_detail_event.dart';
-import 'package:marketky/bloc/product_detail/product_detail_state.dart';
+import 'package:persian_ball/bloc/product_detail/product_detail_event.dart';
+import 'package:persian_ball/bloc/product_detail/product_detail_state.dart';
 import '../../services/product_service.dart';
 
 class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {

@@ -92,9 +92,9 @@ BEGIN
             VALUE "CompanyName", "com.example" "\0"
             VALUE "FileDescription", "پرشین بال" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "marketky" "\0"
+            VALUE "InternalName", "persian_ball" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "marketky.exe" "\0"
+            VALUE "OriginalFilename", "persian_ball.exe" "\0"
             VALUE "ProductName", "پرشین بال" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END

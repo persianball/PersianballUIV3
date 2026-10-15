@@ -1,4 +1,4 @@
-import 'package:marketky/core/model/Notification.dart';
+import 'package:persian_ball/core/model/Notification.dart';
 
 class NotificationService {
   static List<UserNotification> listNotification = notificationListRawData.map((data) => UserNotification.fromJson(data)).toList();

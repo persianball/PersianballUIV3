@@ -1,11 +1,11 @@
 // lib/services/course_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:marketky/constant/urls.dart';
-import 'package:marketky/models/course_models.dart';
-import 'package:marketky/models/course_detail_model.dart';
+import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/models/course_models.dart';
+import 'package:persian_ball/models/course_detail_model.dart';
 import 'package:flutter/widgets.dart';
-import 'package:marketky/services/auth_service.dart';
+import 'package:persian_ball/services/auth_service.dart';
 
 /// نکته‌ی مهم: سرور پاسخ‌ها را با `Content-Type: application/json` و
 /// **بدون charset** برمی‌گرداند. در این حالت پکیجِ http مقدار `res.body` را

@@ -1,6 +1,6 @@
 
 import 'package:equatable/equatable.dart';
-import 'package:marketky/models/ProductModel.dart';
+import 'package:persian_ball/models/ProductModel.dart';
 
 abstract class ProductDetailEvent extends Equatable {
   const ProductDetailEvent();
