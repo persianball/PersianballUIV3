@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:marketky/constant/app_color.dart';
 
@@ -24,13 +26,13 @@ class AppShapes {
 
   /// شکل اسکوئرکل برای Card / Dialog / Button / BottomSheet
   static ContinuousRectangleBorder border(double r, {BorderSide? side}) =>
-      ContinuousRectangleBorder(
+      SafeContinuousBorder(
         borderRadius: radius(r),
         side: side ?? BorderSide.none,
       );
 
   static ContinuousRectangleBorder borderTop(double r) =>
-      ContinuousRectangleBorder(borderRadius: radiusTop(r));
+      SafeContinuousBorder(borderRadius: radiusTop(r));
 
   /// دکمه‌ها و بج‌ها همیشه کاملاً گرد (قرصی) هستند — هیچ گوشه‌ی تیزی در
   /// اپ نباید دیده شود.
@@ -111,4 +113,81 @@ class RaisedSurface extends StatelessWidget {
     );
     return body;
   }
+}
+
+/// [ContinuousRectangleBorder] که شعاعش هرگز از نصفِ ضلعِ کوتاه بیشتر نمی‌شود.
+///
+/// خودِ فلاتر شعاع را فقط به «کلِ» ضلعِ کوتاه محدود می‌کند، نه نصفش. روی یک
+/// ویجتِ کوتاه (مثلاً دکمه‌ی ۳۸ پیکسلی با شعاعِ ۲۲×۱٫۷≈۳۷) منحنیِ گوشه‌ی بالا
+/// و پایین از روی هم رد می‌شوند و وقتی کادر خط دارد، یک خطِ صافِ عمودی در
+/// تمامِ ارتفاع از دو سرِ آن بیرون می‌زند — همان «خط»هایی که روی دکمه‌ی
+/// «انتخاب شد» دیده می‌شد. اینجا شعاع موقعِ رسم با اندازه‌ی واقعی محدود
+/// می‌شود؛ ویجتِ بلند هیچ تغییری نمی‌کند.
+class SafeContinuousBorder extends ContinuousRectangleBorder {
+  const SafeContinuousBorder({super.side, super.borderRadius});
+
+  ContinuousRectangleBorder _fitted(Rect rect, TextDirection? textDirection) {
+    final r = borderRadius.resolve(textDirection);
+    final limit = rect.shortestSide / 2;
+    Radius fit(Radius x) =>
+        Radius.elliptical(math.min(x.x, limit), math.min(x.y, limit));
+    return ContinuousRectangleBorder(
+      side: side,
+      borderRadius: BorderRadius.only(
+        topLeft: fit(r.topLeft),
+        topRight: fit(r.topRight),
+        bottomLeft: fit(r.bottomLeft),
+        bottomRight: fit(r.bottomRight),
+      ),
+    );
+  }
+
+  // paint ـِ والد از getOuterPath استفاده می‌کند، پس خط هم محدود رسم می‌شود.
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+      _fitted(rect, textDirection)
+          .getOuterPath(rect, textDirection: textDirection);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
+      _fitted(rect, textDirection)
+          .getInnerPath(rect, textDirection: textDirection);
+
+  // بدونِ این‌ها، انیمیشن (مثلاً AnimatedContainer) در میانه‌ی راه یک
+  // ContinuousRectangleBorder معمولی می‌سازد و خطِ اضافه چشمک می‌زند.
+  @override
+  ShapeBorder scale(double t) =>
+      SafeContinuousBorder(side: side.scale(t), borderRadius: borderRadius * t);
+
+  @override
+  ShapeBorder? lerpFrom(ShapeBorder? a, double t) {
+    if (a is ContinuousRectangleBorder) {
+      return SafeContinuousBorder(
+        side: BorderSide.lerp(a.side, side, t),
+        borderRadius:
+            BorderRadiusGeometry.lerp(a.borderRadius, borderRadius, t)!,
+      );
+    }
+    return super.lerpFrom(a, t);
+  }
+
+  @override
+  ShapeBorder? lerpTo(ShapeBorder? b, double t) {
+    if (b is ContinuousRectangleBorder) {
+      return SafeContinuousBorder(
+        side: BorderSide.lerp(side, b.side, t),
+        borderRadius:
+            BorderRadiusGeometry.lerp(borderRadius, b.borderRadius, t)!,
+      );
+    }
+    return super.lerpTo(b, t);
+  }
+
+  @override
+  SafeContinuousBorder copyWith(
+          {BorderSide? side, BorderRadiusGeometry? borderRadius}) =>
+      SafeContinuousBorder(
+        side: side ?? this.side,
+        borderRadius: borderRadius ?? this.borderRadius,
+      );
 }

@@ -586,6 +586,21 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     );
   }
 
+  /// چیپِ قرصیِ کوچک در کارتِ زمان و مکان (وضعیت، ظرفیت)
+  Widget _variantChip(String label, {required Color color}) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+        decoration: ShapeDecoration(
+          color: color.withValues(alpha: 0.12),
+          shape: AppShapes.pill,
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontFamily: 'Estedad',
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color)),
+      );
+
   Widget _lockedChip() => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: ShapeDecoration(
@@ -1250,72 +1265,50 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // ظرفیت بالا سمت راست، کنار عنوان مکان
+                                        // مکان یک خطِ کامل برای خودش دارد؛ پیش‌تر با چیپِ ظرفیت و
+                                        // وضعیت در یک ردیف بود و وقتی وضعیت «ثبت‌نام بسته» (پهن‌تر
+                                        // از «فعال») بود، نامِ مکان به «دور… ه…» له می‌شد.
                                         Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8, vertical: 3),
-                                              decoration: ShapeDecoration(
-            color: AppColor.obsidianBg,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
-                                              child: Text(
-                                                'ظرفیت: ${item.capacity}',
-                                                style: const TextStyle(
-                                                  fontFamily: 'Estedad',
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: AppColor.onSurfaceVariant,
-                                                ),
-                                              ),
+                                            const Padding(
+                                              padding: EdgeInsets.only(top: 2),
+                                              child: Icon(
+                                                  Icons.location_on_outlined,
+                                                  size: 16,
+                                                  color: AppColor.pitchGreen),
                                             ),
-                                            const SizedBox(width: 8),
+                                            const SizedBox(width: 4),
                                             Expanded(
-                                              child: Row(
-                                                children: [
-                                                  const Icon(
-                                                      Icons
-                                                          .location_on_outlined,
-                                                      size: 15,
-                                                      color: AppColor
-                                                          .pitchGreen),
-                                                  const SizedBox(width: 4),
-                                                  Expanded(
-                                                    child: Text(
-                                                      item.location == null
-                                                          ? 'دوره‌ی آنلاین'
-                                                          : 'مکان: ${item.location}',
-                                                      maxLines: 2,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: const TextStyle(
-                                                          fontFamily: 'Estedad',
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                          color: AppColor
-                                                              .onSurface),
-                                                    ),
-                                                  ),
-                                                ],
+                                              child: Text(
+                                                item.location == null
+                                                    ? 'دوره‌ی آنلاین'
+                                                    : 'مکان: ${item.location}',
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                    fontFamily: 'Estedad',
+                                                    height: 1.5,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColor.onSurface),
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 6,
+                                          children: [
+                                            _variantChip(
+                                              item.isActive ? 'فعال' : 'ثبت‌نام بسته',
                                               color: item.isActive
-                                                  ? AppColor.successDark.withOpacity(0.12)
-                                                  : AppColor.outlineVariantDark.withOpacity(0.35),
-                                              child: Text(
-                                                  item.isActive ? 'فعال' : 'ثبت‌نام بسته',
-                                                  style: TextStyle(
-                                                      fontFamily: 'Estedad',
-                                                      fontSize: 11,
-                                                      color: item.isActive
-                                                          ? AppColor.successDark
-                                                          : AppColor.onSurfaceVariant)),
+                                                  ? AppColor.successDark
+                                                  : AppColor.onSurfaceVariant,
                                             ),
+                                            _variantChip('ظرفیت: ${item.capacity}',
+                                                color: AppColor.onSurfaceVariant),
                                           ],
                                         ),
                                         if (item.time != null) ...[
