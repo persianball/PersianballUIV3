@@ -72,7 +72,8 @@ class GlassSurface extends StatelessWidget {
               ),
             ),
             // خطِ براقِ لبه‌ی بالا
-            if (highlight)
+            // روی سطوحِ گرد، خطِ براق بعد از برش یک قوسِ سفیدِ لکه‌مانند می‌شد
+            if (highlight && !circle)
               Positioned(
                 top: 1,
                 left: radius * 0.6,
@@ -83,7 +84,7 @@ class GlassSurface extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         Colors.white.withValues(alpha: 0),
-                        Colors.white.withValues(alpha: 0.55),
+                        Colors.white.withValues(alpha: 0.35),
                         Colors.white.withValues(alpha: 0),
                       ],
                     ),
