@@ -27,6 +27,7 @@ import 'package:persian_ball/views/widgets/app_buttons.dart';
 import 'package:persian_ball/views/widgets/app_network_image.dart';
 import 'package:persian_ball/views/widgets/course_lesson_list.dart';
 import 'package:persian_ball/views/widgets/motion.dart';
+import 'package:persian_ball/views/widgets/rich_description.dart';
 import 'package:persian_ball/views/widgets/shimmer.dart';
 import 'package:persian_ball/views/widgets/player/glass_player_model.dart';
 import 'package:persian_ball/views/widgets/player/glass_video_player.dart';
@@ -1005,17 +1006,9 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
           ),
           children: [
             if (description.isNotEmpty)
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  description,
-                  style: const TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 12.5,
-                    height: 1.9,
-                    color: AppColor.inkMuted,
-                  ),
-                ),
+              RichDescription(
+                text: description,
+                style: const TextStyle(fontSize: 12.5),
               ),
             if (prerequisite.isNotEmpty) ...[
               const SizedBox(height: 14),
@@ -1032,17 +1025,9 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                 ),
               ),
               const SizedBox(height: 6),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  prerequisite,
-                  style: const TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 12.5,
-                    height: 1.9,
-                    color: AppColor.inkMuted,
-                  ),
-                ),
+              RichDescription(
+                text: prerequisite,
+                style: const TextStyle(fontSize: 12.5),
               ),
             ],
           ],

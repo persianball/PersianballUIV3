@@ -17,6 +17,7 @@ import 'package:persian_ball/views/widgets/detail_tabs.dart';
 import 'package:persian_ball/views/widgets/shimmer.dart';
 import 'package:persian_ball/views/widgets/modals/video_player_dialog.dart';
 import 'package:persian_ball/views/widgets/locked_lessons_veil.dart';
+import 'package:persian_ball/views/widgets/rich_description.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final int id;
@@ -1451,12 +1452,12 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         const SizedBox(height: 8),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          child: Text(
-            data.courseDescription,
+          child: RichDescription(
             key: ValueKey(data.id),
+            text: data.courseDescription,
             textAlign: TextAlign.justify,
-            style: const TextStyle(
-                fontFamily: 'Estedad', color: AppColor.onSurfaceVariant),
+            style: const TextStyle(fontSize: 14, color: AppColor.onSurfaceVariant),
+            strongColor: AppColor.onSurface,
           ),
         ),
         const SizedBox(height: 16),
@@ -1466,9 +1467,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                 fontWeight: FontWeight.w700,
                 color: AppColor.onSurface)),
         const SizedBox(height: 6),
-        Text(data.detail.preRequirement,
-            style: const TextStyle(
-                fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
+        RichDescription(
+          text: data.detail.preRequirement,
+          style: const TextStyle(fontSize: 14, color: AppColor.onSurfaceVariant),
+          strongColor: AppColor.onSurface,
+        ),
       ],
       ),
     );
