@@ -12,7 +12,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +28,8 @@ import 'package:persian_ball/views/widgets/app_network_image.dart';
 import 'package:persian_ball/views/widgets/course_lesson_list.dart';
 import 'package:persian_ball/views/widgets/motion.dart';
 import 'package:persian_ball/views/widgets/shimmer.dart';
-import 'package:persian_ball/views/widgets/video_quality_button.dart';
+import 'package:persian_ball/views/widgets/player/glass_player_model.dart';
+import 'package:persian_ball/views/widgets/player/glass_video_player.dart';
 
 /// ثانیه‌های شمارشِ معکوسِ «درسِ بعدی» بعد از تمام‌شدنِ یک ویدیو.
 const int _kAutoNextSeconds = 6;
@@ -59,7 +59,10 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
   final ScrollController _scroll = ScrollController();
 
   VideoPlayerController? _video;
-  ChewieController? _chewie;
+
+  /// وضعیتِ پخش‌کننده‌ی شیشه‌ای (کادرِ کوچک و تمام‌صفحه هر دو به این گوش
+  /// می‌دهند)
+  final GlassPlayerModel _player = GlassPlayerModel();
 
   CourseLesson? _current;
 
@@ -68,8 +71,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
   HlsVariant? _quality;
 
   bool _booting = true;
-  bool _videoLoading = false;
-  String? _videoError;
 
   /// پوششِ «درسِ بعدی» که بعد از پایانِ ویدیو با شمارشِ معکوس ظاهر می‌شود.
   CourseLesson? _nextUp;
@@ -84,7 +85,39 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
   @override
   void initState() {
     super.initState();
+    _player
+      ..setInfo(
+          title: widget.myCourse.courseDetail.courseTitle,
+          poster: _coursePoster)
+      ..onQuality = _setQuality
+      ..onBack = () {
+        Navigator.of(context).maybePop();
+      }
+      ..onLessons = _openLessons
+      ..onNext = () {
+        final n = _neighbour(1);
+        if (n != null) _play(n);
+      }
+      ..onPrevious = () {
+        final p = _neighbour(-1);
+        if (p != null) _play(p);
+      }
+      ..onRetry = () {
+        final l = _current;
+        if (l != null) _play(l);
+      }
+      ..onPlayNextNow = () {
+        final t = _nextUp;
+        _cancelAutoNext();
+        if (t != null) _play(t);
+      }
+      ..onCancelNext = _cancelAutoNext;
     _boot();
+  }
+
+  String? get _coursePoster {
+    final d = widget.myCourse.courseDetail;
+    return d.videoThumbnail ?? (d.images.isNotEmpty ? d.images.first : d.image);
   }
 
   @override
@@ -92,7 +125,8 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     _countdownTimer?.cancel();
     _flushProgress();
     _video?.removeListener(_onTick);
-    _chewie?.dispose();
+    _player.attach(null);
+    _player.dispose();
     _video?.dispose();
     _scroll.dispose();
     _progress.dispose();
@@ -201,6 +235,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     final at = video?.value.position;
     final wasPlaying = video?.value.isPlaying ?? false;
     setState(() => _quality = q);
+    _player.setQualityState(switching: true);
     await _play(lesson, autoPlay: wasPlaying, startAt: at, keepQuality: true);
   }
 
@@ -215,21 +250,25 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     _cancelAutoNext();
     _flushProgress();
     _video?.removeListener(_onTick);
-    final oldChewie = _chewie;
     final oldVideo = _video;
 
     setState(() {
       _current = lesson;
-      _chewie = null;
       _video = null;
-      _videoLoading = true;
-      _videoError = null;
     });
+    _player
+      ..attach(null)
+      ..setInfo(
+          title: lesson.title,
+          subtitle: lesson.weekTitle,
+          poster: lesson.section.videoThumbnail ?? _coursePoster)
+      ..setStatus(loading: true, clearError: true)
+      ..setNeighbours(
+          hasNext: _neighbour(1) != null, hasPrevious: _neighbour(-1) != null);
     _currentKey.value = lesson.progressKey;
     _lastReported = Duration.zero;
     _reachedEnd = false;
 
-    oldChewie?.dispose();
     await oldVideo?.dispose();
 
     try {
@@ -244,6 +283,11 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
         _variants = variants;
         _quality = HlsQuality.closest(variants, results[1] as int?);
       }
+      _player.setQualityState(
+          variants: _variants,
+          quality: _quality,
+          clearQuality: _quality == null,
+          switching: false);
       final url = _quality?.url ?? lesson.videoUrl;
       final controller = VideoPlayerController.networkUrl(Uri.parse(url));
       await controller.initialize();
@@ -268,41 +312,20 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
       }
 
       controller.addListener(_onTick);
-      final chewie = ChewieController(
-        videoPlayerController: controller,
-        autoPlay: autoPlay,
-        looping: false,
-        allowPlaybackSpeedChanging: true,
-        playbackSpeeds: const [0.75, 1, 1.25, 1.5, 1.75, 2],
-        deviceOrientationsOnEnterFullScreen: const [
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight,
-        ],
-        deviceOrientationsAfterFullScreen: const [DeviceOrientation.portraitUp],
-        materialProgressColors: ChewieProgressColors(
-          playedColor: AppColor.pitchGreenLight,
-          handleColor: AppColor.pitchGreenLight,
-          backgroundColor: Colors.white24,
-          bufferedColor: Colors.white54,
-        ),
-      );
+      _player.attach(controller);
+      if (autoPlay) await controller.play();
 
       if (!mounted) {
-        chewie.dispose();
+        _player.attach(null);
         await controller.dispose();
         return;
       }
-      setState(() {
-        _video = controller;
-        _chewie = chewie;
-        _videoLoading = false;
-      });
+      setState(() => _video = controller);
+      _player.setStatus(loading: false);
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _videoLoading = false;
-        _videoError = 'پخش این ویدیو ممکن نیست. اتصالت را بررسی کن.';
-      });
+      _player.setStatus(
+          loading: false, error: 'پخش این ویدیو ممکن نیست. اتصالت را بررسی کن.');
     }
   }
 
@@ -371,6 +394,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
       _nextUp = next;
       _countdown = _kAutoNextSeconds;
     });
+    _player.setNextUp(next.title, _countdown, total: _kAutoNextSeconds);
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return timer.cancel();
@@ -382,6 +406,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
         return;
       }
       setState(() => _countdown--);
+      _player.setNextUp(_nextUp?.title, _countdown);
     });
   }
 
@@ -389,6 +414,7 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
     _countdownTimer?.cancel();
     _countdownTimer = null;
     if (_nextUp != null) setState(() => _nextUp = null);
+    if (_player.nextUpTitle != null) _player.setNextUp(null, 0);
   }
 
   void _openLessons() {
@@ -414,32 +440,11 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
   }
 
   Widget _playerStage({required double height, required bool rounded}) {
-    final detail = widget.myCourse.courseDetail;
-    final poster = _current?.section.videoThumbnail ??
-        detail.videoThumbnail ??
-        (detail.images.isNotEmpty ? detail.images.first : detail.image);
-
-    final Widget stage = Container(
+    final Widget stage = SizedBox(
       height: height,
-      color: Colors.black,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 320),
-            switchInCurve: Curves.easeOutCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(
-                scale: Tween<double>(begin: 0.97, end: 1).animate(animation),
-                child: child,
-              ),
-            ),
-            child: _playerContent(poster: poster, height: height),
-          ),
-          _topBar(),
-          if (_nextUp != null) _nextUpOverlay(_nextUp!),
-        ],
+      child: GlassVideoPlayer(
+        model: _player,
+        heroTag: 'mycourse_${widget.myCourse.courseId}',
       ),
     );
 
@@ -453,281 +458,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
           ),
         ),
         child: stage,
-      ),
-    );
-  }
-
-  Widget _playerContent({required String? poster, required double height}) {
-    if (_videoError != null) {
-      return Center(
-        key: const ValueKey('error'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.wifi_off_rounded,
-                  size: 34, color: Colors.white70),
-              const SizedBox(height: 10),
-              Text(
-                _videoError!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Estedad',
-                  fontSize: 12.5,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: 150,
-                child: GradientButton(
-                  label: 'تلاش دوباره',
-                  height: 38,
-                  fontSize: 12,
-                  onPressed: () {
-                    final lesson = _current;
-                    if (lesson != null) _play(lesson);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final chewie = _chewie;
-    final video = _video;
-    if (chewie != null && video != null && video.value.isInitialized) {
-      return Center(
-        key: const ValueKey('player'),
-        child: AspectRatio(
-          aspectRatio:
-              video.value.aspectRatio == 0 ? 16 / 9 : video.value.aspectRatio,
-          child: Chewie(controller: chewie),
-        ),
-      );
-    }
-
-    // پیش از آماده‌شدنِ ویدیو، همان تصویری که کاربر در فهرستِ دوره‌ها لمس
-    // کرده بود با انتقالِ Hero اینجا می‌نشیند و بعد جایش را به پخش‌کننده
-    // می‌دهد؛ صفحه هیچ لحظه‌ای خالی دیده نمی‌شود.
-    return Stack(
-      key: const ValueKey('poster'),
-      fit: StackFit.expand,
-      children: [
-        Hero(
-          tag: 'mycourse_${widget.myCourse.courseId}',
-          child: AppNetworkImage(
-            url: poster,
-            fit: BoxFit.cover,
-            fallbackAsset: 'assets/images/course_not_found.jpg',
-          ),
-        ),
-        const DecoratedBox(decoration: BoxDecoration(color: Color(0x8C000000))),
-        Center(
-          child: _videoLoading
-              ? const SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2.4, color: Colors.white),
-                )
-              : Icon(
-                  Icons.play_circle_fill_rounded,
-                  size: 58,
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
-        ),
-      ],
-    );
-  }
-
-  /// نوارِ شفافِ بالای ویدیو: بازگشت + عنوانِ درسِ در حالِ پخش.
-  Widget _topBar() {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: IgnorePointer(
-        ignoring: false,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(8, 6, 8, 22),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xB3000000), Color(0x00000000)],
-            ),
-          ),
-          child: Row(
-            children: [
-              _glassButton(
-                icon: Icons.arrow_back_rounded,
-                tooltip: 'بازگشت',
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _current?.title ?? widget.myCourse.courseDetail.courseTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Estedad',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        shadows: [Shadow(blurRadius: 6, color: Colors.black54)],
-                      ),
-                    ),
-                    if (_current != null)
-                      Text(
-                        _current!.weekTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 10.5,
-                          color: Colors.white70,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (_variants.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                VideoQualityButton(
-                  variants: _variants,
-                  selected: _quality,
-                  busy: _videoLoading,
-                  onSelected: _setQuality,
-                ),
-              ],
-              // در دسکتاپ فهرست همیشه در ستونِ کناری باز است.
-              if (!AppBreakpoints.isDesktop(context)) ...[
-                const SizedBox(width: 8),
-                _glassButton(
-                  icon: Icons.playlist_play_rounded,
-                  tooltip: 'فهرست درس‌ها',
-                  onTap: _openLessons,
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _glassButton({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onTap,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: PressableScale(
-        onTap: onTap,
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: ShapeDecoration(
-            color: Colors.black.withValues(alpha: 0.42),
-            shape: const CircleBorder(
-              side: BorderSide(color: Colors.white24),
-            ),
-          ),
-          child: Icon(icon, size: 19, color: Colors.white),
-        ),
-      ),
-    );
-  }
-
-  /// بعد از پایانِ ویدیو: کارتِ درسِ بعدی با شمارشِ معکوس.
-  Widget _nextUpOverlay(CourseLesson next) {
-    return Positioned.fill(
-      child: FadeSlideIn(
-        duration: const Duration(milliseconds: 320),
-        child: Container(
-          color: const Color(0xD9000000),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'درس بعدی',
-                style: TextStyle(
-                  fontFamily: 'Estedad',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white54,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                next.title,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'Estedad',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 148,
-                    child: GradientButton(
-                      label: 'پخش ($_countdown)',
-                      height: 40,
-                      fontSize: 12.5,
-                      icon: const Icon(Icons.play_arrow_rounded),
-                      onPressed: () {
-                        _cancelAutoNext();
-                        _play(next);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  PressableScale(
-                    onTap: _cancelAutoNext,
-                    child: Container(
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      alignment: Alignment.center,
-                      decoration: ShapeDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        shape: AppShapes.pill.copyWith(
-                          side: const BorderSide(color: Colors.white24),
-                        ),
-                      ),
-                      child: const Text(
-                        'بی‌خیال',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

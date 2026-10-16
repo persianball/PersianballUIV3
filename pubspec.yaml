@@ -60,11 +60,15 @@ dependencies:
   package_info_plus: ^9.0.1
   firebase_core: ^4.14.0
   firebase_messaging: ^16.6.0
+  # تمام‌صفحه‌ی واقعیِ مرورگر برای پخش‌کننده (بدونِ dart:html، سازگار با wasm)
+  web: ^1.1.1
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # برای ساختنِ پلتفرمِ جعلیِ ویدیو در تست‌های پخش‌کننده
+  video_player_platform_interface: ^6.6.0
   flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
