@@ -125,16 +125,28 @@ class _GlassFullscreenPage extends StatefulWidget {
 
 class _GlassFullscreenPageState extends State<_GlassFullscreenPage> {
   void Function()? _unlisten;
+  bool _closing = false;
 
   @override
   void initState() {
     super.initState();
-    // Esc یا دکمه‌ی خودِ مرورگر: مسیرِ فلاتری هم بسته شود
+    // Esc یا دکمه‌ی خودِ مرورگر: مسیرِ فلاتری هم بسته شود.
+    //
+    // فقط وقتی این مسیر هنوز روی صفحه است. وقتی خودمان با دکمه‌ی خروج pop
+    // می‌کنیم، مرورگر هم از تمام‌صفحه درمی‌آید و همین رویداد وسطِ انیمیشنِ
+    // بسته‌شدن می‌رسد؛ pop دوباره صفحه‌ی دوره‌ی زیری را هم می‌بست و کاربر
+    // به خانه می‌افتاد.
     _unlisten = BrowserFullscreen.listen(() {
-      if (!BrowserFullscreen.isActive && mounted) {
-        Navigator.of(context).maybePop();
-      }
+      if (BrowserFullscreen.isActive || !mounted || _closing) return;
+      if (ModalRoute.of(context)?.isCurrent != true) return;
+      _close();
     });
+  }
+
+  void _close() {
+    if (_closing) return;
+    _closing = true;
+    Navigator.of(context).maybePop();
   }
 
   @override
@@ -165,7 +177,7 @@ class _GlassFullscreenPageState extends State<_GlassFullscreenPage> {
                 GlassVideoControls(
                   model: model,
                   fullscreen: true,
-                  onToggleFullscreen: () => Navigator.of(context).maybePop(),
+                  onToggleFullscreen: _close,
                 ),
               ],
             );
