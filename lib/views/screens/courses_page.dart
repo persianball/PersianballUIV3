@@ -373,7 +373,7 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                     : _UserCoursesList(
                         courses: _userCourses?.results ?? [],
                         abs: _abs,
-                        onTapCourse: (course,{scrollToVideo}) => Navigator.of(context).pushNamed('/user-course-detail', arguments: course),
+                        onTapCourse: (course,{scrollToVideo}) => Navigator.of(context).pushNamed('/my-course/${course.courseId}', arguments: course),
                       ),
           ],
         ),

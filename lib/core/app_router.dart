@@ -14,6 +14,7 @@ import 'package:persian_ball/views/screens/static_pages.dart';
 import 'package:persian_ball/views/screens/catalog_page.dart';
 import 'package:persian_ball/views/screens/course_detail_page.dart';
 import 'package:persian_ball/views/screens/my_course_detail_page.dart';
+import 'package:persian_ball/views/screens/my_course_loader_page.dart';
 import 'package:persian_ball/models/course_models.dart';
 
 class AppRouter {
@@ -44,6 +45,25 @@ class AppRouter {
       final id = int.parse(orderMatch.group(1)!);
       return MaterialPageRoute(
         builder: (_) => OrderDetailPage(orderId: id),
+        settings: settings,
+      );
+    }
+
+    // Dynamic: /my-course/{id} — دوره‌ی خریداری‌شده با آدرسِ قابلِ کپی.
+    // از فهرست با خودِ آبجکت می‌آید (سریع)؛ با رفرش/لینک فقط شناسه هست و
+    // لودر بعد از اطمینان از ورود، دوره را از فهرستِ کاربر پیدا می‌کند.
+    final myCourseMatch = RegExp(r'^/my-course/(\d+)$').firstMatch(name);
+    if (myCourseMatch != null) {
+      final id = int.parse(myCourseMatch.group(1)!);
+      final args = settings.arguments;
+      if (args is MyCourse && args.courseId == id) {
+        return MaterialPageRoute(
+          builder: (_) => MyCourseDetailPage(myCourse: args),
+          settings: settings,
+        );
+      }
+      return MaterialPageRoute(
+        builder: (_) => MyCourseLoaderPage(courseId: id),
         settings: settings,
       );
     }
@@ -113,15 +133,19 @@ class AppRouter {
           final c = args['course'] ?? args['myCourse'] ?? args['data'];
           if (c is MyCourse) myCourse = c;
         }
+        // مسیرِ قدیمی بدونِ شناسه: با رفرشِ وب چیزی برای بازسازی نداشت.
+        // اگر آبجکت همراه باشد همان صفحه با آدرسِ شناسه‌دار باز می‌شود تا
+        // آدرسِ نوارِ مرورگر قابلِ کپی باشد؛ وگرنه کاربر به دوره‌هایش برمی‌گردد.
         if (myCourse == null) {
           return MaterialPageRoute(
-            builder: (_) => Scaffold(body: Center(child: Text('اطلاعات دوره کاربر یافت نشد'))),
-            settings: settings,
+            builder: (_) => PageSwitcher(),
+            settings: const RouteSettings(name: '/home'),
           );
         }
         return MaterialPageRoute(
           builder: (_) => MyCourseDetailPage(myCourse: myCourse!),
-          settings: RouteSettings(name: name, arguments: args),
+          settings: RouteSettings(
+              name: '/my-course/${myCourse.courseId}', arguments: myCourse),
         );
       default:
         // Fallback to home

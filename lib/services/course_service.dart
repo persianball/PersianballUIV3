@@ -43,10 +43,13 @@ class CourseService {
     throw Exception('خطا در دریافت جزییات دوره (${res.statusCode})');
   }
 
-  static Future<MyCoursesResponse> fetchUserCourses(BuildContext context) async {
+  static Future<MyCoursesResponse> fetchUserCourses(BuildContext context,
+      {String? nextPageUrl}) async {
     final token = await AuthService.getToken();
     if (token == null || token.isEmpty) throw Exception('توکن ورود یافت نشد');
-    final uri = Uri.parse('${URLs.baseUrl}v1/course/user-course/');
+    final uri = nextPageUrl != null && nextPageUrl.isNotEmpty
+        ? Uri.parse(nextPageUrl)
+        : Uri.parse('${URLs.baseUrl}v1/course/user-course/');
     final res = await http.get(uri, headers: {
       'Authorization': 'token $token',
       'Accept': 'application/json',

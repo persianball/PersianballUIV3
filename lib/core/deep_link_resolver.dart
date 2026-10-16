@@ -29,7 +29,7 @@ class DeepLinkResolver {
   };
 
   /// روت‌های پویا: /product/<id> و /course/<id>
-  static final RegExp _dynamicRoute = RegExp(r'^/(product|course)/\d+$');
+  static final RegExp _dynamicRoute = RegExp(r'^/(product|course|my-course|order)/\d+$');
 
   /// اگر لینک قابل هندل باشد روت داخلی را برمی‌گرداند، وگرنه null
   static String? resolve(Uri uri) {
