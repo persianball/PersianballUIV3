@@ -15,8 +15,57 @@ class ApiError {
   /// متنِ خلاصه برای نمایش به کاربر
   final String message;
 
-  /// بدنه‌ی خام (کوتاه‌شده) برای نمایشِ فنی تا پیش از انتشار
+  /// بدنه‌ی خامِ کامل برای نمایشِ فنی تا پیش از انتشار
   final String? raw;
+
+  bool get isHtml => _looksHtml(raw ?? '');
+
+  static bool _looksHtml(String s) {
+    final head = s.trimLeft();
+    return head.startsWith('<!DOCTYPE') ||
+        head.startsWith('<html') ||
+        RegExp(r'<html[\s>]', caseSensitive: false).hasMatch(head.substring(0, head.length.clamp(0, 400)));
+  }
+
+  /// بدنه‌ی قابلِ نمایش: JSON با تورفتگی، HTML بدونِ script/style، بقیه عیناً
+  String get prettyRaw {
+    final r = raw ?? '';
+    if (isHtml) return sanitizeHtml(r);
+    try {
+      return const JsonEncoder.withIndent('  ').convert(jsonDecode(r));
+    } catch (_) {
+      return r;
+    }
+  }
+
+  static String sanitizeHtml(String html) => html
+      .replaceAll(RegExp(r'<script[\s\S]*?</script>', caseSensitive: false), '')
+      .replaceAll(RegExp(r'<style[\s\S]*?</style>', caseSensitive: false), '');
+
+  /// خلاصه‌ی صفحه‌ی خطای جنگو: عنوان + مقدارِ استثنا، اگر باشد.
+  static String? htmlSummary(String html) {
+    String clean(String v) => v
+        .replaceAll(RegExp(r'<[^>]+>'), ' ')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#x27;', "'")
+        .replaceAll('&#39;', "'")
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&amp;', '&')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final title = RegExp(r'<title>([\s\S]*?)</title>', caseSensitive: false)
+        .firstMatch(html)
+        ?.group(1);
+    final exc = RegExp(r'class="exception_value">([\s\S]*?)</pre>', caseSensitive: false)
+        .firstMatch(html)
+        ?.group(1);
+    final parts = [
+      if (title != null && clean(title).isNotEmpty) clean(title),
+      if (exc != null && clean(exc).isNotEmpty) clean(exc),
+    ];
+    return parts.isEmpty ? null : parts.join('\n');
+  }
 
   static const Map<String, String> _known = {
     'Discount does not exist': 'کد تخفیف وجود ندارد',
@@ -28,7 +77,14 @@ class ApiError {
 
   /// از بدنه‌ی پاسخ. هرگز خالی برنمی‌گرداند.
   factory ApiError.fromResponse(int status, String body) {
-    final raw = body.length > 600 ? '${body.substring(0, 600)}…' : body;
+    final raw = body;
+    if (_looksHtml(body)) {
+      return ApiError(
+        status: status,
+        message: htmlSummary(body) ?? _statusText(status),
+        raw: raw,
+      );
+    }
     dynamic decoded;
     try {
       decoded = jsonDecode(body);

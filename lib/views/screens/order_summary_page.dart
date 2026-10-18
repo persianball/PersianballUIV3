@@ -12,6 +12,7 @@ import 'package:persian_ball/utils/ThousandsFormatter.dart';
 import 'package:persian_ball/utils/api_error.dart';
 import 'package:persian_ball/utils/order_totals.dart';
 import 'package:persian_ball/views/widgets/checkout_timeline.dart';
+import 'package:persian_ball/views/widgets/html_description_image.dart';
 import 'package:persian_ball/constant/app_breakpoints.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -250,8 +251,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     }
   }
 
-  /// فعلاً (پیش از انتشار) جزئیاتِ فنیِ خطا هم نشان داده می‌شود تا معلوم
-  /// شود سرور دقیقاً چه گفته؛ بعداً جایش پیامِ کاربرپسند می‌نشیند.
+  /// TODO(release): پیش از انتشار، نمایشِ بدنه‌ی خام/HTML را بردار و فقط
+  /// پیامِ خوانای بک‌اند (ApiError.message) را نشان بده.
+  ///
+  /// فعلاً جزئیاتِ فنیِ خطا کامل نشان داده می‌شود تا معلوم شود سرور دقیقاً
+  /// چه گفته: صفحه‌ی HTMLِ جنگو رندر می‌شود، JSON با تورفتگی.
   Future<void> _showErrorDialog({
     required String title,
     required ApiError error,
@@ -282,8 +286,8 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
           // از صفحه بیرون می‌زد و اسکرول نمی‌شد.
           content: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: 520,
-              maxHeight: MediaQuery.of(ctx).size.height * 0.6,
+              maxWidth: error.isHtml ? 760 : 520,
+              maxHeight: MediaQuery.of(ctx).size.height * 0.8,
             ),
             child: SingleChildScrollView(
             child: Column(
@@ -316,19 +320,25 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                       border: Border.all(color: AppColor.outlineVariantDark),
                     ),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 220),
+                      constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(ctx).size.height * 0.5),
                       child: SingleChildScrollView(
-                        child: SelectableText(
-                          error.raw!.length > 2000
-                              ? '${error.raw!.substring(0, 2000)}…'
-                              : error.raw!,
-                          textDirection: TextDirection.ltr,
-                          style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 11,
-                              height: 1.5,
-                              color: AppColor.onSurfaceVariant),
-                        ),
+                        child: error.isHtml
+                            // صفحه‌ی خطای جنگو همان‌طور که مرورگر نشان می‌دهد
+                            ? Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: HtmlDescriptionBody(
+                                    html: error.prettyRaw),
+                              )
+                            : SelectableText(
+                                error.prettyRaw,
+                                textDirection: TextDirection.ltr,
+                                style: const TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 11,
+                                    height: 1.5,
+                                    color: AppColor.onSurfaceVariant),
+                              ),
                       ),
                     ),
                   ),

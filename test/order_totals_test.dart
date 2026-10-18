@@ -53,6 +53,22 @@ void main() {
       final e = ApiError.fromResponse(401, '{"detail":"اطلاعات برای اعتبارسنجی ارسال نشده است."}');
       expect(e.message, 'اطلاعات برای اعتبارسنجی ارسال نشده است.');
     });
+    test('صفحه‌ی HTMLِ جنگو: عنوان و مقدارِ استثنا خلاصه می‌شود، بدنه کامل می‌ماند', () {
+      const html = '<!DOCTYPE html><html><head><title>KeyError at /v1/order/order/</title>'
+          '<style>body{color:red}</style><script>alert(1)</script></head><body>'
+          '<pre class="exception_value">&#x27;address&#x27;</pre><p>Request Method: POST</p></body></html>';
+      final e = ApiError.fromResponse(500, html);
+      expect(e.isHtml, isTrue);
+      expect(e.message, "KeyError at /v1/order/order/\n'address'");
+      expect(e.raw, html);
+      expect(e.prettyRaw, isNot(contains('<script')));
+      expect(e.prettyRaw, isNot(contains('<style')));
+      expect(e.prettyRaw, contains('Request Method'));
+    });
+    test('JSON با تورفتگی نمایش داده می‌شود', () {
+      final e = ApiError.fromResponse(400, '{"detail":"x","fields":{"a":[1]}}');
+      expect(e.prettyRaw, contains('\n  "fields"'));
+    });
     test('بدنه‌ی غیرِ JSON', () {
       final e = ApiError.fromResponse(502, '<html>Bad Gateway</html>');
       expect(e.message, 'خطای سرور (502)');
