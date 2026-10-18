@@ -58,6 +58,11 @@ class _VariantSwatchPickerState extends State<VariantSwatchPicker>
   static const double _gap = 12;
   static const double _ring = 4; // فاصله‌ی قطره از لبه‌ی کاشی
 
+  /// حاشیه‌ی رسم دورِ کاشی‌ها: قطره و هاله‌اش روی کاشیِ اول/آخر و بالا/پایین
+  /// بیرونِ بومِ رسم می‌افتاد و بریده می‌شد. ویوپورتِ اسکرول هم همین‌قدر
+  /// پهن‌تر می‌شود تا کاشیِ اول با سربرگ هم‌تراز بماند.
+  static const double _bleed = 10;
+
   late final AnimationController _flow = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 620),
@@ -108,7 +113,7 @@ class _VariantSwatchPickerState extends State<VariantSwatchPicker>
   void _ensureVisible(int i) {
     if (!_scroll.hasClients) return;
     final pos = _scroll.position;
-    final start = i * _step;
+    final start = _bleed + i * _step;
     final end = start + widget.tileSize + _ring * 2;
     double? target;
     if (start < pos.pixels) target = start - 8;
@@ -144,52 +149,66 @@ class _VariantSwatchPickerState extends State<VariantSwatchPicker>
       mainAxisSize: MainAxisSize.min,
       children: [
         _header(selected, swatches.length),
-        const SizedBox(height: 10),
+        const SizedBox(height: 2),
         SizedBox(
-          height: box + 6,
-          child: SingleChildScrollView(
-            controller: _scroll,
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: SizedBox(
-              width: swatches.length * _step - _gap + _ring * 2,
-              height: box,
-              child: AnimatedBuilder(
-                animation: _flow,
-                builder: (context, _) => CustomPaint(
-                  painter: _LiquidBlobPainter(
-                    from: _from,
-                    to: _to,
-                    t: _flow.value,
-                    step: _step,
-                    size: box,
-                    rtl: Directionality.of(context) == TextDirection.rtl,
-                    totalWidth: swatches.length * _step - _gap + _ring * 2,
-                  ),
-                  child: Row(
-                    children: [
-                      for (int i = 0; i < swatches.length; i++) ...[
-                        if (i > 0) const SizedBox(width: _gap),
-                        Padding(
-                          padding: EdgeInsets.only(
-                            left: i == 0 ? _ring : 0,
-                            right: i == swatches.length - 1 ? _ring : 0,
-                          ),
-                          child: _Tile(
-                            swatch: swatches[i],
-                            size: widget.tileSize,
-                            selected: i == sel,
-                            onTap: () => _tap(i),
-                          ),
+          height: box + _bleed * 2,
+          child: LayoutBuilder(builder: (context, cons) {
+            final double contentW =
+                swatches.length * _step - _gap + _ring * 2;
+            final double viewportW = cons.maxWidth + _bleed * 2;
+            return OverflowBox(
+              minWidth: viewportW,
+              maxWidth: viewportW,
+              alignment: Alignment.center,
+              child: SingleChildScrollView(
+                controller: _scroll,
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.zero,
+                child: SizedBox(
+                  width: contentW + _bleed * 2,
+                  height: box + _bleed * 2,
+                  child: AnimatedBuilder(
+                    animation: _flow,
+                    builder: (context, _) => CustomPaint(
+                      painter: _LiquidBlobPainter(
+                        from: _from,
+                        to: _to,
+                        t: _flow.value,
+                        step: _step,
+                        size: box,
+                        inset: _bleed,
+                        rtl: Directionality.of(context) == TextDirection.rtl,
+                        totalWidth: contentW,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(_bleed),
+                        child: Row(
+                          children: [
+                            for (int i = 0; i < swatches.length; i++) ...[
+                              if (i > 0) const SizedBox(width: _gap),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  left: i == 0 ? _ring : 0,
+                                  right: i == swatches.length - 1 ? _ring : 0,
+                                ),
+                                child: _Tile(
+                                  swatch: swatches[i],
+                                  size: widget.tileSize,
+                                  selected: i == sel,
+                                  onTap: () => _tap(i),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ],
-                    ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
         ),
       ],
     );
@@ -301,14 +320,19 @@ class _LiquidBlobPainter extends CustomPainter {
     required this.size,
     required this.rtl,
     required this.totalWidth,
+    this.inset = 0,
   });
 
   final int from, to;
   final double t, step, size, totalWidth;
   final bool rtl;
 
+  /// حاشیه‌ی رسم (همان _bleed) که محتوا با آن جابه‌جا شده
+  final double inset;
+
   // Row در RTL از راست چیده می‌شود
-  double _left(int i) => rtl ? totalWidth - size - i * step : i * step;
+  double _left(int i) =>
+      inset + (rtl ? totalWidth - size - i * step : i * step);
 
   @override
   void paint(Canvas canvas, Size canvasSize) {
@@ -333,7 +357,7 @@ class _LiquidBlobPainter extends CustomPainter {
     // حجمِ ثابت: هرچه کشیده‌تر، کوتاه‌تر (حداکثر ~۱۸٪)
     final stretch = (width / size - 1).clamp(0.0, 3.0);
     final double h = size * (1 - 0.18 * math.min(stretch, 1.0));
-    final double top = (size - h) / 2;
+    final double top = inset + (size - h) / 2;
 
     final rect = Rect.fromLTWH(left, top, width, h);
     final r = Radius.circular(AppShapes.rLg * 0.9);
