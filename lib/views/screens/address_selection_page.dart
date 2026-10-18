@@ -383,6 +383,14 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
             children: [
               Row(
                 children: [
+                  // دایره‌ی انتخاب سمتِ راست، کنارِ نام (پیش‌تر انتهای چپِ ردیف بود)
+                  Radio<int>(
+                    value: a.id ?? -1,
+                    groupValue: selectedAddressId,
+                    onChanged: (_) => setState(() => selectedAddressId = a.id),
+                    activeColor: AppColor.goldEnd,
+                    visualDensity: VisualDensity.compact,
+                  ),
                   Expanded(
                     child: Text(
                       a.addressName ?? 'آدرس بدون نام',
@@ -402,12 +410,6 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                     tooltip: 'حذف',
                     icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                     onPressed: () => _confirmDelete(a.id!),
-                  ),
-                  Radio<int>(
-                    value: a.id ?? -1,
-                    groupValue: selectedAddressId,
-                    onChanged: (_) => setState(() => selectedAddressId = a.id),
-                    activeColor: AppColor.goldEnd,
                   ),
                 ],
               ),
