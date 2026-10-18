@@ -1,0 +1,101 @@
+// lib/utils/api_error.dart
+//
+// تبدیلِ پاسخِ خطای بک‌اند به متنِ خوانا. شکل‌های دیده‌شده:
+//   {"code":"invalid_data","status":null,"messages":"Discount does not exist"}
+//   {"code":["این مقدار نباید خالی باشد."]}            ← خطای فیلد
+//   {"detail":"اطلاعات برای اعتبارسنجی ارسال نشده است."}
+//   {"non_field_errors":["..."]}  /  {"message":"..."}
+import 'dart:convert';
+
+class ApiError {
+  const ApiError({required this.status, required this.message, this.raw});
+
+  final int status;
+
+  /// متنِ خلاصه برای نمایش به کاربر
+  final String message;
+
+  /// بدنه‌ی خام (کوتاه‌شده) برای نمایشِ فنی تا پیش از انتشار
+  final String? raw;
+
+  static const Map<String, String> _known = {
+    'Discount does not exist': 'کد تخفیف وجود ندارد',
+    'Discount expired': 'کد تخفیف منقضی شده است',
+    'Discount already used': 'این کد قبلاً استفاده شده است',
+  };
+
+  static String _translate(String s) => _known[s.trim()] ?? s.trim();
+
+  /// از بدنه‌ی پاسخ. هرگز خالی برنمی‌گرداند.
+  factory ApiError.fromResponse(int status, String body) {
+    final raw = body.length > 600 ? '${body.substring(0, 600)}…' : body;
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      decoded = null;
+    }
+    final parts = <String>[];
+    void add(dynamic v, {String? field}) {
+      if (v == null) return;
+      if (v is String) {
+        if (v.trim().isEmpty) return;
+        parts.add(field == null ? _translate(v) : '$field: ${_translate(v)}');
+      } else if (v is List) {
+        for (final e in v) {
+          add(e, field: field);
+        }
+      } else if (v is Map) {
+        v.forEach((k, val) => add(val, field: k.toString()));
+      } else {
+        parts.add(v.toString());
+      }
+    }
+
+    if (decoded is Map) {
+      for (final k in ['messages', 'message', 'detail', 'error', 'non_field_errors']) {
+        if (decoded.containsKey(k)) add(decoded[k]);
+      }
+      if (parts.isEmpty) {
+        // خطاهای فیلد: {"code": ["…"]} — «code» اینجا نامِ فیلد است نه کدِ خطا
+        decoded.forEach((k, v) {
+          if (k == 'status') return;
+          if (v is String && k == 'code' && decoded.length > 1) return;
+          add(v, field: k.toString());
+        });
+      }
+    } else if (decoded is List) {
+      add(decoded);
+    } else if (decoded is String) {
+      add(decoded);
+    }
+
+    String message = parts.join('\n');
+    if (message.isEmpty) message = _statusText(status);
+    return ApiError(status: status, message: message, raw: raw);
+  }
+
+  static String _statusText(int s) {
+    switch (s) {
+      case 400:
+        return 'درخواست نامعتبر بود';
+      case 401:
+        return 'برای این کار باید وارد حساب شوی';
+      case 403:
+        return 'دسترسی به این عملیات ممکن نیست';
+      case 404:
+        return 'یافت نشد';
+      case 409:
+        return 'تداخل با وضعیتِ فعلی';
+      case 422:
+        return 'اطلاعاتِ ارسالی پذیرفته نشد';
+      case 429:
+        return 'درخواست‌ها زیاد است؛ کمی بعد دوباره امتحان کن';
+    }
+    if (s >= 500) return 'خطای سرور ($s)';
+    return 'خطای نامشخص ($s)';
+  }
+
+  @override
+  String toString() => '$message (HTTP $status)';
+}

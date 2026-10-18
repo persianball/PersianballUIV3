@@ -9,6 +9,8 @@ import 'package:persian_ball/constant/urls.dart';
 import 'package:persian_ball/models/CartModel.dart';
 import 'package:persian_ball/models/address_model.dart';
 import 'package:persian_ball/utils/ThousandsFormatter.dart';
+import 'package:persian_ball/utils/api_error.dart';
+import 'package:persian_ball/utils/order_totals.dart';
 import 'package:persian_ball/views/widgets/checkout_timeline.dart';
 import 'package:persian_ball/constant/app_breakpoints.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,6 +39,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   bool _posting = false;
   int _discountPercent = 0;
   bool _applyingDiscount = false;
+
+  /// کدی که سرور تأیید کرده (فقط همین به سفارش فرستاده می‌شود)
+  String? _appliedCode;
+  ApiError? _discountError;
 
   @override
   void dispose() {
@@ -96,22 +102,21 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   }
 
   Future<void> _applyDiscountCode() async {
-    if (_discountCtrl.text.trim().isEmpty) {
-      _showSnack('لطفاً کد تخفیف را وارد کنید');
+    final code = _discountCtrl.text.trim();
+    if (code.isEmpty) {
+      setState(() => _discountError =
+          const ApiError(status: 0, message: 'کد تخفیف را وارد کن'));
       return;
     }
-
     if (_applyingDiscount) return;
-
-    setState(() => _applyingDiscount = true);
+    setState(() {
+      _applyingDiscount = true;
+      _discountError = null;
+    });
 
     try {
       final token = await _requireToken();
-      if (token == null || token.isEmpty)
-        return; // user canceled or not logged in
-      final body = {
-        'code': _discountCtrl.text.trim(),
-      };
+      if (token == null || token.isEmpty) return;
 
       final resp = await http.post(
         Uri.parse('${URLs.baseUrl}/v1/payment/voucher/verify/'),
@@ -119,28 +124,59 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
           'Authorization': 'token $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode(body),
+        body: jsonEncode({'code': code}),
       );
+      if (!mounted) return;
 
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
-        final data = jsonDecode(resp.body) as Map<String, dynamic>;
-        final discountPercent = data['discount_percent'] as int? ?? 0;
-
-        setState(() => _discountPercent = discountPercent);
-
-        if (discountPercent > 0) {
-          _showSnack('کد تخفیف اعمال شد - ${discountPercent}% تخفیف');
-        } else {
-          _showSnack('کد تخفیف نامعتبر است');
+        final data = jsonDecode(utf8.decode(resp.bodyBytes));
+        final int percent = data is Map
+            ? (int.tryParse('${data['discount_percent'] ?? 0}') ?? 0)
+            : 0;
+        if (percent <= 0) {
+          setState(() {
+            _discountPercent = 0;
+            _appliedCode = null;
+            _discountError = ApiError(
+                status: resp.statusCode,
+                message: 'این کد تخفیفی ندارد',
+                raw: utf8.decode(resp.bodyBytes));
+          });
+          return;
         }
+        setState(() {
+          _discountPercent = percent;
+          _appliedCode = code;
+          _discountError = null;
+        });
+        _showSnack('کد «$code» اعمال شد: ٪$percent تخفیف');
       } else {
-        _showSnack('خطا در اعمال کد تخفیف (${resp.statusCode})');
+        setState(() {
+          _discountPercent = 0;
+          _appliedCode = null;
+          _discountError =
+              ApiError.fromResponse(resp.statusCode, utf8.decode(resp.bodyBytes));
+        });
       }
     } catch (e) {
-      _showSnack('خطای شبکه/سرور: $e');
+      if (!mounted) return;
+      setState(() => _discountError =
+          ApiError(status: 0, message: 'اتصال برقرار نشد', raw: '$e'));
     } finally {
       if (mounted) setState(() => _applyingDiscount = false);
     }
+  }
+
+  /// لغوِ کدِ تخفیف: جمع‌ها به حالتِ بدونِ کد برمی‌گردند و سفارش بدونِ کد
+  /// ثبت می‌شود.
+  void _removeDiscount() {
+    setState(() {
+      _discountPercent = 0;
+      _appliedCode = null;
+      _discountError = null;
+      _discountCtrl.clear();
+    });
+    _showSnack('کد تخفیف حذف شد');
   }
 
   Future<void> _submitOrder() async {
@@ -155,9 +191,8 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       final body = {
         'delivery_method': widget.deliveryMethod,
         'address': widget.address?.id,
-        'discount_code': _discountCtrl.text.trim().isEmpty
-            ? null
-            : _discountCtrl.text.trim(),
+        // فقط کدی که سرور تأیید کرده؛ متنِ تایپ‌شده‌ی تأییدنشده فرستاده نمی‌شود
+        'discount_code': _appliedCode,
         'is_browser_view': true,
         'use_wallet': _useWallet,
       }..removeWhere((k, v) => v == null);
@@ -171,8 +206,9 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
         body: jsonEncode(body),
       );
 
+      if (!mounted) return;
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
-        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        final data = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
         final redirectUrl = data['redirect_url'] as String?;
         if (redirectUrl != null && redirectUrl.isNotEmpty) {
           // Navigator.of(context).push(
@@ -186,16 +222,116 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
 
           Navigator.pop(context);
         } else {
-          _showSnack('پاسخ نامعتبر از سرور');
+          await _showErrorDialog(
+            title: 'پاسخِ سرور بدونِ آدرسِ درگاه',
+            error: ApiError(
+                status: resp.statusCode,
+                message: 'سرور آدرسِ درگاه (redirect_url) را برنگرداند',
+                raw: utf8.decode(resp.bodyBytes)),
+            endpoint: '/v1/order/order/',
+          );
         }
       } else {
-        _showSnack('خطا در ایجاد سفارش (${resp.statusCode})');
+        await _showErrorDialog(
+          title: 'ایجادِ سفارش انجام نشد',
+          error: ApiError.fromResponse(resp.statusCode, utf8.decode(resp.bodyBytes)),
+          endpoint: '/v1/order/order/',
+        );
       }
     } catch (e) {
-      _showSnack('خطای شبکه/سرور: $e');
+      if (!mounted) return;
+      await _showErrorDialog(
+        title: 'اتصال به سرور برقرار نشد',
+        error: ApiError(status: 0, message: 'خطای شبکه', raw: '$e'),
+        endpoint: '/v1/order/order/',
+      );
     } finally {
       if (mounted) setState(() => _posting = false);
     }
+  }
+
+  /// فعلاً (پیش از انتشار) جزئیاتِ فنیِ خطا هم نشان داده می‌شود تا معلوم
+  /// شود سرور دقیقاً چه گفته؛ بعداً جایش پیامِ کاربرپسند می‌نشیند.
+  Future<void> _showErrorDialog({
+    required String title,
+    required ApiError error,
+    required String endpoint,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: AppColor.surfaceContainerOpaque,
+          shape: AppShapes.border(AppShapes.rLg),
+          title: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, color: AppColor.errorDark),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(title,
+                    style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppColor.onSurface)),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(error.message,
+                    style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 13.5,
+                        height: 1.7,
+                        color: AppColor.onSurface)),
+                const SizedBox(height: 12),
+                Text(
+                  'HTTP ${error.status == 0 ? '-' : error.status} — $endpoint',
+                  textDirection: TextDirection.ltr,
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 11,
+                      color: AppColor.onSurfaceVariant),
+                ),
+                if ((error.raw ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColor.obsidianBg,
+                      borderRadius: AppShapes.radius(AppShapes.rMd),
+                      border: Border.all(color: AppColor.outlineVariantDark),
+                    ),
+                    child: SelectableText(
+                      error.raw!,
+                      textDirection: TextDirection.ltr,
+                      style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          height: 1.5,
+                          color: AppColor.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('باشه',
+                  style: TextStyle(fontFamily: 'Estedad', color: AppColor.goldEnd)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showSnack(String msg) {
@@ -209,28 +345,18 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
         hasCart ? widget.cart.results[0].items : <CartItemFromBackend>[];
     final price = hasCart ? widget.cart.results[0].price : TotalPriceFromBack();
 
-    final base = price.price ?? 0;
-    final discounted = price.discountedPrice ?? base;
-    final tax = price.nat ?? 0;
-
-    // Delivery cost based on chosen method
     final postPrice = price.postShippingPrice ?? 0;
     final peykPrice = price.peykShippingPrice ?? 0;
     final isFree =
         widget.deliveryMethod == 'free' || (price.isFreeShipping ?? false);
-    final shippingCost =
-        isFree ? 0 : (widget.deliveryMethod == 'peyk' ? peykPrice : postPrice);
-
-    // اگر کد تخفیف اعمال شده باشد جای مقدار تخفیف بک‌اند می‌نشیند
-    final discountBase = _discountPercent > 0
-        ? base - (base * _discountPercent / 100)
-        : discounted;
-
-    // مقداری که در ردیف «تخفیف» نمایش داده می‌شود
-    final displayedDiscount = discountBase + tax + shippingCost;
-
-    // مبلغی که کاربر باید بپردازد
-    final payable = base - discountBase;
+    final totals = OrderTotals.compute(
+      base: price.price ?? 0,
+      productDiscount: price.discountedPrice ?? 0,
+      tax: price.nat ?? 0,
+      shipping: widget.deliveryMethod == 'peyk' ? peykPrice : postPrice,
+      freeShipping: isFree,
+      voucherPercent: _discountPercent,
+    );
 
     final bool isDesktop = AppBreakpoints.isDesktop(context);
 
@@ -249,12 +375,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
           child: isDesktop
               ? _buildDesktopBody(
                   items: items,
-                  base: base,
-                  displayedDiscount: displayedDiscount,
-                  tax: tax,
-                  isFree: isFree,
-                  shippingCost: shippingCost,
-                  payable: payable,
+                  totals: totals,
                 )
               // تبلت: مثلِ صفحه‌ی آدرس حداکثر ۷۲۰، نه تمام‌عرض
               : PageContainer(
@@ -278,12 +399,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                           _buildDiscountCard(),
                           const SizedBox(height: 12),
                           _buildTotalsCard(
-                            base: base,
-                            displayedDiscount: displayedDiscount,
-                            tax: tax,
-                            isFree: isFree,
-                            shippingCost: shippingCost,
-                            payable: payable,
+                            totals: totals,
                           ),
                           const SizedBox(height: 20),
                           _buildPayButton(),
@@ -303,12 +419,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   /// آیتم‌ها/آدرس/کد تخفیف در ستون اصلی و جمع مبالغ + دکمه پرداخت در ستون کناری.
   Widget _buildDesktopBody({
     required List<CartItemFromBackend> items,
-    required int base,
-    required num displayedDiscount,
-    required int tax,
-    required bool isFree,
-    required int shippingCost,
-    required num payable,
+    required OrderTotals totals,
   }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 24),
@@ -345,12 +456,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildTotalsCard(
-                        base: base,
-                        displayedDiscount: displayedDiscount,
-                        tax: tax,
-                        isFree: isFree,
-                        shippingCost: shippingCost,
-                        payable: payable,
+                        totals: totals,
                       ),
                       const SizedBox(height: 16),
                       _buildPayButton(),
@@ -578,22 +684,93 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                 ),
                               ],
                             ),
-                            if (_discountPercent > 0) ...[
+                            if (_discountError != null) ...[
                               const SizedBox(height: 8),
                               Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: AppColor.successDark.withOpacity(0.08),
+                                  color: AppColor.errorDark.withValues(alpha: 0.08),
                                   border: Border.all(
-                                      color: AppColor.successDark.withOpacity(0.4)),
+                                      color: AppColor.errorDark.withValues(alpha: 0.4)),
+                                  borderRadius: AppShapes.radius(AppShapes.rMd),
                                 ),
-                                child: Text(
-                                  'کد تخفیف اعمال شد: ${_discountPercent}% تخفیف',
-                                  style: const TextStyle(
-                                    fontFamily: 'Estedad',
-                                    color: AppColor.successDark,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.error_outline_rounded,
+                                        size: 18, color: AppColor.errorDark),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _discountError!.message,
+                                            style: const TextStyle(
+                                              fontFamily: 'Estedad',
+                                              fontSize: 12.5,
+                                              height: 1.6,
+                                              color: AppColor.errorDark,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (_discountError!.status > 0)
+                                            Text(
+                                              'HTTP ${_discountError!.status}'
+                                              '${(_discountError!.raw ?? '').isNotEmpty ? ' — ${_discountError!.raw}' : ''}',
+                                              textDirection: TextDirection.ltr,
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontFamily: 'Estedad',
+                                                fontSize: 10.5,
+                                                color: AppColor.onSurfaceVariant,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            if (_discountPercent > 0 && _appliedCode != null) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
+                                decoration: BoxDecoration(
+                                  color: AppColor.successDark.withValues(alpha: 0.08),
+                                  border: Border.all(
+                                      color: AppColor.successDark.withValues(alpha: 0.4)),
+                                  borderRadius: AppShapes.radius(AppShapes.rMd),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle_rounded,
+                                        size: 18, color: AppColor.successDark),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'کد «$_appliedCode» اعمال شد: ٪$_discountPercent تخفیف',
+                                        style: const TextStyle(
+                                          fontFamily: 'Estedad',
+                                          fontSize: 12.5,
+                                          color: AppColor.successDark,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: _removeDiscount,
+                                      icon: const Icon(Icons.close_rounded,
+                                          size: 16, color: AppColor.errorDark),
+                                      label: const Text('حذف کد',
+                                          style: TextStyle(
+                                              fontFamily: 'Estedad',
+                                              fontSize: 12,
+                                              color: AppColor.errorDark)),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -617,46 +794,45 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     );
   }
 
-  /// کارت جمع مبالغ سفارش.
-  Widget _buildTotalsCard({
-    required int base,
-    required num displayedDiscount,
-    required int tax,
-    required bool isFree,
-    required int shippingCost,
-    required num payable,
-  }) {
+  /// کارت جمع مبالغ سفارش — هر ردیف یک عددِ API یا کدِ تخفیفِ تأییدشده.
+  Widget _buildTotalsCard({required OrderTotals totals}) {
+    final t = totals;
     return Container(
-                      decoration: ShapeDecoration(
-            color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            _priceRow('قیمت کل',
-                                '${thousandSeparator(base)} تومان'),
-                            _priceRow('تخفیف',
-                                '${thousandSeparator(displayedDiscount.toInt())}- تومان',
-                                valueColor: AppColor.errorDark),
-                            _priceRow(
-                                'مالیات', '${thousandSeparator(tax)} تومان'),
-                            _priceRow(
-                                'هزینه ارسال',
-                                isFree
-                                    ? 'رایگان'
-                                    : '${thousandSeparator(shippingCost)} تومان',
-                                valueColor: isFree ? AppColor.successDark : null),
-                            Divider(height: 24, color: AppColor.outlineVariantDark),
-                            _priceRow('مبلغ قابل پرداخت',
-                                '${thousandSeparator(payable.toInt())} تومان',
-                                valueColor: AppColor.goldEnd),
-                          ],
-                        ),
-                      ),
-                    );
+      decoration: ShapeDecoration(
+        color: AppColor.surfaceContainer,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _priceRow('قیمت کل', '${thousandSeparator(t.base)} تومان'),
+            if (t.productDiscount > 0)
+              _priceRow('تخفیف محصولات',
+                  '${thousandSeparator(t.productDiscount)}- تومان',
+                  valueColor: AppColor.errorDark),
+            if (t.hasVoucher)
+              _priceRow('کد تخفیف (٪${t.voucherPercent})',
+                  '${thousandSeparator(t.voucherAmount)}- تومان',
+                  valueColor: AppColor.successDark),
+            _priceRow('مالیات', '${thousandSeparator(t.tax)} تومان'),
+            _priceRow(
+                'هزینه ارسال',
+                t.freeShipping
+                    ? 'رایگان'
+                    : '${thousandSeparator(t.shipping)} تومان',
+                valueColor: t.freeShipping ? AppColor.successDark : null),
+            Divider(height: 24, color: AppColor.outlineVariantDark),
+            _priceRow('مبلغ قابل پرداخت',
+                t.payable == 0
+                    ? 'رایگان'
+                    : '${thousandSeparator(t.payable)} تومان',
+                valueColor: AppColor.goldEnd),
+          ],
+        ),
+      ),
+    );
   }
 
   /// دکمه رفتن به درگاه پرداخت.

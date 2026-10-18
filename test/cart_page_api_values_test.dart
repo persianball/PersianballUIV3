@@ -9,6 +9,7 @@ import 'package:persian_ball/bloc/cart/cart_bloc.dart';
 import 'package:persian_ball/models/CartModel.dart';
 import 'package:persian_ball/utils/ThousandsFormatter.dart';
 import 'package:persian_ball/views/screens/cart_page.dart';
+import 'package:persian_ball/views/screens/order_summary_page.dart';
 
 class _FakeCartBloc extends Bloc<CartEvent, CartState> implements CartBloc {
   _FakeCartBloc(AllCartFromBackend cart) : super(CartLoaded(cart)) {
@@ -63,5 +64,21 @@ void main() {
     await _pump(t, const Size(1280, 800));
     expect(find.text('${thousandSeparator(1000)} تومان'), findsWidgets);
     expect(find.text('سایز 38'), findsOneWidget);
+  });
+
+  testWidgets('خلاصه‌ی سفارش: ردیف‌ها عیناً از price ِ API، بدونِ کد', (t) async {
+    t.view.physicalSize = const Size(390, 844);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+    await t.pumpWidget(MaterialApp(
+      home: OrderSummaryPage(cart: _fixture(), deliveryMethod: 'free'),
+    ));
+    await t.pump();
+    expect(find.text('قیمت کل'), findsOneWidget);
+    expect(find.text('تخفیف محصولات'), findsOneWidget);
+    expect(find.text('${thousandSeparator(9000)}- تومان'), findsOneWidget);
+    expect(find.text('${thousandSeparator(1000)} تومان'), findsWidgets);
+    expect(find.text('حذف کد'), findsNothing);
+    expect(find.text('رفتن به درگاه پرداخت'), findsOneWidget);
   });
 }
