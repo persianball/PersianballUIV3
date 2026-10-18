@@ -511,19 +511,43 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                   child: Row(
                                     children: [
                                       Expanded(
-                                        child: Text(
-                                          it.product?.productVariant
-                                                  ?.productName ??
-                                              'محصول',
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                              fontFamily: 'Estedad',
-                                              color: AppColor.onSurface),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              it.product?.productVariant
+                                                      ?.productName ??
+                                                  it.course?.courseName ??
+                                                  'محصول',
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontFamily: 'Estedad',
+                                                  color: AppColor.onSurface),
+                                            ),
+                                            // رنگ و سایز، مینیمال، فقط اگر باشند
+                                            if (_variantLine(it) != null)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 2),
+                                                child: Text(
+                                                  _variantLine(it)!,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                      fontFamily: 'Estedad',
+                                                      fontSize: 11.5,
+                                                      color: AppColor
+                                                          .onSurfaceVariant),
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      Text('x${it.quantity}',
+                                      Text('×${it.quantity}',
                                           style: const TextStyle(
                                               fontFamily: 'Estedad',
                                               color: AppColor.onSurfaceVariant)),
@@ -534,6 +558,18 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                         ),
                       ),
                     );
+  }
+
+  /// «رنگ مشکی، سایز ۳۸» از فیلدهای خودِ آیتم؛ null وقتی هیچ‌کدام نیست.
+  static String? _variantLine(CartItemFromBackend it) {
+    final p = it.product;
+    if (p == null) return null;
+    final color = (p.productVariant?.color ?? '').trim();
+    final parts = <String>[
+      if (color.isNotEmpty && color.toLowerCase() != 'null') 'رنگ $color',
+      if (p.sizeLabel != null) 'سایز ${p.sizeLabel}',
+    ];
+    return parts.isEmpty ? null : parts.join('، ');
   }
 
   /// کارت آدرس و روش ارسال — برای سفارشِ بدون ارسال، به‌جای آدرس یک

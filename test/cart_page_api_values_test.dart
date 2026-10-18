@@ -78,6 +78,7 @@ void main() {
     expect(find.text('تخفیف محصولات'), findsOneWidget);
     expect(find.text('${thousandSeparator(9000)}- تومان'), findsOneWidget);
     expect(find.text('${thousandSeparator(1000)} تومان'), findsWidgets);
+    expect(find.text('رنگ مشکی، سایز 38'), findsOneWidget);
     expect(find.text('حذف کد'), findsNothing);
     expect(find.text('رفتن به درگاه پرداخت'), findsOneWidget);
   });
