@@ -774,10 +774,16 @@ class _CartPageState extends State<CartPage> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(label,
-                                          style: const TextStyle(
-                                              fontSize: 14,
-                                              color: AppColor.onSurfaceVariant)),
+                                      Expanded(
+                                        child: Text(label,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                                fontSize: 14,
+                                                color:
+                                                    AppColor.onSurfaceVariant)),
+                                      ),
+                                      const SizedBox(width: 8),
                                       Text(value,
                                           style: TextStyle(
                                               fontSize: 14,
@@ -928,11 +934,13 @@ class _CartPageState extends State<CartPage> {
                                                       color:
                                                           AppColor.successDark),
                                                   SizedBox(width: 8),
-                                                  Text(
-                                                      'ارسال رایگان برای سفارش شما فعال است',
-                                                      style: TextStyle(
-                                                          color: AppColor
-                                                              .onSurface)),
+                                                  Expanded(
+                                                    child: Text(
+                                                        'ارسال رایگان برای سفارش شما فعال است',
+                                                        style: TextStyle(
+                                                            color: AppColor
+                                                                .onSurface)),
+                                                  ),
                                                 ],
                                               ),
                                             )

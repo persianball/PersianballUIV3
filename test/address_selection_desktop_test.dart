@@ -61,9 +61,12 @@ void main() {
     expect(find.text('آدرس 2'), findsNWidgets(2)); // کارت + ستونِ کناری
   });
 
-  testWidgets('موبایل: لیستِ تایم‌لاین و FAB', (t) async {
+  testWidgets('موبایل: دکمه‌ی پرداخت تمام‌عرض، افزودن در نوارِ بالا', (t) async {
     await _pump(t, const Size(390, 844));
-    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byTooltip('افزودن آدرس'), findsOneWidget);
     expect(find.text('ارسال به'), findsNothing);
+    final w = t.getSize(find.widgetWithText(ElevatedButton, 'نهایی‌سازی و پرداخت')).width;
+    expect(w, greaterThan(340)); // ۳۹۰ − حاشیه‌ها
   });
 }

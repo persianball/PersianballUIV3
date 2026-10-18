@@ -24,17 +24,11 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
   bool isLoading = false;
   bool isDeleteLoading = false;
 
-  int get _originalPrice =>
-      (widget.cartItemFromBackend.product?.price ?? 0) *
-      widget.cartItemFromBackend.quantity;
+  int get _originalPrice => widget.cartItemFromBackend.lineTotal;
 
   int? get _discountPercent => widget.cartItemFromBackend.product?.disountPercentage;
 
-  int get _discountedPrice {
-    final percent = _discountPercent;
-    if (percent == null || percent == 0) return _originalPrice;
-    return (_originalPrice * (1 - percent / 100.0)).toInt();
-  }
+  int get _discountedPrice => widget.cartItemFromBackend.discountedLineTotal;
 
   void _changeQuantity(int next) {
     if (next < 1) return;
@@ -71,9 +65,11 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
 
   @override
   Widget build(BuildContext context) {
-    final farsiName = widget.cartItemFromBackend.product?.productVariant?.productName ?? '';
-    final colorName = widget.cartItemFromBackend.product?.productVariant?.color ?? '';
-    final image = widget.cartItemFromBackend.product?.productVariant?.image ?? '';
+    final item = widget.cartItemFromBackend;
+    final farsiName = item.product?.productVariant?.productName ?? '';
+    final colorName = item.product?.productVariant?.color ?? '';
+    final image = item.product?.productVariant?.image ?? '';
+    final sizeLabel = item.product?.sizeLabel;
     final percent = _discountPercent;
 
     return BlocListener<CartBloc, CartState>(
@@ -95,123 +91,130 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
           onTap: _openDetails,
           behavior: HitTestBehavior.opaque,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
             decoration: ShapeDecoration(
-            color: AppColor.surfaceContainer,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              color: AppColor.surfaceContainer,
+              shape: AppShapes.border(AppShapes.rLg),
+              shadows: AppColor.cardShadow,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // تصویر کوچک، سمت راست
-                SquircleClip(
-                  radius: AppShapes.rSm,
-                  child: Image.network(
-                    "${URLs.baseUrl}$image",
-                    width: 48,
-                    height: 48,
-                    cacheWidth: 144,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) =>
-                        Image.asset('assets/images/placeholder.jpg', width: 48, height: 48),
-                  ),
-                ),
-                const SizedBox(width: 10),
-
-                // عنوان و رنگ، چسبیده به تصویر در سمت راست
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        farsiName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.start,
-                        style: const TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColor.onSurface,
-                        ),
+                // ردیفِ بالا: تصویر، نام/رنگ، قیمت
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SquircleClip(
+                      radius: AppShapes.rSm,
+                      child: Image.network(
+                        "${URLs.baseUrl}$image",
+                        width: 52,
+                        height: 52,
+                        cacheWidth: 156,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Image.asset(
+                            'assets/images/placeholder.jpg',
+                            width: 52,
+                            height: 52),
                       ),
-                      if (colorName.isNotEmpty) ...[
-                        const SizedBox(height: 2),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            farsiName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColor.onSurface,
+                              height: 1.4,
+                            ),
+                          ),
+                          if (colorName.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              colorName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 11,
+                                color: AppColor.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // قیمت: بالا تخفیف + قیمتِ قبلی، پایین قیمتِ نهایی
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (percent != null && percent != 0)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: const ShapeDecoration(
+                                  color: AppColor.danger,
+                                  shape: AppShapes.pill,
+                                ),
+                                child: Text(
+                                  '٪$percent',
+                                  style: const TextStyle(
+                                      fontFamily: 'Estedad',
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                thousandSeparator(_originalPrice),
+                                style: const TextStyle(
+                                  fontFamily: 'Estedad',
+                                  fontSize: 10,
+                                  color: AppColor.onSurfaceVariant,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            ],
+                          ),
                         Text(
-                          colorName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.start,
+                          '${thousandSeparator(_discountedPrice)} تومان',
                           style: const TextStyle(
                             fontFamily: 'Estedad',
-                            fontSize: 11,
-                            color: AppColor.onSurfaceVariant,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColor.goldEnd,
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // قیمت/تخفیف و کنترل تعداد و حذف، سمت چپ - مینیمال و ریز
-                // ردیف اول: درصد تخفیف + قیمت قبلی (خط‌خورده)، ردیف دوم:
-                // قیمت نهایی.
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (percent != null && percent != 0)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: const ShapeDecoration(
-                              color: AppColor.danger,
-                              shape: AppShapes.pill,
-                            ),
-                            child: Text(
-                              '$percent%',
-                              style: const TextStyle(
-                                  fontFamily: 'Estedad',
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            thousandSeparator(_originalPrice),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColor.onSurfaceVariant,
-                              decoration: TextDecoration.lineThrough,
-                            ),
-                          ),
-                        ],
-                      ),
-                    Text(
-                      thousandSeparator(_discountedPrice),
-                      style: const TextStyle(
-                        fontFamily: 'Estedad',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColor.goldEnd,
-                      ),
                     ),
-                    const SizedBox(height: 4),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // ردیفِ پایین، تمام‌عرض: سایز کنارِ کنترلِ تعداد
+                Row(
+                  children: [
+                    if (sizeLabel != null) _chip('سایز', sizeLabel),
+                    const Spacer(),
                     MiniQuantityRow(
-                      quantity: widget.cartItemFromBackend.quantity,
+                      quantity: item.quantity,
                       isLoading: isLoading,
                       isDeleteLoading: isDeleteLoading,
-                      onIncrement: () =>
-                          _changeQuantity(widget.cartItemFromBackend.quantity + 1),
-                      onDecrement: () =>
-                          _changeQuantity(widget.cartItemFromBackend.quantity - 1),
+                      onIncrement: () => _changeQuantity(item.quantity + 1),
+                      onDecrement: () => _changeQuantity(item.quantity - 1),
                       onDelete: _delete,
                     ),
                   ],
@@ -223,9 +226,27 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
       ),
     );
   }
+
+  Widget _chip(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: ShapeDecoration(
+        color: AppColor.pitchGreen.withValues(alpha: 0.12),
+        shape: const StadiumBorder(),
+      ),
+      child: Text(
+        '$label $value',
+        style: const TextStyle(
+          fontFamily: 'Estedad',
+          fontSize: 11.5,
+          fontWeight: FontWeight.w800,
+          color: AppColor.onSurface,
+        ),
+      ),
+    );
+  }
 }
 
-/// ردیف ریز و مینیمال تعداد + حذف، مشترک بین محصول و دوره.
 class MiniQuantityRow extends StatelessWidget {
   final int quantity;
   final bool isLoading;
@@ -334,12 +355,10 @@ class _ProductDetailsSheet extends StatelessWidget {
     final farsiName = cartItemFromBackend.product?.productVariant?.productName ?? '';
     final colorName = cartItemFromBackend.product?.productVariant?.color ?? '';
     final image = cartItemFromBackend.product?.productVariant?.image ?? '';
-    final originalPrice =
-        (cartItemFromBackend.product?.price ?? 0) * cartItemFromBackend.quantity;
+    final originalPrice = cartItemFromBackend.lineTotal;
     final percent = cartItemFromBackend.product?.disountPercentage;
-    final discountedPrice = (percent != null && percent != 0)
-        ? (originalPrice * (1 - percent / 100.0)).toInt()
-        : originalPrice;
+    final discountedPrice = cartItemFromBackend.discountedLineTotal;
+    final sizeLabel = cartItemFromBackend.product?.sizeLabel;
     final isFreeShipping = priceFromBack.isFreeShipping ?? false;
 
     return Directionality(
@@ -383,10 +402,13 @@ class _ProductDetailsSheet extends StatelessWidget {
                   color: AppColor.onSurface,
                 ),
               ),
-              if (colorName.isNotEmpty) ...[
+              if (colorName.isNotEmpty || sizeLabel != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  colorName,
+                  [
+                    if (colorName.isNotEmpty) 'رنگ $colorName',
+                    if (sizeLabel != null) 'سایز $sizeLabel',
+                  ].join('، '),
                   style: const TextStyle(
                       fontFamily: 'Estedad',
                       fontSize: 13,
@@ -402,7 +424,7 @@ class _ProductDetailsSheet extends StatelessWidget {
                 isFreeShipping ? Icons.check_circle_outline : Icons.motorcycle,
                 isFreeShipping
                     ? 'ارسال رایگان'
-                    : '${priceFromBack.postShippingPrice}: هزینه ارسال',
+                    : 'هزینه ارسال: ${thousandSeparator(priceFromBack.postShippingPrice ?? 0)} تومان',
               ),
               const SizedBox(height: 20),
               Row(
@@ -433,7 +455,7 @@ class _ProductDetailsSheet extends StatelessWidget {
                         color: AppColor.danger,
                         shape: AppShapes.pill,
                       ),
-                      child: Text('$percent%',
+                      child: Text('٪$percent',
                           style: const TextStyle(
                               fontFamily: 'Estedad',
                               fontWeight: FontWeight.w700,

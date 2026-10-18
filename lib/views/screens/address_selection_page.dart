@@ -49,16 +49,18 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
           elevation: 0,
           title: const Text('انتخاب آدرس',
               style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
-        ),
-        // دسکتاپ دکمه‌ی «افزودن» را در سربرگِ لیست دارد
-        floatingActionButton: desktop
-            ? null
-            : FloatingActionButton(
+          // موبایل: «افزودن آدرس» در نوارِ بالا؛ FABِ «+» روی دکمه‌ی تمام‌عرضِ
+          // پرداخت می‌افتاد. دسکتاپ دکمه را در سربرگِ لیست دارد.
+          actions: [
+            if (!desktop)
+              IconButton(
+                tooltip: 'افزودن آدرس',
                 onPressed: _openCreateDialog,
-                backgroundColor: AppColor.goldEnd,
-                shape: AppShapes.border(AppShapes.rMd),
-                child: const Icon(Icons.add, color: AppColor.onGold),
+                icon: const Icon(Icons.add_location_alt_outlined,
+                    color: AppColor.goldEnd),
               ),
+          ],
+        ),
         body: BlocConsumer<AddressBloc, AddressState>(
           listener: (context, state) {
             if (state is AddressError) {
@@ -133,11 +135,12 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              // پیش‌تر نصفِ عرضِ پنجره بود: روی گوشی تنگ، روی تبلت کشیده
+              // تمام‌عرض روی گوشی (پیش‌تر به اندازه‌ی متنش جمع می‌شد)، روی
+              // تبلت حداکثر ۴۲۰
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
-                  child: _payButton(),
+                  child: SizedBox(width: double.infinity, child: _payButton()),
                 ),
               ),
             ),

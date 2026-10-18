@@ -82,6 +82,20 @@ class CartItemFromBackend{
 });
 
 
+  /// قیمتِ خط (واحد × تعداد) از فیلدهای API
+  int get lineTotal =>
+      (product?.unitPrice ?? course?.price ?? 0) * quantity;
+
+  int get discountedLineTotal {
+    final p = product;
+    if (p != null) return p.discountedUnitPrice * quantity;
+    final c = course;
+    if (c == null) return 0;
+    final pct = c.discountPercentage ?? 0;
+    final unit = c.price ?? 0;
+    return (pct <= 0 ? unit : (unit * (100 - pct)) ~/ 100) * quantity;
+  }
+
   factory CartItemFromBackend.fromJson(Map<String, dynamic> json) {
 
     return CartItemFromBackend(
@@ -146,6 +160,23 @@ class ProductInCart{
     required this.productVariant,required this.size,required this.count,required this.disountPercentage,
     required this.isActive,required this.price,required this.id
   });
+
+  /// همه از فیلدهای خودِ آیتم در پاسخِ سبد (نه از size_variants).
+  int get unitPrice => price ?? 0;
+  int get discountPercent => disountPercentage ?? 0;
+
+  /// قیمتِ واحد بعد از تخفیف با حسابِ صحیح. نسخه‌ی قبلی با اعشار
+  /// (1 - 90/100.0 = 0.0999…) ۱۰۰۰ را ۹۹۹ نشان می‌داد.
+  int get discountedUnitPrice => discountPercent <= 0
+      ? unitPrice
+      : (unitPrice * (100 - discountPercent)) ~/ 100;
+
+  /// «۳۸» → «سایز ۳۸»؛ مقدارهای خالی/Null نمایش داده نمی‌شوند.
+  String? get sizeLabel {
+    final s = (size ?? '').trim();
+    if (s.isEmpty || s.toLowerCase() == 'null') return null;
+    return s;
+  }
   factory ProductInCart.fromJson(Map<String, dynamic> json){
     return ProductInCart(
       id: requireInt(json['id'], 'product.id'),
