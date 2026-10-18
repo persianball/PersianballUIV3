@@ -278,7 +278,14 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
               ),
             ],
           ),
-          content: SingleChildScrollView(
+          // بدونِ سقفِ ارتفاع، بدنه‌ی خامِ بلند (مثلاً HTMLِ درگاه) دیالوگ را
+          // از صفحه بیرون می‌زد و اسکرول نمی‌شد.
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 520,
+              maxHeight: MediaQuery.of(ctx).size.height * 0.6,
+            ),
+            child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,18 +315,26 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                       borderRadius: AppShapes.radius(AppShapes.rMd),
                       border: Border.all(color: AppColor.outlineVariantDark),
                     ),
-                    child: SelectableText(
-                      error.raw!,
-                      textDirection: TextDirection.ltr,
-                      style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 11,
-                          height: 1.5,
-                          color: AppColor.onSurfaceVariant),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 220),
+                      child: SingleChildScrollView(
+                        child: SelectableText(
+                          error.raw!.length > 2000
+                              ? '${error.raw!.substring(0, 2000)}…'
+                              : error.raw!,
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 11,
+                              height: 1.5,
+                              color: AppColor.onSurfaceVariant),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ],
+            ),
             ),
           ),
           actions: [
