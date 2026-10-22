@@ -43,23 +43,7 @@ void main() {
     });
   });
 
-  group('اعلان‌ها', () {
-    test('در ابتدا همه خوانده‌نشده‌اند', () async {
-      final all = await NotificationService.fetch();
-      expect(await NotificationService.unreadCount(), all.length);
-    });
-
-    test('خواندن یک اعلان شمارنده را کم می‌کند', () async {
-      final before = await NotificationService.unreadCount();
-      await NotificationService.markRead(1);
-      expect(await NotificationService.unreadCount(), before - 1);
-    });
-
-    test('خواندن همه، شمارنده را صفر می‌کند', () async {
-      await NotificationService.markAllRead();
-      expect(await NotificationService.unreadCount(), 0);
-    });
-
+  group('بنرهای هوم', () {
     test('بنرهای هوم خالی نیستند', () {
       expect(NotificationService.banners(), isNotEmpty);
     });

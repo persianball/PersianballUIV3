@@ -1,9 +1,19 @@
 // lib/views/screens/notification_page.dart
+//
+// اعلان‌ها = صندوق پیامِ واقعیِ کاربر از /v1/user/messages/.
+//
+// نسخه‌ی قبلی سه اعلانِ ثابت نشان می‌داد و «خوانده‌شده» را فقط در حافظه‌ی
+// مرورگر نگه می‌داشت. حالا همان پیام‌هایی که سرور برای کاربر ساخته نشان داده
+// می‌شوند و «خوانده شد» با PATCHِ seen_at روی سرور ثبت می‌شود، پس روی همه‌ی
+// دستگاه‌های کاربر یکی است.
 import 'package:flutter/material.dart';
 import 'package:persian_ball/constant/app_breakpoints.dart';
 import 'package:persian_ball/constant/app_shapes.dart';
 import 'package:persian_ball/constant/app_color.dart';
-import 'package:persian_ball/services/notification_service.dart';
+import 'package:persian_ball/services/auth_service.dart';
+import 'package:persian_ball/services/user_message_service.dart';
+import 'package:persian_ball/utils/jalali_date.dart';
+import 'package:persian_ball/views/screens/message_detail_page.dart';
 import 'package:persian_ball/views/widgets/motion.dart';
 
 class NotificationPage extends StatefulWidget {
@@ -14,46 +24,152 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  List<AppNotification> _items = [];
-  Set<int> _read = {};
+  final List<UserMessage> _items = [];
+  final ScrollController _scroll = ScrollController();
+  String? _nextUrl;
+
   bool _loading = true;
+  bool _loadingMore = false;
+  bool _needsLogin = false;
+  bool _markingAll = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_onScroll);
     _load();
   }
 
-  Future<void> _load() async {
-    final items = await NotificationService.fetch();
-    final read = await NotificationService.readIds();
-    if (!mounted) return;
-    setState(() {
-      _items = items;
-      _read = read;
-      _loading = false;
-    });
+  @override
+  void dispose() {
+    _scroll.dispose();
+    // نشانِ زنگوله‌ی خانه بعد از دیدنِ اعلان‌ها باید با سرور یکی شود.
+    UserMessageService.refreshUnread();
+    super.dispose();
   }
 
-  IconData _iconFor(AppNotificationType type) {
-    switch (type) {
-      case AppNotificationType.order:
-        return Icons.local_shipping_outlined;
-      case AppNotificationType.promo:
-        return Icons.local_offer_outlined;
-      case AppNotificationType.system:
-        return Icons.shield_outlined;
+  int get _unread => _items.where((m) => !m.isRead).length;
+
+  Future<void> _load({bool more = false}) async {
+    if (!more) {
+      final token = await AuthService.getToken();
+      if (token == null || token.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _needsLogin = true;
+          _loading = false;
+        });
+        return;
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _needsLogin = false;
+      if (more) {
+        _loadingMore = true;
+      } else {
+        _loading = _items.isEmpty;
+        _error = null;
+      }
+    });
+    try {
+      final page =
+          await UserMessageService.fetch(nextUrl: more ? _nextUrl : null);
+      if (!mounted) return;
+      setState(() {
+        if (!more) _items.clear();
+        _items.addAll(page.results);
+        _nextUrl = page.next;
+        _loading = false;
+        _loadingMore = false;
+      });
+      _syncBadge();
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      setState(() {
+        _loading = false;
+        _loadingMore = false;
+        if (msg == 'نیاز به ورود') {
+          _needsLogin = true;
+        } else if (_items.isEmpty) {
+          // خطای صفحه‌ی بعد نباید چیزی را که نشان داده‌ایم پاک کند.
+          _error = msg;
+        }
+      });
     }
   }
 
-  Color _colorFor(AppNotificationType type) {
-    switch (type) {
-      case AppNotificationType.order:
-        return AppColor.goldEnd;
-      case AppNotificationType.promo:
-        return Colors.orange.shade400;
-      case AppNotificationType.system:
-        return Colors.blueGrey.shade200;
+  void _onScroll() {
+    if (_nextUrl == null || _loading || _loadingMore) return;
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 240) {
+      _load(more: true);
+    }
+  }
+
+  /// وقتی همه‌ی صفحه‌ها آمده‌اند شمارش همین‌جا دقیق است؛ وگرنه از سرور
+  /// دوباره شمرده می‌شود.
+  void _syncBadge() {
+    if (_nextUrl == null) {
+      UserMessageService.unreadNotifier.value = _unread;
+    } else {
+      UserMessageService.refreshUnread();
+    }
+  }
+
+  /// باز کردن پیام و ثبتِ «خوانده شد»: ردیف همان لحظه بی‌نشان می‌شود و اگر
+  /// سرور نپذیرفت برمی‌گردد.
+  Future<void> _open(UserMessage m) async {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => MessageDetailPage(data: m)),
+    );
+    final id = m.id;
+    if (m.isRead || id == null) return;
+    _replace(id, m.copyWithSeen(DateTime.now()));
+    if (!await UserMessageService.markSeen(id)) _replace(id, m);
+  }
+
+  void _replace(int id, UserMessage m) {
+    if (!mounted) return;
+    final at = _items.indexWhere((x) => x.id == id);
+    if (at == -1) return;
+    setState(() => _items[at] = m);
+    _syncBadge();
+  }
+
+  Future<void> _markAll() async {
+    final unread = [for (final m in _items) if (!m.isRead && m.id != null) m];
+    if (unread.isEmpty) return;
+    final now = DateTime.now();
+    setState(() {
+      _markingAll = true;
+      for (var i = 0; i < _items.length; i++) {
+        if (!_items[i].isRead) _items[i] = _items[i].copyWithSeen(now);
+      }
+    });
+    _syncBadge();
+    final failed =
+        await UserMessageService.markAllSeen(unread.map((m) => m.id!));
+    if (!mounted) return;
+    setState(() => _markingAll = false);
+    for (final m in unread) {
+      if (failed.contains(m.id)) _replace(m.id!, m);
+    }
+    if (failed.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('بعضی پیام‌ها خوانده‌شده ثبت نشدند',
+            style: TextStyle(fontFamily: 'Estedad')),
+      ));
+    }
+  }
+
+  Future<void> _login() async {
+    final ok = await Navigator.of(context)
+        .pushNamed<bool>('/login', arguments: {'popOnSuccess': true});
+    if (ok == true && mounted) {
+      setState(() => _loading = true);
+      await _load();
     }
   }
 
@@ -68,40 +184,86 @@ class _NotificationPageState extends State<NotificationPage> {
           foregroundColor: AppColor.onSurface,
           elevation: 0,
           title: const Text('اعلان‌ها',
-              style: TextStyle(fontFamily: 'Estedad', fontSize: 16, color: AppColor.onSurface)),
+              style: TextStyle(
+                  fontFamily: 'Estedad',
+                  fontSize: 16,
+                  color: AppColor.onSurface)),
           actions: [
-            TextButton(
-              onPressed: () async {
-                await NotificationService.markAllRead();
-                await _load();
-              },
-              child: const Text('خواندن همه',
-                  style: TextStyle(fontFamily: 'Estedad', fontSize: 12, color: AppColor.goldEnd)),
-            ),
+            if (!_needsLogin && _unread > 0)
+              TextButton(
+                onPressed: _markingAll ? null : _markAll,
+                child: const Text('خواندن همه',
+                    style: TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 12,
+                        color: AppColor.goldEnd)),
+              ),
           ],
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator(color: AppColor.goldEnd))
-            : RefreshIndicator(
-                color: AppColor.goldEnd,
-                onRefresh: _load,
-                child: _centerOnDesktop(ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    if (NotificationService.isMock) _mockBanner(),
-                    if (_items.isEmpty)
-                      _empty()
-                    else
-                      for (int i = 0; i < _items.length; i++)
-                        FadeSlideIn(
-                          delay: Duration(milliseconds: 45 * (i % 6)),
-                          child: _tile(_items[i]),
-                        ),
-                  ],
-                )),
-              ),
+        body: _body(),
       ),
+    );
+  }
+
+  Widget _body() {
+    if (_loading) {
+      return const Center(
+          child: CircularProgressIndicator(color: AppColor.goldEnd));
+    }
+    if (_needsLogin) {
+      return _message(
+        icon: Icons.lock_outline,
+        title: 'وارد حساب کاربری نشده‌اید',
+        subtitle: 'برای دیدن اعلان‌ها ابتدا وارد حساب کاربری شوید',
+        action: 'ورود به حساب کاربری',
+        onAction: _login,
+      );
+    }
+    if (_error != null) {
+      return _message(
+        icon: Icons.wifi_off_rounded,
+        title: 'اعلان‌ها دریافت نشد',
+        subtitle: _error!,
+        action: 'تلاش دوباره',
+        onAction: () {
+          setState(() => _loading = true);
+          _load();
+        },
+      );
+    }
+    return RefreshIndicator(
+      color: AppColor.goldEnd,
+      onRefresh: () async {
+        _nextUrl = null;
+        await _load();
+      },
+      child: _centerOnDesktop(ListView(
+        controller: _scroll,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (_items.isEmpty)
+            _empty()
+          else
+            for (int i = 0; i < _items.length; i++)
+              FadeSlideIn(
+                delay: Duration(milliseconds: 45 * (i % 6)),
+                child: _tile(_items[i]),
+              ),
+          if (_loadingMore)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: AppColor.goldEnd),
+                ),
+              ),
+            ),
+        ],
+      )),
     );
   }
 
@@ -116,61 +278,86 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 
-  Widget _mockBanner() => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(10),
-        decoration: ShapeDecoration(
-          color: AppColor.pitchGreenSoft,
-          shape: AppShapes.border(AppShapes.rMd),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.info_outline, size: 18, color: AppColor.goldEnd),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text(
-                'اعلان‌ها نمایشی است؛ برای push واقعی به endpoint اعلان و FCM نیاز است.',
-                style: TextStyle(fontFamily: 'Estedad', fontSize: 11, color: AppColor.onSurfaceVariant),
+  Widget _message({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String action,
+    required VoidCallback onAction,
+  }) =>
+      Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 48, color: AppColor.onSurfaceVariant),
+              const SizedBox(height: 12),
+              Text(title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColor.onSurface)),
+              const SizedBox(height: 6),
+              Text(subtitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontFamily: 'Estedad',
+                      fontSize: 12,
+                      color: AppColor.onSurfaceVariant)),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: onAction,
+                style: FilledButton.styleFrom(
+                    backgroundColor: AppColor.goldEnd),
+                child: Text(action,
+                    style: const TextStyle(fontFamily: 'Estedad')),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
 
-  Widget _empty() => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 60),
+  Widget _empty() => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
         child: Column(
           children: [
             Icon(Icons.notifications_none,
                 size: 48, color: AppColor.onSurfaceVariant),
-            const SizedBox(height: 12),
-            const Text('اعلانی ندارید',
-                style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurface)),
+            SizedBox(height: 12),
+            Text('اعلانی ندارید',
+                style: TextStyle(
+                    fontFamily: 'Estedad', color: AppColor.onSurface)),
           ],
         ),
       );
 
-  Widget _tile(AppNotification n) {
-    final isRead = _read.contains(n.id);
-    final color = _colorFor(n.type);
+  /// متنِ زیرِ تیتر: باقیِ پیام بعد از خطِ اول، یا کلِ متن وقتی تیتر بریده شده.
+  static String? _preview(UserMessage m) {
+    if (!m.hasMoreThanTitle) return null;
+    final lines = m.text.split('\n');
+    final rest = lines.skip(1).join('\n').trim();
+    return rest.isNotEmpty ? rest : m.text;
+  }
+
+  Widget _tile(UserMessage m) {
+    final isRead = m.isRead;
+    final preview = _preview(m);
+    const color = AppColor.goldEnd;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: ShapeDecoration(
-            color: AppColor.card,
-            shape: AppShapes.border(AppShapes.rLg),
-            shadows: AppColor.cardShadow,
-          ),
+        color: AppColor.card,
+        shape: AppShapes.border(AppShapes.rLg),
+        shadows: AppColor.cardShadow,
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () async {
-            await NotificationService.markRead(n.id);
-            if (!mounted) return;
-            await _load();
-            if (!mounted) return;
-            if (n.route != null) Navigator.of(context).pushNamed(n.route!);
-          },
+          onTap: () => _open(m),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -179,10 +366,9 @@ class _NotificationPageState extends State<NotificationPage> {
                 Container(
                   width: 38,
                   height: 38,
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
-                  ),
-                  child: Icon(_iconFor(n.type), size: 20, color: color),
+                  decoration: BoxDecoration(color: color.withOpacity(0.12)),
+                  child: const Icon(Icons.notifications_none_rounded,
+                      size: 20, color: color),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -193,7 +379,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              n.title,
+                              m.displayTitle,
                               style: TextStyle(
                                 fontFamily: 'Estedad',
                                 fontSize: 13,
@@ -205,24 +391,29 @@ class _NotificationPageState extends State<NotificationPage> {
                           ),
                           if (!isRead)
                             Container(
+                              key: const ValueKey('unread-dot'),
                               width: 8,
                               height: 8,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: AppColor.goldEnd,
                                 shape: BoxShape.circle,
                               ),
                             ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(n.body,
-                          style: const TextStyle(
-                              fontFamily: 'Estedad',
-                              fontSize: 12,
-                              height: 1.6,
-                              color: AppColor.onSurfaceVariant)),
+                      if (preview != null) ...[
+                        const SizedBox(height: 4),
+                        Text(preview,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontFamily: 'Estedad',
+                                fontSize: 12,
+                                height: 1.6,
+                                color: AppColor.onSurfaceVariant)),
+                      ],
                       const SizedBox(height: 6),
-                      Text(n.createdAt,
+                      Text(formatOrderDate(m.createdAt),
                           style: const TextStyle(
                               fontFamily: 'Estedad',
                               fontSize: 10,

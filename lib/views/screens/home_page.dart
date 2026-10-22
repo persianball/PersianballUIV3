@@ -24,6 +24,7 @@ import '../../bloc/product/product_bloc.dart';
 import '../../models/ProductModel.dart';
 import '../../services/catalog_service.dart';
 import '../../services/notification_service.dart';
+import 'package:persian_ball/services/user_message_service.dart';
 import 'catalog_page.dart';
 import 'course_detail_page.dart';
 import 'profile_page.dart' show UserService;
@@ -137,10 +138,13 @@ class _HomePageState extends State<HomePage> {
     // نامِ کاربر هم به وضعیت ورود وابسته است؛ سبد را ریشه‌ی برنامه
     // به‌روز می‌کند، ولی خوش‌آمدگویی حالتِ همین صفحه است.
     AuthService.authRevision.addListener(_onAuthChanged);
+    UserMessageService.refreshUnread();
   }
 
   void _onAuthChanged() {
     if (mounted) _loadUserName();
+    // ورود/خروج: نشانِ زنگوله باید مالِ حسابِ فعلی باشد (مهمان = صفر).
+    UserMessageService.refreshUnread();
   }
 
   @override
@@ -296,18 +300,19 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          FutureBuilder<int>(
-            future: NotificationService.unreadCount(),
-            builder: (context, snap) => Badge(
-              isLabelVisible: (snap.data ?? 0) > 0,
-              label: Text('${snap.data ?? 0}'),
+          // نشانِ زنگوله = پیام‌های خوانده‌نشده‌ی صندوقِ واقعیِ کاربر
+          ValueListenableBuilder<int>(
+            valueListenable: UserMessageService.unreadNotifier,
+            builder: (context, unread, _) => Badge(
+              isLabelVisible: unread > 0,
+              label: Text(unread > 99 ? '99+' : '$unread'),
               backgroundColor: AppColor.danger,
               child: CircleIconButton(
                 icon: Icons.notifications_none_rounded,
                 size: 42,
                 onTap: () async {
                   await Navigator.of(context).pushNamed('/notifications');
-                  if (mounted) setState(() {});
+                  UserMessageService.refreshUnread();
                 },
               ),
             ),

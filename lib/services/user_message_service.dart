@@ -189,6 +189,17 @@ class UserMessageService {
     }
   }
 
+  /// «خواندن همه»: سرور endpointِ گروهی ندارد، پس برای هر پیام یک PATCH
+  /// می‌رود. شناسه‌هایی را برمی‌گرداند که ثبت‌شان ناموفق بود.
+  static Future<Set<int>> markAllSeen(Iterable<int> ids) async {
+    final list = ids.toList();
+    final results = await Future.wait(list.map(markSeen));
+    return {
+      for (var i = 0; i < list.length; i++)
+        if (!results[i]) list[i],
+    };
+  }
+
   /// تعداد پیام‌های خوانده‌نشده — برای نشانِ روی آیکن پیام‌ها.
   ///
   /// سرور نه فیلترِ خوانده‌نشده دارد نه شمارنده‌ی جدا، پس ناچار باید خودِ
