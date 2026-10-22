@@ -76,4 +76,70 @@ void main() {
     await sub.cancel();
     await bloc.close();
   });
+  group('رنگ‌های زیاد: اسکرولِ افقی', () {
+    List<VariantSwatch> many(int n) => [
+          for (int i = 0; i < n; i++)
+            VariantSwatch(name: 'شماره $i', color: Color(0xFF203040 + i * 0x1A2B3C)),
+        ];
+
+    Future<void> pump(WidgetTester t, int n, int sel) async {
+      t.view.physicalSize = const Size(390, 200);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: VariantSwatchPicker(
+                swatches: many(n),
+                selectedIndex: sel,
+                tileSize: 60,
+                onSelected: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ));
+      await t.pump(const Duration(milliseconds: 900));
+    }
+
+    // کادرِ خودِ کاشی (بدونِ حلقه): ویجتِ Semantics هر کاشی
+    Rect tileRect(WidgetTester t, String name) => t.getRect(
+          find.byWidgetPredicate(
+            (w) => w is Semantics && w.properties.label == 'رنگ شماره $name',
+            skipOffstage: false,
+          ),
+        );
+
+    testWidgets('حلقه‌ی کاشیِ اول (سمتِ راست در RTL) داخلِ کادر جا می‌شود',
+        (t) async {
+      await pump(t, 4, 0);
+      final viewport = t.getRect(find.byType(SingleChildScrollView));
+      final first = tileRect(t, '0');
+      // دست‌کم ۴px (پهنای حلقه) تا لبه‌ی راستِ کادر فاصله دارد
+      expect(viewport.right - first.right, greaterThanOrEqualTo(4));
+    });
+
+    testWidgets('رنگِ از قبل انتخاب‌شده‌ی آخر از همان اول دیده می‌شود',
+        (t) async {
+      await pump(t, 9, 8);
+      final viewport = t.getRect(find.byType(SingleChildScrollView));
+      final last = tileRect(t, '8');
+      expect(last.left, greaterThanOrEqualTo(viewport.left));
+      expect(last.right, lessThanOrEqualTo(viewport.right));
+      // و کاشیِ اول حالا بیرونِ کادر است (یعنی واقعاً اسکرول خورده)
+      expect(tileRect(t, '0').left, greaterThan(viewport.right));
+    });
+
+    testWidgets('با کشیدنِ افقی به رنگ‌های بعدی می‌رسیم', (t) async {
+      await pump(t, 9, 0);
+      final viewport = t.getRect(find.byType(SingleChildScrollView));
+      expect(tileRect(t, '8').right, lessThan(viewport.left));
+      await t.drag(find.byType(SingleChildScrollView), const Offset(600, 0));
+      await t.pumpAndSettle();
+      expect(tileRect(t, '8').left, greaterThanOrEqualTo(viewport.left));
+    });
+  });
 }

@@ -58,10 +58,10 @@ class _VariantSwatchPickerState extends State<VariantSwatchPicker>
   static const double _gap = 12;
   static const double _ring = 4; // فاصله‌ی قطره از لبه‌ی کاشی
 
-  /// حاشیه‌ی رسم دورِ کاشی‌ها: قطره و هاله‌اش روی کاشیِ اول/آخر و بالا/پایین
-  /// بیرونِ بومِ رسم می‌افتاد و بریده می‌شد. ویوپورتِ اسکرول هم همین‌قدر
-  /// پهن‌تر می‌شود تا کاشیِ اول با سربرگ هم‌تراز بماند.
-  static const double _bleed = 10;
+  /// حاشیه‌ی رسم دورِ کاشی‌ها (حلقه + ۲px ضدِ دندانه). داخلِ خودِ ویجت است؛
+  /// نسخه‌ی قبلی با OverflowBox بیرونِ کادر می‌زد و پنلِ محصول آن را می‌برید
+  /// (حلقه‌ی کاشیِ اول از سمتِ راست کوتاه می‌شد).
+  static const double _bleed = _ring + 2;
 
   late final AnimationController _flow = AnimationController(
     vsync: this,
@@ -71,6 +71,15 @@ class _VariantSwatchPickerState extends State<VariantSwatchPicker>
   final ScrollController _scroll = ScrollController();
   late int _from = widget.selectedIndex;
   late int _to = widget.selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    // رنگِ از قبل انتخاب‌شده (مثلاً نهمی) باید از همان اول دیده شود
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ensureVisible(widget.selectedIndex, jump: true);
+    });
+  }
 
   @override
   void didUpdateWidget(covariant VariantSwatchPicker old) {
@@ -110,7 +119,7 @@ class _VariantSwatchPickerState extends State<VariantSwatchPicker>
     return lerpDouble(_from.toDouble(), _to.toDouble(), Curves.easeInOut.transform(t))!;
   }
 
-  void _ensureVisible(int i) {
+  void _ensureVisible(int i, {bool jump = false}) {
     if (!_scroll.hasClients) return;
     final pos = _scroll.position;
     final start = _bleed + i * _step;
@@ -121,8 +130,13 @@ class _VariantSwatchPickerState extends State<VariantSwatchPicker>
       target = end - pos.viewportDimension + 8;
     }
     if (target == null) return;
+    final double to = target.clamp(0, pos.maxScrollExtent);
+    if (jump || _reduceMotion) {
+      _scroll.jumpTo(to);
+      return;
+    }
     _scroll.animateTo(
-      target.clamp(0, pos.maxScrollExtent),
+      to,
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
     );
@@ -152,63 +166,56 @@ class _VariantSwatchPickerState extends State<VariantSwatchPicker>
         const SizedBox(height: 2),
         SizedBox(
           height: box + _bleed * 2,
-          child: LayoutBuilder(builder: (context, cons) {
-            final double contentW =
-                swatches.length * _step - _gap + _ring * 2;
-            final double viewportW = cons.maxWidth + _bleed * 2;
-            return OverflowBox(
-              minWidth: viewportW,
-              maxWidth: viewportW,
-              alignment: Alignment.center,
-              child: SingleChildScrollView(
-                controller: _scroll,
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.zero,
-                child: SizedBox(
-                  width: contentW + _bleed * 2,
-                  height: box + _bleed * 2,
-                  child: AnimatedBuilder(
-                    animation: _flow,
-                    builder: (context, _) => CustomPaint(
-                      painter: _LiquidBlobPainter(
-                        from: _from,
-                        to: _to,
-                        t: _flow.value,
-                        step: _step,
-                        size: box,
-                        inset: _bleed,
-                        rtl: Directionality.of(context) == TextDirection.rtl,
-                        totalWidth: contentW,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(_bleed),
-                        child: Row(
-                          children: [
-                            for (int i = 0; i < swatches.length; i++) ...[
-                              if (i > 0) const SizedBox(width: _gap),
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  left: i == 0 ? _ring : 0,
-                                  right: i == swatches.length - 1 ? _ring : 0,
-                                ),
-                                child: _Tile(
-                                  swatch: swatches[i],
-                                  size: widget.tileSize,
-                                  selected: i == sel,
-                                  onTap: () => _tap(i),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
+          // رنگ‌های زیاد: اسکرولِ افقی، بریده در لبه‌ی خودِ ویجت
+          child: SingleChildScrollView(
+            controller: _scroll,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.zero,
+            child: SizedBox(
+              width: swatches.length * _step - _gap + _ring * 2 + _bleed * 2,
+              height: box + _bleed * 2,
+              child: AnimatedBuilder(
+                animation: _flow,
+                builder: (context, _) => CustomPaint(
+                  painter: _LiquidBlobPainter(
+                    from: _from,
+                    to: _to,
+                    t: _flow.value,
+                    step: _step,
+                    size: box,
+                    inset: _bleed,
+                    rtl: Directionality.of(context) == TextDirection.rtl,
+                    totalWidth: swatches.length * _step - _gap + _ring * 2,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(_bleed),
+                    child: Row(
+                      children: [
+                        for (int i = 0; i < swatches.length; i++) ...[
+                          if (i > 0) const SizedBox(width: _gap),
+                          Padding(
+                            // start/end، نه left/right: در RTL کاشیِ اول سمتِ
+                            // راست است و با پدینگِ فیزیکی ۴px زیرِ حلقه می‌رفت
+                            padding: EdgeInsetsDirectional.only(
+                              start: i == 0 ? _ring : 0,
+                              end: i == swatches.length - 1 ? _ring : 0,
+                            ),
+                            child: _Tile(
+                              swatch: swatches[i],
+                              size: widget.tileSize,
+                              selected: i == sel,
+                              onTap: () => _tap(i),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ),
               ),
-            );
-          }),
+            ),
+          ),
         ),
       ],
     );
@@ -330,6 +337,8 @@ class _LiquidBlobPainter extends CustomPainter {
   /// حاشیه‌ی رسم (همان _bleed) که محتوا با آن جابه‌جا شده
   final double inset;
 
+  static const double _ringRadiusPad = 4;
+
   // Row در RTL از راست چیده می‌شود
   double _left(int i) =>
       inset + (rtl ? totalWidth - size - i * step : i * step);
@@ -360,15 +369,9 @@ class _LiquidBlobPainter extends CustomPainter {
     final double top = inset + (size - h) / 2;
 
     final rect = Rect.fromLTWH(left, top, width, h);
-    final r = Radius.circular(AppShapes.rLg * 0.9);
+    final r = Radius.circular(AppShapes.rMd + _ringRadiusPad);
     final rrect = RRect.fromRectAndRadius(rect, r);
 
-    canvas.drawRRect(
-      rrect.shift(const Offset(0, 4)),
-      Paint()
-        ..color = AppColor.pitchGreen.withValues(alpha: 0.22)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
-    );
     canvas.drawRRect(
       rrect,
       Paint()
