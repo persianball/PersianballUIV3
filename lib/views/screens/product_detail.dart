@@ -84,7 +84,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
 
   /// اشتراک‌گذاری لینک محصول (دیپ‌لینک همین اپ)
   Future<void> _shareProduct(String productName) async {
-    final link = '${URLs.baseUrl}/product/${widget.productId}';
+    final link = '${URLs.origin}/product/${widget.productId}';
     final text = Uri.encodeComponent('$productName\n$link');
     // بدون وابستگی جدید: ارسال از طریق پیام‌رسان‌های نصب‌شده
     final uri = Uri.parse('sms:?body=$text');
@@ -945,14 +945,6 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                       children: [
                         Row(
                           children: [
-                            const Text(
-                              'از: ',
-                              style: TextStyle(
-                                fontFamily: 'Estedad',
-                                fontSize: 13,
-                                color: AppColor.inkMuted,
-                              ),
-                            ),
                             Text(
                               original > 0
                                   ? '${thousandSeparator(finalPrice)} تومان'

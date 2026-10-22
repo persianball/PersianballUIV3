@@ -75,7 +75,9 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
             final available = _isAvailable(index);
             final isSelected = _selectedIndex == index && available;
 
-            return GestureDetector(
+            return _HoverScale(
+              enabled: available,
+              child: GestureDetector(
               // سایز ناموجود قابل انتخاب نیست
               onTap: available
                   ? () {
@@ -143,6 +145,7 @@ class _SelectableCircleSizeState extends State<SelectableCircleSize> {
                   ],
                 ),
               ),
+            ),
             );
           },
         ),
@@ -170,4 +173,35 @@ class _UnavailableCrossPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// کرسرِ دست و کمی بزرگ‌شدن با هاور (دسکتاپ/وب)؛ سایزِ ناموجود کرسرِ «ممنوع».
+class _HoverScale extends StatefulWidget {
+  const _HoverScale({required this.child, required this.enabled});
+  final Widget child;
+  final bool enabled;
+
+  @override
+  State<_HoverScale> createState() => _HoverScaleState();
+}
+
+class _HoverScaleState extends State<_HoverScale> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: widget.enabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.forbidden,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedScale(
+        scale: _hover && widget.enabled ? 1.08 : 1,
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
 }
