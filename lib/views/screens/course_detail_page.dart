@@ -18,6 +18,7 @@ import 'package:persian_ball/views/widgets/shimmer.dart';
 import 'package:persian_ball/views/widgets/modals/video_player_dialog.dart';
 import 'package:persian_ball/views/widgets/locked_lessons_veil.dart';
 import 'package:persian_ball/views/widgets/rich_description.dart';
+import 'package:persian_ball/models/super_course.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final int id;
@@ -43,13 +44,9 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   /// پیشرفتِ تماشا روی همین دستگاه (کدام ویدیو تا کجا دیده شده).
   CourseProgress _progress = CourseProgress.empty;
 
-  /// هفته‌ی بازِ آکاردئون، به‌شکلِ «محدوده|شماره» (محدوده خالی = خودِ دوره،
-  /// c<id> = یک زیرمجموعه). هر زیرمجموعه هفته‌ی ۱ خودش را دارد، پس شماره‌ی
-  /// هفته به‌تنهایی یکتا نیست. با ورود به صفحه هفته‌ی اول باز است.
+  /// هفته‌ی بازِ آکاردئون، به‌شکلِ «محدوده|شماره». با ورود به صفحه هفته‌ی
+  /// اول باز است.
   String? _openWeek;
-
-  /// زیرمجموعه‌های بازِ یک دوره‌ی مجموعه‌ای
-  final Set<int> _openSubCourses = <int>{};
 
   /// پیشنهادِ «ادامه‌ی تماشا» در هر بار ورود فقط یک‌بار نشان داده می‌شود.
   bool _resumeAsked = false;
@@ -187,16 +184,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
 
   void _openFirstWeek(CourseDetailResponse data) {
     if (_openWeek != null) return;
-    if (data.detail.isBundle) {
-      final first = data.detail.subCourses.first;
-      setState(() {
-        _openSubCourses.add(first.id);
-        if (first.weekGroups.isNotEmpty) {
-          _openWeek = _weekId('c${first.id}', first.weekGroups.first.weekNumber);
-        }
-      });
-      return;
-    }
     if (data.detail.weekGroups.isEmpty) return;
     setState(() => _openWeek = _weekId('', data.detail.weekGroups.first.weekNumber));
   }
@@ -206,10 +193,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
 
   /// باز کردنِ مسیرِ رسیدن به یک ویدیو (زیرمجموعه‌ها + هفته)
   void _reveal(_Located f) {
-    setState(() {
-      _openSubCourses.addAll(f.path);
-      _openWeek = _weekId(f.scope, f.weekNumber);
-    });
+    setState(() => _openWeek = _weekId(f.scope, f.weekNumber));
   }
 
   /// شناسه‌ی پایدارِ یک ویدیو: آدرسِ ویدیو، و اگر نبود هفته+عنوان.
@@ -247,30 +231,12 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     for (final week in data.detail.weekGroups) {
       for (final s in week.allSections) {
         if (_sectionKey(s, week.weekNumber) == key) {
-          return _Located(s, week.weekNumber, '', const [],
+          return _Located(s, week.weekNumber, '',
               weekTitle: week.title);
         }
       }
     }
-    _Located? walk(List<SubCourse> subs, List<int> path) {
-      for (final c in subs) {
-        final scope = 'c${c.id}';
-        final here = [...path, c.id];
-        for (final week in c.weekGroups) {
-          for (final s in week.allSections) {
-            if (_sectionKey(s, week.weekNumber, scope) == key) {
-              return _Located(s, week.weekNumber, scope, here,
-                  courseTitle: c.title, weekTitle: week.title);
-            }
-          }
-        }
-        final deeper = walk(c.subCourses, here);
-        if (deeper != null) return deeper;
-      }
-      return null;
-    }
-
-    return walk(data.detail.subCourses, const []);
+    return null;
   }
 
   /// یک‌بار در هر ورود: اگر ویدیوی نیمه‌کاره‌ای هست، ادامه‌اش را پیشنهاد بده.
@@ -322,7 +288,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               ),
               const SizedBox(height: 4),
               Text(
-                '${found.courseTitle != null ? '${found.courseTitle}، ' : ''}${found.weekTitle}، ${_ago(p.updatedAt)}',
+                '${found.weekTitle}، ${_ago(p.updatedAt)}',
                 style: const TextStyle(
                     fontFamily: 'Estedad',
                     fontSize: 12,
@@ -387,7 +353,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     if (found == null) return null;
     final section = found.section;
     final weekNumber = found.weekNumber;
-    final where = found.courseTitle != null ? '${found.courseTitle}، ' : '';
     final bool done = last.seen;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -436,8 +401,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                       const SizedBox(height: 2),
                       Text(
                         done
-                            ? '$where${found.weekTitle}، کامل دیده شده، ${_ago(last.updatedAt)}'
-                            : '$where${found.weekTitle}، دقیقه‌ی ${_clock(last.position)}، ${_ago(last.updatedAt)}',
+                            ? '${found.weekTitle}، کامل دیده شده، ${_ago(last.updatedAt)}'
+                            : '${found.weekTitle}، دقیقه‌ی ${_clock(last.position)}، ${_ago(last.updatedAt)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -830,317 +795,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     );
   }
 
-  // ---------- دوره‌ی مجموعه‌ای ----------
-
-  /// کارتِ خلاصه‌ی بالای مسیر: «این مجموعه از ۳ دوره تشکیل شده».
-  Widget _bundleSummary(CourseDetailResponse data) {
-    final d = data.detail;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      padding: const EdgeInsets.all(14),
-      decoration: ShapeDecoration(
-        color: AppColor.pitchGreenSoft,
-        shape: AppShapes.border(AppShapes.rLg),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: const ShapeDecoration(
-              color: AppColor.surfaceContainer,
-              shape: CircleBorder(),
-            ),
-            child: const Icon(Icons.layers_rounded,
-                color: AppColor.pitchGreen, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'این مجموعه از ${d.subCourses.length} دوره تشکیل شده',
-                  style: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: AppColor.onSurface),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${d.bundleWeekCount} هفته، ${d.bundleVideoCount} ویدیو، به ترتیبِ زیر',
-                  style: const TextStyle(
-                      fontFamily: 'Estedad',
-                      fontSize: 11.5,
-                      color: AppColor.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// مسیرِ یادگیری: دوره‌ها به ترتیب، با شماره و خطِ اتصال.
-  List<Widget> _subCourseNodes(List<SubCourse> subs, {int depth = 0}) => [
-        for (int i = 0; i < subs.length; i++)
-          _subCourseNode(subs[i],
-              index: i, isLast: i == subs.length - 1, depth: depth),
-      ];
-
-  Widget _subCourseNode(SubCourse c,
-      {required int index, required bool isLast, int depth = 0}) {
-    final open = _openSubCourses.contains(c.id);
-    final scope = 'c${c.id}';
-    const double rail = 18; // فاصله‌ی مرکزِ دایره از لبه‌ی شروع
-    const double dot = 36;
-    return _AnimatedSlideFade(
-      delayMs: 60 * index,
-      child: Padding(
-        padding: EdgeInsetsDirectional.fromSTEB(
-            depth == 0 ? 16 : 4, 0, depth == 0 ? 16 : 0, 0),
-        child: Stack(
-          children: [
-            // خطِ اتصال به دوره‌ی قبلی و بعدی
-            if (index > 0)
-              const PositionedDirectional(
-                start: rail - 1,
-                top: 0,
-                height: 10,
-                child: _RailLine(),
-              ),
-            if (!isLast)
-              const PositionedDirectional(
-                start: rail - 1,
-                top: 10 + dot,
-                bottom: 0,
-                child: _RailLine(),
-              ),
-            Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 4 : 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      width: dot,
-                      height: dot,
-                      alignment: Alignment.center,
-                      decoration: ShapeDecoration(
-                        gradient: open ? AppColor.greenGradient : null,
-                        color: open ? null : AppColor.surfaceContainer,
-                        shape: CircleBorder(
-                          side: BorderSide(
-                              color: AppColor.pitchGreen
-                                  .withValues(alpha: open ? 0 : 0.45),
-                              width: 1.5),
-                        ),
-                        shadows: open ? AppColor.greenShadow : null,
-                      ),
-                      child: Text(
-                        '${index + 1}',
-                        style: TextStyle(
-                          fontFamily: 'Estedad',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: open
-                              ? AppColor.onPitchGreen
-                              : AppColor.pitchGreen,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: _subCourseCard(c, open: open, scope: scope, depth: depth)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _subCourseCard(SubCourse c,
-      {required bool open, required String scope, required int depth}) {
-    final locked = c.isFullyLocked;
-    return Container(
-      decoration: ShapeDecoration(
-        color: AppColor.surfaceContainer,
-        shape: AppShapes.border(AppShapes.rLg,
-            side: open
-                ? BorderSide(
-                    color: AppColor.pitchGreen.withValues(alpha: 0.35))
-                : null),
-        shadows: AppColor.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: AppShapes.radius(AppShapes.rLg),
-              onTap: () => setState(() {
-                open ? _openSubCourses.remove(c.id) : _openSubCourses.add(c.id);
-              }),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: AppShapes.radius(AppShapes.rMd),
-                      child: SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: c.image.isEmpty
-                            ? Container(
-                                color: AppColor.pitchGreenSoft,
-                                child: const Icon(Icons.school_rounded,
-                                    color: AppColor.pitchGreen),
-                              )
-                            : Image.network(
-                                _abs(c.image),
-                                cacheWidth: 180, // کادرِ ۶۰px
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  color: AppColor.pitchGreenSoft,
-                                  child: const Icon(Icons.school_rounded,
-                                      color: AppColor.pitchGreen),
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            c.title.isEmpty ? 'دوره' : c.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontFamily: 'Estedad',
-                                fontSize: 14,
-                                height: 1.5,
-                                fontWeight: FontWeight.w800,
-                                color: AppColor.onSurface),
-                          ),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: [
-                              if (c.totalWeeks > 0)
-                                _miniChip(Icons.calendar_month_rounded,
-                                    '${c.totalWeeks} هفته'),
-                              if (c.totalVideos > 0)
-                                _miniChip(Icons.play_circle_fill_rounded,
-                                    '${c.totalVideos} ویدیو'),
-                              if (c.difficulty.trim().isNotEmpty)
-                                _miniChip(Icons.military_tech_rounded,
-                                    c.difficulty.trim()),
-                              if (c.subCourses.isNotEmpty)
-                                _miniChip(Icons.layers_rounded,
-                                    '${c.subCourses.length} دوره'),
-                              if (locked) _lockedChip(),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    AnimatedRotation(
-                      turns: open ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 220),
-                      child: const Icon(Icons.keyboard_arrow_down_rounded,
-                          color: AppColor.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: !open
-                ? const SizedBox(width: double.infinity)
-                : Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (c.description.trim().isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-                            child: Text(
-                              c.description.trim(),
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontFamily: 'Estedad',
-                                  fontSize: 12.5,
-                                  height: 1.8,
-                                  color: AppColor.onSurfaceVariant),
-                            ),
-                          ),
-                        for (int i = 0; i < c.weekGroups.length; i++)
-                          _weekCard(c.weekGroups[i],
-                              scope: scope, index: i, hMargin: 8),
-                        if (c.subCourses.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
-                            child: Column(
-                              children:
-                                  _subCourseNodes(c.subCourses, depth: depth + 1),
-                            ),
-                          ),
-                        if (c.weekGroups.isEmpty && c.subCourses.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(12, 4, 12, 10),
-                            child: Text(
-                              'برنامه‌ی این دوره به‌زودی منتشر می‌شود.',
-                              style: TextStyle(
-                                  fontFamily: 'Estedad',
-                                  fontSize: 12,
-                                  color: AppColor.onSurfaceVariant),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _miniChip(IconData icon, String label) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: ShapeDecoration(
-          color: AppColor.cardMuted,
-          shape: AppShapes.pill,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: AppColor.onSurfaceVariant),
-            const SizedBox(width: 4),
-            Text(label,
-                style: const TextStyle(
-                    fontFamily: 'Estedad',
-                    fontSize: 11,
-                    color: AppColor.onSurfaceVariant)),
-          ],
-        ),
-      );
-
   /// آواتار کوچک پشتیبان/مربی
   Widget _coachAvatar(CourseCoach coach) {
     final url = (coach.avatar ?? '').trim();
@@ -1408,22 +1062,35 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       spacing: 8,
       runSpacing: 8,
       children: [
-        if (data.detail.isBundle)
-          _infoChip('شامل ${data.detail.subCourses.length} دوره',
-              icon: Icons.layers_rounded, color: AppColor.pitchGreen),
+        for (final path in data.superCourses) _superCourseChip(path),
         _infoChip('سطح: ${data.courseDifficulty}',
             icon: Icons.military_tech_rounded, color: AppColor.levelExpert),
         _infoChip(
-            'تعداد هفته: ${data.weekCount > 0 || !data.detail.isBundle ? data.weekCount : data.detail.bundleWeekCount}',
+            'تعداد هفته: ${data.weekCount}',
             icon: Icons.calendar_month_rounded, color: AppColor.categoryBadge),
         _infoChip('تعداد سکشن: ${data.sectionCount}',
             icon: Icons.view_list_rounded, color: AppColor.pitchGreen),
         _infoChip('مدت دوره: ${_formatDuration(data.courseDuration)}',
             icon: Icons.schedule_rounded, color: AppColor.warning),
         _infoChip(
-            'تعداد ویدیو: ${data.detail.videoCount > 0 || !data.detail.isBundle ? data.detail.videoCount : data.detail.bundleVideoCount}',
+            'تعداد ویدیو: ${data.detail.videoCount}',
             icon: Icons.play_circle_fill_rounded, color: AppColor.danger),
       ],
+    );
+  }
+
+  /// «بخشی از مسیرِ …»: لینک به سوپرکورسی که این دوره عضوش است.
+  Widget _superCourseChip(SuperCourseRef path) {
+    final label = path.name.isNotEmpty
+        ? 'بخشی از مسیر «${path.name}»'
+        : 'بخشی از یک مسیر آموزشی';
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).pushNamed(path.route),
+        child: _infoChip(label,
+            icon: Icons.route_rounded, color: AppColor.pitchGreen),
+      ),
     );
   }
 
@@ -1481,30 +1148,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Widget _detailTabs(CourseDetailResponse data) {
     return DetailTabs(
       tabs: [
-        // دوره‌ی مجموعه‌ای: مسیرِ دوره‌های تشکیل‌دهنده، هرکدام با برنامه‌ی
-        // هفتگیِ خودش.
-        if (data.detail.isBundle)
-          DetailTab(
-            title: 'دوره‌های این مجموعه',
-            icon: Icons.layers_rounded,
-            builder: (context) {
-              final resume = _resumeCard(data);
-              return Column(
-                children: [
-                  if (resume != null) resume,
-                  _bundleSummary(data),
-                  ..._subCourseNodes(data.detail.subCourses),
-                ],
-              );
-            },
-          ),
-        // برنامه‌ی هفتگیِ خودِ دوره (در مجموعه‌ها فقط اگر جلسه‌ی مشترک دارد)
-        if (!data.detail.isBundle || data.detail.weekGroups.isNotEmpty)
-          DetailTab(
+        DetailTab(
             title: 'برنامه هفتگی',
             icon: Icons.calendar_month_rounded,
             builder: (context) {
-              final resume = data.detail.isBundle ? null : _resumeCard(data);
+              final resume = _resumeCard(data);
               return Column(
                 children: [
                   if (resume != null) resume,
@@ -2347,35 +1995,16 @@ class _DesktopInfoBones extends StatelessWidget {
   }
 }
 
-/// جای یک ویدیو در درختِ دوره: محدوده (خودِ دوره یا c<id>)، هفته، و مسیرِ
-/// زیرمجموعه‌هایی که باید باز شوند تا دیده شود.
+/// جای یک ویدیو در برنامه‌ی دوره: محدوده و هفته.
 class _Located {
-  const _Located(this.section, this.weekNumber, this.scope, this.path,
-      {this.courseTitle, String? weekTitle})
+  const _Located(this.section, this.weekNumber, this.scope,
+      {String? weekTitle})
       : weekTitle = weekTitle ?? 'هفته $weekNumber';
 
   final CourseWeekSectionItem section;
   final String weekNumber;
   final String scope;
-  final List<int> path;
-
-  /// عنوانِ زیرمجموعه، برای «ادامه‌ی تماشا»
-  final String? courseTitle;
 
   /// «هفته ۲» یا «Upper» — همان که روی کارتِ هفته نوشته شده
   final String weekTitle;
-}
-
-/// خطِ عمودیِ مسیرِ یادگیری بینِ دوره‌ها
-class _RailLine extends StatelessWidget {
-  const _RailLine();
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: 2,
-        decoration: BoxDecoration(
-          color: AppColor.pitchGreen.withValues(alpha: 0.25),
-          borderRadius: BorderRadius.circular(1),
-        ),
-      );
 }

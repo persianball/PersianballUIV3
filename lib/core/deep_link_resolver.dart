@@ -31,6 +31,9 @@ class DeepLinkResolver {
   /// روت‌های پویا: /product/<id> و /course/<id>
   static final RegExp _dynamicRoute = RegExp(r'^/(product|course|my-course|order)/\d+$');
 
+  /// /super-course/<id یا نامِ انگلیسی>
+  static final RegExp _superCourseRoute = RegExp(r'^/super-course/[A-Za-z0-9_-]+$');
+
   /// اگر لینک قابل هندل باشد روت داخلی را برمی‌گرداند، وگرنه null
   static String? resolve(Uri uri) {
     final scheme = uri.scheme.toLowerCase();
@@ -64,6 +67,7 @@ class DeepLinkResolver {
     }
 
     if (_dynamicRoute.hasMatch(path)) return path;
+    if (_superCourseRoute.hasMatch(path)) return path;
     if (_staticRoutes.contains(path)) return path;
 
     return null;

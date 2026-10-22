@@ -16,6 +16,8 @@ import 'package:persian_ball/views/screens/course_detail_page.dart';
 import 'package:persian_ball/views/screens/my_course_detail_page.dart';
 import 'package:persian_ball/views/screens/my_course_loader_page.dart';
 import 'package:persian_ball/models/course_models.dart';
+import 'package:persian_ball/models/super_course.dart';
+import 'package:persian_ball/views/screens/super_course_page.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -64,6 +66,19 @@ class AppRouter {
       }
       return MaterialPageRoute(
         builder: (_) => MyCourseLoaderPage(courseId: id),
+        settings: settings,
+      );
+    }
+
+    // Dynamic: /super-course/{id | english_name} — مسیرِ آموزشی (لایه‌ی اول)
+    final superMatch = RegExp(r'^/super-course/([A-Za-z0-9_-]+)$').firstMatch(name);
+    if (superMatch != null) {
+      final args = settings.arguments;
+      return MaterialPageRoute(
+        builder: (_) => SuperCoursePage(
+          idOrSlug: superMatch.group(1)!,
+          initial: args is SuperCourse ? args : null,
+        ),
         settings: settings,
       );
     }

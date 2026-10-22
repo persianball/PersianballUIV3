@@ -1,3 +1,5 @@
+import 'package:persian_ball/models/super_course.dart';
+
 // lib/models/course_detail_model.dart
 
 class CourseWeekSectionItem {
@@ -28,8 +30,7 @@ class CourseWeek {
   final String? weekName;
   final List<CourseWeekSectionItem> sections;
 
-  /// عنوانِ نمایشیِ هفته وقتی «هفته‌ی N» کافی نیست (مثلاً «Upper» در
-  /// زیرمجموعه‌ای که از نامِ هفته‌ها ساخته شده). کلیدِ پیشرفت همچنان
+  /// عنوانِ نمایشیِ هفته وقتی «هفته‌ی N» کافی نیست. کلیدِ پیشرفت همچنان
   /// [weekNumber] است.
   final String? title;
 
@@ -207,197 +208,6 @@ class CourseTimeAndLocationItem {
   }
 }
 
-int _asInt(dynamic v) => v is int ? v : int.tryParse('${v ?? ''}') ?? 0;
-
-/// یک دوره‌ی زیرمجموعه داخلِ یک دوره‌ی «مجموعه‌ای».
-///
-/// دوره می‌تواند از چند دوره‌ی دیگر تشکیل شود و هر کدام برنامه‌ی هفتگیِ
-/// خودش را دارد (همان شکلِ `detail.sections` در دوره‌ی معمولی). زیرمجموعه
-/// خودش هم می‌تواند زیرمجموعه داشته باشد؛ رابط کاربری برای یک سطح طراحی
-/// شده ولی سطوحِ عمیق‌تر را هم با تورفتگی نشان می‌دهد.
-///
-/// قراردادِ پیشنهادی با بک‌اند (داخلِ `detail`):
-///   "sub_courses": [{ "id", "order", "course_title", "image",
-///     "course_description", "course_difficulty", "course_duration",
-///     "week_count", "video_count", "sections": [...], "sub_courses": [...] }]
-class SubCourse {
-  final int id;
-  final int order;
-  final String title;
-  final String image;
-  final String description;
-  final String difficulty;
-
-  /// همان واحدِ `course_duration` دوره‌ی اصلی (ثانیه)
-  final int duration;
-  final int weekCount;
-  final int videoCount;
-  final List<CourseWeek> weeks;
-  final List<SubCourse> subCourses;
-
-  const SubCourse({
-    required this.id,
-    required this.order,
-    required this.title,
-    required this.image,
-    required this.description,
-    required this.difficulty,
-    required this.duration,
-    required this.weekCount,
-    required this.videoCount,
-    required this.weeks,
-    required this.subCourses,
-  });
-
-  List<CourseWeekGroup> get weekGroups => CourseWeekGroup.groupByWeek(weeks);
-
-  /// تعداد ویدیوها از خودِ برنامه شمرده می‌شود؛ اگر بک‌اند برنامه را
-  /// نفرستاده باشد (مثلاً در لیست)، عددِ اعلام‌شده‌اش.
-  int get totalVideos {
-    final own = weeks.fold<int>(0, (n, w) => n + w.sections.length);
-    final nested = subCourses.fold<int>(0, (n, c) => n + c.totalVideos);
-    return (own == 0 && nested == 0) ? videoCount : own + nested;
-  }
-
-  int get totalWeeks {
-    final own = weekGroups.length;
-    final nested = subCourses.fold<int>(0, (n, c) => n + c.totalWeeks);
-    return (own == 0 && nested == 0) ? weekCount : own + nested;
-  }
-
-  /// همه‌ی ویدیوهایش قفل است (هنوز خریداری نشده)
-  bool get isFullyLocked {
-    final all = [for (final w in weeks) ...w.sections];
-    final nestedLocked = subCourses.every((c) => c.isFullyLocked);
-    return (all.isNotEmpty || subCourses.isNotEmpty) &&
-        all.every((s) => s.isLocked) &&
-        nestedLocked;
-  }
-
-  /// سه لایه از روی نامِ هفته‌ها.
-  ///
-  /// بک‌اند دوره‌ی مجموعه‌ای را (فعلاً) بدونِ `sub_courses` می‌فرستد و هر
-  /// ورودیِ `sections` نامی به شکلِ «۴-دوره دریبلینگ سرعت – پا عوض کردن –
-  /// هفته اول» دارد: «زیردوره – هفته/بخش». ورودی‌های پشتِ‌سرِ‌همی که
-  /// زیردوره‌ی یکسان دارند یک [SubCourse] می‌شوند. ورودیِ تک (مثل «۱۶-انواع
-  /// دریبل») خودش یک زیردوره با یک هفته است.
-  ///
-  /// اگر چیزی گروه نشد (دوره‌ی معمولی با «هفته اول، هفته دوم…») یا همه
-  /// یک گروه شدند، null: دوره همان شکلِ ساده نمایش داده می‌شود.
-  static List<SubCourse>? deriveFromWeekNames(List<CourseWeek> weeks) {
-    if (weeks.length < 2) return null;
-    final parsed = [for (final w in weeks) _splitWeekName(w.weekName)];
-
-    // گروه‌بندیِ ورودی‌های پشتِ‌سرِ‌هم با سرِ یکسان
-    final runs = <List<int>>[];
-    for (int i = 0; i < weeks.length; i++) {
-      final head = parsed[i].head;
-      final prev = runs.isEmpty ? null : runs.last;
-      if (prev != null &&
-          head != null &&
-          parsed[prev.last].head == head) {
-        prev.add(i);
-      } else {
-        runs.add([i]);
-      }
-    }
-    if (runs.length < 2 || runs.length == weeks.length) return null;
-
-    final result = <SubCourse>[];
-    for (int r = 0; r < runs.length; r++) {
-      final run = runs[r];
-      final single = run.length == 1;
-      final first = parsed[run.first];
-      final title = single ? first.full : first.head!;
-      final subWeeks = <CourseWeek>[];
-      for (int k = 0; k < run.length; k++) {
-        final w = weeks[run[k]];
-        final tail = single ? null : parsed[run[k]].tail;
-        // «هفته اول/دوم…» از روی ترتیب شماره می‌خورد، نه از متن؛ متنِ
-        // بک‌اند گاهی تکراری/اشتباه است. بخش‌های بی‌نامِ هفته (Upper،
-        // «قواعد و راز…») نامِ خودشان را نگه می‌دارند.
-        final isWeekLabel = tail == null || tail.startsWith('هفته');
-        subWeeks.add(CourseWeek(
-          weekNumber: w.weekNumber,
-          weekName: null,
-          sections: w.sections,
-          title: isWeekLabel ? 'هفته ${k + 1}' : tail,
-        ));
-      }
-      result.add(SubCourse(
-        id: r + 1,
-        order: r,
-        title: title,
-        image: '',
-        description: '',
-        difficulty: '',
-        duration: 0,
-        weekCount: subWeeks.length,
-        videoCount: subWeeks.fold(0, (n, w) => n + w.sections.length),
-        weeks: subWeeks,
-        subCourses: const [],
-      ));
-    }
-    return result;
-  }
-
-  static final RegExp _leadingNumber = RegExp(r'^\s*[0-9۰-۹]+\s*[-–—.)]\s*');
-  static final RegExp _dash = RegExp(r'\s*[-–—]\s*');
-
-  /// «۴-دوره X – هفته اول» → full «دوره X – هفته اول»، head «دوره X»،
-  /// tail «هفته اول». بدونِ خط‌تیره، head و tail null.
-  static ({String full, String? head, String? tail}) _splitWeekName(
-      String? raw) {
-    var full = (raw ?? '').trim().replaceFirst(_leadingNumber, '');
-    full = full.replaceAll(RegExp(r'\s+'), ' ').trim();
-    final matches = _dash.allMatches(full).toList();
-    if (matches.isEmpty) return (full: full, head: null, tail: null);
-    final m = matches.last;
-    final head = full.substring(0, m.start).trim();
-    final tail = full.substring(m.end).trim();
-    if (head.isEmpty || tail.isEmpty) {
-      return (full: full, head: null, tail: null);
-    }
-    // خط‌تیره‌های داخلِ خودِ نام (– در «سرعت – پا عوض کردن») یکسان می‌شوند
-    return (
-      full: full,
-      head: head.replaceAll(_dash, ' – '),
-      tail: tail,
-    );
-  }
-
-  static List<SubCourse> listFrom(dynamic raw) {
-    if (raw is! List) return const [];
-    final list = <SubCourse>[];
-    for (final e in raw) {
-      if (e is Map<String, dynamic>) list.add(SubCourse.fromJson(e));
-    }
-    // ترتیبِ آموزشی مهم است؛ اگر order نیامده بود، ترتیبِ خودِ پاسخ می‌ماند
-    // (sort پایدار است و همه صفر می‌شوند).
-    list.sort((a, b) => a.order.compareTo(b.order));
-    return list;
-  }
-
-  factory SubCourse.fromJson(Map<String, dynamic> json) {
-    return SubCourse(
-      id: _asInt(json['id']),
-      order: _asInt(json['order']),
-      title: (json['course_title'] ?? json['title'] ?? '').toString(),
-      image: (json['image'] ?? '').toString(),
-      description: (json['course_description'] ?? '').toString(),
-      difficulty: (json['course_difficulty'] ?? '').toString(),
-      duration: _asInt(json['course_duration']),
-      weekCount: _asInt(json['week_count']),
-      videoCount: _asInt(json['video_count']),
-      weeks: [
-        for (final e in (json['sections'] as List? ?? const []))
-          if (e is Map<String, dynamic>) CourseWeek.fromJson(e),
-      ],
-      subCourses: SubCourse.listFrom(json['sub_courses']),
-    );
-  }
-}
-
 class CourseDetailInner {
   final String preRequirement;
   final int videoCount;
@@ -405,21 +215,8 @@ class CourseDetailInner {
   final List<CourseWeek> weeks;
   final List<CourseTimeAndLocationItem> timeAndLocation;
 
-  /// دوره‌های تشکیل‌دهنده؛ خالی یعنی دوره‌ی معمولی.
-  final List<SubCourse> subCourses;
-
   /// هفته‌ها پس از گروه‌بندی بر اساس `week_number`.
   List<CourseWeekGroup> get weekGroups => CourseWeekGroup.groupByWeek(weeks);
-
-  /// دوره‌ای که از چند دوره‌ی دیگر تشکیل شده
-  bool get isBundle => subCourses.isNotEmpty;
-
-  int get bundleVideoCount =>
-      subCourses.fold<int>(0, (n, c) => n + c.totalVideos) +
-      weeks.fold<int>(0, (n, w) => n + w.sections.length);
-
-  int get bundleWeekCount =>
-      subCourses.fold<int>(0, (n, c) => n + c.totalWeeks) + weekGroups.length;
 
   CourseDetailInner({
     required this.preRequirement,
@@ -427,7 +224,6 @@ class CourseDetailInner {
     required this.length,
     required this.weeks,
     required this.timeAndLocation,
-    this.subCourses = const [],
   });
 
   factory CourseDetailInner.fromJson(Map<String, dynamic> json) {
@@ -437,24 +233,14 @@ class CourseDetailInner {
     final times = (json['time_and_location'] as List<dynamic>? ?? [])
         .map((e) => CourseTimeAndLocationItem.fromJson(e as Map<String, dynamic>))
         .toList();
-    // زیرمجموعه‌ها: اگر بک‌اند `sub_courses` فرستاد همان، وگرنه از نامِ
-    // هفته‌ها (و آن‌وقت هفته‌ها فقط داخلِ زیرمجموعه‌ها نمایش داده می‌شوند).
-    var subs = SubCourse.listFrom(json['sub_courses']);
-    var ownWeeks = weeks;
-    if (subs.isEmpty) {
-      final derived = SubCourse.deriveFromWeekNames(weeks);
-      if (derived != null) {
-        subs = derived;
-        ownWeeks = const [];
-      }
-    }
+    // سه لایه (مسیر → دوره → هفته) حالا از سوپرکورس می‌آید؛ هر دوره فقط
+    // برنامه‌ی هفتگیِ خودش را دارد.
     return CourseDetailInner(
       preRequirement: (json['pre_requirement'] ?? '').toString(),
       videoCount: json['video_count'] is int ? json['video_count'] : int.tryParse('${json['video_count']}') ?? 0,
       length: json['length'] is int ? json['length'] : int.tryParse('${json['length']}') ?? 0,
-      weeks: ownWeeks,
+      weeks: weeks,
       timeAndLocation: times,
-      subCourses: subs,
     );
   }
 }
@@ -470,6 +256,9 @@ class CourseDetailResponse {
   final int courseDuration;
   final CourseDetailInner detail;
 
+  /// مسیرهای آموزشی (سوپرکورس‌هایی) که این دوره عضوشان است.
+  final List<SuperCourseRef> superCourses;
+
   CourseDetailResponse({
     required this.id,
     required this.sectionCount,
@@ -480,6 +269,7 @@ class CourseDetailResponse {
     required this.courseDifficulty,
     required this.courseDuration,
     required this.detail,
+    this.superCourses = const [],
   });
 
   factory CourseDetailResponse.fromJson(Map<String, dynamic> json) {
@@ -493,6 +283,7 @@ class CourseDetailResponse {
       courseDifficulty: (json['course_difficulty'] ?? '').toString(),
       courseDuration: json['course_duration'] is int ? json['course_duration'] : int.tryParse('${json['course_duration']}') ?? 0,
       detail: CourseDetailInner.fromJson(json['detail'] as Map<String, dynamic>),
+      superCourses: SuperCourseRef.listFrom(json['super_courses']),
     );
   }
 }

@@ -14,6 +14,9 @@ import 'package:persian_ball/views/widgets/app_slider.dart';
 import 'package:persian_ball/views/widgets/shimmer.dart';
 import 'package:persian_ball/models/slider_item.dart';
 import 'package:persian_ball/constant/app_breakpoints.dart';
+import 'package:persian_ball/models/super_course.dart';
+import 'package:persian_ball/services/super_course_service.dart';
+import 'package:persian_ball/views/widgets/super_course_strip.dart';
 
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -23,6 +26,9 @@ class CoursesPage extends StatefulWidget {
 
 class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin {
   CoursesResponse? _data;
+
+  /// مسیرهای آموزشی (سوپرکورس‌ها)؛ خالی یا خطا = ردیفش نشان داده نمی‌شود.
+  List<SuperCourse> _superCourses = const [];
   bool _loading = true;
   String? _error;
   String? _nextUrl;
@@ -42,6 +48,7 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _fetch();
+    _fetchSuperCourses();
     _fetchUserCourses();
     _controller.addListener(_onScroll);
     // این صفحه در FadeIndexedStack (page_switcher) زنده نگه داشته می‌شود،
@@ -89,6 +96,15 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
         _error = e.toString();
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _fetchSuperCourses() async {
+    try {
+      final page = await SuperCourseService.fetchList();
+      if (mounted) setState(() => _superCourses = page.results);
+    } catch (_) {
+      // ردیفِ مسیرها اختیاری است؛ خطایش نباید لیستِ دوره‌ها را خراب کند.
     }
   }
 
@@ -243,6 +259,11 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
             ),
           ),
         ),
+        if (_superCourses.isNotEmpty)
+          SliverToBoxAdapter(
+            child: SuperCourseStrip(
+                items: _superCourses, horizontalPadding: side),
+          ),
         SliverPadding(
           padding: EdgeInsets.fromLTRB(side, 24, side, 110),
           sliver: SliverGrid(
@@ -331,7 +352,7 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                         color: AppColor.goldEnd,
                         onRefresh: () async {
                           _nextUrl = null;
-                          await _fetch();
+                          await Future.wait([_fetch(), _fetchSuperCourses()]);
                         },
                         child: AppBreakpoints.isDesktop(context)
                             ? _desktopCoursesGrid()
@@ -341,10 +362,20 @@ class _CoursesPageState extends State<CoursesPage> with TickerProviderStateMixin
                                 itemCount: _data!.results.length + 1,
                                 itemBuilder: (_, i) {
                                   if (i == 0) {
-                                    return const Padding(
-                                      padding: EdgeInsets.fromLTRB(0, 8, 0, 4),
-                                      child: AppSlider(
-                                          page: SliderPage.academy),
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        const Padding(
+                                          padding:
+                                              EdgeInsets.fromLTRB(0, 8, 0, 4),
+                                          child: AppSlider(
+                                              page: SliderPage.academy),
+                                        ),
+                                        if (_superCourses.isNotEmpty)
+                                          SuperCourseStrip(
+                                              items: _superCourses),
+                                      ],
                                     );
                                   }
                                   final c = _data!.results[i - 1];
