@@ -524,16 +524,17 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
             children: [
               Expanded(
                 child: _stepButton(
-                  label: 'درس قبلی',
-                  icon: Icons.chevron_right_rounded,
+                  label: 'ویدیو قبلی',
+                  // chevron ها در RTL آینه می‌شوند: left → رو به راست (قبلی)
+                  icon: Icons.chevron_left_rounded,
                   onTap: previous == null ? null : () => _play(previous),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _stepButton(
-                  label: 'درس بعدی',
-                  icon: Icons.chevron_left_rounded,
+                  label: 'ویدیو بعدی',
+                  icon: Icons.chevron_right_rounded,
                   onTap: next == null ? null : () => _play(next),
                 ),
               ),

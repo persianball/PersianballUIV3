@@ -446,7 +446,7 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
         children: [
           GlassIconButton(
             icon: Icons.skip_previous_rounded,
-            tooltip: 'درس قبلی',
+            tooltip: 'ویدیو قبلی',
             size: small,
             enabled: m.hasPrevious && m.onPrevious != null,
             onTap: () => m.onPrevious?.call(),
@@ -490,7 +490,7 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
           SizedBox(width: gapOut),
           GlassIconButton(
             icon: Icons.skip_next_rounded,
-            tooltip: 'درس بعدی',
+            tooltip: 'ویدیو بعدی',
             size: small,
             enabled: m.hasNext && m.onNext != null,
             onTap: () => m.onNext?.call(),
@@ -724,7 +724,7 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'درس بعدی',
+                    'ویدیو بعدی',
                     style: TextStyle(
                       fontFamily: 'Estedad',
                       fontSize: 10.5,

@@ -263,7 +263,7 @@ void main() {
     await _pump(t, m, const Size(1000, 560));
     m.setNextUp('زیدانی', 4, total: 6);
     await t.pump(const Duration(milliseconds: 300));
-    expect(find.text('درس بعدی'), findsOneWidget);
+    expect(find.text('ویدیو بعدی'), findsOneWidget);
     expect(find.text('زیدانی'), findsOneWidget);
     expect(find.text('۴'), findsOneWidget);
     await t.tap(find.text('پخش'));
