@@ -15,6 +15,7 @@
 import 'dart:async';
 import 'dart:ui' show FontFeature;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -49,6 +50,14 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
 
   bool _visible = true;
   Timer? _hide;
+
+  /// آخرین باری که کنترل‌ها نمایان شدند. روی وبِ موبایل هر لمس اول یک رویدادِ
+  /// hover می‌فرستد (کنترل‌ها می‌آیند) و ۳۰۰ms بعد خودِ ضربه می‌رسد؛ اگر
+  /// ضربه با «نمایان است → پنهان کن» تفسیر شود، کنترل‌ها فقط یک لحظه می‌آیند
+  /// و می‌روند و هیچ دکمه‌ای قابلِ زدن نیست. ضربه‌ای که کمتر از این فاصله
+  /// بعد از نمایان شدن برسد، پنهان نمی‌کند.
+  DateTime _shownAt = DateTime.fromMillisecondsSinceEpoch(0);
+  static const Duration _tapHideGrace = Duration(milliseconds: 600);
   _Menu _menu = _Menu.none;
 
   bool _scrubbing = false;
@@ -118,7 +127,10 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
 
   void _show() {
     _hide?.cancel();
-    if (!_visible) setState(() => _visible = true);
+    if (!_visible) {
+      _shownAt = DateTime.now();
+      setState(() => _visible = true);
+    }
     _scheduleHide();
   }
 
@@ -128,7 +140,9 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
       _scheduleHide();
       return;
     }
-    if (_visible && m.isPlaying) {
+    final bool justShown =
+        DateTime.now().difference(_shownAt) < _tapHideGrace;
+    if (_visible && m.isPlaying && !justShown) {
       _hide?.cancel();
       setState(() => _visible = false);
     } else {
@@ -207,8 +221,10 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
         autofocus: widget.fullscreen,
         onKeyEvent: _onKey,
         child: MouseRegion(
-          onHover: (_) {
-            if (!_visible) _show();
+          // فقط موسِ واقعی؛ لمس روی وب هم hover می‌فرستد و کنترل‌ها را قبل از
+          // رسیدنِ خودِ ضربه نمایان می‌کرد (بعد ضربه آن‌ها را پنهان می‌کرد).
+          onHover: (e) {
+            if (e.kind == PointerDeviceKind.mouse && !_visible) _show();
           },
           child: Stack(
             fit: StackFit.expand,
