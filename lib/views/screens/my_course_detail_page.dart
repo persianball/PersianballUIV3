@@ -857,7 +857,8 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
                             color: AppColor.pitchGreen,
                           ),
                         ),
-                        Icon(Icons.chevron_left_rounded,
+                        // در RTL آینه می‌شود → رو به چپ
+                        Icon(Icons.chevron_right_rounded,
                             size: 18, color: AppColor.pitchGreen),
                       ],
                     ),
