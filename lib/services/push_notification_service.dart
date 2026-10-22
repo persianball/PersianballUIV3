@@ -49,6 +49,28 @@ class PushNotificationService {
       StreamController<RemoteMessage>.broadcast();
   static Stream<RemoteMessage> get onMessageOpened => _opened.stream;
 
+  /// ضربه‌ای که اپ را از حالتِ بسته باز کرده ممکن است پیش از گوش دادنِ
+  /// اپ برسد (init قبل از runApp و بدونِ انتظار اجرا می‌شود). چنین پیامی
+  /// اینجا نگه داشته می‌شود تا با [takePendingOpened] تحویل شود.
+  static RemoteMessage? _pendingOpened;
+
+  static RemoteMessage? takePendingOpened() {
+    final m = _pendingOpened;
+    _pendingOpened = null;
+    return m;
+  }
+
+  @visibleForTesting
+  static void emitOpenedForTest(RemoteMessage m) => _emitOpened(m);
+
+  static void _emitOpened(RemoteMessage m) {
+    if (_opened.hasListener) {
+      _opened.add(m);
+    } else {
+      _pendingOpened = m;
+    }
+  }
+
   /// پیامِ رسیده در حالی که اپ باز است.
   static final StreamController<RemoteMessage> _foreground =
       StreamController<RemoteMessage>.broadcast();
@@ -109,15 +131,11 @@ class PushNotificationService {
         if (!_foreground.isClosed) _foreground.add(m);
       });
 
-      FirebaseMessaging.onMessageOpenedApp.listen((m) {
-        if (!_opened.isClosed) _opened.add(m);
-      });
+      FirebaseMessaging.onMessageOpenedApp.listen(_emitOpened);
 
       // اپ کاملاً بسته بوده و با ضربه روی نوتیفیکیشن باز شده
       final initial = await messaging.getInitialMessage();
-      if (initial != null && !_opened.isClosed) {
-        _opened.add(initial);
-      }
+      if (initial != null) _emitOpened(initial);
 
       _ready = true;
     } catch (e) {

@@ -18,8 +18,13 @@ import 'bloc/product/product_bloc.dart';
 import 'dart:async';
 import 'package:persian_ball/services/slider_service.dart';
 import 'package:persian_ball/services/push_notification_service.dart';
+import 'package:persian_ball/services/user_message_service.dart';
+import 'package:persian_ball/core/push_navigation.dart';
+import 'package:firebase_messaging/firebase_messaging.dart' show RemoteMessage;
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<ScaffoldMessengerState> appMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,12 +63,38 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final authBloc = LoginBloc()..add(CheckAuthStatus());
   StreamSubscription? _linkSub;
+  StreamSubscription<RemoteMessage>? _pushOpenedSub;
+  StreamSubscription<RemoteMessage>? _pushForegroundSub;
   AppLinks? _appLinks;
 
   @override
   void initState() {
     super.initState();
     _initDeepLinks();
+    _initPushRouting();
+  }
+
+  /// ضربه روی پوش → صفحه‌ی مقصدش (یا صندوقِ اعلان‌ها)؛ پوشِ رسیده وقتِ
+  /// باز بودنِ اپ → اسنک‌بار با «مشاهده». هر دو نشانِ زنگوله را تازه می‌کنند.
+  void _initPushRouting() {
+    _pushOpenedSub = PushNotificationService.onMessageOpened.listen(_openPush);
+    final pending = PushNotificationService.takePendingOpened();
+    if (pending != null) _openPush(pending);
+    _pushForegroundSub =
+        PushNotificationService.onForegroundMessage.listen(_showForegroundPush);
+  }
+
+  void _openPush(RemoteMessage m) {
+    UserMessageService.refreshUnread();
+    _pushWhenReady(PushNavigation.routeFor(m.data));
+  }
+
+  void _showForegroundPush(RemoteMessage m) {
+    UserMessageService.refreshUnread();
+    final route = PushNavigation.routeFor(m.data);
+    appMessengerKey.currentState?.showSnackBar(
+      PushNavigation.foregroundSnackBar(m, onOpen: () => _pushWhenReady(route)),
+    );
   }
 
   Future<void> _initDeepLinks() async {
@@ -107,6 +138,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _linkSub?.cancel();
+    _pushOpenedSub?.cancel();
+    _pushForegroundSub?.cancel();
     super.dispose();
   }
 
@@ -124,6 +157,7 @@ class _MyAppState extends State<MyApp> {
       child: _AuthChangeReloader(
         child: MaterialApp(
         navigatorKey: appNavigatorKey,
+        scaffoldMessengerKey: appMessengerKey,
         debugShowCheckedModeBanner: false,
         // روی وب عنوانِ تب و نامِ پنجره‌ی اپِ نصب‌شده از اینجا می‌آید؛ بدونِ
         // آن فلاتر بعد از بارگذاری عنوانِ index.html را خالی می‌کرد.

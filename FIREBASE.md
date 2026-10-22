@@ -91,6 +91,38 @@ flutterfire configure --project=persianball-sport --platforms=android,ios,web --
   (`onLogout()`)، وگرنه پوشِ او به دستگاهی می‌رفت که دیگر دستش نیست.
 - `onTokenRefresh` هم گوش داده می‌شود: توکن FCM دائمی نیست.
 
+### دیتای پوش (قرارداد با بک‌اند)
+
+ضربه روی پوش صفحه‌ی مقصد را باز می‌کند و پوشی که وقتِ باز بودنِ اپ برسد
+به‌صورت اسنک‌بار با دکمه‌ی «مشاهده» دیده می‌شود
+([`lib/core/push_navigation.dart`](lib/core/push_navigation.dart)).
+سرور مقصد را در بخشِ `data` می‌فرستد؛ همه‌ی کلیدها اختیاری‌اند و به این
+ترتیب بررسی می‌شوند:
+
+| کلید | مثال | صفحه |
+|---|---|---|
+| `route` | `/order/2097` | همان مسیر |
+| `link` یا `url` | `https://pball.ah8ad3.ir/product/9` | همان صفحه، فقط هاست‌های خودمان |
+| `order_id` | `2097` | `/order/2097` |
+| `product_id` | `9` | `/product/9` |
+| `course_id` | `22` | `/course/22` |
+
+بدونِ هیچ‌کدام، صندوقِ اعلان‌ها (`/notifications`) باز می‌شود. عنوان و متن از
+بخشِ `notification` خوانده می‌شود و در پوش‌های data-only از `data.title` و
+`data.body`. نمونه‌ی پیام FCM HTTP v1:
+
+```json
+{
+  "message": {
+    "token": "<fcm_token دستگاه>",
+    "notification": {"title": "سفارش شما ارسال شد", "body": "کد رهگیری: 123"},
+    "data": {"route": "/order/2097"}
+  }
+}
+```
+
+مقدارهای `data` در FCM باید رشته باشند (`"2097"` نه `2097`).
+
 ### دو محدودیت سمت سرور
 
 از `OPTIONS /v1/user/devices/` اندازه‌گیری شد:

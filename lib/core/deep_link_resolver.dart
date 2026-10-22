@@ -49,6 +49,15 @@ class DeepLinkResolver {
       return null;
     }
 
+    return resolvePath(path);
+  }
+
+  /// مسیرِ خام (مثلاً از دیتای پوش: '/order/2097') → روت داخلی، یا null اگر
+  /// جزو روت‌های اپ نباشد. اسلشِ اول و آخر اختیاری است.
+  static String? resolvePath(String raw) {
+    var path = raw.trim();
+    if (path.isEmpty) return null;
+    if (!path.startsWith('/')) path = '/$path';
     // حذف اسلش انتهایی: /product/12/ → /product/12
     if (path.length > 1 && path.endsWith('/')) {
       path = path.substring(0, path.length - 1);
