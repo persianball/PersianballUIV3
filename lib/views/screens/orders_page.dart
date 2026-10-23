@@ -67,7 +67,10 @@ class _OrdersPageState extends State<OrdersPage> {
       if (!mounted) return;
       setState(() {
         if (!loadMore) _orders.clear();
-        _orders.addAll(res.results);
+        // اگر وسطِ ورق زدن سفارشِ تازه‌ای ثبت شود، مرزِ صفحه‌ها جابه‌جا می‌شود
+        // و یک سفارش ممکن است دوباره بیاید.
+        final seen = {for (final o in _orders) o.id};
+        _orders.addAll(res.results.where((o) => seen.add(o.id)));
         _count = res.count;
         _nextUrl = res.next;
         _loading = false;
