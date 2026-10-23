@@ -71,6 +71,8 @@ class ApiError {
     'Discount does not exist': 'کد تخفیف وجود ندارد',
     'Discount expired': 'کد تخفیف منقضی شده است',
     'Discount already used': 'این کد قبلاً استفاده شده است',
+    // POST /v2/order/order/ بدونِ آدرس
+    'Address is empty': 'آدرسِ ارسال انتخاب نشده است',
   };
 
   static String _translate(String s) => _known[s.trim()] ?? s.trim();

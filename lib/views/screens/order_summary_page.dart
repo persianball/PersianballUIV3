@@ -1,4 +1,5 @@
 // lib/views/screens/order_summary_page.dart
+import 'package:persian_ball/utils/payment_redirect.dart';
 import 'dart:convert';
 import 'package:persian_ball/constant/app_shapes.dart';
 import 'package:flutter/material.dart';
@@ -180,6 +181,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     _showSnack('کد تخفیف حذف شد');
   }
 
+  /// ساختِ سفارش. v1 دیگر POST ندارد؛ v2 همان فیلدها را می‌گیرد
+  /// (delivery_method، address، discount_code، is_browser_view، use_wallet).
+  static const String _orderEndpoint = '/v2/order/order/';
+
   Future<void> _submitOrder() async {
     if (_posting) return;
     setState(() => _posting = true);
@@ -199,7 +204,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       }..removeWhere((k, v) => v == null);
 
       final resp = await http.post(
-        Uri.parse('${URLs.baseUrl}/v1/order/order/'),
+        Uri.parse('${URLs.origin}$_orderEndpoint'),
         headers: {
           'Authorization': 'token $token',
           'Content-Type': 'application/json',
@@ -209,9 +214,9 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
 
       if (!mounted) return;
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
-        final data = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
-        final redirectUrl = data['redirect_url'] as String?;
-        if (redirectUrl != null && redirectUrl.isNotEmpty) {
+        final redirectUrl =
+            paymentRedirectUrl(jsonDecode(utf8.decode(resp.bodyBytes)));
+        if (redirectUrl != null) {
           // Navigator.of(context).push(
           //   MaterialPageRoute(
           //     builder: (_) => PaymentWebViewPage(paymentUrl: redirectUrl),
@@ -227,16 +232,16 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
             title: 'پاسخِ سرور بدونِ آدرسِ درگاه',
             error: ApiError(
                 status: resp.statusCode,
-                message: 'سرور آدرسِ درگاه (redirect_url) را برنگرداند',
+                message: 'سرور آدرسِ درگاه را برنگرداند',
                 raw: utf8.decode(resp.bodyBytes)),
-            endpoint: '/v1/order/order/',
+            endpoint: _orderEndpoint,
           );
         }
       } else {
         await _showErrorDialog(
           title: 'ایجادِ سفارش انجام نشد',
           error: ApiError.fromResponse(resp.statusCode, utf8.decode(resp.bodyBytes)),
-          endpoint: '/v1/order/order/',
+          endpoint: _orderEndpoint,
         );
       }
     } catch (e) {
@@ -244,7 +249,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       await _showErrorDialog(
         title: 'اتصال به سرور برقرار نشد',
         error: ApiError(status: 0, message: 'خطای شبکه', raw: '$e'),
-        endpoint: '/v1/order/order/',
+        endpoint: _orderEndpoint,
       );
     } finally {
       if (mounted) setState(() => _posting = false);
