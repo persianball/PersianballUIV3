@@ -89,10 +89,32 @@ class PushNotificationService {
         options: DefaultFirebaseOptions.currentPlatform,
       );
 
-      FirebaseMessaging.onBackgroundMessage(
-          firebaseMessagingBackgroundHandler);
+      // وب: پیامِ پس‌زمینه را سرویس‌ورکر (web/fcm/) می‌گیرد.
+      if (!kIsWeb) {
+        FirebaseMessaging.onBackgroundMessage(
+            firebaseMessagingBackgroundHandler);
+      }
 
       final messaging = FirebaseMessaging.instance;
+
+      _foregroundSub?.cancel();
+      _foregroundSub = FirebaseMessaging.onMessage.listen((m) {
+        if (!_foreground.isClosed) _foreground.add(m);
+      });
+
+      if (kIsWeb) {
+        // مرورگرها درخواستِ اجازه‌ی بی‌مقدمه موقعِ باز شدنِ صفحه را معمولاً
+        // بی‌صدا رد می‌کنند؛ پس فقط اگر قبلاً اجازه داده شده، توکن همین‌جا
+        // گرفته می‌شود و وگرنه منتظرِ [enableWebPush] (دکمه) می‌مانیم.
+        // لمسِ اعلان را سرویس‌ورکر (web/fcm/) مدیریت می‌کند.
+        final s = await messaging.getNotificationSettings();
+        webPermission.value = s.authorizationStatus;
+        _ready = true;
+        if (s.authorizationStatus == AuthorizationStatus.authorized) {
+          await _activate(messaging);
+        }
+        return;
+      }
 
       final settings = await messaging.requestPermission(
         alert: true,
@@ -115,21 +137,7 @@ class PushNotificationService {
         sound: true,
       );
 
-      _token = await messaging.getToken();
-      debugPrint('[push] token: ${_token == null ? 'null' : 'دریافت شد'}');
-      await _sendToken();
-
-      // توکن FCM دائمی نیست (نصب مجدد، پاک کردن داده، چرخشِ دوره‌ای)
-      _tokenSub?.cancel();
-      _tokenSub = messaging.onTokenRefresh.listen((t) async {
-        _token = t;
-        await _sendToken();
-      });
-
-      _foregroundSub?.cancel();
-      _foregroundSub = FirebaseMessaging.onMessage.listen((m) {
-        if (!_foreground.isClosed) _foreground.add(m);
-      });
+      await _activate(messaging);
 
       FirebaseMessaging.onMessageOpenedApp.listen(_emitOpened);
 
@@ -141,6 +149,58 @@ class PushNotificationService {
     } catch (e) {
       // نبودِ Google Play Services، شبکه‌ی قطع، یا پیکربندی ناقص
       debugPrint('[push] راه‌اندازی ناموفق: $e');
+    }
+  }
+
+  /// وضعیتِ اجازه‌ی اعلانِ مرورگر (فقط وب)؛ null یعنی پوشِ وب در دسترس
+  /// نیست (پیکربندی یا پشتیبانیِ مرورگر).
+  static final ValueNotifier<AuthorizationStatus?> webPermission =
+      ValueNotifier<AuthorizationStatus?>(null);
+
+  /// سرویس‌ورکرِ پوش در پوشه‌ی جدا تا با سرویس‌ورکرِ فلاتر یکی نشود؛ مسیرِ
+  /// نسبی روی base hrefِ صفحه (/PersianballUIV3/) حل می‌شود. پیکربندی در
+  /// query string می‌رود تا فقط در firebase_options.dart تعریف شده باشد.
+  static String get _webWorkerPath {
+    final o = DefaultFirebaseOptions.web;
+    return Uri(path: 'fcm/firebase-messaging-sw.js', queryParameters: {
+      'apiKey': o.apiKey,
+      'appId': o.appId,
+      'projectId': o.projectId,
+      'messagingSenderId': o.messagingSenderId,
+    }).toString();
+  }
+
+  /// گرفتنِ توکن، فرستادن به سرور و گوش دادن به تغییرِ آن.
+  static Future<void> _activate(FirebaseMessaging messaging) async {
+    _token = kIsWeb
+        ? await messaging.getToken(
+            vapidKey: DefaultFirebaseOptions.webVapidKey,
+            serviceWorkerScriptPath: _webWorkerPath)
+        : await messaging.getToken();
+    debugPrint('[push] token: ${_token == null ? 'null' : 'دریافت شد'}');
+    await _sendToken();
+
+    // توکن FCM دائمی نیست (نصب مجدد، پاک کردن داده، چرخشِ دوره‌ای)
+    _tokenSub?.cancel();
+    _tokenSub = messaging.onTokenRefresh.listen((t) async {
+      _token = t;
+      await _sendToken();
+    });
+  }
+
+  /// وب: درخواستِ اجازه با کلیکِ کاربر. true یعنی اعلان‌ها فعال شد.
+  static Future<bool> enableWebPush() async {
+    if (!kIsWeb || !_ready) return false;
+    try {
+      final messaging = FirebaseMessaging.instance;
+      final s = await messaging.requestPermission();
+      webPermission.value = s.authorizationStatus;
+      if (s.authorizationStatus != AuthorizationStatus.authorized) return false;
+      await _activate(messaging);
+      return _token != null;
+    } catch (e) {
+      debugPrint('[push] فعال‌سازی پوشِ وب ناموفق: $e');
+      return false;
     }
   }
 

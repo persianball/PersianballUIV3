@@ -6,7 +6,10 @@
 // مرورگر نگه می‌داشت. حالا همان پیام‌هایی که سرور برای کاربر ساخته نشان داده
 // می‌شوند و «خوانده شد» با PATCHِ seen_at روی سرور ثبت می‌شود، پس روی همه‌ی
 // دستگاه‌های کاربر یکی است.
+import 'package:firebase_messaging/firebase_messaging.dart' show AuthorizationStatus;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:persian_ball/services/push_notification_service.dart';
 import 'package:persian_ball/constant/app_breakpoints.dart';
 import 'package:persian_ball/constant/app_shapes.dart';
 import 'package:persian_ball/constant/app_color.dart';
@@ -242,6 +245,7 @@ class _NotificationPageState extends State<NotificationPage> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         children: [
+          if (kIsWeb) _webPushBanner(),
           if (_items.isEmpty)
             _empty()
           else
@@ -266,6 +270,63 @@ class _NotificationPageState extends State<NotificationPage> {
       )),
     );
   }
+
+  /// وب: روشن کردنِ اعلان‌های مرورگر با کلیکِ کاربر (مرورگر درخواستِ
+  /// بی‌مقدمه را رد می‌کند). اگر قبلاً رد شده، فقط راهنمایی.
+  Widget _webPushBanner() => ValueListenableBuilder<AuthorizationStatus?>(
+        valueListenable: PushNotificationService.webPermission,
+        builder: (context, status, _) {
+          if (status == null || status == AuthorizationStatus.authorized) {
+            return const SizedBox.shrink();
+          }
+          final denied = status == AuthorizationStatus.denied;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: ShapeDecoration(
+              color: AppColor.pitchGreenSoft,
+              shape: AppShapes.border(AppShapes.rMd),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.notifications_active_outlined,
+                    color: AppColor.pitchGreen),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    denied
+                        ? 'اعلان‌های این سایت در مرورگر مسدود است. از تنظیماتِ سایت در نوار آدرس آن را مجاز کنید.'
+                        : 'با روشن کردنِ اعلان‌ها، خبرِ سفارش و پیام‌های تازه را حتی وقتی سایت بسته است دریافت می‌کنید.',
+                    style: const TextStyle(
+                        fontFamily: 'Estedad',
+                        fontSize: 12,
+                        height: 1.6,
+                        color: AppColor.onSurface),
+                  ),
+                ),
+                if (!denied) ...[
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () async {
+                      final ok = await PushNotificationService.enableWebPush();
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(
+                            ok ? 'اعلان‌های مرورگر روشن شد' : 'اعلان‌ها روشن نشد',
+                            style: const TextStyle(fontFamily: 'Estedad')),
+                      ));
+                    },
+                    style: FilledButton.styleFrom(
+                        backgroundColor: AppColor.pitchGreen),
+                    child: const Text('روشن کردن',
+                        style: TextStyle(fontFamily: 'Estedad')),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      );
 
   /// دسکتاپ: لیست اعلان‌ها وسط‌چین با حداکثر عرض ۸۰۰؛ موبایل بی‌اثر.
   Widget _centerOnDesktop(Widget child) {

@@ -6,7 +6,7 @@
 |---|---|
 | اندروید | ✅ کامل — `google-services.json` سر جایش، بیلد گرفته می‌شود |
 | iOS | ⛔ منتظر `GoogleService-Info.plist` |
-| وب | ⛔ منتظر پیکربندی وب + کلید VAPID |
+| وب | ✅ کامل — firebaseConfig و کلید VAPID در `lib/firebase_options.dart`، سرویس‌ورکر در `web/fcm/` |
 
 شناسه‌ی اپ در هر سه پلتفرم روی **`com.persianball.football`** تنظیم شد
 (قبلاً `com.example.marketky` بود که گوگل‌پلی رد می‌کند و با
@@ -90,6 +90,18 @@ flutterfire configure --project=persianball-sport --platforms=android,ios,web --
 - بعد از خروج، ارتباط دستگاه با کاربر قبلی پاک می‌شود
   (`onLogout()`)، وگرنه پوشِ او به دستگاهی می‌رفت که دیگر دستش نیست.
 - `onTokenRefresh` هم گوش داده می‌شود: توکن FCM دائمی نیست.
+
+### پوشِ وب
+
+- سرویس‌ورکرِ پوش در `web/fcm/firebase-messaging-sw.js` است، نه در ریشه:
+  سرویس‌ورکرِ فلاتر scopeِ `/PersianballUIV3/` را دارد و دو سرویس‌ورکر با یک
+  scope جای هم را می‌گیرند. پیکربندی در query stringِ ثبتِ همین فایل می‌رود.
+- اجازه‌ی اعلان با دکمه‌ی «روشن کردن» در صفحه‌ی اعلان‌ها گرفته می‌شود؛ اگر
+  کاربر قبلاً اجازه داده باشد، توکن موقعِ باز شدنِ سایت گرفته می‌شود.
+- لمسِ اعلان در مرورگر: `webpush.fcm_options.link` اگر بود، وگرنه همان
+  `route` / `order_id` / … (جدول پایین). نمونه برای توکن‌های وب:
+  `"webpush": {"fcm_options": {"link": "https://persianball.github.io/PersianballUIV3/#/order/2097"}}`
+- آیفون: فقط وقتی سایت با Add to Home Screen نصب شده باشد (iOS ۱۶.۴+).
 
 ### دیتای پوش (قرارداد با بک‌اند)
 
