@@ -11,6 +11,7 @@ import 'package:persian_ball/constant/app_breakpoints.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:persian_ball/bloc/cart/cart_bloc.dart';
 import 'package:persian_ball/views/widgets/auth_background.dart';
+import 'package:persian_ball/services/user_message_service.dart';
 
 class PageSwitcher extends StatefulWidget {
   @override
@@ -221,6 +222,48 @@ class _DesktopNavBar extends StatelessWidget implements PreferredSizeWidget {
                 icon: Icons.search_rounded,
                 tooltip: 'جست‌وجو در فروشگاه',
                 onTap: () => onSelect(2),
+              ),
+              const SizedBox(width: 8),
+
+              // اعلان‌ها با نشانِ پیام‌های خوانده‌نشده. پیش‌تر زنگوله فقط در
+              // هدرِ هومِ موبایل بود و در دسکتاپ راهی به اعلان‌ها نبود.
+              ValueListenableBuilder<int>(
+                valueListenable: UserMessageService.unreadNotifier,
+                builder: (context, unread, _) => Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    _NavIconButton(
+                      icon: Icons.notifications_none_rounded,
+                      tooltip: 'اعلان‌ها',
+                      onTap: () async {
+                        await Navigator.of(context).pushNamed('/notifications');
+                        UserMessageService.refreshUnread();
+                      },
+                    ),
+                    if (unread > 0)
+                      Positioned(
+                        top: -4,
+                        left: -4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: const ShapeDecoration(
+                            color: AppColor.danger,
+                            shape: StadiumBorder(),
+                          ),
+                          child: Text(
+                            unread > 99 ? '99+' : '$unread',
+                            style: const TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(width: 8),
 
