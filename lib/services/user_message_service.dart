@@ -120,13 +120,57 @@ class UserMessageService {
   /// در خطا استثنا پرتاب می‌کند تا صفحه بتواند «تلاش مجدد» نشان دهد؛
   /// برای مصرف‌کننده‌های بی‌صدا (مثل بج) [fetchOrNull] هست.
   static Future<UserMessagesPage> fetch({String? nextUrl, int? limit}) async {
-    final headers = await _headers();
-    final url = nextUrl != null && nextUrl.isNotEmpty
-        ? _normalize(nextUrl)
-        : '$_base/$_path${limit != null ? '?limit=$limit' : ''}';
+    // limitِ صریح (مثلاً شمارشِ نخوانده‌ها): همان صفحه‌ی خامِ سرور.
+    if (limit != null) {
+      return _page('$_base/$_path?limit=$limit');
+    }
+    // سرور از قدیم به جدید صفحه می‌دهد و ordering ندارد (مثلِ سفارش‌ها)؛
+    // پس از انتهای لیست خوانده می‌شود تا پیامِ تازه بالا باشد.
+    int offset;
+    int size;
+    int count;
+    if (nextUrl != null && nextUrl.isNotEmpty) {
+      final q = Uri.parse(_normalize(nextUrl)).queryParameters;
+      offset = int.tryParse(q['offset'] ?? '') ?? 0;
+      size = int.tryParse(q['limit'] ?? '') ?? pageSize;
+      count = int.tryParse(q['count'] ?? '') ?? 0;
+    } else {
+      final head = await _page('$_base/$_path?limit=$pageSize&offset=0');
+      if (head.count <= pageSize) {
+        return UserMessagesPage(
+            count: head.count, next: null, results: _newestFirst(head.results));
+      }
+      count = head.count;
+      offset = count - pageSize;
+      size = pageSize;
+    }
+    final page = await _page('$_base/$_path?limit=$size&offset=$offset');
+    final older = offset - pageSize < 0 ? 0 : offset - pageSize;
+    return UserMessagesPage(
+      count: page.count > 0 ? page.count : count,
+      next: offset > 0
+          ? '$_base/$_path?limit=${offset - older}&offset=$older&count=$count'
+          : null,
+      results: _newestFirst(page.results),
+    );
+  }
 
+  static const int pageSize = 20;
+
+  static List<UserMessage> _newestFirst(List<UserMessage> list) {
+    final sorted = [...list];
+    sorted.sort((a, b) {
+      final ta = a.createdAt, tb = b.createdAt;
+      if (ta != null && tb != null && ta != tb) return tb.compareTo(ta);
+      return (b.id ?? 0).compareTo(a.id ?? 0);
+    });
+    return sorted;
+  }
+
+  static Future<UserMessagesPage> _page(String url) async {
+    final headers = await _headers();
     final res = await http
-        .get(Uri.parse(url), headers: headers)
+        .get(Uri.parse(_normalize(url)), headers: headers)
         .timeout(const Duration(seconds: 20));
 
     if (res.statusCode == 401 || res.statusCode == 403) {

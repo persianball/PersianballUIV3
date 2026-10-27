@@ -82,7 +82,8 @@ class _NotificationPageState extends State<NotificationPage> {
       if (!mounted) return;
       setState(() {
         if (!more) _items.clear();
-        _items.addAll(page.results);
+        final seen = {for (final m in _items) m.id};
+        _items.addAll(page.results.where((m) => seen.add(m.id)));
         _nextUrl = page.next;
         _loading = false;
         _loadingMore = false;
@@ -275,8 +276,13 @@ class _NotificationPageState extends State<NotificationPage> {
   /// بی‌مقدمه را رد می‌کند). اگر قبلاً رد شده، فقط راهنمایی.
   Widget _webPushBanner() => ValueListenableBuilder<AuthorizationStatus?>(
         valueListenable: PushNotificationService.webPermission,
-        builder: (context, status, _) {
-          if (status == null || status == AuthorizationStatus.authorized) {
+        builder: (context, status, _) => ValueListenableBuilder<String?>(
+        valueListenable: PushNotificationService.webPushError,
+        builder: (context, error, _) {
+          final active = status == AuthorizationStatus.authorized &&
+              PushNotificationService.token != null &&
+              error == null;
+          if (active || (status == null && error == null)) {
             return const SizedBox.shrink();
           }
           final denied = status == AuthorizationStatus.denied;
@@ -296,7 +302,10 @@ class _NotificationPageState extends State<NotificationPage> {
                   child: Text(
                     denied
                         ? 'اعلان‌های این سایت در مرورگر مسدود است. از تنظیماتِ سایت در نوار آدرس آن را مجاز کنید.'
-                        : 'با روشن کردنِ اعلان‌ها، خبرِ سفارش و پیام‌های تازه را حتی وقتی سایت بسته است دریافت می‌کنید.',
+                        : error != null
+                            // TODO(release): فعلاً متنِ کاملِ خطا برای دیباگ
+                            ? 'اعلان‌ها روشن نشد:\n$error'
+                            : 'با روشن کردنِ اعلان‌ها، خبرِ سفارش و پیام‌های تازه را حتی وقتی سایت بسته است دریافت می‌کنید.',
                     style: const TextStyle(
                         fontFamily: 'Estedad',
                         fontSize: 12,
@@ -308,24 +317,48 @@ class _NotificationPageState extends State<NotificationPage> {
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: () async {
-                      final ok = await PushNotificationService.enableWebPush();
+                      final err = await PushNotificationService.enableWebPush();
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(
-                            ok ? 'اعلان‌های مرورگر روشن شد' : 'اعلان‌ها روشن نشد',
-                            style: const TextStyle(fontFamily: 'Estedad')),
-                      ));
+                      if (err == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('اعلان‌های مرورگر روشن شد',
+                              style: TextStyle(fontFamily: 'Estedad')),
+                        ));
+                        return;
+                      }
+                      // TODO(release): فعلاً متنِ کاملِ خطا برای دیباگ.
+                      await showDialog<void>(
+                        context: context,
+                        builder: (_) => Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: AlertDialog(
+                            title: const Text('اعلان‌ها روشن نشد',
+                                style: TextStyle(fontFamily: 'Estedad')),
+                            content: SelectableText(err,
+                                textDirection: TextDirection.ltr,
+                                style: const TextStyle(fontSize: 12)),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('باشه',
+                                    style: TextStyle(fontFamily: 'Estedad')),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
                     },
                     style: FilledButton.styleFrom(
                         backgroundColor: AppColor.pitchGreen),
-                    child: const Text('روشن کردن',
-                        style: TextStyle(fontFamily: 'Estedad')),
+                    child: Text(error != null ? 'تلاش دوباره' : 'روشن کردن',
+                        style: const TextStyle(fontFamily: 'Estedad')),
                   ),
                 ],
               ],
             ),
           );
         },
+        ),
       );
 
   /// دسکتاپ: لیست اعلان‌ها وسط‌چین با حداکثر عرض ۸۰۰؛ موبایل بی‌اثر.

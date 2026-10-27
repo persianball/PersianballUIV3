@@ -70,6 +70,17 @@ void main() {
     expect(find.textContaining('نمایشی'), findsNothing);
   });
 
+  testWidgets('پیامِ تازه بالاتر از پیامِ قدیمی است', (t) async {
+    SharedPreferences.setMockInitialValues({'auth_token': 'tok'});
+    final server = _FakeServer();
+    await http.runWithClient(() async {
+      await t.pumpWidget(_app());
+      await t.pumpAndSettle();
+    }, () => server.client);
+    final y = [for (final s in ['تخفیف ویژه', 'سفارش شما ارسال شد', 'پیام قدیمی']) t.getTopLeft(find.text(s)).dy];
+    expect(y[0] < y[1] && y[1] < y[2], isTrue);
+  });
+
   testWidgets('«خواندن همه» برای هر پیامِ خوانده‌نشده PATCH می‌فرستد', (t) async {
     SharedPreferences.setMockInitialValues({'auth_token': 'tok'});
     final server = _FakeServer();

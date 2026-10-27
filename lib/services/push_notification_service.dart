@@ -149,6 +149,7 @@ class PushNotificationService {
     } catch (e) {
       // نبودِ Google Play Services، شبکه‌ی قطع، یا پیکربندی ناقص
       debugPrint('[push] راه‌اندازی ناموفق: $e');
+      webPushError.value = '$e';
     }
   }
 
@@ -172,11 +173,7 @@ class PushNotificationService {
 
   /// گرفتنِ توکن، فرستادن به سرور و گوش دادن به تغییرِ آن.
   static Future<void> _activate(FirebaseMessaging messaging) async {
-    _token = kIsWeb
-        ? await messaging.getToken(
-            vapidKey: DefaultFirebaseOptions.webVapidKey,
-            serviceWorkerScriptPath: _webWorkerPath)
-        : await messaging.getToken();
+    _token = kIsWeb ? await _webToken(messaging) : await messaging.getToken();
     debugPrint('[push] token: ${_token == null ? 'null' : 'دریافت شد'}');
     await _sendToken();
 
@@ -188,19 +185,52 @@ class PushNotificationService {
     });
   }
 
-  /// وب: درخواستِ اجازه با کلیکِ کاربر. true یعنی اعلان‌ها فعال شد.
-  static Future<bool> enableWebPush() async {
-    if (!kIsWeb || !_ready) return false;
+  /// وب: بلافاصله بعد از ثبتِ سرویس‌ورکرِ پوش، مرورگر هنوز آن را «فعال»
+  /// نمی‌داند و subscribe با «no active Service Worker» رد می‌شود (پلاگین
+  /// فقط یک بار دوباره تلاش می‌کند). روی GitHub Pages همین رخ می‌داد؛ پس
+  /// چند بار با فاصله‌ی بیشتر تلاش می‌شود.
+  static Future<String?> _webToken(FirebaseMessaging messaging) async {
+    for (var attempt = 1;; attempt++) {
+      try {
+        return await messaging.getToken(
+            vapidKey: DefaultFirebaseOptions.webVapidKey,
+            serviceWorkerScriptPath: _webWorkerPath);
+      } catch (e) {
+        final waiting =
+            '$e'.toLowerCase().contains('no active service worker');
+        if (!waiting || attempt >= 6) rethrow;
+        debugPrint('[push] سرویس‌ورکر هنوز فعال نیست؛ تلاشِ ${attempt + 1}');
+        await Future<void>.delayed(Duration(milliseconds: 700 * attempt));
+      }
+    }
+  }
+
+  /// خطای راه‌اندازیِ پوش (فعلاً برای دیباگ در صفحه‌ی اعلان‌ها نشان داده
+  /// می‌شود). TODO(release): پیش از انتشار فقط پیامِ کوتاه بماند.
+  static final ValueNotifier<String?> webPushError = ValueNotifier<String?>(null);
+
+  /// وب: درخواستِ اجازه با کلیکِ کاربر. null یعنی اعلان‌ها فعال شد؛ وگرنه
+  /// علتِ دقیق.
+  static Future<String?> enableWebPush() async {
+    if (!kIsWeb) return 'فقط روی وب';
+    if (!_ready) {
+      return 'Firebase راه‌اندازی نشد: ${webPushError.value ?? 'نامشخص'}';
+    }
     try {
       final messaging = FirebaseMessaging.instance;
       final s = await messaging.requestPermission();
       webPermission.value = s.authorizationStatus;
-      if (s.authorizationStatus != AuthorizationStatus.authorized) return false;
+      if (s.authorizationStatus != AuthorizationStatus.authorized) {
+        return 'اجازه‌ی اعلان داده نشد (${s.authorizationStatus.name})';
+      }
       await _activate(messaging);
-      return _token != null;
+      if (_token == null) return 'توکنِ FCM خالی برگشت';
+      webPushError.value = null;
+      return null;
     } catch (e) {
       debugPrint('[push] فعال‌سازی پوشِ وب ناموفق: $e');
-      return false;
+      webPushError.value = '$e';
+      return '$e';
     }
   }
 
