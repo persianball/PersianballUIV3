@@ -20,6 +20,7 @@ import 'package:persian_ball/services/slider_service.dart';
 import 'package:persian_ball/services/push_notification_service.dart';
 import 'package:persian_ball/services/user_message_service.dart';
 import 'package:persian_ball/core/push_navigation.dart';
+import 'package:persian_ball/core/web_safe_area/web_safe_area.dart';
 import 'package:firebase_messaging/firebase_messaging.dart' show RemoteMessage;
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
@@ -28,6 +29,7 @@ final GlobalKey<ScaffoldMessengerState> appMessengerKey =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  initWebSafeArea();
 
   // سرور گالری کند است (TTFB حدود ۲ تا ۶ ثانیه). کشِ دیسک را قبل از اولین
   // فریم می‌خوانیم تا اسلایدرها فوراً چیزی نشان دهند، و واکشیِ تازه را در
@@ -366,7 +368,9 @@ class _MyAppState extends State<MyApp> {
         // این builder جهت RTL را برای کل اپ (همه‌ی روت‌ها، از جمله
         // AppBarها) یک‌جا تضمین می‌کند؛ Directionality(rtl) تکراری که
         // صفحات خودشان دارند بی‌ضرر و اضافی می‌ماند.
-        builder: (context, child) => Directionality(
+        builder: (context, child) => _WebSafeAreaInsets(
+            child: Builder(
+          builder: (context) => Directionality(
           textDirection: TextDirection.rtl,
           child: Stack(
             children: [
@@ -394,6 +398,7 @@ class _MyAppState extends State<MyApp> {
             ],
           ),
         ),
+        )),
         // initialRoute عمداً ست نشده: اگر مقداردهی شود، فلاتر وب همیشه
         // مسیر '/' را در بارگذاری اول باز می‌کند و آدرس واقعی مرورگر
         // (مثلاً /#/product/4) نادیده گرفته می‌شود. بدون آن، مسیر اولیه
@@ -466,3 +471,33 @@ class _AuthChangeReloaderState extends State<_AuthChangeReloader> {
 //////////////////////////////////////////////////////////////////////////////
 
 
+
+/// فاصله‌ی امنِ مرورگر را به MediaQuery اضافه می‌کند (روی اپِ بومی صفر است و
+/// چیزی عوض نمی‌شود). وقتی صفحه‌کلید باز است فاصله‌ی پایین صفر می‌شود، مثلِ
+/// رفتارِ خودِ سیستم‌عامل، تا بالای صفحه‌کلید جای خالی نماند.
+class _WebSafeAreaInsets extends StatelessWidget {
+  const _WebSafeAreaInsets({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<EdgeInsets>(
+      valueListenable: webSafeArea,
+      child: child,
+      builder: (context, insets, child) {
+        if (insets == EdgeInsets.zero) return child!;
+        final mq = MediaQuery.of(context);
+        final bool keyboard = mq.viewInsets.bottom > 0;
+        return MediaQuery(
+          data: mq.copyWith(
+            padding: mq.padding +
+                (keyboard ? insets.copyWith(bottom: 0) : insets),
+            viewPadding: mq.viewPadding + insets,
+          ),
+          child: child!,
+        );
+      },
+    );
+  }
+}
