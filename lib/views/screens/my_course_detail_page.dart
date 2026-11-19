@@ -28,6 +28,7 @@ import 'package:persian_ball/views/widgets/app_network_image.dart';
 import 'package:persian_ball/views/widgets/course_lesson_list.dart';
 import 'package:persian_ball/views/widgets/motion.dart';
 import 'package:persian_ball/views/widgets/rich_description.dart';
+import 'package:persian_ball/views/widgets/lesson_drill_images.dart';
 import 'package:persian_ball/views/widgets/shimmer.dart';
 import 'package:persian_ball/views/widgets/player/glass_player_model.dart';
 import 'package:persian_ball/views/widgets/player/glass_video_player.dart';
@@ -519,6 +520,15 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
           ),
           const SizedBox(height: 10),
           _livePosition(),
+          if (lesson.section.layoutImage != null ||
+              lesson.section.volumeImage != null) ...[
+            const SizedBox(height: 12),
+            LessonDrillImages(
+              key: ValueKey('drill-${lesson.flatIndex}'),
+              layoutImage: lesson.section.layoutImage,
+              volumeImage: lesson.section.volumeImage,
+            ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [

@@ -279,11 +279,19 @@ class MyCourseWeekSectionItem {
   final String? videoUrl;
   final String? videoThumbnail;
 
+  /// تصویرِ چیدمانِ تمرین (null اگر آپلود نشده)
+  final String? layoutImage;
+
+  /// تصویرِ میزانِ انجامِ تمرین (null اگر آپلود نشده)
+  final String? volumeImage;
+
   MyCourseWeekSectionItem({
     required this.title,
     required this.isLocked,
     this.videoUrl,
     this.videoThumbnail,
+    this.layoutImage,
+    this.volumeImage,
   });
 
   factory MyCourseWeekSectionItem.fromJson(Map<String, dynamic> json) {
@@ -292,6 +300,8 @@ class MyCourseWeekSectionItem {
       isLocked: json['is_locked'] == true,
       videoUrl: json['video_url']?.toString(),
       videoThumbnail: json['video_thumbnail']?.toString(),
+      layoutImage: _image(json['layout_image']),
+      volumeImage: _image(json['volume_image']),
     );
   }
 }
@@ -525,4 +535,10 @@ class Course {
               .toList(),
     );
   }
+}
+
+/// لینکِ تصویر یا null (رشته‌ی خالی هم یعنی «آپلود نشده»).
+String? _image(dynamic v) {
+  final t = v?.toString().trim() ?? '';
+  return t.isEmpty || t == 'null' ? null : t;
 }
