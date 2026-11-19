@@ -5,6 +5,7 @@
 // خطِ براقِ بالایی. همه‌جا یک زبان: دکمه‌ی گرد، قرص، کارت.
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:persian_ball/views/widgets/motion.dart';
@@ -33,14 +34,32 @@ class GlassSurface extends StatelessWidget {
   final bool highlight;
   final bool shadow;
 
+  /// تاریِ پس‌زمینه فقط جایی که ارزان است و واقعاً دیده می‌شود.
+  ///
+  /// کنترل‌های پخش‌کننده حدودِ ۱۶ سطحِ شیشه‌ای دارند و هر BackdropFilter یک
+  /// گذرِ تاریِ جدا روی GPU است، آن هم در هر فریمِ ویدیو. روی اندرویدِ
+  /// میان‌رده (مثلِ Galaxy A55) همین پخش و اسکرولِ صفحه‌ی دوره را پرلکنت
+  /// می‌کرد. روی وب هم ویدیو یک عنصرِ HTML زیرِ بومِ فلاتر است و تاری اصلاً
+  /// به آن نمی‌رسد؛ فقط هزینه داشت. در این دو حالت به‌جای تاری، تینت کمی
+  /// غلیظ‌تر می‌شود تا خوانایی حفظ شود.
+  static bool get blurEnabled =>
+      debugBlurOverride ??
+      (!kIsWeb && defaultTargetPlatform != TargetPlatform.android);
+
+  @visibleForTesting
+  static bool? debugBlurOverride;
+
   @override
   Widget build(BuildContext context) {
     final BorderRadius br =
         circle ? BorderRadius.circular(999) : BorderRadius.circular(radius);
+    final bool blurred = blurEnabled;
+    final double tint =
+        blurred ? this.tint : (this.tint + 0.2).clamp(0.0, 0.82).toDouble();
     final surface = ClipRRect(
       borderRadius: br,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+      child: _backdrop(
+        blurred: blurred,
         child: Stack(
           children: [
             Positioned.fill(
@@ -108,6 +127,13 @@ class GlassSurface extends StatelessWidget {
       child: surface,
     );
   }
+
+  Widget _backdrop({required bool blurred, required Widget child}) => blurred
+      ? BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: child,
+        )
+      : child;
 }
 
 /// دکمه‌ی گردِ شیشه‌ای با یک آیکن.

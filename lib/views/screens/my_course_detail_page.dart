@@ -535,8 +535,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
               Expanded(
                 child: _stepButton(
                   label: 'ویدیو قبلی',
-                  // chevron ها در RTL آینه می‌شوند: left → رو به راست (قبلی)
-                  icon: Icons.chevron_left_rounded,
                   onTap: previous == null ? null : () => _play(previous),
                 ),
               ),
@@ -544,7 +542,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
               Expanded(
                 child: _stepButton(
                   label: 'ویدیو بعدی',
-                  icon: Icons.chevron_right_rounded,
                   onTap: next == null ? null : () => _play(next),
                 ),
               ),
@@ -618,7 +615,6 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
 
   Widget _stepButton({
     required String label,
-    required IconData icon,
     required VoidCallback? onTap,
   }) {
     final enabled = onTap != null;
@@ -633,21 +629,14 @@ class _MyCourseDetailPageState extends State<MyCourseDetailPage> {
             color: AppColor.cardMuted,
             shape: AppShapes.pill,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 17, color: AppColor.ink),
-              const SizedBox(width: 5),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontFamily: 'Estedad',
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColor.ink,
-                ),
-              ),
-            ],
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Estedad',
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: AppColor.ink,
+            ),
           ),
         ),
       ),

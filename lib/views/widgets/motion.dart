@@ -136,9 +136,15 @@ class _FadeSlideInState extends State<FadeSlideIn>
   }
 }
 
-/// تعویض نرم بین تب‌های اصلی، بدون از دست رفتن حالت صفحات: همه‌ی بچه‌ها
+/// تعویض نرم بین تب‌های اصلی، بدون از دست رفتن حالت صفحات: تب‌های دیده‌شده
 /// زنده می‌مانند (مثل IndexedStack) و فقط شفافیت/مقیاسشان انیمیت می‌شود.
-class FadeIndexedStack extends StatelessWidget {
+///
+/// تنبل: هر تب اولین بار که انتخاب شود ساخته می‌شود. قبلاً هر چهار تب در
+/// همان فریمِ اول ساخته می‌شدند؛ یعنی باز شدنِ اپ همزمان درخواست‌ها،
+/// چیدمان و دیکودِ تصویرِ خانه + دوره‌ها + فروشگاه + پروفایل را راه
+/// می‌انداخت (محصولات و دوره‌ها هر کدام دو بار گرفته می‌شدند) و روی گوشیِ
+/// میان‌رده بارگذاریِ اول کند و پرلکنت بود.
+class FadeIndexedStack extends StatefulWidget {
   const FadeIndexedStack({
     super.key,
     required this.index,
@@ -149,6 +155,23 @@ class FadeIndexedStack extends StatelessWidget {
   final int index;
   final List<Widget> children;
   final Duration duration;
+
+  @override
+  State<FadeIndexedStack> createState() => _FadeIndexedStackState();
+}
+
+class _FadeIndexedStackState extends State<FadeIndexedStack> {
+  late final Set<int> _visited = {widget.index};
+
+  int get index => widget.index;
+  List<Widget> get children => widget.children;
+  Duration get duration => widget.duration;
+
+  @override
+  void didUpdateWidget(FadeIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _visited.add(widget.index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +198,9 @@ class FadeIndexedStack extends StatelessWidget {
                     child: Visibility(
                       visible: true,
                       maintainState: true,
-                      child: children[i],
+                      child: _visited.contains(i)
+                          ? children[i]
+                          : const SizedBox.shrink(),
                     ),
                   ),
                 ),

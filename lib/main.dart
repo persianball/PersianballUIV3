@@ -371,7 +371,26 @@ class _MyAppState extends State<MyApp> {
           child: Stack(
             children: [
               const Positioned.fill(child: AnimatedGradientBackground()),
-              child ?? const SizedBox.shrink(),
+              // اندروید ۱۵ به بالا اپ را لبه‌تالبه می‌کشد و نوارِ ناوبریِ سیستم
+              // (سه‌دکمه‌ای یا ژست) روی پایینِ صفحه می‌افتد. بیشترِ صفحه‌ها
+              // SafeArea نداشتند و دکمه‌ها و انتهای لیست زیرِ آن می‌رفت.
+              // اینجا یک‌بار برای همه‌ی روت‌ها، دیالوگ‌ها و شیت‌ها (فعلی و
+              // آینده) فاصله‌ی پایین و کناره‌ها گرفته می‌شود. SafeArea این
+              // فاصله را از MediaQuery هم حذف می‌کند، پس صفحه‌هایی که خودشان
+              // SafeArea دارند دوبار فاصله نمی‌گیرند. بالا دست‌نخورده است
+              // (AppBarها خودشان نوارِ وضعیت را حساب می‌کنند). در تمام‌صفحه‌ی
+              // ویدیو سیستم فاصله را صفر می‌دهد و چیزی کم نمی‌شود.
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: MediaQuery.viewPaddingOf(context).bottom,
+                child: const ColoredBox(color: AppColor.milk),
+              ),
+              SafeArea(
+                top: false,
+                child: child ?? const SizedBox.shrink(),
+              ),
             ],
           ),
         ),

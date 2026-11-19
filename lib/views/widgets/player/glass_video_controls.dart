@@ -331,7 +331,7 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
                   child: Center(child: _nextUpToast()),
                 ),
 
-              if (_menu != _Menu.none) ..._menuLayer(compact),
+              if (_menu != _Menu.none) ..._menuLayer(compact, c.maxHeight),
             ],
           ),
         ),
@@ -578,7 +578,16 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
 
   // ───────────────────────── منوها
 
-  List<Widget> _menuLayer(bool compact) {
+  List<Widget> _menuLayer(bool compact, double available) {
+    // منو نباید از پایینِ پخش‌کننده بیرون بزند: پخش‌کننده‌ی درون‌صفحه روی
+    // گوشی حدودِ ۲۰۰ پیکسل ارتفاع دارد و سقفِ ثابتِ قبلی (۱۵۰ + عنوان) از
+    // لبه‌ی پایین رد می‌شد و ردیف‌های آخر دیده نمی‌شدند. ارتفاعِ فهرست از
+    // فضای واقعی حساب می‌شود و بقیه‌اش اسکرول می‌خورد.
+    final double top = compact ? 46 : 58;
+    const double chrome = 40; // عنوان و حاشیه‌ی داخلیِ منو
+    final double listMax = (available - top - chrome - 10)
+        .clamp(76.0, 260.0)
+        .toDouble();
     final bool quality = _menu == _Menu.quality;
     final List<_MenuItem> items = quality
         ? [
@@ -616,13 +625,13 @@ class _GlassVideoControlsState extends State<GlassVideoControls> {
       ),
       // قرص‌ها در RTL سمتِ چپِ نوارِ بالا هستند؛ منو زیرِ همان‌ها
       Positioned(
-        top: compact ? 52 : 58,
+        top: top,
         left: 12,
         child: _GlassMenu(
           title: quality ? 'کیفیت ویدیو' : 'سرعت پخش',
           items: items,
           onPicked: _closeMenu,
-          maxHeight: compact ? 150 : 260,
+          maxHeight: listMax,
         ),
       ),
     ];
