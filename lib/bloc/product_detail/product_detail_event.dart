@@ -12,10 +12,13 @@ abstract class ProductDetailEvent extends Equatable {
 class FetchProductDetail extends ProductDetailEvent {
   final int productId;
 
-  const FetchProductDetail(this.productId);
+  /// کش را دور می‌زند (کشیدن برای تازه‌سازی).
+  final bool refresh;
+
+  const FetchProductDetail(this.productId, {this.refresh = false});
 
   @override
-  List<Object?> get props => [productId];
+  List<Object?> get props => [productId, refresh];
 }
 
 class ChangeProductColorEvent extends ProductDetailEvent{

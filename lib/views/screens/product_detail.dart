@@ -224,7 +224,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   /// وضعیت نهاییِ بلاک منتظر می‌ماند تا حلقه‌ی نشانگر زودتر از داده محو نشود.
   Future<void> _refresh() async {
     final bloc = context.read<ProductDetailBloc>();
-    bloc.add(FetchProductDetail(widget.productId));
+    bloc.add(FetchProductDetail(widget.productId, refresh: true));
     await bloc.stream
         .firstWhere((s) => s is! ProductDetailLoading)
         .timeout(const Duration(seconds: 20), onTimeout: () => bloc.state);

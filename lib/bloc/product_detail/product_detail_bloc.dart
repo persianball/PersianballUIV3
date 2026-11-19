@@ -7,10 +7,20 @@ import '../../services/product_service.dart';
 class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
   ProductDetailBloc() : super(ProductDetailInitial()) {
     on<FetchProductDetail>((event, emit) async {
+      // محصولی که تازه دیده شده فوراً نشان داده می‌شود، بدونِ اسکلتِ بارگذاری.
+      final cached = event.refresh
+          ? null
+          : ProductService.cachedProductDetail(event.productId);
+      if (cached != null) {
+        emit(ProductDetailLoaded(cached));
+        return;
+      }
       emit(ProductDetailLoading());
 
       try {
-        final product = await ProductService.fetchProductDetail(event.productId);
+        final product = await ProductService.fetchProductDetail(
+            event.productId,
+            refresh: event.refresh);
         emit(ProductDetailLoaded(product));
       } catch (e) {
         emit(ProductDetailError(e.toString()));

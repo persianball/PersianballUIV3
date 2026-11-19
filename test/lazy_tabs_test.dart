@@ -26,6 +26,7 @@ class _ProbeState extends State<_Probe> {
 }
 
 void main() {
+  warmUpTests();
   testWidgets('فقط تبِ انتخاب‌شده ساخته می‌شود و بعد زنده می‌ماند',
       (tester) async {
     final log = <String>[];
@@ -52,5 +53,25 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(log, ['a', 'c']);
     expect(find.text('b'), findsNothing);
+  });
+}
+
+// گرم‌کردنِ پس‌زمینه: بعد از مکث، تب‌های ندیده یکی‌یکی ساخته می‌شوند.
+void warmUpTests() {
+  testWidgets('تب‌های ندیده بعد از مکث یکی‌یکی ساخته می‌شوند', (tester) async {
+    final log = <String>[];
+    await tester.pumpWidget(MaterialApp(
+      home: FadeIndexedStack(
+        index: 0,
+        warmUpAfter: const Duration(seconds: 4),
+        children: [_Probe('a', log), _Probe('b', log), _Probe('c', log)],
+      ),
+    ));
+    expect(log, ['a']);
+    await tester.pump(const Duration(seconds: 4));
+    expect(log, ['a', 'b']);
+    await tester.pump(const Duration(milliseconds: 1500));
+    expect(log, ['a', 'b', 'c']);
+    await tester.pump(const Duration(milliseconds: 1500));
   });
 }

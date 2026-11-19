@@ -1,4 +1,5 @@
 // core/services/ProductService.dart
+import 'package:persian_ball/core/timed_cache.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constant/urls.dart';
@@ -23,9 +24,17 @@ class ProductService {
     }
   }
 
-  static Future<ProductDetail> fetchProductDetail(int productId) async {
+  static final TimedCache<int, ProductDetail> _detailCache = TimedCache();
 
-    print("product id : ${productId}");
+  static ProductDetail? cachedProductDetail(int productId) =>
+      _detailCache.peek(productId);
+
+  static Future<ProductDetail> fetchProductDetail(int productId,
+          {bool refresh = false}) =>
+      _detailCache.get(productId, () => _loadProductDetail(productId),
+          refresh: refresh);
+
+  static Future<ProductDetail> _loadProductDetail(int productId) async {
     try {
       final response = await http.get(
         Uri.parse('${URLs.baseUrl}/v2/product/product/${productId}/'),

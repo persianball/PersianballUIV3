@@ -2,6 +2,8 @@
 //
 // جعبه‌ابزار حرکت اپ: چند ویجت کوچک و قابل‌استفاده‌ی مجدد تا همه‌ی صفحات
 // زبان انیمیشن یکسانی داشته باشند (همان حس «مورف» صفحه‌ی محصول).
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// بازخورد لمسی کارت‌ها و آیتم‌های قابل‌ضربه: هنگام فشردن کمی جمع می‌شود
@@ -149,12 +151,20 @@ class FadeIndexedStack extends StatefulWidget {
     super.key,
     required this.index,
     required this.children,
-    this.duration = const Duration(milliseconds: 320),
+    this.duration = const Duration(milliseconds: 160),
+    this.warmUpAfter,
+    this.warmUpGap = const Duration(milliseconds: 1500),
   });
 
   final int index;
   final List<Widget> children;
   final Duration duration;
+
+  /// اگر داده شود، بعد از این مکث تب‌های ندیده یکی‌یکی (با فاصله‌ی
+  /// [warmUpGap]) در پس‌زمینه ساخته می‌شوند. بارگذاریِ اول سبک می‌ماند و
+  /// اولین ضربه روی هر تب هم دیگر منتظرِ ساختنِ صفحه و درخواستش نمی‌ماند.
+  final Duration? warmUpAfter;
+  final Duration warmUpGap;
 
   @override
   State<FadeIndexedStack> createState() => _FadeIndexedStackState();
@@ -162,6 +172,30 @@ class FadeIndexedStack extends StatefulWidget {
 
 class _FadeIndexedStackState extends State<FadeIndexedStack> {
   late final Set<int> _visited = {widget.index};
+  Timer? _warmUp;
+
+  @override
+  void initState() {
+    super.initState();
+    final after = widget.warmUpAfter;
+    if (after != null) _warmUp = Timer(after, _warmNext);
+  }
+
+  void _warmNext() {
+    if (!mounted) return;
+    for (int i = 0; i < widget.children.length; i++) {
+      if (_visited.contains(i)) continue;
+      setState(() => _visited.add(i));
+      _warmUp = Timer(widget.warmUpGap, _warmNext);
+      return;
+    }
+  }
+
+  @override
+  void dispose() {
+    _warmUp?.cancel();
+    super.dispose();
+  }
 
   int get index => widget.index;
   List<Widget> get children => widget.children;
@@ -185,10 +219,9 @@ class _FadeIndexedStackState extends State<FadeIndexedStack> {
               opacity: i == index ? 1 : 0,
               duration: duration,
               curve: Curves.easeOutCubic,
-              child: AnimatedScale(
-                scale: i == index ? 1 : 0.985,
-                duration: duration,
-                curve: Curves.easeOutCubic,
+              // مقیاس عمداً انیمیت نمی‌شود: تغییرِ مقیاس در هر فریم کلِ صفحه
+              // را دوباره رستر می‌کرد و تعویضِ تب را سنگین می‌کرد.
+              child: SizedBox.expand(
                 // صفحه‌ی غیر فعال نباید فوکوس/اسکرول بگیرد یا هزینه‌ی
                 // رندر بدهد؛ وقتی کاملاً محو شد از درخت نقاشی حذف می‌شود.
                 child: TickerMode(

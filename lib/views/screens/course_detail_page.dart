@@ -72,7 +72,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   /// «کشیدن برای تازه‌سازی»: جزییات دوره را دوباره می‌گیرد. اگر واریانتِ
   /// انتخاب‌شده دیگر فعال نباشد، اولین واریانت فعالِ جدید انتخاب می‌شود.
   Future<void> _refresh() async {
-    final future = CourseService.fetchCourseDetail(id: widget.id);
+    final future =
+        CourseService.fetchCourseDetail(id: widget.id, refresh: true);
     setState(() => _future = future);
     try {
       final data = await future;
@@ -1489,7 +1490,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                             style: TextStyle(fontFamily: 'Estedad', color: AppColor.onSurfaceVariant)),
                         const SizedBox(height: 12),
                         OutlinedButton(
-                          onPressed: () => setState(() => _future = CourseService.fetchCourseDetail(id: widget.id)),
+                          onPressed: () => setState(() => _future = CourseService.fetchCourseDetail(id: widget.id, refresh: true)),
                           style: OutlinedButton.styleFrom(
                               foregroundColor: AppColor.goldEnd,
                               side: const BorderSide(color: AppColor.goldEnd),

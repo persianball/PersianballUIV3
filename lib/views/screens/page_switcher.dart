@@ -85,6 +85,8 @@ class _PageSwitcherState extends State<PageSwitcher> {
             : null,
         body: FadeIndexedStack(
           index: _selectedIndex,
+          // خانه اول و تنها؛ بقیه‌ی تب‌ها بعد از آرام شدنِ بارگذاری
+          warmUpAfter: const Duration(seconds: 4),
           children: [
             HomePage(),
             const CoursesPage(),

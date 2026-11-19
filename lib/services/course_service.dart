@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:persian_ball/constant/urls.dart';
+import 'package:persian_ball/core/timed_cache.dart';
 import 'package:persian_ball/models/course_models.dart';
 import 'package:persian_ball/models/course_detail_model.dart';
 import 'package:flutter/widgets.dart';
@@ -32,7 +33,15 @@ class CourseService {
     throw Exception('خطا در دریافت لیست دوره‌ها (${res.statusCode})');
   }
 
-  static Future<CourseDetailResponse> fetchCourseDetail({required int id}) async {
+  static final TimedCache<int, CourseDetailResponse> _detailCache =
+      TimedCache();
+
+  /// جزییاتِ دوره؛ بازدیدِ دوباره در چند دقیقه از حافظه می‌آید.
+  static Future<CourseDetailResponse> fetchCourseDetail(
+          {required int id, bool refresh = false}) =>
+      _detailCache.get(id, () => _loadCourseDetail(id), refresh: refresh);
+
+  static Future<CourseDetailResponse> _loadCourseDetail(int id) async {
     final uri = Uri.parse('${URLs.baseUrl}v2/product/course/$id/');
     final res = await http.get(uri);
     if (res.statusCode >= 200 && res.statusCode < 300) {
