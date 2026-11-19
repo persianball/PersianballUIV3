@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:persian_ball/utils/stock_limit.dart';
 import 'package:persian_ball/constant/app_breakpoints.dart';
 import 'package:persian_ball/utils/login_prompt.dart';
 import 'package:persian_ball/constant/app_color.dart';
@@ -335,6 +336,26 @@ class _ProductDetailPageState extends State<ProductDetailPage>
     }
     if (!_guardStock(context, s)) return;
 
+    // سقفِ تعداد: موجودیِ این سایز منهای آنچه از قبل در سبد است.
+    final size = _selectedSize(s);
+    final int? remaining = size == null
+        ? null
+        : remainingStock(
+            stock: size.count,
+            inCart: quantityInCart(context.read<CartBloc>().state, size.id),
+          );
+    if (remaining != null && remaining <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'همه‌ی موجودیِ این سایز (${size!.count} عدد) در سبد شماست',
+              style: const TextStyle(fontFamily: 'Estedad')),
+          backgroundColor: AppColor.danger,
+        ),
+      );
+      return;
+    }
+
     _dropRunning = false;
     _cartButtonPopped = false;
     _pendingAddedMessage = null;
@@ -343,7 +364,10 @@ class _ProductDetailPageState extends State<ProductDetailPage>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => AddToCartModal(cartItem: _cartItemFor(product, s)),
+      builder: (_) => AddToCartModal(
+        cartItem: _cartItemFor(product, s),
+        maxQuantity: remaining,
+      ),
     );
 
     if (!mounted || launch == null) return;

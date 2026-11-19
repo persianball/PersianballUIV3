@@ -173,7 +173,9 @@ class _MyAppState extends State<MyApp> {
           // (AnimatedGradientBackground در builder) از پشت دیده شود.
           scaffoldBackgroundColor: Colors.transparent,
           fontFamily: 'Estedad',
-          splashFactory: InkSparkle.splashFactory,
+          // InkSparkle برای هر لمس یک شیدرِ تمام‌سطح اجرا می‌کند، درست همان
+          // لحظه‌ای که صفحه‌ی بعد دارد باز می‌شود؛ موجِ ساده ارزان‌تر است.
+          splashFactory: InkRipple.splashFactory,
           colorScheme: ColorScheme.fromSeed(
             seedColor: AppColor.pitchGreen,
             brightness: Brightness.light,

@@ -32,6 +32,22 @@ class _ProCartItemCardState extends State<ProCartItemCard> {
 
   void _changeQuantity(int next) {
     if (next < 1) return;
+    // بیشتر از موجودیِ انبارِ این سایز نمی‌شود؛ کم کردن همیشه آزاد است.
+    final stock = widget.cartItemFromBackend.product?.count;
+    if (stock != null &&
+        next > stock &&
+        next > widget.cartItemFromBackend.quantity) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('بیشتر از $stock عدد از این کالا موجود نیست',
+                style: const TextStyle(fontFamily: 'Estedad')),
+            backgroundColor: AppColor.danger,
+          ),
+        );
+      return;
+    }
     context.read<CartBloc>().add(UpdateQuantity(context,
         widget.cartItemFromBackend.id, widget.cartItemFromBackend.product!.id, null, next));
     setState(() => isLoading = true);

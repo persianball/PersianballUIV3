@@ -30,10 +30,15 @@ class AddToCartModal extends StatefulWidget {
   /// تعدادی که کاربر در صفحه‌ی محصول انتخاب کرده است
   final int initialQuantity;
 
+  /// بیشترین تعدادی که می‌شود اضافه کرد (موجودیِ این سایز منهای آنچه از قبل
+  /// در سبد است). null یعنی موجودی معلوم نیست و سقفی نیست.
+  final int? maxQuantity;
+
   const AddToCartModal({
     Key? key,
     required this.cartItem,
     this.initialQuantity = 1,
+    this.maxQuantity,
   }) : super(key: key);
 
   @override
@@ -50,6 +55,13 @@ class _AddToCartModalState extends State<AddToCartModal> {
   void initState() {
     super.initState();
     _quantity = widget.initialQuantity < 1 ? 1 : widget.initialQuantity;
+    final max = widget.maxQuantity;
+    if (max != null && max >= 1 && _quantity > max) _quantity = max;
+  }
+
+  bool get _atMax {
+    final max = widget.maxQuantity;
+    return max != null && _quantity >= max;
   }
 
   @override
@@ -268,10 +280,28 @@ class _AddToCartModalState extends State<AddToCartModal> {
                           _StepperButton(
                             icon: Icons.add_rounded,
                             filled: true,
-                            onTap: () => setState(() => _quantity++),
+                            onTap: _atMax
+                                ? null
+                                : () => setState(() => _quantity++),
                           ),
                         ],
                       ),
+                      if (_atMax) ...[
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: Text(
+                            'بیشتر از ${widget.maxQuantity} عدد موجود نیست',
+                            key: const ValueKey('stock-limit-hint'),
+                            style: const TextStyle(
+                              fontFamily: 'Estedad',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColor.danger,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       const Divider(height: 1, color: AppColor.line),
                       const SizedBox(height: 12),

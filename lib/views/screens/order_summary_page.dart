@@ -1,4 +1,5 @@
 // lib/views/screens/order_summary_page.dart
+import 'package:persian_ball/utils/digits.dart';
 import 'package:persian_ball/utils/payment_redirect.dart';
 import 'dart:convert';
 import 'package:persian_ball/constant/app_shapes.dart';
@@ -104,7 +105,9 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   }
 
   Future<void> _applyDiscountCode() async {
-    final code = _discountCtrl.text.trim();
+    // رقمِ فارسی/عربی → لاتین و حذفِ فاصله‌ها؛ وگرنه کدِ درست رد می‌شود.
+    final code = normalizeCode(_discountCtrl.text);
+    if (code != _discountCtrl.text) _discountCtrl.text = code;
     if (code.isEmpty) {
       setState(() => _discountError =
           const ApiError(status: 0, message: 'کد تخفیف را وارد کن'));
@@ -695,6 +698,18 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                 Expanded(
                                   child: TextField(
                                     controller: _discountCtrl,
+                                    // کد لاتین است: چپ‌به‌راست، بدونِ تصحیحِ
+                                    // خودکار، و رقمِ فارسی همان لحظه لاتین می‌شود
+                                    textDirection: TextDirection.ltr,
+                                    textAlign: TextAlign.left,
+                                    autocorrect: false,
+                                    enableSuggestions: false,
+                                    keyboardType: TextInputType.visiblePassword,
+                                    textInputAction: TextInputAction.done,
+                                    inputFormatters: const [
+                                      EnglishDigitsFormatter()
+                                    ],
+                                    onSubmitted: (_) => _applyDiscountCode(),
                                     style: const TextStyle(
                                         fontFamily: 'Estedad', color: AppColor.onSurface),
                                     decoration: InputDecoration(

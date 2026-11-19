@@ -142,6 +142,46 @@ class SafeContinuousBorder extends ContinuousRectangleBorder {
     );
   }
 
+  /// سایه‌ها با مستطیلِ گوشه‌گرد کشیده شوند، نه با مسیرِ اسکوئرکل.
+  ///
+  /// سایه‌ی محو روی یک «مسیرِ دلخواه» برای GPU گران است: موتور باید شکل را
+  /// در یک بافتِ جدا بکشد و چند گذرِ تاری رویش بزند، برای هر سایه و در هر
+  /// فریم. تقریباً همه‌ی کارت‌های اپ چنین سایه‌ای دارند (هر صفحه ده‌ها عدد)
+  /// و همین اسکرول و ترنزیشن را روی گوشیِ میان‌رده پرلکنت می‌کرد. برای
+  /// مستطیلِ گوشه‌گرد موتور فرمولِ مستقیم دارد و بافتِ جدا لازم نیست. خودِ
+  /// سطحِ کارت همچنان اسکوئرکلِ دقیق است؛ فقط سایه‌ی محوش تقریبی است و با
+  /// تاریِ ۱۶ پیکسلی تفاوتی دیده نمی‌شود.
+  static bool fastShadows = true;
+
+  // ShapeDecoration وقتی این true باشد سایه و سطح را با paintInterior می‌کشد.
+  @override
+  bool get preferPaintInterior => true;
+
+  @override
+  void paintInterior(Canvas canvas, Rect rect, Paint paint,
+      {TextDirection? textDirection}) {
+    // رنگِ سایه همیشه maskFilter دارد (BoxShadow.toPaint)؛ سطحِ کارت ندارد.
+    if (fastShadows && paint.maskFilter != null) {
+      final r = borderRadius.resolve(textDirection);
+      final limit = rect.shortestSide / 2;
+      // شعاعِ ذخیره‌شده در _k ضرب شده؛ معادلِ دایره‌ای‌اش همان شعاعِ طراحی است.
+      Radius c(Radius x) =>
+          Radius.circular(math.min(x.x / AppShapes._k, limit));
+      canvas.drawRRect(
+        RRect.fromRectAndCorners(
+          rect,
+          topLeft: c(r.topLeft),
+          topRight: c(r.topRight),
+          bottomLeft: c(r.bottomLeft),
+          bottomRight: c(r.bottomRight),
+        ),
+        paint,
+      );
+      return;
+    }
+    canvas.drawPath(getOuterPath(rect, textDirection: textDirection), paint);
+  }
+
   // paint ـِ والد از getOuterPath استفاده می‌کند، پس خط هم محدود رسم می‌شود.
   @override
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
